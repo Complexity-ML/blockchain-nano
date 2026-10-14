@@ -1,0 +1,48 @@
+Internal ctest changing into directory: /proof/ctest
+UpdateCTestConfiguration  from :/proof/ctest/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/proof/ctest/DartConfiguration.tcl
+Test project /proof/ctest
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 380
+    Start 380: consensus_capella_bootstrap_startup
+
+380: Test command: /outputs/nano-capella-bootstrap-startup-tests "--self-test"
+380: Working Directory: /proof/ctest
+380: Test timeout computed to be: 70
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"pinned-proof-inputs-and-refusals"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"post-validation-artifact-rebinding-refused"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"strict-existing-owner-never-initializes"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"explicit-two-pin-runtime-startup-before-clock"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"fresh-typed-bootstrap-archives-before-clock"}
+380: {"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"scenario":"main-cli-typed-recovery-refuses-absent-primary"}
+380: {"clockRebased":false,"hostClockRead":false,"networkUsed":false,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"bootstrap-startup-self-test","workersStarted":false}
+1/2 Test #380: consensus_capella_bootstrap_startup ...   Passed    0.30 sec
+test 381
+    Start 381: consensus_capella_startup_deadline
+
+381: Test command: /outputs/nano-capella-startup-deadline-tests "--self-test"
+381: Working Directory: /proof/ctest
+381: Test timeout computed to be: 70
+381: {"exactBoundaryRefused":true,"invalidBeforeProfileRead":true,"legacyNoSteadyRead":true,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"runtimeUTCQualified":false,"scenario":"startup-deadline-boundaries-and-compatibility"}
+381: {"callerCancellationTypePreserved":true,"copiedBudgetAndConfiguration":true,"invalidProfileStillRefused":true,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"runtimeUTCQualified":false,"scenario":"startup-deadline-owned-inputs-and-error-types"}
+381: {"callerWaitObserved":true,"deadlineTypeObserved":true,"newSignaturesCreated":0,"noPublicationObserved":true,"noRuntimeHandleReturned":true,"privateInputsRead":false,"productionQualified":false,"realSteadyUsed":true,"result":"PASS","runtimeDutiesResumed":false,"runtimeUTCQualified":false,"scenario":"startup-deadline-real-runtime-expiration"}
+381: {"actualClockPublications":1,"currentPrimaryAndWitnessRetained":true,"newSignaturesCreated":0,"oldPrimaryPinRefused":true,"privateInputsRead":false,"privateJournalFloorsQualified":false,"productionQualified":false,"rawSnapshotPreserved":true,"result":"PASS","runtimeDutiesResumed":false,"runtimeUTCQualified":false,"scenario":"startup-deadline-durable-prefix-reopen"}
+381: {"coldReadAfterHandoff":true,"deadlineInactiveBeforeWorkers":true,"legacyAndBudgetedRuntimeReturnsObserved":2,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"realTimePastStartupBudget":true,"result":"PASS","retainedCheckSafeAfterScope":true,"runtimeDutiesResumed":false,"runtimeUTCQualified":false,"scenario":"startup-deadline-handoff-and-retained-callback-lifetime"}
+381: {"completedTestRuntimeStarts":2,"elapsedMs":5285,"groups":5,"maxRssKiB":23764,"networkUsed":false,"newSignaturesCreated":0,"powerLossQualified":false,"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeDutiesResumed":false,"runtimeUTCQualified":false,"scenario":"capella-startup-deadline-self-test"}
+2/2 Test #381: consensus_capella_startup_deadline ....   Passed    5.29 sec
+
+The following tests passed:
+	consensus_capella_bootstrap_startup
+	consensus_capella_startup_deadline
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+qualification_consensus_recovery    =   5.59 sec*proc (2 tests)
+
+Total Test time (real) =   5.59 sec

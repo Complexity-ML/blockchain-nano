@@ -1,0 +1,58 @@
+{
+  "format": "nano-startup-deadline-two-ctest-metadata-contract-v1",
+  "externalManifestFormat": "nano-capella-startup-deadline-public-build-bindings-v1",
+  "fields": [
+    "format",
+    "terminalSha256",
+    "buildControllerSha256",
+    "parentPlanSha256",
+    "files"
+  ],
+  "fileRowFields": [
+    "path",
+    "sha256",
+    "bytes"
+  ],
+  "fixedPaths": [
+    "receipts/source-before.json",
+    "receipts/sdk-binding.json",
+    "receipts/sdk-before.log",
+    "receipts/sdk-after.log",
+    "receipts/archive-142-raw-member-proof.json",
+    "receipts/image-inspect.log",
+    "build/compile_commands.json",
+    "build/CTestTestfile.cmake",
+    "build/third_party/secp256k1/CTestTestfile.cmake",
+    "build/third_party/secp256k1/src/CTestTestfile.cmake"
+  ],
+  "targetMetadata": {
+    "targets": [
+      "nano_core",
+      "nano",
+      "nano-capella-bootstrap-startup-tests",
+      "nano-capella-startup-deadline-tests"
+    ],
+    "leaves": [
+      "flags.make",
+      "link.txt"
+    ],
+    "pattern": "build/CMakeFiles/<target>.dir/<leaf>"
+  },
+  "freshObjects": [
+    "CMakeFiles/nano_core.dir/src/consensus_capella_runtime.cpp.o",
+    "CMakeFiles/nano-capella-startup-deadline-tests.dir/tests/test_capella_startup_deadline.cpp.o"
+  ],
+  "freshMdPatterns": [
+    "build/<object>.d",
+    "build/preflight/<object>.d"
+  ],
+  "filesExactly": 22,
+  "testsRequestedExactly": [
+    "consensus_capella_bootstrap_startup",
+    "consensus_capella_startup_deadline"
+  ],
+  "realScenarioRows": 13,
+  "twoTimeoutSeconds": 70,
+  "activeGlobalSeconds": 180,
+  "qualifiedByWritingThisContract": false
+}

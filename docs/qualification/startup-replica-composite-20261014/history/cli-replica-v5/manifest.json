@@ -1,0 +1,116 @@
+{
+  "format": "nano-bootstrap-owned-copies-cli-readonly-replica-proposal-v5",
+  "status": "FROZEN_SOURCE_PROPOSAL_NOT_COMPILED_OR_EXECUTED",
+  "baselineRepositoryCommitObserved": "ae37c5ad561fc6a5b7750213ebea6b6303c7121d",
+  "baselineProductionSourceReportedEquivalentTo": "d228",
+  "sourceFiles": [
+    {
+      "path": "tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+      "sourcePath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/source/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+      "bytes": 26689,
+      "sha256": "4a53f54dc7784d2c64e218647291bd00932d1347bdd019fa1c0f24718e8bf359",
+      "baselineSha256": "1b034acdd8b0cc177af5188eb2724e460012295248b645b48541bc30601d8743"
+    },
+    {
+      "path": "tools/storage-maintenance/bootstrap-readonly-replica.hpp",
+      "sourcePath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/source/tools/storage-maintenance/bootstrap-readonly-replica.hpp",
+      "bytes": 16951,
+      "sha256": "40d61faedd832af733d2772a653046d1e98d13da5195bb0947a7d9c1af9cb4f1",
+      "baselineSha256": null
+    },
+    {
+      "path": "tests/test_bootstrap_readonly_replica.cpp",
+      "sourcePath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/source/tests/test_bootstrap_readonly_replica.cpp",
+      "bytes": 8413,
+      "sha256": "369dd5fd5f0d54407634d26d9911e69e52f0202bd3039c190f59727830c0d23e",
+      "baselineSha256": null
+    },
+    {
+      "path": "CMakeLists.txt",
+      "sourcePath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/source/CMakeLists.txt",
+      "bytes": 160629,
+      "sha256": "b336c1c4205e9c5663d828f26254bb85346bfc2b77fae68143eb52a5ab9742ca",
+      "baselineSha256": "d0b9232b4de7adb4a080e38737fb1989af4bdd3b1e3b9d885a4af42bacf1f6ac"
+    }
+  ],
+  "patch": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/delivery.patch",
+    "bytes": 37334,
+    "sha256": "abdb19e7906fcadce68e3510850cd75757eb45cbbcf088daaf2c17707a4f8666"
+  },
+  "priorProposal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v4-20261014/manifest.json",
+    "bytes": 5511,
+    "sha256": "b81043edfca1be847adafd6af9706353fad56a6fd48fca41efd7c8c08a40393e"
+  },
+  "minidesign": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-v3-replica-design-20261014/manifest.json",
+    "bytes": 610,
+    "sha256": "175c4bee8f7e263b962878d807b2fd9642247594497e28254e753d89563c47c1"
+  },
+  "minidesignReview": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-v3-replica-design-independent-review-20261014/terminal-static-minidesign-review.json",
+    "bytes": 3523,
+    "sha256": "9f4d3142a046ec6ced0e146ffa5ee81afd585b837c947d8233b5b4ac9a78a8b7"
+  },
+  "files": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/registration-block.txt",
+      "bytes": 577,
+      "sha256": "b366f990b95cc661379b08a57d3ccf43d7714eb69027b8626516c10ff8793e89"
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/README.md",
+      "bytes": 4864,
+      "sha256": "80492a6f52d39a05e3a0af2106c5f911da63cad28ef2284f62387f02ea61f43d"
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/authoring-assertion-refusal.json",
+      "bytes": 310,
+      "sha256": "5c0c23b3feef78160a438b97c01b2df52216cdde87bb3311ae63059414e8aba2"
+    }
+  ],
+  "scope": {
+    "databaseOpened": false,
+    "privateInputsRead": false,
+    "compilerDockerSshExecuted": false,
+    "testsExecuted": 0,
+    "newSignaturesCreated": 0,
+    "runtimeStarted": false,
+    "repoEdited": false,
+    "productionQualified": false
+  },
+  "requiredQualification": [
+    "Independent implementation review",
+    "Actual source/SDK-bound CLI+tiny compilation and links",
+    "New two-group replica CTest",
+    "All13existingWrapperCasesOnNewCLI",
+    "Fresh deadline archive parent chosen by ROOT requires real external terminal pins; no parent fabricated"
+  ],
+  "knownOpen": [
+    "Actual CLI WAL interruption",
+    "Privileged concurrent writers cannot be excluded by filesystem sampling",
+    "Actual private sources/journals/backup/currentUTC/duties/finality",
+    "Whole production goal"
+  ],
+  "narrowGuardDelta": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v5-20261014/v4-to-v5-owned-inputs.patch",
+    "bytes": 8399,
+    "sha256": "ed3c625d548d694ab43b1227f74791b58fa34359f34e57695985f10f14131d27"
+  },
+  "v3Disposition": "STATIC_GUARD_REPAIR_BEFORE_EXECUTION_NOT_A_TEST_OR_COMPILER_FAILURE",
+  "unchangedFromV3": [
+    "CLI bytes",
+    "tinytest bytes",
+    "CMake bytes",
+    "request/NEXT/Pair/protocol/core APIs"
+  ],
+  "v4Disposition": "P1_CALLER_OUTPUT_ALIAS_AND_CALLBACK_OWNERSHIP_FIXED_BEFORE_EXECUTION",
+  "unchangedFromV4": [
+    "CLI bytes",
+    "CMake bytes",
+    "request/NEXT/Pair/protocol/core APIs"
+  ],
+  "addedConformanceCase": "During capture change caller output path and clear caller callback; owned path stays original and owned checks continue",
+  "tinyStdoutRows": 3
+}

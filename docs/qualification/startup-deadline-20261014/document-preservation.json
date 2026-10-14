@@ -1,0 +1,54 @@
+{
+  "format": "nano-startup-deadline-four-document-prefix-preservation-v1",
+  "baselineCommit": "ae37c5ad561fc6a5b7750213ebea6b6303c7121d",
+  "documents": [
+    {
+      "path": "docs/PRODUCTION-GOAL.md",
+      "baselineSha256": "c0661de92959c616d55e1fdb0ff14b54bb05a8f477667c24bf910f67a41a3966",
+      "baselineBytes": 594940,
+      "prefixPath": "document-prefixes/PRODUCTION-GOAL.md",
+      "prefixUtf8": "## 14 octobre 2026 — Budget steady de startup qualifié sur Docker ARM et AMD64\n\nLe runtime accepte un plafond optionnel `clock.maximumStartupElapsedMs`, mesuré en steady time, distinct de l’UTC et du grant de panne. Il contrôle les callbacks synchrones et expire par exception typée ; absence du champ conserve le comportement sans plafond ajouté. Après retour/RAII, ses callbacks retenus deviennent inertes avant les workers. Une publication de préfixe suivie d’expiration conserve les engagements actuels, pas les anciens pins.\n\nDeux CTests réels passent sans retry ni skip par architecture : startup (six cas + résumé) et deadline (cinq groupes + résumé), 13 lignes, zéro nouvelle signature. ARM : 5,764 s ; deadline 5 285 ms/23 764 KiB. AMD64 : 7,098 s ; deadline 5 802 ms/25 600 KiB. Une unité runtime fraîche + 141 objets réutilisés, un test neuf, trois liens ; SDK, sources, raw archive142 et inputs/conteneurs contrôlés. Ancienne V1 jamais compilée/exécutée, réparation V2 des scopes RO/RW de test conservée. Source runtime/helper/test exacts ; CMake de livraison préserve les targets/install maintenance et ajoute seulement la registration deadline. [Preuves publiques](qualification/capella-startup-deadline-20261014/README.md).\n\nCe plafond coopératif n’élargit pas le grant 2h/60 et ne qualifie ni UTC courant, longue panne, journaux/floors, duties ni finalité commune. Le gate RO/RW concurrent du CLI maintenance à ae37 reste ouvert jusqu’à sa nouvelle qualification ; ces tests n’appliquent rien aux copies privées. Profil Shanghai, EIP/CSV et tous autres critères conservés : natif/install, WAL/backup/V37/NAS, consensus/charge/exploitation, CI facturation et audit indépendant externe restent ouverts. Aucune activation opérationnelle de budget ou production qualifiée.\n\n",
+      "prefixSha256": "5f08fd9f9f98e72b51b7bf7431262287c3ded7b6353a43a871e93ff3ca1c5d46",
+      "prefixBytes": 1834,
+      "resultSha256": "baf66f58d68a4db6400daa316c86c5fddb607197a448c45b432e73e8cedf8b57",
+      "resultBytes": 596774
+    },
+    {
+      "path": "docs/VALIDATOR-EIP-ROADMAP.md",
+      "baselineSha256": "e9f4d8ea8651e3f3b742d23d9d6f3949ae1b7a4289f511bf906a09d71e588c06",
+      "baselineBytes": 817267,
+      "prefixPath": "document-prefixes/VALIDATOR-EIP-ROADMAP.md",
+      "prefixUtf8": "## 14 octobre 2026 — Startup steady : preuve limitée\n\nDocker ARM/AMD64 : deux CTests réels PASS chacun, 13 lignes startup/deadline, zéro nouvelle signature ; runtime/helper/test V2 exacts, archive142 cohérente et readbacks conservés. [Preuves](qualification/capella-startup-deadline-20261014/README.md).\n\nGrant 2h/60, profil Shanghai et statuts EIP/CSV inchangés. CLI maintenance RO/RW concurrent, UTC/journaux/duties/finalité, natif/install/CI/audit et production restent ouverts ; tous corps historiques conservés.\n\n",
+      "prefixSha256": "e6792f685c8295379453e60db5860a6f334dc915e2c7de82b7e44f9fb594a0ed",
+      "prefixBytes": 528,
+      "resultSha256": "04477e8cd3704c45057c4c159d99c0ab2bab3b512891a0611aa3d9f0c66e5d45",
+      "resultBytes": 817795
+    },
+    {
+      "path": "docs/EVM-PRODUCTION-EIP-ROADMAP.md",
+      "baselineSha256": "71426aaecb236b44e363df91e17a2cdc04952e1f6643ac8698907ddac8265aad",
+      "baselineBytes": 617345,
+      "prefixPath": "document-prefixes/EVM-PRODUCTION-EIP-ROADMAP.md",
+      "prefixUtf8": "## 14 octobre 2026 — Startup steady : preuve limitée\n\nDocker ARM/AMD64 : deux CTests réels PASS chacun, 13 lignes startup/deadline, zéro nouvelle signature ; runtime/helper/test V2 exacts, archive142 cohérente et readbacks conservés. [Preuves](qualification/capella-startup-deadline-20261014/README.md).\n\nGrant 2h/60, profil Shanghai et statuts EIP/CSV inchangés. CLI maintenance RO/RW concurrent, UTC/journaux/duties/finalité, natif/install/CI/audit et production restent ouverts ; tous corps historiques conservés.\n\n",
+      "prefixSha256": "e6792f685c8295379453e60db5860a6f334dc915e2c7de82b7e44f9fb594a0ed",
+      "prefixBytes": 528,
+      "resultSha256": "ea3621a555dc3d37bb12938f1078254f8208e1251dfe43402b8324fb57e90d9b",
+      "resultBytes": 617873
+    },
+    {
+      "path": "docs/EIP-IMPLEMENTATION-STATUS.md",
+      "baselineSha256": "cd7a3aba2b7d6ca11bc4095c80095e9e15572d7124e252bdfe910df37ab93ea2",
+      "baselineBytes": 821048,
+      "prefixPath": "document-prefixes/EIP-IMPLEMENTATION-STATUS.md",
+      "prefixUtf8": "## 14 octobre 2026 — Startup steady : preuve limitée\n\nDocker ARM/AMD64 : deux CTests réels PASS chacun, 13 lignes startup/deadline, zéro nouvelle signature ; runtime/helper/test V2 exacts, archive142 cohérente et readbacks conservés. [Preuves](qualification/capella-startup-deadline-20261014/README.md).\n\nGrant 2h/60, profil Shanghai et statuts EIP/CSV inchangés. CLI maintenance RO/RW concurrent, UTC/journaux/duties/finalité, natif/install/CI/audit et production restent ouverts ; tous corps historiques conservés.\n\n",
+      "prefixSha256": "e6792f685c8295379453e60db5860a6f334dc915e2c7de82b7e44f9fb594a0ed",
+      "prefixBytes": 528,
+      "resultSha256": "78e5bb3bdeedea60efd329d828cb4a5be90e021793b3c2346be6479d836902bf",
+      "resultBytes": 821576
+    }
+  ],
+  "csvPath": "docs/EIP-IMPLEMENTATION-STATUS.csv",
+  "csvSha256": "371663637bccd58bc817f11b6f51bf264691235a5424e1ff3011f22a9be64283",
+  "csvBytes": 11281,
+  "historicalBodiesUnchanged": true
+}

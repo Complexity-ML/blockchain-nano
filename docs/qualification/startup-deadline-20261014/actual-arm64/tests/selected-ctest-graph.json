@@ -1,0 +1,85 @@
+{
+  "backtraceGraph": {
+    "commands": [
+      "add_test"
+    ],
+    "files": [
+      "/work/CMakeLists.txt"
+    ],
+    "nodes": [
+      {
+        "file": 0
+      },
+      {
+        "command": 0,
+        "file": 0,
+        "line": 2080,
+        "parent": 0
+      },
+      {
+        "file": 0
+      },
+      {
+        "command": 0,
+        "file": 0,
+        "line": 2086,
+        "parent": 2
+      }
+    ]
+  },
+  "kind": "ctestInfo",
+  "tests": [
+    {
+      "backtrace": 1,
+      "command": [
+        "/outputs/nano-capella-bootstrap-startup-tests",
+        "--self-test"
+      ],
+      "name": "consensus_capella_bootstrap_startup",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 70.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/proof/ctest"
+        }
+      ]
+    },
+    {
+      "backtrace": 3,
+      "command": [
+        "/outputs/nano-capella-startup-deadline-tests",
+        "--self-test"
+      ],
+      "name": "consensus_capella_startup_deadline",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_recovery"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 70.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/proof/ctest"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 1,
+    "minor": 0
+  }
+}

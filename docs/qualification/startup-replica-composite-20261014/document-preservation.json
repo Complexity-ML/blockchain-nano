@@ -1,0 +1,67 @@
+{
+  "format": "nano-combined-deadline-replica-four-document-preservation-v1",
+  "baselineCommit": "ae37c5ad561fc6a5b7750213ebea6b6303c7121d",
+  "documents": [
+    {
+      "path": "docs/PRODUCTION-GOAL.md",
+      "baselineSha256": "c0661de92959c616d55e1fdb0ff14b54bb05a8f477667c24bf910f67a41a3966",
+      "baselineBytes": 594940,
+      "prefixPath": "document-prefixes/PRODUCTION-GOAL.md",
+      "prefixUtf8": "## 14 octobre 2026 — Livraison combinée timer et maintenance par répliques\n\nLe CLI V6 inspecte uniquement des répliques physiques privées scellées et revalidées ; il acquiert ensuite le vrai owner Existing/LOCK des copies ciblées. Le banc conserve les engagements distincts et leurs fsync avant publication, les formats chaud/froid/fragmenté et l’idempotence. Deux CTests maintenance/réplique passent une fois sur chaque architecture Docker : 13 lignes wrapper et 3 lignes tiny, zéro nouvelle signature. ARM : wrapper 2 691 ms/23 752 KiB, tiny 17 ms/17 668 KiB ; AMD64 : wrapper 8 987 ms/25 140 KiB, tiny 78 ms/17 920 KiB. Le scénario RO/RW indéfini de ae37 est fermé pour ce chemin d’outil qualifié ; ni absence de writers privilégiés ni écriture concurrente sûre ne sont garanties.\n\nLes deux CTests startup/deadline précédents n’ont pas été rejoués : cœur/archive et trois ELF sont byte-exacts dans le composite. Quatre CTests distincts passent une fois par architecture, huit exécutions réelles au total sur deux lots ; les lignes JSON sont des résultats sémantiques, pas des CTests. Sources finales runtime8e/helpera585/testbf9/CLI4a53/réplique3869/tinyafb6 et CMake fcc de 161 145 octets, réellement configurée, préservent CLI/install/targets et les anciens argv. La capsule standalone deadline50fe, sa CMake a2 non configurée et tous findings V3–V6 restent historiques. [Preuves combinées](qualification/deadline-replica-combined-20261014/README.md).\n\nPas d’application aux copies privées ou de nouvelle signature. UTC courant/grant 2h/60, journaux/floors/duties/finalité commune, WAL interrompu/whole-node backup, V37/NAS, natif/clean/install/CI facturation, audit externe et autres critères demeurent ouverts. Profil Shanghai et matrices EIP/CSV inchangés ; production non qualifiée. Le préfixe deadline antérieur et tous corps ae37 restent intacts ci-dessous.\n\n## 14 octobre 2026 — Budget steady de startup qualifié sur Docker ARM et AMD64\n\nLe runtime accepte un plafond optionnel `clock.maximumStartupElapsedMs`, mesuré en steady time, distinct de l’UTC et du grant de panne. Il contrôle les callbacks synchrones et expire par exception typée ; absence du champ conserve le comportement sans plafond ajouté. Après retour/RAII, ses callbacks retenus deviennent inertes avant les workers. Une publication de préfixe suivie d’expiration conserve les engagements actuels, pas les anciens pins.\n\nDeux CTests réels passent sans retry ni skip par architecture : startup (six cas + résumé) et deadline (cinq groupes + résumé), 13 lignes, zéro nouvelle signature. ARM : 5,764 s ; deadline 5 285 ms/23 764 KiB. AMD64 : 7,098 s ; deadline 5 802 ms/25 600 KiB. Une unité runtime fraîche + 141 objets réutilisés, un test neuf, trois liens ; SDK, sources, raw archive142 et inputs/conteneurs contrôlés. Ancienne V1 jamais compilée/exécutée, réparation V2 des scopes RO/RW de test conservée. Source runtime/helper/test exacts ; CMake de livraison préserve les targets/install maintenance et ajoute seulement la registration deadline. [Preuves publiques](qualification/capella-startup-deadline-20261014/README.md).\n\nCe plafond coopératif n’élargit pas le grant 2h/60 et ne qualifie ni UTC courant, longue panne, journaux/floors, duties ni finalité commune. Le gate RO/RW concurrent du CLI maintenance à ae37 reste ouvert jusqu’à sa nouvelle qualification ; ces tests n’appliquent rien aux copies privées. Profil Shanghai, EIP/CSV et tous autres critères conservés : natif/install, WAL/backup/V37/NAS, consensus/charge/exploitation, CI facturation et audit indépendant externe restent ouverts. Aucune activation opérationnelle de budget ou production qualifiée.\n\n",
+      "prefixSha256": "36d4454906eac10b32f181835bb5859cac88be45e02035c6080f6d97f060dd82",
+      "prefixBytes": 3757,
+      "newIntroSha256": "3cce7ae2ec067dfd22ead7f56374b3719721ad9b02b811d0d0ec6194dedd9ab2",
+      "priorDeadlinePrefixSha256": "5f08fd9f9f98e72b51b7bf7431262287c3ded7b6353a43a871e93ff3ca1c5d46",
+      "priorDeadlinePrefixByteExactSuffix": true,
+      "resultSha256": "ac0d6da79dfa322c30391be8ea36b16c6faba7f06c1a028f8df0ab5e3886f6b3",
+      "resultBytes": 598697
+    },
+    {
+      "path": "docs/VALIDATOR-EIP-ROADMAP.md",
+      "baselineSha256": "e9f4d8ea8651e3f3b742d23d9d6f3949ae1b7a4289f511bf906a09d71e588c06",
+      "baselineBytes": 817267,
+      "prefixPath": "document-prefixes/VALIDATOR-EIP-ROADMAP.md",
+      "prefixUtf8": "## 14 octobre 2026 — Timer et CLI par répliques : qualification limitée\n\nSources finales et CMake fcc réellement configurée sur Docker ARM/AMD64 ; quatre CTests distincts par architecture sur deux lots, huit exécutions totales, zéro nouvelle signature. Gate RO/RW de l’outil fermé uniquement pour lecture sur répliques + vrai LOCK ; writers privilégiés/écriture concurrente non garantis. [Preuves](qualification/deadline-replica-combined-20261014/README.md).\n\nShanghai, EIP/CSV et grant 2h/60 inchangés. Copies privées/journaux/UTC/duties/finalité, WAL/backup, natif/clean/install/CI/audit et production restent ouverts ; préfixe deadline50fe et historique ae37 conservés byte pour byte.\n\n## 14 octobre 2026 — Startup steady : preuve limitée\n\nDocker ARM/AMD64 : deux CTests réels PASS chacun, 13 lignes startup/deadline, zéro nouvelle signature ; runtime/helper/test V2 exacts, archive142 cohérente et readbacks conservés. [Preuves](qualification/capella-startup-deadline-20261014/README.md).\n\nGrant 2h/60, profil Shanghai et statuts EIP/CSV inchangés. CLI maintenance RO/RW concurrent, UTC/journaux/duties/finalité, natif/install/CI/audit et production restent ouverts ; tous corps historiques conservés.\n\n",
+      "prefixSha256": "fccb54072ddfee60b113feeec28b7922d23a0fa9e0c17e680e8d1ad46d04def8",
+      "prefixBytes": 1237,
+      "newIntroSha256": "63ed8921d7e12da682cd6ea87306fea676c029441b44bfa77df35d816332cca4",
+      "priorDeadlinePrefixSha256": "e6792f685c8295379453e60db5860a6f334dc915e2c7de82b7e44f9fb594a0ed",
+      "priorDeadlinePrefixByteExactSuffix": true,
+      "resultSha256": "01ac7772953b2242c3d798614e62ac5bf5625137323848b650548f106d017d57",
+      "resultBytes": 818504
+    },
+    {
+      "path": "docs/EVM-PRODUCTION-EIP-ROADMAP.md",
+      "baselineSha256": "71426aaecb236b44e363df91e17a2cdc04952e1f6643ac8698907ddac8265aad",
+      "baselineBytes": 617345,
+      "prefixPath": "document-prefixes/EVM-PRODUCTION-EIP-ROADMAP.md",
+      "prefixUtf8": "## 14 octobre 2026 — Timer et CLI par répliques : qualification limitée\n\nSources finales et CMake fcc réellement configurée sur Docker ARM/AMD64 ; quatre CTests distincts par architecture sur deux lots, huit exécutions totales, zéro nouvelle signature. Gate RO/RW de l’outil fermé uniquement pour lecture sur répliques + vrai LOCK ; writers privilégiés/écriture concurrente non garantis. [Preuves](qualification/deadline-replica-combined-20261014/README.md).\n\nShanghai, EIP/CSV et grant 2h/60 inchangés. Copies privées/journaux/UTC/duties/finalité, WAL/backup, natif/clean/install/CI/audit et production restent ouverts ; préfixe deadline50fe et historique ae37 conservés byte pour byte.\n\n## 14 octobre 2026 — Startup steady : preuve limitée\n\nDocker ARM/AMD64 : deux CTests réels PASS chacun, 13 lignes startup/deadline, zéro nouvelle signature ; runtime/helper/test V2 exacts, archive142 cohérente et readbacks conservés. [Preuves](qualification/capella-startup-deadline-20261014/README.md).\n\nGrant 2h/60, profil Shanghai et statuts EIP/CSV inchangés. CLI maintenance RO/RW concurrent, UTC/journaux/duties/finalité, natif/install/CI/audit et production restent ouverts ; tous corps historiques conservés.\n\n",
+      "prefixSha256": "fccb54072ddfee60b113feeec28b7922d23a0fa9e0c17e680e8d1ad46d04def8",
+      "prefixBytes": 1237,
+      "newIntroSha256": "63ed8921d7e12da682cd6ea87306fea676c029441b44bfa77df35d816332cca4",
+      "priorDeadlinePrefixSha256": "e6792f685c8295379453e60db5860a6f334dc915e2c7de82b7e44f9fb594a0ed",
+      "priorDeadlinePrefixByteExactSuffix": true,
+      "resultSha256": "1fd68020221bb17613a2fe19fb1dcfa7a1df0dcfe2be1d7036ffdfcbea1c8bc6",
+      "resultBytes": 618582
+    },
+    {
+      "path": "docs/EIP-IMPLEMENTATION-STATUS.md",
+      "baselineSha256": "cd7a3aba2b7d6ca11bc4095c80095e9e15572d7124e252bdfe910df37ab93ea2",
+      "baselineBytes": 821048,
+      "prefixPath": "document-prefixes/EIP-IMPLEMENTATION-STATUS.md",
+      "prefixUtf8": "## 14 octobre 2026 — Timer et CLI par répliques : qualification limitée\n\nSources finales et CMake fcc réellement configurée sur Docker ARM/AMD64 ; quatre CTests distincts par architecture sur deux lots, huit exécutions totales, zéro nouvelle signature. Gate RO/RW de l’outil fermé uniquement pour lecture sur répliques + vrai LOCK ; writers privilégiés/écriture concurrente non garantis. [Preuves](qualification/deadline-replica-combined-20261014/README.md).\n\nShanghai, EIP/CSV et grant 2h/60 inchangés. Copies privées/journaux/UTC/duties/finalité, WAL/backup, natif/clean/install/CI/audit et production restent ouverts ; préfixe deadline50fe et historique ae37 conservés byte pour byte.\n\n## 14 octobre 2026 — Startup steady : preuve limitée\n\nDocker ARM/AMD64 : deux CTests réels PASS chacun, 13 lignes startup/deadline, zéro nouvelle signature ; runtime/helper/test V2 exacts, archive142 cohérente et readbacks conservés. [Preuves](qualification/capella-startup-deadline-20261014/README.md).\n\nGrant 2h/60, profil Shanghai et statuts EIP/CSV inchangés. CLI maintenance RO/RW concurrent, UTC/journaux/duties/finalité, natif/install/CI/audit et production restent ouverts ; tous corps historiques conservés.\n\n",
+      "prefixSha256": "fccb54072ddfee60b113feeec28b7922d23a0fa9e0c17e680e8d1ad46d04def8",
+      "prefixBytes": 1237,
+      "newIntroSha256": "63ed8921d7e12da682cd6ea87306fea676c029441b44bfa77df35d816332cca4",
+      "priorDeadlinePrefixSha256": "e6792f685c8295379453e60db5860a6f334dc915e2c7de82b7e44f9fb594a0ed",
+      "priorDeadlinePrefixByteExactSuffix": true,
+      "resultSha256": "df01f4bca56ec49c3a580debe7d8e52e98fc62ddaccb245e3a9ebae3c2576e1f",
+      "resultBytes": 822285
+    }
+  ],
+  "oldDeadlineCapsuleSha256": "50fe3fde3a2bfbbf82054aca27a78214e3bf6adc6d81fd5d3a122404512032d8",
+  "csvSha256": "371663637bccd58bc817f11b6f51bf264691235a5424e1ff3011f22a9be64283",
+  "csvBytes": 11281,
+  "historicalBodiesUnchanged": true,
+  "oldDeadlinePrefixesBytePreserved": true
+}

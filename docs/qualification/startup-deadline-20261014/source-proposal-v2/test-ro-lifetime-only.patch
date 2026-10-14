@@ -1,0 +1,33 @@
+--- a/tests/test_capella_startup_deadline.cpp
++++ b/tests/test_capella_startup_deadline.cpp
+@@ -74,8 +74,8 @@
+  Budget extreme(10,{},C::time_point::min(),[]{return C::time_point::max();});require(refused_as<std::overflow_error>(extreme.checkpoint()),"steady subtraction overflow accepted");
+  unsigned legacy_calls=0;Budget legacy(std::nullopt,[&]{++legacy_calls;},origin,[]{throw std::runtime_error("legacy read steady");return C::time_point{};});const auto lc=legacy.checkpoint();lc();require(legacy_calls>0,"absent budget lost caller cancellation");const auto before=legacy_calls;legacy.finish();lc();require(legacy_calls==before,"finished absent budget called caller");
+  for(const auto& invalid:{Json("0x0"),Json("0x00"),Json("0x01"),Json("0xA"),Json(UINT64_MAX),Json(nullptr),Json("0xffffffffffffffff")}){
+-  Temp t;Blockchain owner(t.path/"primary",f.genesis);const auto logical_before=rows(t.path/"primary");auto cfg=f.config;cfg["clock"]["maximumStartupElapsedMs"]=invalid;cfg["profile"]["file"]=(t.path/"absent-profile").string();cfg["recoveryWitness"]=(t.path/"absent-witness").string();
+-  bool callback_reached=false;require(refused_as<std::invalid_argument>([&]{start_capella_runtime(owner,cfg,[&]{callback_reached=true;checkpoint();});}),"invalid elapsed config accepted");require(!callback_reached&&!fs::exists(t.path/"absent-witness")&&rows(t.path/"primary")==logical_before,"invalid elapsed config reached startup callback or changed owner/witness");
++  Temp t;{Blockchain initialize(t.path/"primary",f.genesis);}const auto logical_before=rows(t.path/"primary");auto cfg=f.config;cfg["clock"]["maximumStartupElapsedMs"]=invalid;cfg["profile"]["file"]=(t.path/"absent-profile").string();cfg["recoveryWitness"]=(t.path/"absent-witness").string();
++  bool callback_reached=false;{Blockchain owner(t.path/"primary",f.genesis,ChainStore::OpenMode::ReadWriteExisting);require(refused_as<std::invalid_argument>([&]{start_capella_runtime(owner,cfg,[&]{callback_reached=true;checkpoint();});}),"invalid elapsed config accepted");}require(!callback_reached&&!fs::exists(t.path/"absent-witness")&&rows(t.path/"primary")==logical_before,"invalid elapsed config reached startup callback or changed owner/witness");
+  }
+  emit("startup-deadline-boundaries-and-compatibility",{{"exactBoundaryRefused",true},{"invalidBeforeProfileRead",true},{"legacyNoSteadyRead",true}});
+ }
+@@ -84,15 +84,15 @@
+  {Temp t;Blockchain owner(t.path/"primary",f.genesis);auto cfg=fresh_config(f,inputs,t.path/"witness");cfg["clock"]["maximumStartupElapsedMs"]=q(5000);bool changed=false;bool reached=false;
+   try{start_capella_runtime(owner,cfg,[&]{if(!changed){changed=true;cfg["clock"]["maximumStartupElapsedMs"]="0x0";cfg["unexpectedCallerField"]=true;}checkpoint();},[&]()->uint64_t{reached=true;throw BeforeClock{};});}catch(const BeforeClock&){}
+   require(changed&&reached,"caller alias changed owned runtime budget/config");}
+- {Temp t;Blockchain owner(t.path/"primary",f.genesis);const auto before=rows(t.path/"primary");auto cfg=fresh_config(f,inputs,t.path/"witness");cfg["clock"]["maximumStartupElapsedMs"]=q(5000);
+-  require(refused_as<CallerCancelled>([&]{start_capella_runtime(owner,cfg,[]{throw CallerCancelled{};});}),"caller cancellation type rewritten");require(!fs::exists(t.path/"witness")&&rows(t.path/"primary")==before,"caller cancellation before IO changed stores");}
++ {Temp t;{Blockchain initialize(t.path/"primary",f.genesis);}const auto before=rows(t.path/"primary");auto cfg=fresh_config(f,inputs,t.path/"witness");cfg["clock"]["maximumStartupElapsedMs"]=q(5000);
++  {Blockchain owner(t.path/"primary",f.genesis,ChainStore::OpenMode::ReadWriteExisting);require(refused_as<CallerCancelled>([&]{start_capella_runtime(owner,cfg,[]{throw CallerCancelled{};});}),"caller cancellation type rewritten");}require(!fs::exists(t.path/"witness")&&rows(t.path/"primary")==before,"caller cancellation before IO changed stores");}
+  {Temp t;Blockchain owner(t.path/"primary",f.genesis);auto cfg=fresh_config(f,inputs,t.path/"witness");cfg["clock"]["maximumStartupElapsedMs"]=q(5000);cfg["profile"]["sha256"]=hex(Bytes(32));
+   require(refused_as<std::invalid_argument>([&]{start_capella_runtime(owner,cfg,checkpoint);}),"bad public profile masked as deadline");require(!fs::exists(t.path/"witness"),"bad public profile opened witness");}
+  emit("startup-deadline-owned-inputs-and-error-types",{{"copiedBudgetAndConfiguration",true},{"callerCancellationTypePreserved",true},{"invalidProfileStillRefused",true}});
+ }
+ void actual_runtime_expiration(const Fixture& f,const fs::path& inputs){
+- Temp t;Blockchain owner(t.path/"primary",f.genesis);const auto before=rows(t.path/"primary");auto cfg=fresh_config(f,inputs,t.path/"witness");cfg["clock"]["maximumStartupElapsedMs"]="0x1";bool caller_waited=false;
+- const bool expired=refused_as<Deadline>([&]{start_capella_runtime(owner,cfg,[&]{caller_waited=true;std::this_thread::sleep_for(std::chrono::milliseconds(20));checkpoint();});});
++ Temp t;{Blockchain initialize(t.path/"primary",f.genesis);}const auto before=rows(t.path/"primary");auto cfg=fresh_config(f,inputs,t.path/"witness");cfg["clock"]["maximumStartupElapsedMs"]="0x1";bool caller_waited=false;bool expired=false;
++ {Blockchain owner(t.path/"primary",f.genesis,ChainStore::OpenMode::ReadWriteExisting);expired=refused_as<Deadline>([&]{start_capella_runtime(owner,cfg,[&]{caller_waited=true;std::this_thread::sleep_for(std::chrono::milliseconds(20));checkpoint();});});}
+  require(expired&&!fs::exists(t.path/"witness")&&rows(t.path/"primary")==before,"real steady expiry failed before runtime file publication");
+  // Expiry can precede the caller if the real process is already delayed.
+  emit("startup-deadline-real-runtime-expiration",{{"realSteadyUsed",true},{"deadlineTypeObserved",expired},{"callerWaitObserved",caller_waited},{"noRuntimeHandleReturned",true},{"noPublicationObserved",true}});

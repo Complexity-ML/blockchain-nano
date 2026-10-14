@@ -1,0 +1,51 @@
+Internal ctest changing into directory: /proof/ctest
+UpdateCTestConfiguration  from :/proof/ctest/DartConfiguration.tcl
+UpdateCTestConfiguration  from :/proof/ctest/DartConfiguration.tcl
+Test project /proof/ctest
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 381
+    Start 381: storage_capella_bootstrap_archive_owned_copies
+
+381: Test command: /outputs/nano-bootstrap-archive-maintenance-tests "--self-test"
+381: Working Directory: /proof/ctest
+381: Test timeout computed to be: 130
+381: {"canonicalStateKeyDerivedFromTip":true,"historicalStateAbsentCurrentStatePresentAccepted":true,"missingCanonicalStateRefused":true,"missingDatabaseOrCurrentNeverCreated":true,"missingPrimaryBindings":4,"missingWitnessIdentity":true,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-existing-owner-refuses-initialization"}
+381: {"falseStopReceiptRefused":true,"freshExecLockAcquisitionObserved":true,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-authenticated-stop-and-actual-exclusive-lock","sourcesNeverOpenedRw":true}
+381: {"allProtocolRowsAndOriginalSourcesUnchanged":true,"cases":8,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-provenance-alias-hardlink-and-budget","sourceHashAliasSymlinkHardlinkScanBudgetForeignGenesisOverlapAndAbsenceRefused":true}
+381: {"cases":7,"missingSwappedWrongHashWrongNextNonPrivateAndExistingOutputRefused":true,"newSignaturesCreated":0,"noSupplementOnRefusal":true,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-retained-pins-and-protected-output-refusals"}
+381: {"actualFsyncFaultCases":3,"allBeforeProtocolPublication":true,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-retention-file-and-directory-fsync-refusals","twoFilesAndPostWitnessDirectoryBoundaries":true}
+381: {"actualDurableFormat":"hot","archiveAndIndexRetained":true,"bothNextReretainedBeforeIo":true,"coldTypedReopen":true,"completedRecoveryRepetitions":2,"interruptedRecoveryQualified":false,"newSignaturesCreated":0,"ordinaryRecoveryRefused":true,"privateInputsRead":false,"productionQualified":false,"rawSnapshotAndAllUnrelatedNamespacesExact":true,"result":"PASS","scenario":"maintenance-real-apply-cold-readback-and-completed-recovery"}
+381: {"actualDurableFormat":"hot","newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-stale-original-apply-refused"}
+381: {"actualDurableFormat":"cold","archiveAndIndexRetained":true,"bothNextReretainedBeforeIo":true,"coldTypedReopen":true,"completedRecoveryRepetitions":2,"interruptedRecoveryQualified":false,"newSignaturesCreated":0,"ordinaryRecoveryRefused":true,"privateInputsRead":false,"productionQualified":false,"rawSnapshotAndAllUnrelatedNamespacesExact":true,"result":"PASS","scenario":"maintenance-real-apply-cold-readback-and-completed-recovery"}
+381: {"actualDurableFormat":"cold","newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-stale-original-apply-refused"}
+381: {"actualDurableFormat":"fragmented","archiveAndIndexRetained":true,"bothNextReretainedBeforeIo":true,"coldTypedReopen":true,"completedRecoveryRepetitions":2,"interruptedRecoveryQualified":false,"newSignaturesCreated":0,"ordinaryRecoveryRefused":true,"privateInputsRead":false,"productionQualified":false,"rawSnapshotAndAllUnrelatedNamespacesExact":true,"result":"PASS","scenario":"maintenance-real-apply-cold-readback-and-completed-recovery"}
+381: {"actualDurableFormat":"fragmented","newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-stale-original-apply-refused"}
+381: {"newSignaturesCreated":0,"ordinaryCompleteInitialIntentSupported":true,"privateInputsRead":false,"productionQualified":false,"result":"PASS","scenario":"maintenance-existing-archive-no-work-apply","twoTokensUnchanged":true}
+381: {"actualCliUsed":true,"alreadySignedPublicFixtureOnly":true,"clockReadOrReset":false,"dutiesResumed":false,"elapsedMs":2691,"interruptedWalRecoveryQualified":false,"maxRssKiB":23752,"networkUsed":false,"newSignaturesCreated":0,"physicalPowerLossQualified":false,"privateInputsRead":false,"productionQualified":false,"result":"PASS","retentionFsyncFaultCases":3,"scenario":"bootstrap-archive-maintenance-wrapper-self-test","wholeNodeBackupQualified":false}
+1/2 Test #381: storage_capella_bootstrap_archive_owned_copies .......   Passed    2.70 sec
+test 383
+    Start 383: storage_capella_bootstrap_archive_readonly_replica
+
+383: Test command: /outputs/nano-bootstrap-readonly-replica-tests "--self-test"
+383: Working Directory: /proof/ctest
+383: Test timeout computed to be: 70
+383: {"actualWriterRemainedOpen":true,"callerOutputMutationRemainsBoundToOwnedParent":true,"clearedCallerCallbackDoesNotDisableOwnedChecks":true,"concurrentWritingQualified":false,"explicitCleanupObserved":true,"newSignaturesCreated":0,"privateInputsRead":false,"productionQualified":false,"rawPathApiRejectedAtCompileTime":true,"readOnlyOpenedIndependentReplicaOnly":true,"result":"PASS","sameLogicalContent":true,"scenario":"maintenance-readonly-replica-api-conformance","sharedInodeUsed":false}
+383: {"cleanupIncompleteRefused":true,"databaseReadOnlyOpensInThisGroup":0,"mutatedReplicaReadbackRefused":true,"newSignaturesCreated":0,"parentRenameSubstitutionDuringRecheckRefused":true,"privateInputsRead":false,"productionQualified":false,"protocolWritesInThisGroup":0,"result":"PASS","scenario":"maintenance-readonly-replica-content-mutation-refusals","sourceMutationBeforeSealRefused":true,"substitutedParentNeverDeleted":true,"successfulCleanupObservedBeforeSubstitution":true}
+383: {"elapsedMs":17,"groups":2,"maxRssKiB":17668,"networkUsed":false,"newSignaturesCreated":0,"physicalPowerLossQualified":false,"privateInputsRead":false,"productionQualified":false,"result":"PASS","runtimeStarted":false,"scenario":"bootstrap-readonly-replica-self-test"}
+2/2 Test #383: storage_capella_bootstrap_archive_readonly_replica ...   Passed    0.02 sec
+
+The following tests passed:
+	storage_capella_bootstrap_archive_owned_copies
+	storage_capella_bootstrap_archive_readonly_replica
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+qualification_consensus_bootstrap_maintenance    =   2.72 sec*proc (2 tests)
+
+Total Test time (real) =   2.72 sec

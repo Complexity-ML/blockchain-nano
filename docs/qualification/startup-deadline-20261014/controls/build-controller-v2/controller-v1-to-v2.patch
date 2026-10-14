@@ -1,0 +1,15 @@
+--- a/build-startup-deadline-root-only.py
++++ b/build-startup-deadline-root-only.py
+@@ -4,10 +4,10 @@
+ """
+ import argparse,hashlib,json,os,pathlib,posixpath,re,shlex,stat,subprocess,sys,time,types,uuid
+ GUARD='cd1b0ce8abd1a69ec6c6dcc0b3c3ac79415ff00a0676187c48309bd5943a9ae2'
+-PROPOSAL='35e9bbbda83f78326ff868bf8183acc78456be7d268f8d6ac5548ae5567420bd'
++PROPOSAL='9b5b160facb9fcef0a8e38b957ead7b5203dd458af9aee7fff349ede3d416d90'
+ CURRENT='b6b7c4504ab02bc20c83f90688f9038ff9d118b616ed41f2c7db4eff59e53ff8'
+ RUNTIME='src/consensus_capella_runtime.cpp';HEADER='src/consensus_capella_startup_budget.hpp';TEST='tests/test_capella_startup_deadline.cpp';TARGET='nano-capella-startup-deadline-tests';PENDING='tests/test_capella_bootstrap_archive_cas.cpp'
+-OVERLAYS={'CMakeLists.txt':'011a0ab3df13134f3de51f5e2e94c01462860f221f844b491dcc37ba6a5a3ad5',RUNTIME:'8e6cb49a36978961a9413f2d0f40f67f4ae0d05287530d691ee25dc4f834ae63',HEADER:'a585e6a9ec051761772795155aec063eaf566a5036c86cab638899e700f2f228',TEST:'66bac2539b1a12ea0e7762d2d99a241c930ed10bd2d29d016cd08ff2ea4a045e',PENDING:'b3d5b0c1328ad563852df097e94f82f948eeb3bde022087b6ac101601b6bcb37'}
++OVERLAYS={'CMakeLists.txt':'011a0ab3df13134f3de51f5e2e94c01462860f221f844b491dcc37ba6a5a3ad5',RUNTIME:'8e6cb49a36978961a9413f2d0f40f67f4ae0d05287530d691ee25dc4f834ae63',HEADER:'a585e6a9ec051761772795155aec063eaf566a5036c86cab638899e700f2f228',TEST:'bf9cdddbafe1a704578605cf76faedf6320ddde1d515f4657c9ffa1d70dce117',PENDING:'b3d5b0c1328ad563852df097e94f82f948eeb3bde022087b6ac101601b6bcb37'}
+ CONSUMERS=['nano','nano-capella-bootstrap-startup-tests'];PROGRAMS=CONSUMERS+[TARGET]
+ def need(ok,why):
+  if not ok:raise ValueError(why)

@@ -1,0 +1,85 @@
+{
+  "backtraceGraph": {
+    "commands": [
+      "add_test"
+    ],
+    "files": [
+      "/work/CMakeLists.txt"
+    ],
+    "nodes": [
+      {
+        "file": 0
+      },
+      {
+        "command": 0,
+        "file": 0,
+        "line": 2098,
+        "parent": 0
+      },
+      {
+        "file": 0
+      },
+      {
+        "command": 0,
+        "file": 0,
+        "line": 2110,
+        "parent": 2
+      }
+    ]
+  },
+  "kind": "ctestInfo",
+  "tests": [
+    {
+      "backtrace": 1,
+      "command": [
+        "/outputs/nano-bootstrap-archive-maintenance-tests",
+        "--self-test"
+      ],
+      "name": "storage_capella_bootstrap_archive_owned_copies",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_bootstrap_maintenance"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 130.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/proof/ctest"
+        }
+      ]
+    },
+    {
+      "backtrace": 3,
+      "command": [
+        "/outputs/nano-bootstrap-readonly-replica-tests",
+        "--self-test"
+      ],
+      "name": "storage_capella_bootstrap_archive_readonly_replica",
+      "properties": [
+        {
+          "name": "LABELS",
+          "value": [
+            "qualification_consensus_bootstrap_maintenance"
+          ]
+        },
+        {
+          "name": "TIMEOUT",
+          "value": 70.0
+        },
+        {
+          "name": "WORKING_DIRECTORY",
+          "value": "/proof/ctest"
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 1,
+    "minor": 0
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "format": "nano-independent-static-readonly-replica-implementation-review-v1",
+  "status": "BLOCKED_ONE_MATERIAL_PATH_BINDING_FINDING",
+  "proposalSha256": "ec3d2746e388575f1ce3b366dbeac3cf122129e901266f1424a957a634492efa",
+  "sourceBindings": {
+    "cli": "4a53f54dc7784d2c64e218647291bd00932d1347bdd019fa1c0f24718e8bf359",
+    "replicaHeader": "40d61faedd832af733d2772a653046d1e98d13da5195bb0947a7d9c1af9cb4f1",
+    "tinyTest": "369dd5fd5f0d54407634d26d9911e69e52f0202bd3039c190f59727830c0d23e",
+    "cmake": "b336c1c4205e9c5663d828f26254bb85346bfc2b77fae68143eb52a5ab9742ca"
+  },
+  "publicSealsVerified": {
+    "sources": 4,
+    "baselineRepositoryCommit": "ae37c5ad561fc6a5b7750213ebea6b6303c7121d",
+    "twoModifiedGitBaselineShaBindingsChecked": true,
+    "manifestAndAncillaryHashSizeChecked": true
+  },
+  "closedStaticFindings": [
+    {
+      "history": "V3 cleanup null-root retry and physical alias ancestry",
+      "closure": "V4 guard refuses null-root incomplete cleanup; checks source-ancestor/output-leaf and output-ancestor/source-leaf identities without falsely rejecting siblings."
+    },
+    {
+      "history": "V4 caller output path and callback borrowed during capture",
+      "closure": "V5 state path uses owned parent.path; capture checkpoint copied by value before callbacks and State owns its copy. Tiny mutation of caller output and clearing caller callback is discriminating."
+    }
+  ],
+  "materialFinding": {
+    "priority": 1,
+    "file": "tools/storage-maintenance/bootstrap-readonly-replica.hpp",
+    "line": 172,
+    "title": "Rebind directories after callback-driven scans before exposing replica pathname",
+    "cause": "recheck() performs source.recheck and root_binding before two physical captures with callback, but has no directory-link validation after those callbacks. A callback can rename/substitute owned output parent during the source scan, leaving source and replica FD contents/stats unchanged while returned state.path resolves elsewhere.",
+    "requiredRepair": "After both same_entries captures, call state_->source.recheck() and state_->root_binding() without any callback afterward.",
+    "testIdea": "Arm a callback for an existing capability recheck; rename output parent and substitute its original pathname during source scan, require refusal, restore original parent binding before explicit cleanup. No real private DB is needed."
+  },
+  "otherGuardsReviewed": [
+    "Nofollow directory FD chains and regular nlink1 files, SHA and full sampled file/directory metadata before/copy/after, bounded entry/bytes/depth/chunks, exclusive private700/600 replica, fsync and no shared inode.",
+    "Cleanup validates created inode identities and removes only its recorded entries via held FD; failures prevent completion.",
+    "RO invariant and cold readers accept only capability and use independent replicas; pre pair closes/cleans before originals are opened RWExisting, post readers after each RW scope.",
+    "Two retained NEXT600 file and directory fsync before Pair/application remain in original order; original sources never opened RW; typed recovery and full transition authority unchanged.",
+    "Tiny idle open writer conformance reads only separate replica; no concurrent-writing/quiescence or powerloss qualification claimed."
+  ],
+  "historicalScope": "Previously observed13 maintenance rows per architecture are retained; they do not qualify the unsupported same-path concurrent RO branch found in pinned RocksDB contract. This proposal is uncompiled and untested.",
+  "compilerTestsDockerSshArExecutedByReviewer": false,
+  "privateInputsRead": false,
+  "repoOrFrozenSourcesChanged": false,
+  "privateCliApplied": false,
+  "productionQualified": false
+}

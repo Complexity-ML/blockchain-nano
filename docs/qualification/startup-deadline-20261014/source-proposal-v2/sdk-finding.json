@@ -1,0 +1,32 @@
+{
+  "format": "nano-startup-deadline-test-ro-lifetime-finding",
+  "sdkPath": "/opt/homebrew/include/rocksdb/db.h",
+  "sdkSha256": "d31da9d3b4db690e43842f78f6a2d2cc4a560cf5924b1d907155106fa56b4702",
+  "sdkBytes": 127531,
+  "lines": [
+    {
+      "line": 195,
+      "text": "  // While a given DB can be simultaneously opened via OpenForReadOnly"
+    },
+    {
+      "line": 196,
+      "text": "  // by any number of readers, if a DB is simultaneously opened by Open"
+    },
+    {
+      "line": 197,
+      "text": "  // and OpenForReadOnly, the read-only instance has undefined behavior"
+    },
+    {
+      "line": 198,
+      "text": "  // (though can often succeed if quickly closed) and the read-write"
+    },
+    {
+      "line": 199,
+      "text": "  // instance is unaffected. See also OpenAsSecondary."
+    }
+  ],
+  "priorTestSha256": "66bac2539b1a12ea0e7762d2d99a241c930ed10bd2d29d016cd08ff2ea4a045e",
+  "threeScopesOnly": true,
+  "noCompilerOrTestExecuted": true,
+  "productionUnchanged": true
+}

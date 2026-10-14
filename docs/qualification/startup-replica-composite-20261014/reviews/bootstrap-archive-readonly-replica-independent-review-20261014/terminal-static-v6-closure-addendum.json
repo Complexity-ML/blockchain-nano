@@ -1,0 +1,65 @@
+{
+  "format": "nano-independent-static-readonly-replica-v6-closure-addendum-v1",
+  "status": "NO_MATERIAL_STATIC_BLOCKER_FOUND",
+  "proposalSha256": "78a3e907bde06e43c05d79239297e261078cdcc2b8ed9d5fedae033b11cb22f8",
+  "priorIndependentReviewSha256": "71a337c650987688f1e9c9206626b7f681f717fbcbbd83322ecb8849f94a691e",
+  "sourceBindings": {
+    "tools/storage-maintenance/bootstrap-archive-owned-copies.cpp": {
+      "sha256": "4a53f54dc7784d2c64e218647291bd00932d1347bdd019fa1c0f24718e8bf359",
+      "bytes": 26689
+    },
+    "tools/storage-maintenance/bootstrap-readonly-replica.hpp": {
+      "sha256": "3869ef2b35871aca2baf2de7866553fdab0e1c2ff318da2345b34aa18d37510f",
+      "bytes": 16999
+    },
+    "tests/test_bootstrap_readonly_replica.cpp": {
+      "sha256": "afb622b75ee08dd745f003eda4f6215ac2be97ce77d880c261d2f3da27d88bbd",
+      "bytes": 9737
+    },
+    "CMakeLists.txt": {
+      "sha256": "b336c1c4205e9c5663d828f26254bb85346bfc2b77fae68143eb52a5ab9742ca",
+      "bytes": 160629
+    }
+  },
+  "staticFindingClosure": {
+    "finding": "V5 post-callback directory provenance",
+    "headerLine": 172,
+    "change": "Exactly source.recheck() and root_binding() appended after both callback-bearing full physical captures; no callback after these final link checks.",
+    "testLines": [
+      65,
+      66,
+      67
+    ],
+    "discriminant": "Existing capability callback performs actual output-parent rename and replacement during source scan. No source or replica bytes need change. Getter must refuse before pathname return/RO; explicit cleanup must refuse and leave scratch in renamed original tree and substituted sentinel intact.",
+    "testExecutionObservedByReviewer": false
+  },
+  "ownershipAndProtocolReviewed": [
+    "Factory checkpoint copied by value before first callback; source/output Directory paths copied before callback; state.path derived from owned parent.path, getters return values.",
+    "Nofollow held directory/file FD chains, exact SHA/full stable sampled metadata/whole sets, exclusive private700/600, no hardlinks/shared inodes, fsync; bounded entry/bytes/depth/chunks.",
+    "Physical ancestor/leaf inode guards; cleanup tracks only created identities and refuses incomplete/null-root retry.",
+    "All CLI RO logical/cold readers use sealed independent replicas; captures explicitly close/clean before operational Pair RWExisting and after each closed RW scope.",
+    "NEXT retention600 file+directory fsync order, primary/witness identity/pins, typed same-digest recovery and full signature transition unchanged.",
+    "Tiny remains two groups+summary, zero signatures; idle open writer source and physical sampling do not qualify concurrent writing or quiescence."
+  ],
+  "sourceSealsVerified": true,
+  "publicAncillarySealsVerified": true,
+  "cliAndCmakeByteIdenticalV5": true,
+  "headerDiffExactlyTwoPostCallbackBindingCalls": true,
+  "historicalTinyIdentityClarification": "Inherited manifest unchangedFromV3 tinytest bytes is treated as the V4 repair history, not terminal source identity; tiny actually changed in V5/V6 and the four literal source hashes above are authoritative.",
+  "requiredBeforeQualification": [
+    "Actual SDK/MD-bound CLI+tiny compilation and links on root-approved current runtime archive.",
+    "New replica CTest and all13 maintenance wrapper rows on the changed CLI."
+  ],
+  "stillOpen": [
+    "Privileged concurrent filesystem writers cannot be excluded by sampling.",
+    "Actual CLI interrupted WAL recovery.",
+    "Private sources/journal floors/backup/currentUTC/duties/common finality.",
+    "Native/install/runtime image and whole production qualification."
+  ],
+  "reviewWasStaticInternalNotExternalAudit": true,
+  "compilerTestsDockerSshArExecutedByReviewer": false,
+  "privateInputsRead": false,
+  "repoOrFrozenSourcesChanged": false,
+  "privateCliApplied": false,
+  "productionQualified": false
+}

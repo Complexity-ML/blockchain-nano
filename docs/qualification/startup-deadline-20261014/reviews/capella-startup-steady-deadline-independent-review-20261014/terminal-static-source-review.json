@@ -1,0 +1,52 @@
+{
+  "format": "nano-capella-startup-steady-deadline-independent-static-review-v1",
+  "createdAtUtc": "2026-10-14T00:07:48.352982+00:00",
+  "verdict": "NO_MATERIAL_STATIC_BLOCKER_FOUND_SOURCE_PROPOSAL_ONLY",
+  "reviewerRole": "Independent internal public source review; not an external security audit",
+  "bindings": {
+    "manifestSha256": "35e9bbbda83f78326ff868bf8183acc78456be7d268f8d6ac5548ae5567420bd",
+    "baselineRevision": "599dd39776ceab5d0bb16043613d69a8d48e5c4b",
+    "runtimeSha256": "8e6cb49a36978961a9413f2d0f40f67f4ae0d05287530d691ee25dc4f834ae63",
+    "privateHelperSha256": "a585e6a9ec051761772795155aec063eaf566a5036c86cab638899e700f2f228",
+    "testSha256": "66bac2539b1a12ea0e7762d2d99a241c930ed10bd2d29d016cd08ff2ea4a045e",
+    "cmakeSha256": "011a0ab3df13134f3de51f5e2e94c01462860f221f844b491dcc37ba6a5a3ad5",
+    "patchSha256": "bbc82af92e1e9aa47a630d349b0f70947bc6915dfcc8124a4a2b6e39fa272358"
+  },
+  "seals": {
+    "twoModifiedBaselineFilesShaMatchGitShow": true,
+    "tenProtectedBaselineFilesShaSizeMatchGitShow": true,
+    "publicRuntimeHeaderUnchanged": true,
+    "manifestPayloadCount": 9,
+    "allManifestPayloadsShaSizeMatch": true
+  },
+  "checked": [
+    "Steady start observation is first runtime action, before owning config copy. Optional max parsed as positive canonical uint64 and checked against representable steady duration before callbacks/profile I/O.",
+    "Immutable owned config and copied std::function caller live in owned shared State; callback wrapper captures shared State by value, with deleted Budget copy/assignment. Runtime public signature/header unchanged.",
+    "Unsigned elapsed tick difference avoids signed subtraction overflow after monotonic order checks; representability checked, typed Deadline at exact boundary, regression/overflow distinct.",
+    "Checks occur before/after startup caller callbacks; original cancellation categories propagate. No catch maps unrelated errors into deadline, no consensus/rule/UTC/genesis/floor/trust-policy changes.",
+    "Absent max installs no implicit deadline and does not read helper injected steady source or add finish callback. Valid legacy ordinary callbacks retained; malformed clock shape is deliberately validated earlier.",
+    "Final finish checks active bounded startup then closes before clock/duty workers start. RAII close also disables copies on unwind. Future wrapper calls return without invoking old startup caller or steady source.",
+    "Actual cold records retain cache/fetch and receive lease callbacks at call time; no claim that they necessarily retain this budget. Shared ownership is safe for any copied wrapper. Returned public read and runtime workers use ordinary per-operation callbacks.",
+    "Synchronous budget is threaded through public proof preparation, reactor recovery/initial/migration, registry/key startup checks, startup catch-up and initial poll; no permanent deadline capture in worker clock/signer logic.",
+    "Five source-only test groups plus summary: boundary/range/invalidconfig/legacy, config ownership and typed cancellation, genuine steady runtime expiry, genuine published prefix with oracle and current two-token cold reopen, retained wrapper lifetime plus two runtime returns/cold/public read after real deadline.",
+    "Prefix test preserves actual current durable raw snapshot and witness with old pin refusal, not rollback. No new signature/key/private fixture reads; validators absent in returned test runtimes and no private journal-floor qualification claimed.",
+    "New CMake test only70s with explicit60s/128MiB test bounds. Existing startup tests must relink/requalify on changed runtime archive; no old CAS/pending PASS transferred."
+  ],
+  "limits": [
+    "Source proposal only; no compilation or CTest pass has been established by this review.",
+    "Deadline is cooperative: configuration reading in main and prior Blockchain construction are outside runtime scope; blocking syscalls/callbacks require outer operator watchdog. No administrative downtime budget selected or expanded.",
+    "Helper scope is synchronous startup before workers; this is not a proof of general concurrent callback ordering or stop-the-world interruption.",
+    "Current UTC, long-downtime recovery, actual private floors/owned copies, duties, network/common finality, whole backup/power loss and production remain unqualified."
+  ],
+  "reviewCorrection": "An earlier short message suggested actual cold leases retain startup guard. Exact source inspection shows cache/fetch retention with operation callback at call time; final scope states only shared wrapper safety and targeted post-handoff read test.",
+  "activity": {
+    "compilerCommands": 0,
+    "testCommands": 0,
+    "dockerCommands": 0,
+    "sshCommands": 0,
+    "controllerImports": 0,
+    "privateReads": 0,
+    "repoWrites": 0,
+    "productionQualified": false
+  }
+}

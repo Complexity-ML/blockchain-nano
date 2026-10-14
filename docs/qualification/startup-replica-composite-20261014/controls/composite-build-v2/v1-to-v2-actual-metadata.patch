@@ -1,0 +1,35 @@
+--- a/build-replica-new-deadline-root-only.py
++++ b/build-replica-new-deadline-root-only.py
+@@ -115,6 +115,9 @@
+  try:
+   for n,f in inputs.items():before[n]=write_owned(source/n,derived) if n=='CMakeLists.txt' else cp(f,source/n)
+   m.save(receipts/'source-before.json',before);m.save(receipts/'parents-before.json',protected);m.save(receipts/'derived-cmake.json',{'baseSha256':BASECM,'deadlineRegistrationSha256':DEADLINEREG,'replicaRegistrationSha256':REPLICAREG,'sha256':sha(derived),'bytes':len(derived),'order':'base+LF+deadline+LF+replica'})
++  image_argv=p['dockerArgv']+['image','inspect','--format','{{json .}}',p['image']];m.save(receipts/'image-inspect.command.json',{'argv':image_argv,'timeoutSeconds':20})
++  with (receipts/'image-inspect.log').open('xb',buffering=0) as log:image_result=subprocess.run(image_argv,stdout=log,stderr=subprocess.STDOUT,env=env,timeout=20)
++  m.save(receipts/'image-inspect.exit.json',{'exitCode':image_result.returncode,'timedOut':False});need(image_result.returncode==0,'actual pinned image inspection');image=json.loads((receipts/'image-inspect.log').read_bytes());need(image['Id']==p['image'] and image['Architecture']==arch and image['Os']=='linux' and not any(x.split('=',1)[0].startswith(('NANO_','LD_','DYLD_')) for x in image.get('Config',{}).get('Env',[])),'existing pinned image without injected environment')
+   run('configure',['/usr/bin/cmake','-S','/work','-B','/outputs','-G','Unix Makefiles','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_C_COMPILER=/usr/bin/clang','-DCMAKE_CXX_COMPILER=/usr/bin/clang++','-DMCL_PORTABLE=ON','-DCMAKE_EXPORT_COMPILE_COMMANDS=ON'],120)
+   cc=json.loads((build/'compile_commands.json').read_bytes());now={key(r):r for r in cc};need(len(now)==len(old)+1 and all(now.get(k)==r for k,r in old.items()),'all parent argv unchanged; tiny sole addition')
+   for bound,targets in [(d,['nano_core',*DEADTARGETS]),(v,OLDTARGETS)]:
+@@ -125,7 +128,12 @@
+   copies['libnano_core.a']=cp(db/'libnano_core.a',build/'libnano_core.a')
+   for n in dt['programs']:copies[n]=cp(db/n,build/n)
+   for n in dt['consumerObjects']:copies[n]=cp(db/n,build/n)
+-  for target,(obj,deps) in reuse.items():copies[obj]=cp(mb/obj,build/obj)
++  reused_md={}
++  for target,(obj,deps) in reuse.items():
++   copies[obj]=cp(mb/obj,build/obj)
++   for n in (obj+'.d','preflight/'+obj+'.d'):copies[n]=cp(mb/n,build/n)
++   reused_md[target]={'object':obj,'actualMdOrigin':str(mb/(obj+'.d')),'actualMdSha256':copies[obj+'.d']['sha256'],'preflightMdOrigin':str(mb/'preflight'/(obj+'.d')),'preflightMdSha256':copies['preflight/'+obj+'.d']['sha256'],'newMdGenerated':False,'dependencies':sorted(deps)}
++  m.save(receipts/'reused-md-provenance.json',{'maintenanceTerminalSha256':a.maintenance_terminal_sha,'maintenanceMetadataSha256':a.maintenance_metadata_sha,'objects':reused_md})
+   so='lib'+SHIM+'.so';copies[so]=cp(mb/so,build/so)
+   for n in p['libraries']:copies[n]=cp(db/n,build/n)
+   for n,z in p['generated'].items():pin(build/n,z['sha256'],z['bytes']);copies[n]=m.observed(build/n,arch)
+@@ -157,7 +165,7 @@
+   for n,z in {**copies,**fresh,**programs,**generated_metadata}.items():same(build/n,z)
+   for path,z in workers.items():same(path,z)
+   m.save(receipts/'parents-after.json',protected);m.save(receipts/'ctime-diagnostics.json',diagnostics)
+-  result={'format':'nano-bootstrap-readonly-replica-deadline-composite-build-terminal-v1','status':'BUILD_PASS_REPLICA_AND_WRAPPER_TESTS_NOT_EXECUTED','arch':arch,'controllerSha256':a.controller_sha,'guardSha256':GUARD,'parentPlanSha256':a.parent_plan_sha,'deadlineTerminalSha256':a.deadline_terminal_sha,'deadlineMetadataSha256':a.deadline_metadata_sha,'maintenanceTerminalSha256':a.maintenance_terminal_sha,'maintenanceMetadataSha256':a.maintenance_metadata_sha,'proposalSha256':PROPOSAL,'sourceFiles':1324,'derivedCmakeSha256':sha(derived),'coreObjectsCompiled':0,'coreObjectsByteCopied':142,'archiveMembers':142,'archive':copies['libnano_core.a'],'archiveConstructionCommandsExecuted':0,'actualRawMemberProofVerified':True,'objectsCompiled':compiled,'objectsReused':{obj:copies[obj] for obj,_ in reuse.values()},'objects':{units[x][0]:fresh[units[x][0]] for x in units},'links':linked,'programs':programs,'shim':copies[so],'newDeadlineProgramsPreserved':{n:copies[n] for n in dt['programs']},'oldCompilerCommandsUnchanged':True,'allActualMdEqualPreflight':True,'sourceSdkLibrariesGeneratedAndParentsUnchanged':True,'testsExecuted':0,'privateInputsRead':False,'runtimeStarted':False,'productionQualified':False}
++  result={'format':'nano-bootstrap-readonly-replica-deadline-composite-build-terminal-v1','status':'BUILD_PASS_REPLICA_AND_WRAPPER_TESTS_NOT_EXECUTED','arch':arch,'controllerSha256':a.controller_sha,'guardSha256':GUARD,'parentPlanSha256':a.parent_plan_sha,'deadlineTerminalSha256':a.deadline_terminal_sha,'deadlineMetadataSha256':a.deadline_metadata_sha,'maintenanceTerminalSha256':a.maintenance_terminal_sha,'maintenanceMetadataSha256':a.maintenance_metadata_sha,'proposalSha256':PROPOSAL,'sourceFiles':1324,'derivedCmakeSha256':sha(derived),'coreObjectsCompiled':0,'coreObjectsByteCopied':142,'archiveMembers':142,'archive':copies['libnano_core.a'],'archiveConstructionCommandsExecuted':0,'actualRawMemberProofVerified':True,'archiveVerificationCommandsExecuted':1+len(actual),'reusedMdCopiedWithHistoricalProvenance':True,'objectsCompiled':compiled,'objectsReused':{obj:copies[obj] for obj,_ in reuse.values()},'objects':{units[x][0]:fresh[units[x][0]] for x in units},'links':linked,'programs':programs,'shim':copies[so],'newDeadlineProgramsPreserved':{n:copies[n] for n in dt['programs']},'oldCompilerCommandsUnchanged':True,'allActualMdEqualPreflight':True,'sourceSdkLibrariesGeneratedAndParentsUnchanged':True,'testsExecuted':0,'privateInputsRead':False,'runtimeStarted':False,'productionQualified':False}
+  except BaseException as e:
+   failed=type(e).__name__+': '+str(e);result={'format':'nano-bootstrap-readonly-replica-deadline-composite-build-terminal-v1','status':'BUILD_FAILED_NO_AUTOMATIC_RETRY','arch':arch,'failure':failed,'consumerCompilerCommandsCompleted':compiled,'linksCompleted':linked,'coreObjectsCompiled':0,'archiveConstructionCommandsExecuted':0,'testsExecuted':0,'privateInputsRead':False,'runtimeStarted':False,'productionQualified':False}
+   try:

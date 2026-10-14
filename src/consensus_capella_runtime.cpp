@@ -1,6 +1,7 @@
 #include "nano/consensus_capella_runtime.hpp"
 #include "nano/consensus_capella_bootstrap_input.hpp"
 #include "nano/local_monotonic_time.hpp"
+#include "consensus_capella_startup_budget.hpp"
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
@@ -35,8 +36,20 @@ std::string read_bounded(const std::filesystem::path& path,size_t maximum,const 
 struct Owner {InboundBudget decoder_budget;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;std::unique_ptr<CapellaLocalClock> clock;std::unique_ptr<CapellaValidatorLoop> validator;std::unique_ptr<CapellaConsensusService> admission;std::unique_ptr<CapellaInventorySessions> catalogs;};
 }
 CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,const std::function<void()>& checkpoint,std::function<uint64_t()> now){
+ const auto startup_started=std::chrono::steady_clock::now();
  // Preserve a single startup configuration across cancellable file reads.
  const Json config=config_input;
+ // Own configuration and validate the optional elapsed budget before file I/O.
+ // Absence preserves the legacy unbounded startup policy; it grants no downtime.
+ std::optional<uint64_t> maximum_startup_elapsed;
+ if(config.is_object()&&config.contains("clock")){
+  const auto& clock=config.at("clock");auto fields=clock;
+  fields.erase("maximumWallClockDriftMs");fields.erase("startupCatchup");fields.erase("maximumStartupElapsedMs");
+  shape(fields,{"intervalMs","maximumForwardStepMs"});
+  if(clock.contains("maximumStartupElapsedMs"))maximum_startup_elapsed=number(clock.at("maximumStartupElapsedMs"));
+ }
+ capella_detail::CapellaStartupBudget startup_budget(maximum_startup_elapsed,checkpoint,startup_started,[]{return std::chrono::steady_clock::now();});
+ const std::function<void()> startup_check=startup_budget.checkpoint();
  // Diagnostic stage timing contains no configuration or key material. It is
  // enabled only by the existing private-network trace flag and cannot fail boot.
  const char* startup_trace=std::getenv("NANO_TEST_NETWORK_TRACE");
@@ -52,11 +65,11 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
   }catch(...){} // Telemetry never substitutes for validation or controls startup.
  };
  stage("validate-input");
- if(checkpoint)checkpoint();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("bootstrapArchive");base.erase("bootstrapArchiveRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");base.erase("fragmentCheckpointMigration");base.erase("coldCheckpoint");shape(base,{"profile","limits","initial","restart","clock"});
+ if(startup_check)startup_check();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("bootstrapArchive");base.erase("bootstrapArchiveRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");base.erase("fragmentCheckpointMigration");base.erase("coldCheckpoint");shape(base,{"profile","limits","initial","restart","clock"});
  const auto& genesis=chain.genesis();
  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
- const auto rules=load_capella_fork_profile(read_bounded(p.at("file").get<std::string>(),maximum,checkpoint),digest(p.at("sha256")),maximum);
+ const auto rules=load_capella_fork_profile(read_bounded(p.at("file").get<std::string>(),maximum,startup_check),digest(p.at("sha256")),maximum);
  if(rules.transition.chain_id!=genesis.chain_id||rules.transition.replay_policy!=ReplayPolicy::RequireChainId)throw std::invalid_argument("Capella network requires matching chain ID and protected transactions");
  const auto& l=config.at("limits");shape(l,{"envelopeBytes","blocks","messages","equivocations","stateBytes","totalStateBytes","replaySlots","syncTrials"});
  const CapellaStoreSnapshotLimits limits{number(l.at("envelopeBytes")),number(l.at("blocks")),number(l.at("messages")),number(l.at("equivocations")),number(l.at("stateBytes")),number(l.at("totalStateBytes")),number(l.at("replaySlots")),number(l.at("syncTrials"))};
@@ -67,7 +80,7 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
   cold_checkpoint=CapellaColdCheckpointOptions{number(cold.at("cacheRecords")),number(cold.at("cacheEncodedBytes"))};
   if(cold_checkpoint->cache_records>limits.blocks||cold_checkpoint->cache_bytes>limits.envelope_bytes)throw std::invalid_argument("Capella cold cache exceeds configured budget");
  }
- const auto& c=config.at("clock");auto clock_fields=c;clock_fields.erase("maximumWallClockDriftMs");clock_fields.erase("startupCatchup");shape(clock_fields,{"intervalMs","maximumForwardStepMs"});const auto interval=number(c.at("intervalMs")),step=number(c.at("maximumForwardStepMs"));
+ const auto& c=config.at("clock");auto clock_fields=c;clock_fields.erase("maximumWallClockDriftMs");clock_fields.erase("startupCatchup");clock_fields.erase("maximumStartupElapsedMs");shape(clock_fields,{"intervalMs","maximumForwardStepMs"});const auto interval=number(c.at("intervalMs")),step=number(c.at("maximumForwardStepMs"));
  std::optional<std::pair<uint64_t,uint64_t>> startup_catchup;
  if(c.contains("startupCatchup")){
   const auto& recovery=c.at("startupCatchup");shape(recovery,{"maximumDowntimeMs","maximumSteps"});
@@ -121,9 +134,9 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
   shape(primary,{"sequence","digest"});shape(witness,{"sequence","digest"});
   archive_next_primary=ForkCheckpointToken{number(primary.at("sequence")),digest(primary.at("digest"))};
   archive_next_witness=ForkCheckpointToken{number(witness.at("sequence")),digest(witness.at("digest"))};
-  archive_proof.emplace(load_capella_signed_bootstrap_proof(genesis,rules,limits,a.at("authority"),checkpoint));
+  archive_proof.emplace(load_capella_signed_bootstrap_proof(genesis,rules,limits,a.at("authority"),startup_check));
  }else if(fresh_archive){
-  archive_proof.emplace(load_capella_signed_bootstrap_proof(genesis,rules,limits,config.at("bootstrapArchive"),checkpoint));
+  archive_proof.emplace(load_capella_signed_bootstrap_proof(genesis,rules,limits,config.at("bootstrapArchive"),startup_check));
  }
  auto owner=std::make_shared<Owner>();std::set<std::filesystem::path> paths;
  if(witnessed){
@@ -146,18 +159,18 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
  stage("reactor-recovery");
  if(recover){
   if(archive_recovery){
-   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,std::move(*archive_proof),*archive_next_primary,*archive_next_witness,checkpoint);
-  }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,checkpoint,recovery_commitment);
+   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,std::move(*archive_proof),*archive_next_primary,*archive_next_witness,startup_check);
+  }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,*owner->witness,startup_check,recovery_commitment);
  }else if(restart){
   const auto& r=config.at("restart");shape(r,{"sequence","digest"});const ForkCheckpointToken token{number(r.at("sequence")),digest(r.at("digest"))};
-  owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,token,checkpoint);
+  owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,token,startup_check);
  }else{
   if(chain.store().fork_checkpoint(genesis.chain_id,genesis.block.header.hash(),limits.envelope_bytes))throw std::invalid_argument("Existing Capella checkpoint requires explicit restart token");
   const auto& a=config.at("initial");shape(a,{"file","sha256"});
-  auto initial=capella_store_from_snapshot(read_bounded(a.at("file").get<std::string>(),limits.envelope_bytes,checkpoint),digest(a.at("sha256")),rules,limits,checkpoint);
+  auto initial=capella_store_from_snapshot(read_bounded(a.at("file").get<std::string>(),limits.envelope_bytes,startup_check),digest(a.at("sha256")),rules,limits,startup_check);
   if(fresh_archive){
-   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),std::move(*archive_proof),*owner->witness,checkpoint);
-  }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),checkpoint,owner->witness.get());
+   owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),std::move(*archive_proof),*owner->witness,startup_check);
+  }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),startup_check,owner->witness.get());
  }
  stage("checkpoint-migration");
  if(config.contains("automaticPruning")&&!config.at("automaticPruning").is_boolean())throw std::invalid_argument("Capella automaticPruning must be boolean");
@@ -165,8 +178,8 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
  if(config.contains("historicalStatePruning")&&!config.at("historicalStatePruning").is_boolean())throw std::invalid_argument("Capella historicalStatePruning must be boolean");
  owner->reactor->set_historical_state_pruning(config.value("historicalStatePruning",false));
  if(config.contains("fragmentCheckpointMigration")&&!config.at("fragmentCheckpointMigration").is_boolean())throw std::invalid_argument("Capella fragmentCheckpointMigration must be boolean");
- if(config.value("fragmentCheckpointMigration",false))owner->reactor->migrate_fragment_checkpoint(checkpoint);
- if(cold_checkpoint)owner->reactor->migrate_reference_checkpoint(*cold_checkpoint,checkpoint);
+ if(config.value("fragmentCheckpointMigration",false))owner->reactor->migrate_fragment_checkpoint(startup_check);
+ if(cold_checkpoint)owner->reactor->migrate_reference_checkpoint(*cold_checkpoint,startup_check);
  if(wall_drift){
   auto time=std::make_shared<LocalMonotonicTime>(*wall_drift,std::move(now));
   now=[time](){return time->now();};
@@ -208,13 +221,13 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
    }
   };
   struct JournalOwner {std::unique_ptr<ChainStore> witness;std::unique_ptr<ChainStore> disk;std::unique_ptr<BeaconSigningJournal> journal;};
-  const auto current=owner->reactor->current();const auto& anchor=current.state->blocks.at(current.state->timed.view.anchor).lease(checkpoint)->state.ssz;
+  const auto current=owner->reactor->current();const auto& anchor=current.state->blocks.at(current.state->timed.view.anchor).lease(startup_check)->state.ssz;
   if(anchor.size()<40)throw std::invalid_argument("Missing authenticated validators genesis");ConsensusRoot validators_genesis{};std::copy_n(anchor.begin()+8,32,validators_genesis.begin());
-  const auto head_pin=capella_fork_head(*current.state,rules,checkpoint);const auto& head=*head_pin;
-  const auto registry=capella_fork_block_context(head.state,head.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state,checkpoint).registry;
+  const auto head_pin=capella_fork_head(*current.state,rules,startup_check);const auto& head=*head_pin;
+  const auto registry=capella_fork_block_context(head.state,head.header,{rules.transition.consensus.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},rules.transition.consensus.state,startup_check).registry;
   std::vector<CapellaValidatorKey> keys;std::set<std::string> public_keys;
   for(const auto& k:v.at("keys")){
-   if(checkpoint)checkpoint();auto fields=k;fields.erase("recoveryWitness");shape(fields,{"index","feeRecipient","keyEnv","journal","restart"});
+   if(startup_check)startup_check();auto fields=k;fields.erase("recoveryWitness");shape(fields,{"index","feeRecipient","keyEnv","journal","restart"});
    const bool automatic_index=k.at("index").is_null();uint64_t index=0;
    if(!automatic_index){if(!k.at("index").is_string())throw std::invalid_argument("Validator index quantity");index=u64(quantity(k.at("index")));if(quantity(Int(std::to_string(index)))!=k.at("index").get<std::string>())throw std::invalid_argument("Validator index encoding");}
    const auto fee=address(k.at("feeRecipient").get<std::string>()),env=k.at("keyEnv").get<std::string>();
@@ -245,9 +258,12 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
  // Authenticate all configured signing journals before recovery publishes new
  // durable clock state. No duty thread starts until the catch-up is complete.
  stage("clock-catchup");
- if(startup_catchup){auto recovered=owner->clock->startup_catch_up(startup_catchup->first,startup_catchup->second,checkpoint);recovered["event"]="capella-startup-catchup-completed";std::cout<<recovered.dump()<<std::endl;}
+ if(startup_catchup){auto recovered=owner->clock->startup_catch_up(startup_catchup->first,startup_catchup->second,startup_check);recovered["event"]="capella-startup-catchup-completed";std::cout<<recovered.dump()<<std::endl;}
  stage("initial-clock-poll");
- owner->clock->poll(checkpoint);chain.require_execution_ready();
+ owner->clock->poll(startup_check);chain.require_execution_ready();
+ // The elapsed budget and caller checkpoint belong only to synchronous startup.
+ // Disarm every retained copy BEFORE any duty/clock worker can execute.
+ startup_budget.finish();
  stage("duty-workers");
  if(owner->validator)owner->validator->start(std::chrono::milliseconds(validator_poll));
  owner->clock->start(std::chrono::milliseconds(interval));

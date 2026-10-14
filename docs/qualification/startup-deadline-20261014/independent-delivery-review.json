@@ -1,0 +1,96 @@
+{
+  "format": "nano-independent-public-startup-deadline-delivery-review-v1",
+  "status": "NO_MATERIAL_PUBLIC_DELIVERY_BLOCKER_FOUND",
+  "manifestSha256": "50fe3fde3a2bfbbf82054aca27a78214e3bf6adc6d81fd5d3a122404512032d8",
+  "baselineGitCommit": "ae37c5ad561fc6a5b7750213ebea6b6303c7121d",
+  "payloads": 73,
+  "payloadBytes": 1261765,
+  "exactManifestTreeHashSizeOriginRegularNlinkOneVerified": true,
+  "sourceBindings": {
+    "src/consensus_capella_runtime.cpp": {
+      "sha256": "8e6cb49a36978961a9413f2d0f40f67f4ae0d05287530d691ee25dc4f834ae63",
+      "compiledExactBytes": true
+    },
+    "src/consensus_capella_startup_budget.hpp": {
+      "sha256": "a585e6a9ec051761772795155aec063eaf566a5036c86cab638899e700f2f228",
+      "compiledExactBytes": true
+    },
+    "tests/test_capella_startup_deadline.cpp": {
+      "sha256": "bf9cdddbafe1a704578605cf76faedf6320ddde1d515f4657c9ffa1d70dce117",
+      "compiledExactBytes": true
+    },
+    "CMakeLists.txt": {
+      "sha256": "a2abd5869041658a0aefd8bb6bbcc35ae55689b90d35a88e133bdbb690ced70b",
+      "bytes": 160567,
+      "compiledExactBytes": false,
+      "exactDerivation": "ae37 base d0b160051 + LF + qualified registration515",
+      "compiledCmakeSha256": "011a0ab3df13134f3de51f5e2e94c01462860f221f844b491dcc37ba6a5a3ad5",
+      "mergedMetadataConfigureQualified": false
+    }
+  },
+  "actualResultsChecked": {
+    "arm64": {
+      "buildTerminalSha256": "f94dc2e207ed69db1170d9772477c6139e9924f0ce0686f8ab2c80f5ca3ae506",
+      "testTerminalSha256": "d3ae199ff205aebb91ec9402472881f0b964cc5c7034676076f78810ffa9e1f6",
+      "testcases": 2,
+      "namedCasesOrGroups": 11,
+      "summaryRows": 2,
+      "noSkip": true,
+      "ctestElapsedSeconds": 5.763915332965553,
+      "deadlineElapsedMs": 5285,
+      "deadlineRssKiB": 23764
+    },
+    "amd64": {
+      "buildTerminalSha256": "ee35976510525abd54182cb187a480e6d8991ccfcc0588c312162553b91c1e29",
+      "testTerminalSha256": "01afa3bc262f583b5f5024afe82249b6773c6d5dbed0c04a2c2a02197fbf245e",
+      "testcases": 2,
+      "namedCasesOrGroups": 11,
+      "summaryRows": 2,
+      "noSkip": true,
+      "ctestElapsedSeconds": 7.0976360689383,
+      "deadlineElapsedMs": 5802,
+      "deadlineRssKiB": 25600
+    }
+  },
+  "actualEvidenceCrossbinding": [
+    "CTest logs parse to the exact13 scenario rows per architecture; actual JUnit contains only the2 run/noSkip successful tests.",
+    "Both test terminal build/metadata SHA match public actual build/ROOT captures; ROOT records all22 metadata and terminal readbacks unchanged.",
+    "Source1319 runtime1 fresh+141 reused/current raw142 member hashes and sizes equal corresponding142 object records; main/startup reuse plus new deadline and3links distinguished.",
+    "Two synthetic deadline runtime returns, zero new signatures; exact boundary/cancellation/config ownership/expiration/durable current pins/handoff rows checked; no private floor or currentUTC claim.",
+    "AMD explicit public8 payload allowlist transfer SHA/size verified locally; no additional raw private proof included."
+  ],
+  "documentPreservation": {
+    "wholeHistoricalGitBodies": 4,
+    "prefixBytes": [
+      1834,
+      528,
+      528,
+      528
+    ],
+    "prefixPlusOriginalExpectedShaAndBytesChecked": true,
+    "csvPath": "docs/EIP-IMPLEMENTATION-STATUS.csv",
+    "csvSha256": "371663637bccd58bc817f11b6f51bf264691235a5424e1ff3011f22a9be64283",
+    "csvBytes": 11281,
+    "csvCurrentAndGitBaselineEqual": true,
+    "eipMatrixOrCriteriaPromoted": false
+  },
+  "historicalScopePreserved": [
+    "Old source/controllerV1 never executed: static GO does not become a compiler/test PASS or failure.",
+    "Three unsupported same-path RO/RW test scopes repaired before first build; pinned native/ARM RocksDB warning and earlier review correction preserved.",
+    "Historical13 maintenance PASS per architecture retained, while concurrent RO gate remains open pending new CLI qualification."
+  ],
+  "privacyAndScope": [
+    "Allowlist contains public code/controllers/manifests/build-object/SDK metadata and synthetic test output only; no keys, DB contents, binaries, env payload, real capsules, real recovery request/token/hash or four private proofs.",
+    "No additional grants or clock reset;2h/60 administrative limit and expired operational recovery remain separate.",
+    "CurrentUTC/private sources/journals/floors/whole backup/duties/common finality/native/install/runtime images/CI billing/external audit/whole production remain open.",
+    "No unchanged CAS/pending/maintenance/network suite results promoted to this new runtime lot."
+  ],
+  "noRetryEvidence": "Single bounded CTest batch per provided architecture receipt/controller; broader absence of ROOT retries is explicitly ROOT-reported, not inferred from static review.",
+  "reviewMethodCorrection": "Incorrect lookup preservation.json was corrected to the manifested document-preservation.json; no package mutation or source fault inferred.",
+  "concreteBlockers": [],
+  "reviewWasInternalNotExternalSecurityAudit": true,
+  "compilerTestsDockerSshArExecutedByReviewer": false,
+  "privateInputsRead": false,
+  "repoOrFrozenPackageChanged": false,
+  "productionQualified": false
+}

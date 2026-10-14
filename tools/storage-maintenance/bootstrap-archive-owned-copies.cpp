@@ -5,6 +5,7 @@
 #include "nano/consensus_capella_reactor.hpp"
 #include "nano/consensus_beacon_header.hpp"
 #include "rocksdb-owned-copy.hpp"
+#include "bootstrap-readonly-replica.hpp"
 #include <rocksdb/db.h>
 #include <openssl/evp.h>
 #include <algorithm>
@@ -122,10 +123,18 @@ struct Hash{
  void frame(const rocksdb::Slice& s){std::array<unsigned char,8> n{};uint64_t z=s.size();for(unsigned i=0;i<8;++i)n[7-i]=uint8_t(z>>(8*i));io(EVP_DigestUpdate(c.get(),n.data(),n.size())==1&&EVP_DigestUpdate(c.get(),s.data(),s.size())==1);}
  std::string finish(){Bytes out(32);unsigned n=0;io(EVP_DigestFinal_ex(c.get(),out.data(),&n)==1&&n==32);return hex(out).substr(2);}
 };
-std::string invariant(const fs::path& p,const std::set<std::string>& allowed,const Budget& b,const std::function<void()>& check){
- rocksdb::Options o;o.create_if_missing=false;o.paranoid_checks=true;auto db=nano::maintenance::open_read_only_copy(o,p.string());rocksdb::ReadOptions r;r.verify_checksums=true;r.fill_cache=false;std::unique_ptr<rocksdb::Iterator> it(db->NewIterator(r));Hash h;uint64_t records=0,bytes=0;
- for(it->SeekToFirst();it->Valid();it->Next()){check();require(records<b.records);++records;require(it->key().size()<=UINT64_MAX-it->value().size());const uint64_t n=it->key().size()+it->value().size();require(bytes<=b.logical&&n<=b.logical-bytes);bytes+=n;if(!allowed.contains(it->key().ToString())){h.frame(it->key());h.frame(it->value());}}io(it->status().ok());return h.finish();
+std::string invariant(const nano::maintenance::SealedReadonlyReplica& replica,const std::set<std::string>& allowed,const Budget& b,const std::function<void()>& check){
+ const auto p=replica.read_only_path();rocksdb::Options o;o.create_if_missing=false;o.paranoid_checks=true;auto db=nano::maintenance::open_read_only_copy(o,p.string());rocksdb::ReadOptions r;r.verify_checksums=true;r.fill_cache=false;std::unique_ptr<rocksdb::Iterator> it(db->NewIterator(r));Hash h;uint64_t records=0,bytes=0;
+ for(it->SeekToFirst();it->Valid();it->Next()){check();require(records<b.records);++records;require(it->key().size()<=UINT64_MAX-it->value().size());const uint64_t n=it->key().size()+it->value().size();require(bytes<=b.logical&&n<=b.logical-bytes);bytes+=n;if(!allowed.contains(it->key().ToString())){h.frame(it->key());h.frame(it->value());}}io(it->status().ok());it.reset();db.reset();replica.recheck();return h.finish();
 }
+// No public path can stand in for a sealed RO capability. These captures are
+// closed and explicitly cleaned before the next exclusive operational Pair.
+struct ReadonlyPair{
+ nano::maintenance::SealedReadonlyReplica p,w;
+ ReadonlyPair(const Copies& copies,const Output& out,const Budget& b,const std::function<void()>& check):p(nano::maintenance::SealedReadonlyReplica::capture(copies.p.p,out.p,b.files,b.physical,check)),w(nano::maintenance::SealedReadonlyReplica::capture(copies.w.p,out.p,b.files,b.physical,check)){}
+ void recheck()const{p.recheck();w.recheck();}
+ void close(){p.close();w.close();}
+};
 void stopped(const Json& s,const Copies& c){shape(s,{"format","scope","allWritersStopped","allReadersStopped","stoppedAtMs","copies"});require(s.at("format")=="nano-stopped-checkpoint-copy-receipt-v1"&&s.at("scope")=="isolated-owned-copies"&&s.at("allWritersStopped").is_boolean()&&s.at("allReadersStopped").is_boolean()&&s.at("allWritersStopped")==true&&s.at("allReadersStopped")==true);quantity_u64(s.at("stoppedAtMs"));require(s.at("copies").is_array()&&s.at("copies").size()==2);unsigned i=0;for(const auto* role:{"primary","witness"}){const auto& x=s.at("copies")[i];const auto& v=i++?c.w:c.p;shape(x,{"role","path","inventorySha256","sourcePath","sourceInventorySha256"});require(x.at("role")==role&&x.at("path")==v.p.string()&&x.at("sourcePath")==v.source.string()&&x.at("inventorySha256")==v.inventory&&x.at("sourceInventorySha256")==v.source_inventory);}}
 struct Pair{
  std::unique_ptr<Blockchain> owner;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;
@@ -151,28 +160,29 @@ int run(int argc,char** argv){
  stage="owned-stopped-copies";Copies copies(store(request.at("primary")),store(request.at("witness")),b,check);stopped(si.json(),copies);for(const auto* a:{&gi,&pi,&si,&input})copies.outside(a->p);for(const auto* kind:{"genesisState","signedBlock"})copies.outside(path(request.at("authority").at(kind).at("path")));
  Output out(path(Json(argv[4])),copies);out.write("operation-intent.json",Json{{"format","nano-bootstrap-maintenance-operation-intent-v1"},{"operation",op},{"requestSha256",input.sha},{"currentPrimary",encoded(copies.p.pin)},{"currentWitness",encoded(copies.w.pin)}});
  const std::set<std::string> primary_allowed{"fork-checkpoint/v1/token","checkpoint-archive/v1/"+root,"checkpoint-archive-slot/v1/0x0000000000000001/"+root};const std::set<std::string> witness_allowed{"fork-checkpoint/v1/token","fork-checkpoint/v1/payload"};
- std::array<std::string,2> hashes{invariant(copies.p.p,primary_allowed,b,check),invariant(copies.w.p,witness_allowed,b,check)};
+ auto pre=std::make_unique<ReadonlyPair>(copies,out,b,check);std::array<std::string,2> hashes{invariant(pre->p,primary_allowed,b,check),invariant(pre->w,witness_allowed,b,check)};
  std::unique_ptr<Input> pfile,wfile;Json rp,rw;ForkCheckpointToken np=copies.p.pin,nw=copies.w.pin;bool work=false;
  if(op=="plan")copies.initial();else{
   stage="retained-two-commitments";pfile=std::make_unique<Input>(path(Json(argv[5])),sha_text(Json(argv[6])),65536,check);wfile=std::make_unique<Input>(path(Json(argv[7])),sha_text(Json(argv[8])),65536,check);pfile->private_receipt();wfile->private_receipt();copies.outside(pfile->p);copies.outside(wfile->p);require(pfile->p!=wfile->p);rp=pfile->json();rw=wfile->json();retained_shape(rp,"primary",input.sha,copies);retained_shape(rw,"witness",input.sha,copies);auto x=rp,y=rw;x.erase("role");x.erase("next");y.erase("role");y.erase("next");require(x==y);np=token(rp.at("next"));nw=token(rw.at("next"));work=rp.at("hasWork").get<bool>();retained_relation(work,copies.p.pin,copies.w.pin,np,nw);require(rp.at("invariants")==Json::array({hashes[0],hashes[1]}));if(op=="apply"){const auto prepared=copies.inventories();require(rp.at("preparedInventories")==Json::array({prepared[0],prepared[1]}));}else require(work);
  }
  stage="pre-publication-retention";input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);copies.original_sources();if(pfile){pfile->recheck(check);wfile->recheck(check);out.write("primary-next.json",rp);out.write("witness-next.json",rw);}
+ pre->recheck();pre->close();pre.reset();
  stage="reconstructed-process-local-plan";
  {Pair pair(copies,g,rules,limits,proof,check,op=="recover",np,nw);
   if(op!="recover"){
    auto plan=pair.reactor->prepare_bootstrap_archive(proof,copies.p.pin,copies.w.pin,check);if(op=="plan"){work=plan.has_work();np=plan.next_primary();nw=plan.next_witness();}else{require(work==plan.has_work()&&np==plan.next_primary()&&nw==plan.next_witness());input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);pfile->recheck(check);wfile->recheck(check);copies.original_sources();stage="explicit-archive-publication";const auto result=pair.reactor->apply_bootstrap_archive(std::move(plan),check);require(result.published==work&&result.primary==np&&result.witness==nw);}
   }else require(pair.reactor->current().token==np);
  }
- stage="closed-cold-readback";copies.original_sources();require(invariant(copies.p.p,primary_allowed,b,check)==hashes[0]&&invariant(copies.w.p,witness_allowed,b,check)==hashes[1]);
- {ChainStore p(copies.p.p,ChainStore::OpenMode::ReadOnly),w(copies.w.p,ChainStore::OpenMode::ReadOnly);p.require_existing_chain_binding(g.chain_id,g.block.header.hash(),g.consensus,g.staking_contract);w.require_existing_chain_binding(g.chain_id,g.block.header.hash(),"nano-capella-recovery-v1");const auto a=p.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,op=="plan"?copies.p.pin:np);const auto z=w.fork_checkpoint(g.chain_id,g.block.header.hash(),2048+8*limits.envelope_bytes,op=="plan"?copies.w.pin:nw);require(a&&z);if(op!="plan"){
+ stage="closed-cold-readback";copies.original_sources();{ReadonlyPair post(copies,out,b,check);require(invariant(post.p,primary_allowed,b,check)==hashes[0]&&invariant(post.w,witness_allowed,b,check)==hashes[1]);
+ {ChainStore p(post.p.read_only_path(),ChainStore::OpenMode::ReadOnly),w(post.w.read_only_path(),ChainStore::OpenMode::ReadOnly);p.require_existing_chain_binding(g.chain_id,g.block.header.hash(),g.consensus,g.staking_contract);w.require_existing_chain_binding(g.chain_id,g.block.header.hash(),"nano-capella-recovery-v1");const auto a=p.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,op=="plan"?copies.p.pin:np);const auto z=w.fork_checkpoint(g.chain_id,g.block.header.hash(),2048+8*limits.envelope_bytes,op=="plan"?copies.w.pin:nw);require(a&&z);if(op!="plan"){
    const auto archive=p.checkpoint_archive(Bytes(anchor.begin(),anchor.end()),limits.envelope_bytes);require(archive&&archive->slot==1&&archive->payload==wire);
-  }}
+  }}post.recheck();post.close();}
  if(op!="plan"){
   // Reconstruct through typed recovery once more to verify the archive/index,
   // coupled tip/receipts and independently read cold/fragment references.
   Pair reopened(copies,g,rules,limits,proof,check,work,np,nw);require(reopened.reactor->current().token==np);const auto noop=reopened.reactor->prepare_bootstrap_archive(proof,np,nw,check);require(!noop.has_work());
  }
- input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);if(pfile){pfile->recheck(check);wfile->recheck(check);}copies.original_sources();require(invariant(copies.p.p,primary_allowed,b,check)==hashes[0]&&invariant(copies.w.p,witness_allowed,b,check)==hashes[1]);const auto inv=copies.inventories();
+ input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);if(pfile){pfile->recheck(check);wfile->recheck(check);}copies.original_sources();{ReadonlyPair final(copies,out,b,check);require(invariant(final.p,primary_allowed,b,check)==hashes[0]&&invariant(final.w,witness_allowed,b,check)==hashes[1]);final.recheck();final.close();}const auto inv=copies.inventories();
  stage="independent-private-receipts";retained_relation(work,copies.p.pin,copies.w.pin,np,nw);if(op=="plan"){
   out.write("primary-next.json",retained("primary",input.sha,copies,work,np,hashes,inv));out.write("witness-next.json",retained("witness",input.sha,copies,work,nw,hashes,inv));
  }

@@ -1,0 +1,25 @@
+--- a/tools/storage-maintenance/bootstrap-readonly-replica.hpp
++++ b/tools/storage-maintenance/bootstrap-readonly-replica.hpp
+@@ -169,7 +169,7 @@
+  need(same_entries(state->source_entries,readonly_replica_detail::capture(state->source.fd(),maximum_entries,maximum_bytes,checkpoint)));state->sealed_entries=readonly_replica_detail::capture(state->root->n,maximum_entries,maximum_bytes,checkpoint);need(same_contents(state->source_entries,state->sealed_entries));SealedReadonlyReplica result(std::move(state));result.recheck();return result;
+ }
+ inline void SealedReadonlyReplica::recheck()const{
+- using namespace readonly_replica_detail;need(bool(state_)&&!state_->closed);state_->source.recheck();state_->root_binding();need(same_entries(state_->source_entries,readonly_replica_detail::capture(state_->source.fd(),state_->maximum_entries,state_->maximum_bytes,state_->checkpoint)));need(same_entries(state_->sealed_entries,readonly_replica_detail::capture(state_->root->n,state_->maximum_entries,state_->maximum_bytes,state_->checkpoint)));
++ using namespace readonly_replica_detail;need(bool(state_)&&!state_->closed);state_->source.recheck();state_->root_binding();need(same_entries(state_->source_entries,readonly_replica_detail::capture(state_->source.fd(),state_->maximum_entries,state_->maximum_bytes,state_->checkpoint)));need(same_entries(state_->sealed_entries,readonly_replica_detail::capture(state_->root->n,state_->maximum_entries,state_->maximum_bytes,state_->checkpoint)));state_->source.recheck();state_->root_binding();
+ }
+ inline std::filesystem::path SealedReadonlyReplica::read_only_path()const{recheck();return state_->path;}
+ inline void SealedReadonlyReplica::close(){readonly_replica_detail::need(bool(state_));readonly_replica_detail::need(state_->cleanup());}
+--- a/tests/test_bootstrap_readonly_replica.cpp
++++ b/tests/test_bootstrap_readonly_replica.cpp
+@@ -62,7 +62,10 @@
+  // A copied path is returned by value; changing its file cannot mutate the
+  // sealed certificate. Rechecking it must refuse rather than ignore changes.
+  auto replica=SealedReadonlyReplica::capture(source,out,32,1024*1024,checkpoint);const auto path=replica.read_only_path();change(path/"payload");rejected=false;try{replica.recheck();}catch(const std::invalid_argument&){rejected=true;}require(rejected,"replica content mutation refused");replica.close();require(!fs::exists(path)&&scratch_count(out)==0&&fs::is_regular_file(out/"unrelated-sentinel"),"mutation cleanup only owned scratch");
+- emit("maintenance-readonly-replica-content-mutation-refusals",{{"sourceMutationBeforeSealRefused",true},{"mutatedReplicaReadbackRefused",true},{"databaseReadOnlyOpensInThisGroup",0},{"protocolWritesInThisGroup",0},{"explicitCleanupObserved",true}});
++ bool armed=false,rebound_parent=false;const auto renamed=root/"renamed-owned-output";const std::function<void()> rebind=[&]{checkpoint();if(armed&&!rebound_parent){require(::rename(out.c_str(),renamed.c_str())==0,"actual owned output parent rename");directory(out);save(out/"substituted-parent-sentinel","preserved");rebound_parent=true;}};
++ auto substitutable=SealedReadonlyReplica::capture(source,out,32,1024*1024,rebind);const auto original_path=substitutable.read_only_path();armed=true;bool path_returned=false;rejected=false;try{(void)substitutable.read_only_path();path_returned=true;}catch(const std::invalid_argument&){rejected=true;}
++ require(rebound_parent&&rejected&&!path_returned&&fs::is_regular_file(out/"substituted-parent-sentinel")&&fs::exists(renamed/original_path.filename()),"callback parent substitution must refuse before a pathname is returned");bool cleanup_refused=false;try{substitutable.close();}catch(const std::invalid_argument&){cleanup_refused=true;}require(cleanup_refused&&fs::is_regular_file(out/"substituted-parent-sentinel")&&fs::exists(renamed/original_path.filename()),"incomplete cleanup refuses and never deletes substituted parent");
++ emit("maintenance-readonly-replica-content-mutation-refusals",{{"sourceMutationBeforeSealRefused",true},{"mutatedReplicaReadbackRefused",true},{"parentRenameSubstitutionDuringRecheckRefused",true},{"substitutedParentNeverDeleted",true},{"cleanupIncompleteRefused",true},{"databaseReadOnlyOpensInThisGroup",0},{"protocolWritesInThisGroup",0},{"successfulCleanupObservedBeforeSubstitution",true}});
+ }
+ }
+ int main(int argc,char** argv){try{require(argc==2&&std::string(argv[1])=="--self-test","usage --self-test");Temp temp;conformance(temp.path);mutations(temp.path);checkpoint();emit("bootstrap-readonly-replica-self-test",{{"groups",2},{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"runtimeStarted",false},{"networkUsed",false},{"physicalPowerLossQualified",false}});return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -1,0 +1,332 @@
+--- a/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp
++++ b/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp
+@@ -5,6 +5,7 @@
+ #include "nano/consensus_capella_reactor.hpp"
+ #include "nano/consensus_beacon_header.hpp"
+ #include "rocksdb-owned-copy.hpp"
++#include "bootstrap-readonly-replica.hpp"
+ #include <rocksdb/db.h>
+ #include <openssl/evp.h>
+ #include <algorithm>
+@@ -122,10 +123,18 @@
+  void frame(const rocksdb::Slice& s){std::array<unsigned char,8> n{};uint64_t z=s.size();for(unsigned i=0;i<8;++i)n[7-i]=uint8_t(z>>(8*i));io(EVP_DigestUpdate(c.get(),n.data(),n.size())==1&&EVP_DigestUpdate(c.get(),s.data(),s.size())==1);}
+  std::string finish(){Bytes out(32);unsigned n=0;io(EVP_DigestFinal_ex(c.get(),out.data(),&n)==1&&n==32);return hex(out).substr(2);}
+ };
+-std::string invariant(const fs::path& p,const std::set<std::string>& allowed,const Budget& b,const std::function<void()>& check){
+- rocksdb::Options o;o.create_if_missing=false;o.paranoid_checks=true;auto db=nano::maintenance::open_read_only_copy(o,p.string());rocksdb::ReadOptions r;r.verify_checksums=true;r.fill_cache=false;std::unique_ptr<rocksdb::Iterator> it(db->NewIterator(r));Hash h;uint64_t records=0,bytes=0;
+- for(it->SeekToFirst();it->Valid();it->Next()){check();require(records<b.records);++records;require(it->key().size()<=UINT64_MAX-it->value().size());const uint64_t n=it->key().size()+it->value().size();require(bytes<=b.logical&&n<=b.logical-bytes);bytes+=n;if(!allowed.contains(it->key().ToString())){h.frame(it->key());h.frame(it->value());}}io(it->status().ok());return h.finish();
++std::string invariant(const nano::maintenance::SealedReadonlyReplica& replica,const std::set<std::string>& allowed,const Budget& b,const std::function<void()>& check){
++ const auto p=replica.read_only_path();rocksdb::Options o;o.create_if_missing=false;o.paranoid_checks=true;auto db=nano::maintenance::open_read_only_copy(o,p.string());rocksdb::ReadOptions r;r.verify_checksums=true;r.fill_cache=false;std::unique_ptr<rocksdb::Iterator> it(db->NewIterator(r));Hash h;uint64_t records=0,bytes=0;
++ for(it->SeekToFirst();it->Valid();it->Next()){check();require(records<b.records);++records;require(it->key().size()<=UINT64_MAX-it->value().size());const uint64_t n=it->key().size()+it->value().size();require(bytes<=b.logical&&n<=b.logical-bytes);bytes+=n;if(!allowed.contains(it->key().ToString())){h.frame(it->key());h.frame(it->value());}}io(it->status().ok());it.reset();db.reset();replica.recheck();return h.finish();
+ }
++// No public path can stand in for a sealed RO capability. These captures are
++// closed and explicitly cleaned before the next exclusive operational Pair.
++struct ReadonlyPair{
++ nano::maintenance::SealedReadonlyReplica p,w;
++ ReadonlyPair(const Copies& copies,const Output& out,const Budget& b,const std::function<void()>& check):p(nano::maintenance::SealedReadonlyReplica::capture(copies.p.p,out.p,b.files,b.physical,check)),w(nano::maintenance::SealedReadonlyReplica::capture(copies.w.p,out.p,b.files,b.physical,check)){}
++ void recheck()const{p.recheck();w.recheck();}
++ void close(){p.close();w.close();}
++};
+ void stopped(const Json& s,const Copies& c){shape(s,{"format","scope","allWritersStopped","allReadersStopped","stoppedAtMs","copies"});require(s.at("format")=="nano-stopped-checkpoint-copy-receipt-v1"&&s.at("scope")=="isolated-owned-copies"&&s.at("allWritersStopped").is_boolean()&&s.at("allReadersStopped").is_boolean()&&s.at("allWritersStopped")==true&&s.at("allReadersStopped")==true);quantity_u64(s.at("stoppedAtMs"));require(s.at("copies").is_array()&&s.at("copies").size()==2);unsigned i=0;for(const auto* role:{"primary","witness"}){const auto& x=s.at("copies")[i];const auto& v=i++?c.w:c.p;shape(x,{"role","path","inventorySha256","sourcePath","sourceInventorySha256"});require(x.at("role")==role&&x.at("path")==v.p.string()&&x.at("sourcePath")==v.source.string()&&x.at("inventorySha256")==v.inventory&&x.at("sourceInventorySha256")==v.source_inventory);}}
+ struct Pair{
+  std::unique_ptr<Blockchain> owner;std::unique_ptr<ChainStore> witness;std::unique_ptr<CapellaDurableReactor> reactor;
+@@ -151,28 +160,29 @@
+  stage="owned-stopped-copies";Copies copies(store(request.at("primary")),store(request.at("witness")),b,check);stopped(si.json(),copies);for(const auto* a:{&gi,&pi,&si,&input})copies.outside(a->p);for(const auto* kind:{"genesisState","signedBlock"})copies.outside(path(request.at("authority").at(kind).at("path")));
+  Output out(path(Json(argv[4])),copies);out.write("operation-intent.json",Json{{"format","nano-bootstrap-maintenance-operation-intent-v1"},{"operation",op},{"requestSha256",input.sha},{"currentPrimary",encoded(copies.p.pin)},{"currentWitness",encoded(copies.w.pin)}});
+  const std::set<std::string> primary_allowed{"fork-checkpoint/v1/token","checkpoint-archive/v1/"+root,"checkpoint-archive-slot/v1/0x0000000000000001/"+root};const std::set<std::string> witness_allowed{"fork-checkpoint/v1/token","fork-checkpoint/v1/payload"};
+- std::array<std::string,2> hashes{invariant(copies.p.p,primary_allowed,b,check),invariant(copies.w.p,witness_allowed,b,check)};
++ auto pre=std::make_unique<ReadonlyPair>(copies,out,b,check);std::array<std::string,2> hashes{invariant(pre->p,primary_allowed,b,check),invariant(pre->w,witness_allowed,b,check)};
+  std::unique_ptr<Input> pfile,wfile;Json rp,rw;ForkCheckpointToken np=copies.p.pin,nw=copies.w.pin;bool work=false;
+  if(op=="plan")copies.initial();else{
+   stage="retained-two-commitments";pfile=std::make_unique<Input>(path(Json(argv[5])),sha_text(Json(argv[6])),65536,check);wfile=std::make_unique<Input>(path(Json(argv[7])),sha_text(Json(argv[8])),65536,check);pfile->private_receipt();wfile->private_receipt();copies.outside(pfile->p);copies.outside(wfile->p);require(pfile->p!=wfile->p);rp=pfile->json();rw=wfile->json();retained_shape(rp,"primary",input.sha,copies);retained_shape(rw,"witness",input.sha,copies);auto x=rp,y=rw;x.erase("role");x.erase("next");y.erase("role");y.erase("next");require(x==y);np=token(rp.at("next"));nw=token(rw.at("next"));work=rp.at("hasWork").get<bool>();retained_relation(work,copies.p.pin,copies.w.pin,np,nw);require(rp.at("invariants")==Json::array({hashes[0],hashes[1]}));if(op=="apply"){const auto prepared=copies.inventories();require(rp.at("preparedInventories")==Json::array({prepared[0],prepared[1]}));}else require(work);
+  }
+  stage="pre-publication-retention";input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);copies.original_sources();if(pfile){pfile->recheck(check);wfile->recheck(check);out.write("primary-next.json",rp);out.write("witness-next.json",rw);}
++ pre->recheck();pre->close();pre.reset();
+  stage="reconstructed-process-local-plan";
+  {Pair pair(copies,g,rules,limits,proof,check,op=="recover",np,nw);
+   if(op!="recover"){
+    auto plan=pair.reactor->prepare_bootstrap_archive(proof,copies.p.pin,copies.w.pin,check);if(op=="plan"){work=plan.has_work();np=plan.next_primary();nw=plan.next_witness();}else{require(work==plan.has_work()&&np==plan.next_primary()&&nw==plan.next_witness());input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);pfile->recheck(check);wfile->recheck(check);copies.original_sources();stage="explicit-archive-publication";const auto result=pair.reactor->apply_bootstrap_archive(std::move(plan),check);require(result.published==work&&result.primary==np&&result.witness==nw);}
+   }else require(pair.reactor->current().token==np);
+  }
+- stage="closed-cold-readback";copies.original_sources();require(invariant(copies.p.p,primary_allowed,b,check)==hashes[0]&&invariant(copies.w.p,witness_allowed,b,check)==hashes[1]);
+- {ChainStore p(copies.p.p,ChainStore::OpenMode::ReadOnly),w(copies.w.p,ChainStore::OpenMode::ReadOnly);p.require_existing_chain_binding(g.chain_id,g.block.header.hash(),g.consensus,g.staking_contract);w.require_existing_chain_binding(g.chain_id,g.block.header.hash(),"nano-capella-recovery-v1");const auto a=p.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,op=="plan"?copies.p.pin:np);const auto z=w.fork_checkpoint(g.chain_id,g.block.header.hash(),2048+8*limits.envelope_bytes,op=="plan"?copies.w.pin:nw);require(a&&z);if(op!="plan"){
++ stage="closed-cold-readback";copies.original_sources();{ReadonlyPair post(copies,out,b,check);require(invariant(post.p,primary_allowed,b,check)==hashes[0]&&invariant(post.w,witness_allowed,b,check)==hashes[1]);
++ {ChainStore p(post.p.read_only_path(),ChainStore::OpenMode::ReadOnly),w(post.w.read_only_path(),ChainStore::OpenMode::ReadOnly);p.require_existing_chain_binding(g.chain_id,g.block.header.hash(),g.consensus,g.staking_contract);w.require_existing_chain_binding(g.chain_id,g.block.header.hash(),"nano-capella-recovery-v1");const auto a=p.fork_checkpoint(g.chain_id,g.block.header.hash(),limits.envelope_bytes,op=="plan"?copies.p.pin:np);const auto z=w.fork_checkpoint(g.chain_id,g.block.header.hash(),2048+8*limits.envelope_bytes,op=="plan"?copies.w.pin:nw);require(a&&z);if(op!="plan"){
+    const auto archive=p.checkpoint_archive(Bytes(anchor.begin(),anchor.end()),limits.envelope_bytes);require(archive&&archive->slot==1&&archive->payload==wire);
+-  }}
++  }}post.recheck();post.close();}
+  if(op!="plan"){
+   // Reconstruct through typed recovery once more to verify the archive/index,
+   // coupled tip/receipts and independently read cold/fragment references.
+   Pair reopened(copies,g,rules,limits,proof,check,work,np,nw);require(reopened.reactor->current().token==np);const auto noop=reopened.reactor->prepare_bootstrap_archive(proof,np,nw,check);require(!noop.has_work());
+  }
+- input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);if(pfile){pfile->recheck(check);wfile->recheck(check);}copies.original_sources();require(invariant(copies.p.p,primary_allowed,b,check)==hashes[0]&&invariant(copies.w.p,witness_allowed,b,check)==hashes[1]);const auto inv=copies.inventories();
++ input.recheck(check);gi.recheck(check);pi.recheck(check);si.recheck(check);if(pfile){pfile->recheck(check);wfile->recheck(check);}copies.original_sources();{ReadonlyPair final(copies,out,b,check);require(invariant(final.p,primary_allowed,b,check)==hashes[0]&&invariant(final.w,witness_allowed,b,check)==hashes[1]);final.recheck();final.close();}const auto inv=copies.inventories();
+  stage="independent-private-receipts";retained_relation(work,copies.p.pin,copies.w.pin,np,nw);if(op=="plan"){
+   out.write("primary-next.json",retained("primary",input.sha,copies,work,np,hashes,inv));out.write("witness-next.json",retained("witness",input.sha,copies,work,nw,hashes,inv));
+  }
+--- /dev/null
++++ b/tools/storage-maintenance/bootstrap-readonly-replica.hpp
+@@ -0,0 +1,176 @@
++#pragma once
++// Private maintenance capability. Never opens a source DB or promotes a copy
++// into protocol authority. RO readers may use only a sealed independent tree.
++#include <openssl/evp.h>
++#include <openssl/rand.h>
++#include <algorithm>
++#include <array>
++#include <cerrno>
++#include <cstddef>
++#include <cstdint>
++#include <dirent.h>
++#include <fcntl.h>
++#include <filesystem>
++#include <functional>
++#include <memory>
++#include <stdexcept>
++#include <string>
++#include <sys/stat.h>
++#include <unistd.h>
++#include <utility>
++#include <vector>
++namespace nano::maintenance {
++namespace readonly_replica_detail {
++namespace fs=std::filesystem;
++inline void need(bool ok){if(!ok)throw std::invalid_argument("Readonly replica refused");}
++inline void io(bool ok){if(!ok)throw std::runtime_error("Readonly replica I/O refused");}
++struct Fd{
++ int n=-1;explicit Fd(int fd):n(fd){io(n>=0);}~Fd(){if(n>=0)::close(n);}
++ Fd(const Fd&)=delete;Fd& operator=(const Fd&)=delete;
++ Fd(Fd&& x)noexcept:n(x.n){x.n=-1;}
++};
++inline bool identity(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_mode==b.st_mode&&a.st_nlink==b.st_nlink;}
++inline bool directory_identity(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_mode==b.st_mode;}
++inline bool stable(const struct stat& a,const struct stat& b){
++#ifdef __APPLE__
++ const bool times=a.st_mtimespec.tv_sec==b.st_mtimespec.tv_sec&&a.st_mtimespec.tv_nsec==b.st_mtimespec.tv_nsec&&a.st_ctimespec.tv_sec==b.st_ctimespec.tv_sec&&a.st_ctimespec.tv_nsec==b.st_ctimespec.tv_nsec;
++#else
++ const bool times=a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
++#endif
++ return identity(a,b)&&a.st_size==b.st_size&&times;
++}
++inline std::string hexadecimal(const unsigned char* p,size_t n){std::string out;out.reserve(2*n);for(size_t i=0;i<n;++i){out.push_back("0123456789abcdef"[p[i]>>4]);out.push_back("0123456789abcdef"[p[i]&15]);}return out;}
++struct Hash{
++ std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)> c{EVP_MD_CTX_new(),EVP_MD_CTX_free};
++ Hash(){io(bool(c)&&EVP_DigestInit_ex(c.get(),EVP_sha256(),nullptr)==1);}
++ void add(const void* p,size_t n){io(EVP_DigestUpdate(c.get(),p,n)==1);}
++ std::string finish(){std::array<unsigned char,32> out{};unsigned n=0;io(EVP_DigestFinal_ex(c.get(),out.data(),&n)==1&&n==32);return hexadecimal(out.data(),out.size());}
++};
++inline void sync(int fd){int n;do{n=::fsync(fd);}while(n<0&&errno==EINTR);io(n==0);}
++inline void check(const std::function<void()>& f){if(f)f();}
++struct Directory{
++ fs::path path;std::vector<Fd> chain;std::vector<std::string> names;std::vector<struct stat> stamps;
++ explicit Directory(fs::path p):path(std::move(p)){
++  need(path.is_absolute()&&path==path.lexically_normal()&&path.string().size()<=4096&&path.string().find('\0')==std::string::npos&&path!=path.root_path());
++  chain.emplace_back(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));names.emplace_back();struct stat root{};io(::fstat(chain.back().n,&root)==0);stamps.push_back(root);
++  for(const auto& component:path.relative_path()){
++   const auto name=component.string();need(!name.empty()&&name!="."&&name!="..");
++   chain.emplace_back(::openat(chain.back().n,name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));names.push_back(name);struct stat s{};io(::fstat(chain.back().n,&s)==0);stamps.push_back(s);
++  }
++  const auto& leaf=stamps.back();need(S_ISDIR(leaf.st_mode)&&leaf.st_uid==::geteuid()&&(leaf.st_mode&0777)==0700);recheck();
++ }
++ int fd()const{return chain.back().n;}
++ void recheck()const{
++  for(size_t i=1;i<chain.size();++i){struct stat a{},b{};io(::fstat(chain[i].n,&a)==0&&::fstatat(chain[i-1].n,names[i].c_str(),&b,AT_SYMLINK_NOFOLLOW)==0);need(directory_identity(stamps[i],a)&&directory_identity(stamps[i],b));}
++ }
++};
++struct Entry{std::string name;struct stat stamp{};std::string sha;};
++inline Fd relative_fd(int root,const fs::path& relative,int leaf_flags){
++ need(!relative.empty()&&!relative.is_absolute()&&relative==relative.lexically_normal());Fd at(::openat(root,".",O_RDONLY|O_DIRECTORY|O_CLOEXEC));
++ for(const auto& component:relative.parent_path()){
++  const auto name=component.string();need(name!="."&&name!=".."&&!name.empty());
++  Fd next(::openat(at.n,name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));std::swap(at.n,next.n);
++ }
++ return Fd(::openat(at.n,relative.filename().c_str(),leaf_flags|O_NOFOLLOW|O_CLOEXEC));
++}
++inline Fd relative_parent(int root,const fs::path& relative){
++ if(relative.parent_path().empty())return Fd(::openat(root,".",O_RDONLY|O_DIRECTORY|O_CLOEXEC));
++ return relative_fd(root,relative.parent_path(),O_RDONLY|O_DIRECTORY);
++}
++inline std::string file_hash(int fd,const struct stat& expected,const std::function<void()>& checkpoint){
++ struct stat before{},after{};io(::fstat(fd,&before)==0);need(stable(expected,before)&&S_ISREG(before.st_mode)&&before.st_nlink==1&&before.st_size>=0);
++ Hash hash;std::array<unsigned char,65536> buffer{};uint64_t at=0;
++ while(at<uint64_t(before.st_size)){check(checkpoint);const size_t count=size_t(std::min<uint64_t>(buffer.size(),uint64_t(before.st_size)-at));const auto n=::pread(fd,buffer.data(),count,off_t(at));if(n<0&&errno==EINTR)continue;io(n>0);hash.add(buffer.data(),size_t(n));at+=uint64_t(n);}
++ check(checkpoint);io(::fstat(fd,&after)==0);need(stable(before,after));return hash.finish();
++}
++inline void scan(int dir,const std::string& prefix,uint64_t maximum_entries,uint64_t maximum_bytes,
++                 uint64_t& total,std::vector<Entry>& out,const std::function<void()>& checkpoint,size_t depth=0){
++ need(depth<=128);check(checkpoint);struct stat before{},after{};io(::fstat(dir,&before)==0);need(S_ISDIR(before.st_mode)&&before.st_uid==::geteuid()&&(before.st_mode&0022)==0);
++ if(prefix.empty())out.push_back({"",before,{}});
++ Fd listing(::openat(dir,".",O_RDONLY|O_DIRECTORY|O_CLOEXEC));DIR* raw=::fdopendir(listing.n);io(raw!=nullptr);listing.n=-1;std::unique_ptr<DIR,decltype(&::closedir)> owned(raw,&::closedir);std::vector<std::string> names;
++ for(;;){check(checkpoint);errno=0;auto* entry=::readdir(owned.get());if(!entry){io(errno==0);break;}std::string name(entry->d_name);if(name=="."||name=="..")continue;need(names.size()<maximum_entries&&name.find('/')==std::string::npos);names.push_back(std::move(name));}
++ std::sort(names.begin(),names.end());
++ for(const auto& name:names){
++  check(checkpoint);need(out.size()-1<maximum_entries);struct stat s{};io(::fstatat(dir,name.c_str(),&s,AT_SYMLINK_NOFOLLOW)==0);need(s.st_uid==::geteuid()&&(s.st_mode&0022)==0&&(S_ISDIR(s.st_mode)||S_ISREG(s.st_mode)));
++  const auto relative=prefix.empty()?name:prefix+"/"+name;need(relative.size()<=4096);const size_t index=out.size();out.push_back({relative,s,{}});
++  Fd leaf(::openat(dir,name.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC|(S_ISDIR(s.st_mode)?O_DIRECTORY:0)));struct stat held{},linked{};io(::fstat(leaf.n,&held)==0&&::fstatat(dir,name.c_str(),&linked,AT_SYMLINK_NOFOLLOW)==0);need(stable(s,held)&&stable(s,linked));
++  if(S_ISDIR(s.st_mode))scan(leaf.n,relative,maximum_entries,maximum_bytes,total,out,checkpoint,depth+1);
++  else{need(s.st_nlink==1&&s.st_size>=0&&uint64_t(s.st_size)<=maximum_bytes-total);total+=uint64_t(s.st_size);out[index].sha=file_hash(leaf.n,s,checkpoint);}
++  io(::fstat(leaf.n,&held)==0&&::fstatat(dir,name.c_str(),&linked,AT_SYMLINK_NOFOLLOW)==0);need(stable(s,held)&&stable(s,linked));
++ }
++ io(::fstat(dir,&after)==0);need(stable(before,after));
++}
++inline std::vector<Entry> capture(int root,uint64_t maximum_entries,uint64_t maximum_bytes,const std::function<void()>& checkpoint){
++ need(maximum_entries&&maximum_bytes);uint64_t total=0;std::vector<Entry> entries;scan(root,"",maximum_entries,maximum_bytes,total,entries,checkpoint);return entries;
++}
++inline bool same_entries(const std::vector<Entry>& a,const std::vector<Entry>& b){if(a.size()!=b.size())return false;for(size_t i=0;i<a.size();++i)if(a[i].name!=b[i].name||a[i].sha!=b[i].sha||!stable(a[i].stamp,b[i].stamp))return false;return true;}
++inline bool same_contents(const std::vector<Entry>& source,const std::vector<Entry>& copied){
++ if(source.size()!=copied.size())return false;
++ for(size_t i=0;i<source.size();++i){const auto& a=source[i];const auto& b=copied[i];if(a.name!=b.name||a.sha!=b.sha||S_ISDIR(a.stamp.st_mode)!=S_ISDIR(b.stamp.st_mode))return false;
++  if(a.stamp.st_dev==b.stamp.st_dev&&a.stamp.st_ino==b.stamp.st_ino)return false;
++  if(S_ISREG(a.stamp.st_mode)&&(a.stamp.st_size!=b.stamp.st_size||(b.stamp.st_mode&0777)!=0600||b.stamp.st_nlink!=1))return false;
++  if(S_ISDIR(b.stamp.st_mode)&&(b.stamp.st_mode&0777)!=0700)return false;
++ }
++ return true;
++}
++} // readonly_replica_detail
++class SealedReadonlyReplica{
++ struct State;
++ std::unique_ptr<State> state_;
++ explicit SealedReadonlyReplica(std::unique_ptr<State> state);
++public:
++ SealedReadonlyReplica(const SealedReadonlyReplica&)=delete;SealedReadonlyReplica& operator=(const SealedReadonlyReplica&)=delete;
++ SealedReadonlyReplica(SealedReadonlyReplica&&)noexcept;
++ ~SealedReadonlyReplica();
++ static SealedReadonlyReplica capture(const std::filesystem::path& source,const std::filesystem::path& owned_output,
++  uint64_t maximum_entries,uint64_t maximum_bytes,std::function<void()> checkpoint={});
++ std::filesystem::path read_only_path()const;
++ void recheck()const;
++ void close();
++};
++struct SealedReadonlyReplica::State{
++ using Entry=readonly_replica_detail::Entry;
++ readonly_replica_detail::Directory source,parent;
++ std::string leaf;std::filesystem::path path;std::unique_ptr<readonly_replica_detail::Fd> root;
++ struct stat created{};uint64_t maximum_entries,maximum_bytes;std::function<void()> checkpoint;
++ std::vector<Entry> source_entries,sealed_entries,created_entries;bool closed=false;
++ State(const std::filesystem::path& from,const std::filesystem::path& output,uint64_t entries,uint64_t bytes,std::function<void()> check):source(from),parent(output),maximum_entries(entries),maximum_bytes(bytes),checkpoint(std::move(check)){}
++ void root_binding()const{using namespace readonly_replica_detail;parent.recheck();struct stat held{},linked{};io(::fstat(root->n,&held)==0&&::fstatat(parent.fd(),leaf.c_str(),&linked,AT_SYMLINK_NOFOLLOW)==0);need(directory_identity(created,held)&&directory_identity(created,linked));}
++ bool cleanup()noexcept{
++  if(closed)return true;
++  if(!root)return leaf.empty();
++  try{using namespace readonly_replica_detail;root_binding();
++   // Check every owned inode before the first unlink; no discovery/deletion of
++   // names which this capture did not create. Never follow a substituted path.
++   for(const auto& e:created_entries){auto at=relative_parent(root->n,std::filesystem::path(e.name));struct stat now{};io(::fstatat(at.n,std::filesystem::path(e.name).filename().c_str(),&now,AT_SYMLINK_NOFOLLOW)==0);need(directory_identity(e.stamp,now)&&(!S_ISREG(now.st_mode)||now.st_nlink==1));}
++   for(auto it=created_entries.rbegin();it!=created_entries.rend();++it){auto at=relative_parent(root->n,std::filesystem::path(it->name));struct stat now{};io(::fstatat(at.n,std::filesystem::path(it->name).filename().c_str(),&now,AT_SYMLINK_NOFOLLOW)==0);need(directory_identity(it->stamp,now));io(::unlinkat(at.n,std::filesystem::path(it->name).filename().c_str(),S_ISDIR(now.st_mode)?AT_REMOVEDIR:0)==0);}
++   root_binding();root.reset();io(::unlinkat(parent.fd(),leaf.c_str(),AT_REMOVEDIR)==0);sync(parent.fd());closed=true;return true;
++  }catch(...){return false;}
++ }
++ ~State(){(void)cleanup();}
++};
++inline SealedReadonlyReplica::~SealedReadonlyReplica()=default;
++inline SealedReadonlyReplica::SealedReadonlyReplica(std::unique_ptr<State> state):state_(std::move(state)){}
++inline SealedReadonlyReplica::SealedReadonlyReplica(SealedReadonlyReplica&&)noexcept=default;
++inline SealedReadonlyReplica SealedReadonlyReplica::capture(const std::filesystem::path& source,const std::filesystem::path& output,uint64_t maximum_entries,uint64_t maximum_bytes,std::function<void()> checkpoint){
++ using namespace readonly_replica_detail;need(maximum_entries&&maximum_bytes);
++ auto inside=[](const std::filesystem::path& a,const std::filesystem::path& b){auto i=a.begin(),j=b.begin();for(;i!=a.end()&&j!=b.end()&&*i==*j;++i,++j){}return i==a.end();};
++ need(!inside(source,output)&&!inside(output,source));auto state=std::make_unique<State>(source,output,maximum_entries,maximum_bytes,checkpoint);auto same_inode=[](const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino;};for(const auto& ancestor:state->source.stamps)need(!same_inode(ancestor,state->parent.stamps.back()));for(const auto& ancestor:state->parent.stamps)need(!same_inode(ancestor,state->source.stamps.back()));state->source_entries=readonly_replica_detail::capture(state->source.fd(),maximum_entries,maximum_bytes,checkpoint);
++ for(unsigned tries=0;;++tries){need(tries<16);std::array<unsigned char,16> random{};io(RAND_bytes(random.data(),int(random.size()))==1);state->leaf="readonly-replica-"+hexadecimal(random.data(),random.size());if(::mkdirat(state->parent.fd(),state->leaf.c_str(),0700)==0)break;io(errno==EEXIST);}
++ state->path=state->parent.path/state->leaf;state->root=std::make_unique<Fd>(::openat(state->parent.fd(),state->leaf.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));io(::fstat(state->root->n,&state->created)==0);need((state->created.st_mode&0777)==0700&&state->created.st_uid==::geteuid());sync(state->parent.fd());state->root_binding();
++ for(size_t i=1;i<state->source_entries.size();++i){const auto& entry=state->source_entries[i];check(checkpoint);auto parent=relative_parent(state->root->n,std::filesystem::path(entry.name));const auto name=std::filesystem::path(entry.name).filename().string();
++  if(S_ISDIR(entry.stamp.st_mode)){io(::mkdirat(parent.n,name.c_str(),0700)==0);struct stat created{};io(::fstatat(parent.n,name.c_str(),&created,AT_SYMLINK_NOFOLLOW)==0);need((created.st_mode&0777)==0700);state->created_entries.push_back({entry.name,created,{}});continue;}
++  auto src=relative_fd(state->source.fd(),std::filesystem::path(entry.name),O_RDONLY|O_NONBLOCK);struct stat source_before{};io(::fstat(src.n,&source_before)==0);need(stable(source_before,entry.stamp));Fd dst(::openat(parent.n,name.c_str(),O_RDWR|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));struct stat created{};io(::fstat(dst.n,&created)==0);need(S_ISREG(created.st_mode)&&(created.st_mode&0777)==0600&&created.st_nlink==1&&created.st_uid==::geteuid());state->created_entries.push_back({entry.name,created,{}});
++  Hash content;std::array<unsigned char,65536> buffer{};uint64_t at=0;
++  while(at<uint64_t(entry.stamp.st_size)){check(checkpoint);const auto count=size_t(std::min<uint64_t>(buffer.size(),uint64_t(entry.stamp.st_size)-at));const auto n=::pread(src.n,buffer.data(),count,off_t(at));if(n<0&&errno==EINTR)continue;io(n>0);content.add(buffer.data(),size_t(n));size_t written=0;while(written<size_t(n)){check(checkpoint);const auto k=::write(dst.n,buffer.data()+written,size_t(n)-written);if(k<0&&errno==EINTR)continue;io(k>0);written+=size_t(k);}at+=uint64_t(n);}
++  struct stat source_after{},copied{};io(::fstat(src.n,&source_after)==0);need(stable(source_before,source_after)&&content.finish()==entry.sha);sync(dst.n);io(::fstat(dst.n,&copied)==0);need(uint64_t(copied.st_size)==uint64_t(entry.stamp.st_size)&&file_hash(dst.n,copied,checkpoint)==entry.sha);state->created_entries.back().stamp=copied;
++ }
++ for(auto it=state->created_entries.rbegin();it!=state->created_entries.rend();++it)if(S_ISDIR(it->stamp.st_mode)){auto dir=relative_fd(state->root->n,std::filesystem::path(it->name),O_RDONLY|O_DIRECTORY);sync(dir.n);}sync(state->root->n);state->source.recheck();state->root_binding();
++ need(same_entries(state->source_entries,readonly_replica_detail::capture(state->source.fd(),maximum_entries,maximum_bytes,checkpoint)));state->sealed_entries=readonly_replica_detail::capture(state->root->n,maximum_entries,maximum_bytes,checkpoint);need(same_contents(state->source_entries,state->sealed_entries));SealedReadonlyReplica result(std::move(state));result.recheck();return result;
++}
++inline void SealedReadonlyReplica::recheck()const{
++ using namespace readonly_replica_detail;need(bool(state_)&&!state_->closed);state_->source.recheck();state_->root_binding();need(same_entries(state_->source_entries,readonly_replica_detail::capture(state_->source.fd(),state_->maximum_entries,state_->maximum_bytes,state_->checkpoint)));need(same_entries(state_->sealed_entries,readonly_replica_detail::capture(state_->root->n,state_->maximum_entries,state_->maximum_bytes,state_->checkpoint)));state_->source.recheck();state_->root_binding();
++}
++inline std::filesystem::path SealedReadonlyReplica::read_only_path()const{recheck();return state_->path;}
++inline void SealedReadonlyReplica::close(){readonly_replica_detail::need(bool(state_));readonly_replica_detail::need(state_->cleanup());}
++} // nano::maintenance
+--- /dev/null
++++ b/tests/test_bootstrap_readonly_replica.cpp
+@@ -0,0 +1,71 @@
++#include "bootstrap-readonly-replica.hpp"
++#include "rocksdb-owned-copy.hpp"
++#include "nano/types.hpp"
++#include <rocksdb/db.h>
++#include <chrono>
++#include <cstdlib>
++#include <filesystem>
++#include <iostream>
++#include <map>
++#include <sys/resource.h>
++#include <string_view>
++#include <type_traits>
++using nano::Json;
++namespace fs=std::filesystem;
++using nano::maintenance::SealedReadonlyReplica;
++namespace {
++const auto began=std::chrono::steady_clock::now();
++void require(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
++uint64_t elapsed(){return uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began).count());}
++uint64_t rss(){rusage r{};require(::getrusage(RUSAGE_SELF,&r)==0,"resource observation");
++#ifdef __APPLE__
++ return uint64_t(r.ru_maxrss)/1024;
++#else
++ return uint64_t(r.ru_maxrss);
++#endif
++}
++void checkpoint(){require(elapsed()<60000&&rss()<=131072,"replica test resource budget");}
++struct Temp{
++ fs::path path;
++ Temp(){auto name=(fs::temp_directory_path()/"nano-readonly-replica-XXXXXX").string();require(::mkdtemp(name.data())!=nullptr,"owned test directory");path=fs::canonical(name);}
++ ~Temp(){std::error_code ignored;fs::remove_all(path,ignored);}
++};
++void directory(const fs::path& path){require(::mkdir(path.c_str(),0700)==0,"exclusive owned directory");}
++void emit(const char* scenario,Json fields){fields["scenario"]=scenario;fields["result"]="PASS";fields["newSignaturesCreated"]=0;fields["privateInputsRead"]=false;fields["productionQualified"]=false;std::cout<<fields.dump()<<std::endl;}
++using Rows=std::map<std::string,std::string>;
++Rows read_rows(const SealedReadonlyReplica& replica){
++ const auto path=replica.read_only_path();rocksdb::Options options;options.create_if_missing=false;options.paranoid_checks=true;auto db=nano::maintenance::open_read_only_copy(options,path.string());rocksdb::ReadOptions read;read.verify_checksums=true;read.fill_cache=false;std::unique_ptr<rocksdb::Iterator> it(db->NewIterator(read));Rows rows;
++ for(it->SeekToFirst();it->Valid();it->Next()){checkpoint();require(rows.size()<16,"small public logical fixture");rows.emplace(it->key().ToString(),it->value().ToString());}
++ require(it->status().ok(),"complete RO traversal");it.reset();db.reset();replica.recheck();return rows;
++}
++static_assert(!std::is_invocable_v<decltype(&read_rows),const fs::path&>);
++static_assert(!std::is_constructible_v<SealedReadonlyReplica,const fs::path&>);
++static_assert(!std::is_reference_v<decltype(std::declval<const SealedReadonlyReplica&>().read_only_path())>);
++bool overlap(const fs::path& a,const fs::path& b){auto i=a.begin(),j=b.begin();for(;i!=a.end()&&j!=b.end()&&*i==*j;++i,++j){}return i==a.end();}
++size_t scratch_count(const fs::path& out){size_t count=0;for(const auto& entry:fs::directory_iterator(out))if(entry.path().filename().string().starts_with("readonly-replica-"))++count;return count;}
++void save(const fs::path& path,std::string_view value){const int fd=::open(path.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);require(fd>=0,"exclusive owned test file");size_t at=0;while(at<value.size()){const auto n=::write(fd,value.data()+at,value.size()-at);if(n<0&&errno==EINTR)continue;require(n>0,"test file write");at+=size_t(n);}require(::fsync(fd)==0&&::close(fd)==0,"durable test file");}
++void change(const fs::path& path){const int fd=::open(path.c_str(),O_WRONLY|O_NOFOLLOW|O_CLOEXEC);require(fd>=0,"owned mutation target");require(::pwrite(fd,"Z",1,0)==1&&::fsync(fd)==0&&::close(fd)==0,"real owned content mutation");}
++void conformance(const fs::path& root){
++ const auto source=root/"owned-rw-copy",out=root/"audit-output";directory(source);directory(out);save(out/"unrelated-sentinel","unchanged");rocksdb::Options options;options.create_if_missing=true;options.paranoid_checks=true;options.max_background_jobs=1;auto writer=nano::maintenance::open_copy(options,source.string());rocksdb::WriteOptions write;write.sync=true;require(writer->Put(write,"public-key","public-value").ok(),"genuine owned DB fixture");
++ // The writer stays open, without concurrent writes. RO opens only the new
++ // independent replica. This does not certify quiescence of a live writer.
++ auto replica=SealedReadonlyReplica::capture(source,out,1024,16*1024*1024,checkpoint);const auto path=replica.read_only_path();require(!overlap(source,path)&&!overlap(path,source)&&path.parent_path()==out,"RO path is distinct private replica");struct stat a{},b{};require(::lstat((source/"CURRENT").c_str(),&a)==0&&::lstat((path/"CURRENT").c_str(),&b)==0,"actual CURRENT identities");require((a.st_dev!=b.st_dev||a.st_ino!=b.st_ino)&&b.st_nlink==1&&(b.st_mode&0777)==0600,"no shared inode/private replica file");require(read_rows(replica)==Rows{{"public-key","public-value"}},"same genuine logical content");replica.close();require(!fs::exists(path)&&scratch_count(out)==0&&fs::is_regular_file(out/"unrelated-sentinel"),"explicit owned cleanup preserves unrelated output");
++ auto caller_output=out;bool changed_output=false;uint64_t owned_callback_calls=0;std::function<void()> change_caller;change_caller=[&]{++owned_callback_calls;checkpoint();if(!changed_output){caller_output=source;changed_output=true;change_caller={};}};
++ auto rebound=SealedReadonlyReplica::capture(source,caller_output,1024,16*1024*1024,change_caller);const auto rebound_path=rebound.read_only_path();require(changed_output&&!change_caller&&owned_callback_calls>1&&caller_output==source&&rebound_path.parent_path()==out&&!overlap(source,rebound_path),"callback-mutated caller output cannot redirect the owned replica path");require(read_rows(rebound)==Rows{{"public-key","public-value"}},"mutated caller path retains original replica authority");rebound.close();require(!fs::exists(rebound_path)&&scratch_count(out)==0,"caller mutation cleanup bound to original private output");writer.reset();
++ emit("maintenance-readonly-replica-api-conformance",{{"rawPathApiRejectedAtCompileTime",true},{"actualWriterRemainedOpen",true},{"readOnlyOpenedIndependentReplicaOnly",true},{"sameLogicalContent",true},{"callerOutputMutationRemainsBoundToOwnedParent",true},{"clearedCallerCallbackDoesNotDisableOwnedChecks",true},{"sharedInodeUsed",false},{"explicitCleanupObserved",true},{"concurrentWritingQualified",false}});
++}
++void mutations(const fs::path& root){
++ const auto source=root/"mutation-source",out=root/"mutation-output";directory(source);directory(out);save(source/"payload",std::string(131073,'A'));save(out/"unrelated-sentinel","unchanged");bool changed=false,returned=false,rejected=false;
++ const std::function<void()> mutate=[&]{checkpoint();if(changed)return;for(const auto& entry:fs::directory_iterator(out))if(entry.path().filename().string().starts_with("readonly-replica-")&&fs::exists(entry.path()/"payload")){change(source/"payload");changed=true;break;}};
++ try{auto replica=SealedReadonlyReplica::capture(source,out,32,1024*1024,mutate);returned=true;replica.close();}catch(const std::invalid_argument&){rejected=true;}
++ require(changed&&rejected&&!returned&&scratch_count(out)==0,"source mutation refused before a sealed RO capability exists");
++ // A copied path is returned by value; changing its file cannot mutate the
++ // sealed certificate. Rechecking it must refuse rather than ignore changes.
++ auto replica=SealedReadonlyReplica::capture(source,out,32,1024*1024,checkpoint);const auto path=replica.read_only_path();change(path/"payload");rejected=false;try{replica.recheck();}catch(const std::invalid_argument&){rejected=true;}require(rejected,"replica content mutation refused");replica.close();require(!fs::exists(path)&&scratch_count(out)==0&&fs::is_regular_file(out/"unrelated-sentinel"),"mutation cleanup only owned scratch");
++ bool armed=false,rebound_parent=false;const auto renamed=root/"renamed-owned-output";const std::function<void()> rebind=[&]{checkpoint();if(armed&&!rebound_parent){require(::rename(out.c_str(),renamed.c_str())==0,"actual owned output parent rename");directory(out);save(out/"substituted-parent-sentinel","preserved");rebound_parent=true;}};
++ auto substitutable=SealedReadonlyReplica::capture(source,out,32,1024*1024,rebind);const auto original_path=substitutable.read_only_path();armed=true;bool path_returned=false;rejected=false;try{(void)substitutable.read_only_path();path_returned=true;}catch(const std::invalid_argument&){rejected=true;}
++ require(rebound_parent&&rejected&&!path_returned&&fs::is_regular_file(out/"substituted-parent-sentinel")&&fs::exists(renamed/original_path.filename()),"callback parent substitution must refuse before a pathname is returned");bool cleanup_refused=false;try{substitutable.close();}catch(const std::invalid_argument&){cleanup_refused=true;}require(cleanup_refused&&fs::is_regular_file(out/"substituted-parent-sentinel")&&fs::exists(renamed/original_path.filename()),"incomplete cleanup refuses and never deletes substituted parent");
++ emit("maintenance-readonly-replica-content-mutation-refusals",{{"sourceMutationBeforeSealRefused",true},{"mutatedReplicaReadbackRefused",true},{"parentRenameSubstitutionDuringRecheckRefused",true},{"substitutedParentNeverDeleted",true},{"cleanupIncompleteRefused",true},{"databaseReadOnlyOpensInThisGroup",0},{"protocolWritesInThisGroup",0},{"successfulCleanupObservedBeforeSubstitution",true}});
++}
++}
++int main(int argc,char** argv){try{require(argc==2&&std::string(argv[1])=="--self-test","usage --self-test");Temp temp;conformance(temp.path);mutations(temp.path);checkpoint();emit("bootstrap-readonly-replica-self-test",{{"groups",2},{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"runtimeStarted",false},{"networkUsed",false},{"physicalPowerLossQualified",false}});return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -2097,3 +2097,9 @@
+ endif()
+ add_test(NAME storage_capella_bootstrap_archive_owned_copies COMMAND nano-bootstrap-archive-maintenance-tests --self-test)
+ set_tests_properties(storage_capella_bootstrap_archive_owned_copies PROPERTIES TIMEOUT 130 LABELS qualification_consensus_bootstrap_maintenance)
++
++add_executable(nano-bootstrap-readonly-replica-tests tests/test_bootstrap_readonly_replica.cpp)
++target_link_libraries(nano-bootstrap-readonly-replica-tests PRIVATE nano_core)
++target_include_directories(nano-bootstrap-readonly-replica-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/tools/storage-maintenance")
++add_test(NAME storage_capella_bootstrap_archive_readonly_replica COMMAND nano-bootstrap-readonly-replica-tests --self-test)
++set_tests_properties(storage_capella_bootstrap_archive_readonly_replica PROPERTIES TIMEOUT 70 LABELS qualification_consensus_bootstrap_maintenance)

@@ -1,0 +1,42 @@
+{
+  "format": "nano-bootstrap-maintenance-readonly-replica-design-independent-review-v1",
+  "createdAtUtc": "2026-10-14T00:43:11.806731+00:00",
+  "verdict": "NO_MATERIAL_DESIGN_BLOCKER_FOUND_IMPLEMENTATION_AND_TEST_REVIEW_STILL_REQUIRED",
+  "bindings": {
+    "designManifestSha256": "175c4bee8f7e263b962878d807b2fd9642247594497e28254e753d89563c47c1",
+    "designSha256": "600009d41060ba2d1d3dd4eb350fd6eab0b1dcc709b1e376b0ade52a6e21604c",
+    "sourceBindingsSha256": "eb3c14b0683da3e478c9cb7a56774445ba9b1e421412144dbd8030bc7b167267",
+    "priorSdkDiagnosticSha256": "aff4c338b293af01806fac925d96be2ea5aee696263d1738c2e089ffa0918f32"
+  },
+  "checked": [
+    "Two public design payload SHA/size seals match. Design only; no implementation exists in reviewed tree.",
+    "Noncopyable private sealed replica capability cannot be supplied by request path or built from existing tree; fresh output-owned0700 roots and0600 files physically distinct, no hardlink/symlink/special files.",
+    "FD-relative bounded copy and full entry/stat/hash before-copy-after observation, held source/destination descriptors, source/directory replacement checks, EOF/error distinction and explicit seal fsync.",
+    "All invariant and cold RO readers use replica capability, never possibly live RW target path; target Pair and typed reopen stay Existing on owned copies, not originals or replica.",
+    "External request/stop/trust remains authoritative, no physical snapshot replaces signature/fulltransition proof or import authority. Stable observed files do not prove absence of privileged writer.",
+    "Two retained NEXT files and their file/directory fsync precede Pair recovery/apply; current source/profile/pins/raw snapshot/CAS semantics unchanged.",
+    "Pre-capture revalidated immediately before Pair and discarded; each closed RW phase followed by new replica observation rather than comparing stale physical stats across RocksDB LOG creation.",
+    "Cleanup by held identities for created entries only, readers closed, nonthrowing failure retains scratch and reports incomplete; final receipt conditioned on observed cleanup success.",
+    "New conformance and mutation-refusal tests meaningful; new production CLI requires real13 wrapper requalification on both architectures, including LOCK/retention/fsync and formats."
+  ],
+  "implementationReviewRequirements": [
+    "No public mutable/path reference accessor or constructor may allow forged/alias-mutated capability; metadata and actual RO open must remain bound to sealed physical root.",
+    "Perform explicit reader closure and cleanup with observed success before complete.json publication, not only scope destructor afterward.",
+    "Reject any source/replica set/hash/stat mutation or incomplete capture before unsafe open or publication; cooperative timeout still needs ROOT watchdog.",
+    "Preserve all old observations immutably, open concurrent-RO gate until new implementation and tests qualify."
+  ],
+  "limits": [
+    "Design approval is not implementation correctness or qualification. No CPP, DB, compiler, Docker, SSH, tests, private request or source/repo mutation by reviewer.",
+    "Actual interrupted WAL wrapper, powerloss, private copies/journals/floors, current UTC/duties/finality, whole backup and production remain open."
+  ],
+  "activity": {
+    "compilerCommands": 0,
+    "testCommands": 0,
+    "dockerCommands": 0,
+    "sshCommands": 0,
+    "databaseOpens": 0,
+    "privateReads": 0,
+    "repoWrites": 0,
+    "productionQualified": false
+  }
+}

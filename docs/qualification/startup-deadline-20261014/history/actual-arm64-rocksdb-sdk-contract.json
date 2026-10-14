@@ -1,0 +1,61 @@
+{
+  "format": "nano-public-existing-docker-sdk-readonly-concurrency-contract-v1",
+  "arch": "arm64",
+  "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "headerPath": "/usr/include/rocksdb/db.h",
+  "headerSha256": "8e16f9518b091e2a59c0c704d90d6a03ef9d44e921459a2ff614e4343d0b76b9",
+  "matchedQualifiedCompilerHeaderPin": true,
+  "selectedLines": [
+    {
+      "line": 193,
+      "text": "  // to Flush/Compaction will return error."
+    },
+    {
+      "line": 194,
+      "text": "  //"
+    },
+    {
+      "line": 195,
+      "text": "  // While a given DB can be simultaneously opened via OpenForReadOnly"
+    },
+    {
+      "line": 196,
+      "text": "  // by any number of readers, if a DB is simultaneously opened by Open"
+    },
+    {
+      "line": 197,
+      "text": "  // and OpenForReadOnly, the read-only instance has undefined behavior"
+    },
+    {
+      "line": 198,
+      "text": "  // (though can often succeed if quickly closed) and the read-write"
+    },
+    {
+      "line": 199,
+      "text": "  // instance is unaffected. See also OpenAsSecondary."
+    },
+    {
+      "line": 472,
+      "text": "  // SingleDelete is only used for a key that is not deleted using Delete() or"
+    },
+    {
+      "line": 473,
+      "text": "  // written using Merge().  Mixing SingleDelete operations with Deletes and"
+    },
+    {
+      "line": 474,
+      "text": "  // Merges can result in undefined behavior."
+    },
+    {
+      "line": 475,
+      "text": "  //"
+    },
+    {
+      "line": 476,
+      "text": "  // Note: consider setting options.sync = true."
+    }
+  ],
+  "cppOrTestExecuted": false,
+  "privateInputsRead": false,
+  "imageBuiltOrPulled": false
+}
