@@ -1,0 +1,11 @@
+# Configured signing-journal observer — 14 October 2026
+
+`nano-journal-observe` is an offline C++ observation tool. It authenticates the current checkpoint and configured signing-journal/witness pairs on independently owned, stopped copies. It observes reservations and supplied numeric minima; it does not authorize signing or recovery.
+
+The tool requires an externally authenticated request and configuration projection, sealed source inventories, independent current/floor expectations and explicit resource budgets. Report and scratch directories must be disjoint, private and owned. Do not reconstruct a missing signing history from Git or treat a numeric minimum as proof of digest ancestry. The complete report is private; only bounded status fields belong in public evidence.
+
+`scoped-results.json` separates the two architecture public synthetic qualifications from the one real VPS readonly operation. Prior refusals are retained. The VPS result covers all 33 configured pairs in that particular configuration; 33 is not a protocol validator limit. It is not an independent security audit or evidence of resumed validator duties.
+
+The optional I/O harness is enabled with `-DNANO_CONFIGURED_JOURNAL_IO_PUBLIC_TESTS=ON` on Linux; its test name is `storage_configured_journal_observer_public_io`. It remains OFF by default. No shim is linked into the node or observer. Compilation and execution already recorded here used manually derived, provenance-checked recipes. A later Linux ARM64 CMake check generated OFF/ON graphs and discovered 0/1 optional tests without running them. Both configure and both discovery commands exited successfully; two local metadata-auditor mistakes were preserved and corrected without replay. CMake compiler-detection probes are separate from zero product target builds. Configured target compilation, installation and native portability remain unqualified. No image rebuild is required for publishing these records.
+
+Original Mac journals remain unavailable. The user declined NAS access; original Mac keys must not be resumed using reconstructed or fresh journals. Common progressing finality, runtime recovery, CI and the remaining production goal are open. Network compatibility claims remain limited to the activated Shanghai profile.

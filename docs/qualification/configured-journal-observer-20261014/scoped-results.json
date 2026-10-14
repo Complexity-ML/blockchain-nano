@@ -1,0 +1,133 @@
+{
+  "format": "nano-configured-journal-observer-public-scoped-qualification-v1",
+  "status": "PASS_MANUAL_CPP_TWO_ARCH_AND_SCOPED_REAL_VPS_READONLY",
+  "baselineCommit": "6f8f38479429fc641bedffb8c943bc981913573f",
+  "sources": {
+    "tools/storage-maintenance/journal-observe.cpp": {
+      "sha256": "353a1ad90a926e3d0b6f53741feb0186cd2701db5ef6b59e40655c1903716be1",
+      "bytes": 31635
+    },
+    "tests/test_configured_journal_observer.cpp": {
+      "sha256": "b0ceff3e9139fdbf6b28ed653e5887d5e9347eb125d00e88b3b89f5125b4d7e3",
+      "bytes": 32475
+    },
+    "tests/support/journal_observer_io_fault.cpp": {
+      "sha256": "10f487e89e5a494f1b2b0f5566bb80d63b47a15d706b295e5bb9000036f1f51f",
+      "bytes": 2773
+    },
+    "CMakeLists.txt": {
+      "sha256": "736e23cfa73bbcef43ebf6509907e2751cd31e664f8d6b6e2bcd3044b9ee8824",
+      "bytes": 163809
+    }
+  },
+  "publicQualification": {
+    "architectures": [
+      "linux/arm64",
+      "linux/amd64"
+    ],
+    "harnessInvocations": 2,
+    "distinctGroupsPerArchitecture": 8,
+    "jsonRowsTotal": 18,
+    "wrapperCallsTotal": 76,
+    "acceptedCallsTotal": 8,
+    "refusedCallsTotal": 68,
+    "ioFaultEventsTotal": 10,
+    "ctestExecutions": 0,
+    "newKeysOrSignatures": 0,
+    "scope": "synthetic stopped-copy wrapper, bounded admission/refusal/publication and selected I/O failures; direct manually linked harnesses"
+  },
+  "privateReadonlyQualification": {
+    "observerInvocations": 1,
+    "configuredPairs": 33,
+    "independentColdPasses": 2,
+    "maximumRssKiB": 23004,
+    "sourcesSdkAndOriginalReferenceWorkingOwnersUnchanged": true,
+    "ownedContainersAbsent": true,
+    "externalRootProcessQuiescenceBeforeAfterClear": true,
+    "evidenceScope": "ROOT actual operation plus independent public-source and ROOT-filtered result review; not an independent audit of raw private data",
+    "rawPrivateDataIncluded": false,
+    "newSignatures": 0,
+    "keysLoaded": false,
+    "runtimeStarted": false,
+    "dutiesStarted": false
+  },
+  "historicalRefusalsPreserved": [
+    {
+      "operation": "metadata-v2",
+      "adapterInvocations": 1,
+      "generatorInvocations": 0,
+      "helperInvocations": 0,
+      "cause": "unjustified inequality between raw/materialized hashes; source repaired without changing historical proofs"
+    },
+    {
+      "operation": "metadata-v3",
+      "adapterInvocations": 1,
+      "generatorInvocations": 1,
+      "helperInvocations": 0,
+      "cause": "readonly envelope larger than explicitly declared observation budget; narrowed observer envelope only, runtime limits unchanged",
+      "diagnosticInMemoryPreparationEvaluations": 1,
+      "diagnosticScalarBudgetChecks": 1
+    },
+    {
+      "operation": "first-private-carrier",
+      "observerInvocations": 0,
+      "cause": "strict integer parser refused a finite fractional duration in pinned public historical manifest; only that public-manifest parser accepts finite floats now"
+    },
+    {
+      "operation": "cmake-source-admission-before-docker",
+      "dockerInvocations": 0,
+      "cmakeInvocations": 0,
+      "cause": "historical pre-seal source receipt ctime differs; partial manual source view also omits a separately targeted UTC source; full current repository required"
+    }
+  ],
+  "staticSourceStopsRetained": true,
+  "cmakeIntegration": {
+    "configured": true,
+    "productTargetBuilds": 0,
+    "newTestOptionDefault": "OFF",
+    "newIoHarnessPlatform": "Linux only",
+    "installedOrRuntimeImageQualified": false,
+    "qualifiedScope": "Linux ARM64 configure/generate and discovery only; manually compiled two-architecture CPP qualification remains distinct",
+    "configureCommandsExitZero": 2,
+    "discoveryOnlyCommandsExitZero": 2,
+    "optionChecks": [
+      {
+        "option": "OFF",
+        "wrapperRecipes": 1,
+        "harnessRecipes": 0,
+        "shimRecipes": 0,
+        "discoveredTests": 0
+      },
+      {
+        "option": "ON",
+        "wrapperRecipes": 1,
+        "harnessRecipes": 1,
+        "shimRecipes": 1,
+        "discoveredTests": 1
+      }
+    ],
+    "sourceFilesUnchanged": 42203,
+    "testExecutions": 0,
+    "initialPostCommandAuditKeyErrorPreserved": true,
+    "firstRuleOnlyMetadataAssertionPreserved": true,
+    "readonlyMetadataAuditCorrectedWithoutCommandReplay": true,
+    "cmakeCompilerDetectionProbesMayHaveExecuted": true,
+    "configuredTargetBinariesQualified": false
+  },
+  "openGates": [
+    "historical digest ancestry",
+    "delivered signing history",
+    "execution account nonces",
+    "current UTC/clock and duty resumption",
+    "original Mac journal recovery",
+    "advancing common finality across native Mac/Mac Docker/VPS",
+    "extended partition/reconnection/validator lifecycle and sanctions",
+    "full-node bounded load and operational qualification",
+    "CI and external security audit",
+    "bridge/asset relationship and fair-launch terms"
+  ],
+  "nasAccessDeclined": true,
+  "githubRestoresPrivateJournals": false,
+  "activatedNetworkEvmProfile": "Shanghai",
+  "productionQualified": false
+}

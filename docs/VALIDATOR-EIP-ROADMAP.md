@@ -1,3 +1,13 @@
+## 14 octobre 2026 — Réservations configurées observées en lecture seule
+
+Wrapper V5/banc H3 passent une invocation publique ARM64 et AMD64 chacun : huit groupes + résumé par architecture ; total 18 lignes JSON, 76 appels (8 acceptés, 68 refusés), 10 événements E/S, zéro CTest.
+
+ROOT a ensuite observé une fois les 33 paires configurées VPS sur copies arrêtées : deux lectures froides, pic 23 004 KiB. Assets, originaux/références/copies, SDK et contrôles de quiescence restent conformes ; containers absents. Aucun signing, clé chargée, runtime ou duty. L’audit externe ici porte sur la source et le résultat ROOT filtré ; rapports/tokens privés restent VPS.
+
+Ascendance des digests, livraison de signatures, nonces, clock/reprise, duties/finalité commune et production restent non qualifiés. Journaux Mac manquants ; aucun accès NAS autorisé. Refus antérieurs conservés ; CMake Linux ARM64 génère désormais les cibles et découvre 0/1 test en OFF/ON ; aucune cible compilée/exécutée dans ce contrôle. Shanghai/EIP/CSV et corps historiques inchangés.
+
+---
+
 ## 14 octobre 2026 — Réservations de signature et registre authentifié
 
 Les observations publiques des journaux et du registre de validateurs sont désormais qualifiées sur Docker Linux ARM64 et AMD64. Les nouveaux tests vérifient les formats chaud/froid/fragmenté, les engagements courants et minima numériques, les réservations conservatrices, la recherche de clés dans le registre complet, les copies détenues et les refus/annulations. La régression du signer passe aussi avec ses propres clés et bases synthétiques. Ces résultats ne prouvent pas l’ascendance historique, la livraison de signatures, les nonces d’exécution ni la reprise des duties.
