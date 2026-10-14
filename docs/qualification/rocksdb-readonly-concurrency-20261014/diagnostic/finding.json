@@ -1,0 +1,52 @@
+{
+  "format": "nano-bootstrap-maintenance-concurrent-readonly-static-finding-v1",
+  "status": "CONFIRMED_PUBLIC_API_CONTRACT_GAP_NOT_MEASURED_CORRUPTION",
+  "files": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-owned-copies-cli-proposal-v2-20261014/source/tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+      "bytes": 25678,
+      "sha256": "1b034acdd8b0cc177af5188eb2724e460012295248b645b48541bc30601d8743"
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-archive-maintenance-test-proposal-v3-20261014/source/tests/test_bootstrap_archive_maintenance.cpp",
+      "bytes": 30364,
+      "sha256": "e5f664121c238c1db2e94283fa96d9959ecabcd566028dcdd5deb0df0f9ce1ee"
+    },
+    {
+      "path": "/opt/homebrew/include/rocksdb/db.h",
+      "bytes": 127531,
+      "sha256": "d31da9d3b4db690e43842f78f6a2d2cc4a560cf5924b1d907155106fa56b4702"
+    }
+  ],
+  "sdkLines": {
+    "first": 195,
+    "last": 199,
+    "text": [
+      "  // While a given DB can be simultaneously opened via OpenForReadOnly",
+      "  // by any number of readers, if a DB is simultaneously opened by Open",
+      "  // and OpenForReadOnly, the read-only instance has undefined behavior",
+      "  // (though can often succeed if quickly closed) and the read-write",
+      "  // instance is unaffected. See also OpenAsSecondary."
+    ]
+  },
+  "cliSites": {
+    "invariantReader": "125-127",
+    "beforePairCall": 154,
+    "rwPair": 161,
+    "laterReadOnly": "166-167,175"
+  },
+  "harnessContendingOwner": "113-116",
+  "proposal": "All DB read-only audits on sealed independent physical private replicas; live owner Pair retains exact typed pins and exclusive lock",
+  "noOriginalOrReplicaDbRw": true,
+  "twoCopyOperationalPairStillRwExisting": true,
+  "noHooksOrFilenameGuessing": true,
+  "productionCliV3Needed": true,
+  "requalifyOld13IfCliChanges": true,
+  "existingV2Preserved": true,
+  "sourceOnlyNoImplementation": true,
+  "databaseRead": false,
+  "privateRead": false,
+  "compilerDockerSshExecuted": false,
+  "repoEdited": false,
+  "productionQualified": false
+}

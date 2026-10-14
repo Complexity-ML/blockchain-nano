@@ -1,0 +1,5 @@
+# Lecture seule RocksDB et propriétaire concurrent
+
+Le contrat du SDK natif et celui du SDK ARM réellement compilé (pin8e16) indiquent que OpenForReadOnly simultané à OpenRW sur la même base donne un comportement indéfini du lecteur. Le préflight du CLI actuel scanne avant sa prise de LOCK ; son cas adversarial RWholder emprunte donc ce chemin non supporté. Les deux anciens PASS restent des résultats observés ; la garantie de refus sûr du concurrent reste non qualifiée. Aucune perte/corruption n’est démontrée, aucune copie privée appliquée.
+
+Correction prévue : audit de répliques physiques privées indépendantes, cohérentes et bornées, puis propriétaire exclusif sur les copies d’opération ; aucun original ouvert en écriture. Sourcefix et nouveaux tests restent à qualifier. Trois scopes du nouveau test deadline ont aussi été corrigés avant tout build ; son runtime/helper/CMake ne changent pas. L’ancien startup6cas respecte déjà les scopes. Les nouvelles propositions restent non compilées/non activées ; règles2h/60, profil Shanghai et EIP inchangés. Production non qualifiée, objectif actif.

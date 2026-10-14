@@ -1,3 +1,9 @@
+## 14 octobre 2026 — Lecture RocksDB concurrente : critère ouvert
+
+Le SDK RocksDB natif et le SDK ARM compilé définissent la lecture RO simultanée à un propriétaire RW comme indéfinie. Le préflight du CLI de maintenance actuel fait cette lecture avant sa prise de LOCK dans le scénario concurrent. Ses PASS historiques restent observés ; le refus sûr sous concurrence n’est pas qualifié. Aucune perte constatée ni application aux copies privées. Correction par répliques physiques privées indépendantes et nouveaux tests à livrer.
+
+Trois scopes du nouveau test deadline sont corrigés en proposition V2, avant toute compilation ; runtime/helper inchangés et ancien startup correctement scoped. Aucun budget opérationnel activé. Duties, finalité commune, journaux/UTC/V37/NAS, WAL interrompu, natif/install/CI/audit et tous critères restent ouverts. EVM Shanghai et EIP/CSV inchangés ; production non qualifiée. [Constat et limites](qualification/rocksdb-readonly-concurrency-20261014/README.md).
+
 ## 14 octobre 2026 — Maintenance bootstrap qualifiée sur copies synthétiques
 
 Le CLI C++ de maintenance planifie, conserve deux engagements distincts puis applique/reprend une archive initiale signée sur copies arrêtées détenues. Un CTest réel passe par architecture Docker ARM/AMD64 : 13 lignes avec résumé, formats chaud/froid/fragmenté, verrou exclusif, refus de provenance/plans périmés et trois défauts fsync avant publication. ARM : 2 325 ms/23 384 KiB ; AMD64 : 7 076 ms/25 120 KiB. Zéro nouvelle signature. État canonique requis ; absence du seul état historique admissible.
