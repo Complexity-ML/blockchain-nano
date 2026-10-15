@@ -1,0 +1,232 @@
+--- a/tools/storage-maintenance/rocksdb-owned-copy.hpp
++++ b/tools/storage-maintenance/rocksdb-owned-copy.hpp
+@@ -5,11 +5,79 @@
+ #include <fstream>
+ #include <memory>
+ #include <stdexcept>
++#include <string>
++#include <utility>
++#include <vector>
++#include <cerrno>
++#include <dirent.h>
++#include <fcntl.h>
++#include <sys/stat.h>
++#include <unistd.h>
+ namespace nano::maintenance {
+ inline void require_ok(const rocksdb::Status& status){if(!status.ok())throw std::runtime_error(status.ToString());}
++namespace owned_copy_detail {
++struct Fd {
++ int value=-1;
++ explicit Fd(int fd):value(fd){if(fd<0)throw std::runtime_error("Owned copy physical admission I/O failed");}
++ ~Fd(){if(value>=0)::close(value);}
++ Fd(const Fd&)=delete;Fd& operator=(const Fd&)=delete;
++ Fd(Fd&& other)noexcept:value(other.release()){}
++ int release(){const int result=value;value=-1;return result;}
++};
++inline void io(bool ok){if(!ok)throw std::runtime_error("Owned copy physical admission I/O failed");}
++inline bool same(const struct stat& a,const struct stat& b){
++ if(a.st_dev!=b.st_dev||a.st_ino!=b.st_ino||a.st_uid!=b.st_uid||a.st_gid!=b.st_gid||a.st_mode!=b.st_mode||a.st_nlink!=b.st_nlink||a.st_size!=b.st_size)return false;
++#ifdef __APPLE__
++ return a.st_mtimespec.tv_sec==b.st_mtimespec.tv_sec&&a.st_mtimespec.tv_nsec==b.st_mtimespec.tv_nsec&&a.st_ctimespec.tv_sec==b.st_ctimespec.tv_sec&&a.st_ctimespec.tv_nsec==b.st_ctimespec.tv_nsec;
++#else
++ return a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
++#endif
++}
++inline void stable(bool ok){if(!ok)throw std::invalid_argument("Owned copy physical admission changed");}
++struct Directory {
++ std::unique_ptr<DIR,decltype(&::closedir)> stream{nullptr,&::closedir};
++ struct stat initial{};int parent=-1;std::string name;
++ Directory(Fd owned,int parent_fd,std::string leaf):parent(parent_fd),name(std::move(leaf)){
++  io(::fstat(owned.value,&initial)==0);stable(S_ISDIR(initial.st_mode));
++  auto* raw=::fdopendir(owned.value);io(raw!=nullptr);owned.release();stream.reset(raw);
++ }
++ Directory(Directory&&)=default;Directory& operator=(Directory&&)=default;
++ Directory(const Directory&)=delete;Directory& operator=(const Directory&)=delete;
++ int fd()const{return ::dirfd(stream.get());}
++};
++}
++// A stopped copy must have independent regular files before a writable SDK
++// open. This is an admission check, not a filesystem lock: the operator must
++// keep its namespace quiescent, including against other processes of this UID,
++// through DB destruction. No RocksDB Env or race-proof ownership is implied.
++inline void require_independent_copy_files(const std::string& path){
++ using namespace owned_copy_detail;
++ const int root=::open(path.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC);
++ // Preserve the generic wrapper's create_if_missing behavior. The maintenance
++ // CLIs separately require an existing CURRENT and their explicit marker.
++ if(root<0){if(errno==ENOENT)return;throw std::invalid_argument("Owned copy directory admission refused");}
++ Fd owned_root(root);std::vector<Directory> pending;pending.emplace_back(std::move(owned_root),-1,std::string{});
++ while(!pending.empty()){
++  auto& current=pending.back();errno=0;auto* entry=::readdir(current.stream.get());
++  if(!entry){
++   io(errno==0);struct stat held{},linked{};io(::fstat(current.fd(),&held)==0);
++   if(current.parent<0)io(::lstat(path.c_str(),&linked)==0);
++   else io(::fstatat(current.parent,current.name.c_str(),&linked,AT_SYMLINK_NOFOLLOW)==0);
++   stable(same(current.initial,held)&&same(held,linked));pending.pop_back();continue;
++  }
++  const std::string name(entry->d_name);if(name=="."||name=="..")continue;
++  const int parent=current.fd();struct stat before{};io(::fstatat(parent,name.c_str(),&before,AT_SYMLINK_NOFOLLOW)==0);
++  if(!S_ISREG(before.st_mode)&&!S_ISDIR(before.st_mode))throw std::invalid_argument("Owned copy symlink or special entry refused");
++  if(S_ISREG(before.st_mode)&&before.st_nlink!=1)throw std::invalid_argument("Owned copy hard-linked database file refused");
++  Fd leaf(::openat(parent,name.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC|(S_ISDIR(before.st_mode)?O_DIRECTORY:0)));
++  struct stat held{},linked{};io(::fstat(leaf.value,&held)==0&&::fstatat(parent,name.c_str(),&linked,AT_SYMLINK_NOFOLLOW)==0);stable(same(before,held)&&same(held,linked));
++  if(S_ISDIR(held.st_mode))pending.emplace_back(std::move(leaf),parent,name);
++ }
++}
+ // API detection supports installed RocksDB versions without guessing a version boundary.
+ template<class Database=rocksdb::DB>
+ std::unique_ptr<Database> open_copy(const rocksdb::Options& options,const std::string& path){
++ require_independent_copy_files(path);
+  std::unique_ptr<Database> opened;
+  if constexpr(requires { Database::Open(options,path,&opened); })require_ok(Database::Open(options,path,&opened));
+  else{Database* raw=nullptr;auto status=Database::Open(options,path,&raw);opened.reset(raw);require_ok(status);}
+@@ -23,10 +91,15 @@
+  return opened;
+ }
+ inline void require_owned_marker(const std::filesystem::path& marker,const std::string& expected){
+- if(std::filesystem::is_symlink(marker)||!std::filesystem::is_regular_file(marker)||std::filesystem::file_size(marker)>96)throw std::invalid_argument("Bounded regular owned-copy marker required");
+- std::ifstream input(marker,std::ios::binary);std::array<char,97> bytes{};input.read(bytes.data(),bytes.size());
+- if(input.bad()||!input.eof()||input.gcount()>96)throw std::invalid_argument("Owned-copy marker read failed or grew");
+- const std::string value(bytes.data(),size_t(input.gcount()));
++ const int raw=::open(marker.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC);
++ if(raw<0)throw std::invalid_argument("Bounded regular owned-copy marker required");
++ owned_copy_detail::Fd input(raw);struct stat before{};owned_copy_detail::io(::fstat(input.value,&before)==0);
++ if(!S_ISREG(before.st_mode)||before.st_size<0||before.st_size>96)throw std::invalid_argument("Bounded regular owned-copy marker required");
++ if(before.st_nlink!=1)throw std::invalid_argument("Owned-copy marker hard link refused");
++ std::array<char,97> bytes{};size_t count=0;
++ for(;;){const auto n=::read(input.value,bytes.data()+count,bytes.size()-count);if(n<0&&errno==EINTR)continue;if(n<0)throw std::invalid_argument("Owned-copy marker read failed or grew");if(!n)break;count+=size_t(n);if(count>96)throw std::invalid_argument("Owned-copy marker read failed or grew");}
++ struct stat held{},linked{};owned_copy_detail::io(::fstat(input.value,&held)==0&&::lstat(marker.c_str(),&linked)==0);owned_copy_detail::stable(owned_copy_detail::same(before,held)&&owned_copy_detail::same(held,linked));
++ const std::string value(bytes.data(),count);
+  if(value!=expected&&value!=expected+"\n")throw std::invalid_argument("Explicit owned-copy marker required");
+ }
+ }
+--- a/tools/storage-maintenance/migrate-pruned-owned-copy.cpp
++++ b/tools/storage-maintenance/migrate-pruned-owned-copy.cpp
+@@ -24,6 +24,7 @@
+ int main(int argc,char** argv){try{
+  if(argc!=5||std::string(argv[1])!="--offline-owned-copy"||std::string(argv[3])!="--audit-request")throw std::invalid_argument("Usage: migrate-pruned-owned-copy --offline-owned-copy COPY/chain --audit-request VERIFIED-REQUEST.json");
+  fs::path p(argv[2]);for(auto q=p;!q.empty();q=q.parent_path()){if(fs::is_symlink(q))throw std::runtime_error("Symlink path refused");if(q==q.parent_path())break;}p=fs::canonical(p);const auto marker=p.parent_path()/".nano-owned-schema-migration-copy";if(p.filename()!="chain"||!fs::is_regular_file(p/"CURRENT")||fs::is_symlink(marker))throw std::runtime_error("Owned migration chain copy required");for(const auto& e:fs::recursive_directory_iterator(p))if(e.is_symlink())throw std::runtime_error("Database symlinks refused");nano::maintenance::require_owned_marker(marker,"owned-offline-schema-migration-v1");if(fs::is_symlink(argv[4])||!fs::is_regular_file(argv[4])||fs::file_size(argv[4])>1024*1024)throw std::runtime_error("Bounded audit request required");std::ifstream file(argv[4]);Json request;file>>request;
++ nano::maintenance::require_independent_copy_files(p.string());
+  rocksdb::Options options;options.create_if_missing=false;options.paranoid_checks=true;options.allow_fallocate=false;options.info_log=std::make_shared<SilentLogger>();rocksdb::BlockBasedTableOptions tables;tables.format_version=6;options.table_factory.reset(rocksdb::NewBlockBasedTableFactory(tables));auto db=nano::maintenance::open_read_only_copy(options,p.string());const auto initial=inspect(*db,request);const auto digest=except_schema(*db);if(initial.at("schema")=="nano/2-state-pruned"){std::cout<<Json{{"alreadyMigrated",true},{"checkpoint",initial.at("checkpoint")},{"nonSchemaContentSha256",digest},{"writes",0},{"ownedCopyOnly",true}}.dump()<<'\n';return 0;}db.reset();
+  db=nano::maintenance::open_copy(options,p.string());if(inspect(*db,request)!=initial||except_schema(*db)!=digest)throw std::runtime_error("Owned copy changed between verification and exclusive open");stage("before-write");rocksdb::WriteBatch batch;batch.Put("meta/schema","nano/2-state-pruned");rocksdb::WriteOptions write;write.sync=true;ok(db->Write(write,&batch));stage("after-write");const auto final=inspect(*db,request);if(final.at("schema")!="nano/2-state-pruned"||except_schema(*db)!=digest)throw std::runtime_error("Schema migration changed other content");std::cout<<Json{{"alreadyMigrated",false},{"from","nano/1"},{"to","nano/2-state-pruned"},{"checkpoint",final.at("checkpoint")},{"nonSchemaContentSha256",digest},{"onlySchemaChanged",true},{"syncWrite",true},{"ownedCopyOnly",true},{"productionMigrationQualified",false}}.dump()<<'\n';return 0;
+ }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+--- /dev/null
++++ b/tests/test_owned_copy_physical_admission.cpp
+@@ -0,0 +1,80 @@
++#include "support/process.hpp"
++#include <rocksdb/db.h>
++#include <rocksdb/table.h>
++#include <rocksdb/write_batch.h>
++#include <array>
++#include <chrono>
++#include <fcntl.h>
++#include <sys/resource.h>
++#include <sys/stat.h>
++#include <unistd.h>
++
++using namespace test;
++namespace {
++const auto began=std::chrono::steady_clock::now();
++uint64_t elapsed(){return uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began).count());}
++uint64_t rss(){rusage s{};check(::getrusage(RUSAGE_SELF,&s)==0,"RSS observation");
++#ifdef __APPLE__
++ return uint64_t(s.ru_maxrss)/1024;
++#else
++ return uint64_t(s.ru_maxrss);
++#endif
++}
++void bounded(){check(elapsed()<120000&&rss()<=131072,"test resource budget");}
++void private_dir(const fs::path& p){check(fs::create_directory(p),"new private directory");check(::chmod(p.c_str(),0700)==0,"private directory mode");}
++void file(const fs::path& p,std::string_view b){int fd=::open(p.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600);check(fd>=0,"new owned file");size_t pos=0;while(pos<b.size()){auto n=::write(fd,b.data()+pos,b.size()-pos);if(n<0&&errno==EINTR)continue;if(n<=0){::close(fd);throw std::runtime_error("fixture write");}pos+=size_t(n);}check(::fsync(fd)==0,"fixture fsync");check(::close(fd)==0,"fixture close");}
++std::string digest(std::string_view s){return hex(sha256(Bytes(s.begin(),s.end()))).substr(2);}
++std::array<int64_t,9> material(const struct stat& s){
++#ifdef __APPLE__
++ const auto mt=int64_t(s.st_mtimespec.tv_sec)*1000000000+s.st_mtimespec.tv_nsec;
++ const auto ct=int64_t(s.st_ctimespec.tv_sec)*1000000000+s.st_ctimespec.tv_nsec;
++#else
++ const auto mt=int64_t(s.st_mtim.tv_sec)*1000000000+s.st_mtim.tv_nsec;
++ const auto ct=int64_t(s.st_ctim.tv_sec)*1000000000+s.st_ctim.tv_nsec;
++#endif
++ return {int64_t(s.st_dev),int64_t(s.st_ino),int64_t(s.st_mode),int64_t(s.st_uid),int64_t(s.st_gid),int64_t(s.st_nlink),int64_t(s.st_size),mt,ct};
++}
++using Inventory=std::map<std::string,Json>;
++// Refusal oracle uses lstat for every type, never follows links or opens FIFOs.
++// Atime is excluded; all other nine fields and all regular bytes are retained.
++Inventory inventory(const fs::path& root){Inventory out;uint64_t bytes=0;auto one=[&](const fs::path& p){bounded();check(out.size()<4096,"inventory file bound");struct stat a{},b{},f{};check(::lstat(p.c_str(),&a)==0,"inventory lstat");Json row{{"material",material(a)}};if(S_ISREG(a.st_mode)){check(a.st_size>=0&&uint64_t(a.st_size)<=64*1024*1024-bytes,"inventory byte bound");bytes+=uint64_t(a.st_size);int fd=::open(p.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC);check(fd>=0,"inventory regular FD");check(::fstat(fd,&f)==0&&material(f)==material(a),"inventory FD/path binding");std::string raw;raw.reserve(size_t(a.st_size));std::array<char,8192> block{};for(;;){auto n=::read(fd,block.data(),block.size());if(n<0&&errno==EINTR)continue;check(n>=0,"inventory read");if(!n)break;raw.append(block.data(),size_t(n));check(raw.size()<=uint64_t(a.st_size),"inventory file grew");}check(::fstat(fd,&f)==0&&material(f)==material(a),"inventory FD stability");check(::close(fd)==0,"inventory close");check(raw.size()==uint64_t(a.st_size),"inventory length");row["sha256"]=digest(raw);}else if(S_ISLNK(a.st_mode)){row["target"]=fs::read_symlink(p).string();}check(::lstat(p.c_str(),&b)==0&&material(a)==material(b),"inventory path stability");check(out.emplace(p.lexically_relative(root).string(),std::move(row)).second,"inventory unique path");};one(root);for(const auto& x:fs::recursive_directory_iterator(root))one(x.path());return out;}
++rocksdb::Options options(){rocksdb::Options o;o.create_if_missing=false;o.paranoid_checks=true;o.allow_fallocate=false;rocksdb::BlockBasedTableOptions table;table.format_version=6;o.table_factory.reset(rocksdb::NewBlockBasedTableFactory(table));return o;}
++template<class Database=rocksdb::DB>
++std::unique_ptr<Database> open_db(const fs::path& p,bool create,bool ro=false){
++ auto o=options();o.create_if_missing=create;std::unique_ptr<Database> result;
++ const auto good=[](const rocksdb::Status& status){check(status.ok(),"synthetic RocksDB open: "+status.ToString());};
++ if(ro){if constexpr(requires { Database::OpenForReadOnly(o,p.string(),&result); })good(Database::OpenForReadOnly(o,p.string(),&result));else{Database* raw=nullptr;auto status=Database::OpenForReadOnly(o,p.string(),&raw);result.reset(raw);good(status);}}
++ else{if constexpr(requires { Database::Open(o,p.string(),&result); })good(Database::Open(o,p.string(),&result));else{Database* raw=nullptr;auto status=Database::Open(o,p.string(),&raw);result.reset(raw);good(status);}}
++ return result;
++}
++using Rows=std::map<std::string,std::string>;
++Rows logical(const fs::path& p){auto db=open_db(p,false,true);rocksdb::ReadOptions o;o.verify_checksums=true;o.fill_cache=false;std::unique_ptr<rocksdb::Iterator> i(db->NewIterator(o));Rows rows;size_t bytes=0;for(i->SeekToFirst();i->Valid();i->Next()){bounded();bytes+=i->key().size()+i->value().size();check(rows.size()<256&&bytes<=1024*1024,"synthetic logical bound");rows.emplace(i->key().ToString(),i->value().ToString());}check(i->status().ok(),"synthetic logical scan");return rows;}
++struct Fixture{
++ fs::path root,source,copy,request;bool migration;
++ Fixture(const fs::path& parent,const std::string& name,bool migrate):root(parent/name),migration(migrate){private_dir(root);private_dir(root/"original");private_dir(root/"candidate");source=root/"original/chain";copy=root/"candidate/chain";private_dir(source);const std::string payload="public synthetic opaque checkpoint payload";const std::string sum="0x"+digest(payload);Json token{{"sequence","0x1"},{"digest",sum}};{auto db=open_db(source,true);rocksdb::WriteBatch batch;batch.Put("meta/schema","nano/1");batch.Put("fork-checkpoint/v1/token",token.dump());batch.Put("fork-checkpoint/v1/payload",payload);batch.Put("execution-checkpoint/v1",Json{{"digest",sum}}.dump());batch.Put("execution-state-pruning/v1",Json{{"before","0x2"},{"anchorNumber","0x2"},{"anchorHash","0x"+std::string(64,'1')}}.dump());for(unsigned i=0;i<32;++i)batch.Put("public/"+std::to_string(i),std::string(1024,char('a'+i%26)));rocksdb::WriteOptions w;w.sync=true;check(db->Write(w,&batch).ok(),"synthetic fixture batch");rocksdb::FlushOptions f;f.wait=true;check(db->Flush(f).ok(),"synthetic fixture SST");}check(::chmod(source.c_str(),0700)==0,"synthetic source root");fs::copy(source,copy,fs::copy_options::recursive);check(::chmod(copy.c_str(),0700)==0,"synthetic copy root");const auto marker=root/"candidate"/(migration?".nano-owned-schema-migration-copy":".nano-owned-compaction-copy");file(marker,migration?"owned-offline-schema-migration-v1\n":"owned-offline-qualification-copy-v1\n");request=root/"request.json";file(request,Json{{"expectedCheckpoint",token},{"limits",{{"stateBytes","0x100000"}}}}.dump());check(logical(source)==logical(copy),"fresh copy logical equality");
++ }
++ fs::path marker()const{return root/"candidate"/(migration?".nano-owned-schema-migration-copy":".nano-owned-compaction-copy");}
++ std::vector<std::string> args(const std::string& executable={})const{const auto binary=executable.empty()?std::string(migration?NANO_TEST_MIGRATE:NANO_TEST_COMPACT):executable;std::vector<std::string> a{binary,"--offline-owned-copy",copy.string()};if(migration){a.push_back("--audit-request");a.push_back(request.string());}return a;}
++};
++uint64_t calls=0;
++Result invoke(const Fixture& f,const std::string& binary={}){bounded();Process child(f.args(binary),{{"NANO_TEST_MIGRATION_STOP",std::nullopt}});++calls;auto r=child.wait(10);bounded();return r;}
++void emit(const char* name,Json fields){bounded();fields["scenario"]=name;fields["result"]="PASS";fields["newSignaturesCreated"]=0;fields["privateInputsRead"]=false;fields["productionQualified"]=false;fields["elapsedMs"]=elapsed();fields["maxRssKiB"]=rss();std::cout<<fields.dump()<<std::endl;}
++void independent(const fs::path& p){uint64_t start=calls;for(bool migration:{false,true}){Fixture f(p,migration?"independent-migration":"independent-compaction",migration);private_dir(f.copy/"ordinary-subdirectory");file(f.copy/"ordinary-subdirectory/public-leaf","ordinary independent bytes");check(::chmod(f.copy.c_str(),0755)==0,"nonprivate copy mode remains supported");const auto source=inventory(f.root/"original");const auto expected=logical(f.copy);const auto r=invoke(f);check(r.code==0,"valid independent CLI copy refused: "+r.err);const auto report=Json::parse(r.out);auto after=logical(f.copy);if(migration){check(report.at("onlySchemaChanged")==true,"migration did not attest exact non-schema equality");auto changed=expected;changed["meta/schema"]="nano/2-state-pruned";check(after==changed,"migration changed anything except schema");const auto again=invoke(f);check(again.code==0,"migration idempotent replay refused");const auto j=Json::parse(again.out);check(j.at("alreadyMigrated")==true&&j.at("writes")==0,"migration replay wrote");check(logical(f.copy)==changed,"migration replay changed logical rows");}else check(report.at("logicalContentUnchanged")==true&&after==expected,"compaction altered logical rows");check(inventory(f.root/"original")==source,"successful independent CLI modified source");}emit("owned-copy-independent-cli-success",{{"actualCliInvocations",calls-start},{"compactionLogicalRowsExact",true},{"migrationOnlySchemaChanged",true},{"migrationReplayWritesZero",true},{"originalBytesAndMaterialUnchanged",true},{"descendantDirectoriesAccepted",true},{"root0755Accepted",true}});}
++// Each case contains a complete, otherwise accepted synthetic database. An
++// irrelevant extra leaf therefore cannot hide a mutable RocksDB open.
++void refused(const fs::path& p,unsigned mode,const char* name,const std::function<void(Fixture&)>& alter){uint64_t start=calls;for(bool migration:{false,true}){Fixture f(p,std::string(name)+(migration?"-migration":"-compaction"),migration);alter(f);const auto before=inventory(f.root);auto r=invoke(f);check(r.code==1,"unsafe physical copy was not refused");check(!r.err.empty(),"physical refusal diagnostic missing");check(inventory(f.root)==before,"refusal opened/mutated source, copy, marker or external alias");}emit(name,{{"caseId",mode},{"actualCliInvocations",calls-start},{"bothCliRefused",true},{"allBytesAndNineMaterialFieldsUnchanged",true},{"atimeCompared",false}});}
++void marker_aliases(const fs::path& p){const auto start=calls;for(bool migration:{false,true})for(unsigned variant=0;variant<2;++variant){Fixture f(p,std::string("marker-alias-")+(migration?"migration-":"compact-")+std::to_string(variant),migration);if(variant==0)fs::create_hard_link(f.marker(),f.root/"external-marker");else{const auto bytes=read(f.marker());fs::remove(f.marker());file(f.root/"external-marker",bytes);fs::create_symlink(f.root/"external-marker",f.marker());}const auto before=inventory(f.root);const auto r=invoke(f);check(r.code==1&&!r.err.empty(),"marker alias was not refused");check(inventory(f.root)==before,"marker alias refusal changed source/copy/external marker");}emit("owned-copy-marker-alias-refusal",{{"caseId",8},{"actualCliInvocations",calls-start},{"bothCliRefused",true},{"allBytesAndNineMaterialFieldsUnchanged",true},{"atimeCompared",false},{"markerHardlinkAndSymlinkRefused",true}});}
++
++void baseline(const fs::path& p,const std::string& compact,const std::string& migrate){for(bool migration:{false,true}){Fixture f(p,migration?"baseline-migrate":"baseline-compact",migration);file(f.root/"original/public-alias", "public synthetic alias bytes");fs::create_hard_link(f.root/"original/public-alias",f.copy/"public-alias");const auto original=inventory(f.root/"original");const auto r=invoke(f,migration?migrate:compact);check(r.code==0,"old CLI did not accept aliased synthetic copy: "+r.err);check(inventory(f.root/"original")==original,"baseline altered external alias unexpectedly");}emit("owned-copy-old-cli-alias-acceptance",{{"actualCliInvocations",calls},{"oldAcceptedPhysicallyAliasedCopy",true},{"originalBytesAndMaterialUnchanged",true},{"baselineConsumerObjectMayDiffer",true},{"correctedCodeQualified",false}});}
++}
++int main(int argc,char** argv){try{Temp temp;check(::chmod(temp.path.c_str(),0700)==0,"private test root");if(argc==4&&std::string(argv[1])=="--baseline-aliased-cli"){baseline(temp.path,argv[2],argv[3]);return 0;}check(argc==2&&std::string(argv[1])=="--self-test","usage: --self-test or --baseline-aliased-cli OLD-COMPACT OLD-MIGRATE");independent(temp.path);
++ refused(temp.path,1,"owned-copy-external-hardlink-refusal",[](Fixture& f){fs::remove(f.copy/"CURRENT");fs::create_hard_link(f.source/"CURRENT",f.copy/"CURRENT");});
++ refused(temp.path,2,"owned-copy-internal-hardlink-refusal",[](Fixture& f){fs::create_hard_link(f.copy/"CURRENT",f.copy/"second-current");});
++ refused(temp.path,3,"owned-copy-symlink-refusal",[](Fixture& f){fs::create_symlink(f.source/"CURRENT",f.copy/"unexpected-link");});
++ refused(temp.path,4,"owned-copy-special-file-refusal",[](Fixture& f){check(::mkfifo((f.copy/"unexpected-fifo").c_str(),0600)==0,"owned FIFO fixture");});
++ refused(temp.path,5,"owned-copy-directory-current-refusal",[](Fixture& f){fs::remove(f.copy/"CURRENT");private_dir(f.copy/"CURRENT");});
++ refused(temp.path,6,"owned-copy-descendant-hardlink-refusal",[](Fixture& f){private_dir(f.copy/"nested");file(f.root/"original/public-leaf","public synthetic nested alias");fs::create_hard_link(f.root/"original/public-leaf",f.copy/"nested/public-leaf");});
++ refused(temp.path,7,"owned-copy-lock-hardlink-refusal",[](Fixture& f){check(fs::is_regular_file(f.copy/"LOCK"),"real RocksDB LOCK present");fs::create_hard_link(f.copy/"LOCK",f.root/"external-lock");});
++ marker_aliases(temp.path);
++ emit("owned-copy-physical-admission-summary",{{"scenarioRows",9},{"actualCliInvocations",calls},{"unsafeCliRefusals",18},{"successfulCliInvocations",3},{"oldTestsReplayed",false},{"liveWriterOrSameUidAdversaryQualified",false},{"sourceCopyIndependenceQualified",true},{"runtimeStarted",false},{"networkUsed",false}});return 0;
++}catch(const std::exception& e){std::cout<<Json{{"diagnostic","owned-copy-physical-admission-refused"},{"reason",e.what()},{"actualCliInvocations",calls},{"newSignaturesCreated",0},{"privateInputsRead",false},{"productionQualified",false}}.dump()<<std::endl;return 1;}}
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -2181,3 +2181,15 @@
+ target_compile_definitions(nano-capella-durable-owned-admission-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+ add_test(NAME consensus_capella_durable_owned_admission COMMAND nano-capella-durable-owned-admission-tests --self-test)
+ set_tests_properties(consensus_capella_durable_owned_admission PROPERTIES TIMEOUT 180 LABELS qualification_consensus_recovery)
++
++# Standalone physical-independence qualification for stopped owned copies.
++if(UNIX)
++ add_executable(nano-pruned-schema-migration tools/storage-maintenance/migrate-pruned-owned-copy.cpp)
++ target_link_libraries(nano-pruned-schema-migration PRIVATE nano_core)
++ add_executable(nano-owned-copy-physical-admission-tests tests/test_owned_copy_physical_admission.cpp)
++ target_link_libraries(nano-owned-copy-physical-admission-tests PRIVATE nano_core)
++ target_compile_definitions(nano-owned-copy-physical-admission-tests PRIVATE NANO_TEST_COMPACT="$<TARGET_FILE:nano-storage-maintenance>" NANO_TEST_MIGRATE="$<TARGET_FILE:nano-pruned-schema-migration>")
++ add_dependencies(nano-owned-copy-physical-admission-tests nano-storage-maintenance nano-pruned-schema-migration)
++ add_test(NAME storage_owned_copy_physical_independence COMMAND nano-owned-copy-physical-admission-tests --self-test)
++ set_tests_properties(storage_owned_copy_physical_independence PROPERTIES TIMEOUT 130 LABELS qualification_storage_owned_copy_public)
++endif()
+--- a/tools/storage-maintenance/README.md
++++ b/tools/storage-maintenance/README.md
+@@ -32,3 +32,16 @@
+ La seconde proposition ouvre chaque DB avec `ReadWriteExisting` : création de répertoire/base et initialisation de schéma restent interdites, sans transition RO puis RW créatrice. Le CLI transmet une deadline totale par temps écoulé aux inventaires, plans et collecte ; ses statistiques physiques bornées sont calculées après la validation des copies. Une limite de durée ne rend pas une E/S noyau bloquée interruptible ; le contrôleur doit garder un timeout externe.
+ 
+ Les tests adverses écrits ciblent les closures absentes/corrompues, pins/pending, formats/rôles, liens, plan remplacé, limites/annulation, namespace hors-GC, refus de création, erreurs de fsync et un SIGKILL entre les deux bases. Le processus de crash est exécuté à neuf avant toute ouverture RocksDB ; le parent ne poursuit qu'après preuve de terminaison. Aucune de ces nouvelles frontières n'a été exécutée dans cette proposition. Le scénario naturel reste distinct et n'injecte aucun orphelin.
++
++
++## 15 octobre 2026 — Admission physique avant ouverture RocksDB
++
++Les modes de copie arrêtée vérifient désormais les fichiers de la base avant l’ouverture mutable. Chaque fichier régulier de toute l’arborescence doit avoir un seul lien physique (`st_nlink == 1`) ; les liens symboliques et entrées spéciales sont refusés sans ouvrir leur contenu. Les répertoires descendants ordinaires restent permis. Aucune politique nouvelle de propriétaire ou de mode 0700 n’est imposée : une copie indépendante de racine 0755 reste compatible. Le scanner utilise les descripteurs de répertoires et O_NOFOLLOW, avec comparaison stable du FD et du chemin.
++
++Le marqueur d’usage est lu par un FD régulier borné à 96 octets, avec un seul lien et les matériaux FD/chemin stables. Son texte et son saut de ligne final facultatif restent identiques. Ce contrôle ne transforme pas le marqueur en preuve cryptographique ni en autorisation de maintenance sur les données d’un nœud actif.
++
++L’opérateur doit arrêter tous les writers, produire une copie aux fichiers indépendants, conserver la source en lecture seule, puis empêcher toute mutation externe du namespace jusqu’à la destruction des handles RocksDB. Le verrou RocksDB seul ne prouve pas cette indépendance. La vérification d’admission ne protège pas contre un acteur du même UID ou privilégié qui change les chemins après son dernier contrôle. Un timeout externe reste nécessaire ; aucune nouvelle limite arbitraire de fichiers ou de validateurs n’est ajoutée par ce garde.
++
++La compaction conserve son appel `nano-storage-maintenance --offline-owned-copy COPY/chain`. Le helper expérimental de migration reste non installé ; la cible CMake `nano-pruned-schema-migration` sert à sa qualification explicite sur copie. Elle vérifie l’arborescence avant sa lecture initiale, puis à nouveau après fermeture de la lecture seule et juste avant l’ouverture exclusive mutable. Les audits canoniques anciens/nouveaux et les engagements externes décrits plus haut restent requis.
++
++Le lot de preuve utilise uniquement de petites bases RocksDB synthétiques. La lecture d’un payload opaque répondant aux champs du helper ne qualifie pas un checkpoint Capella authentifié, un restore complet, des journaux originaux, des duties ou la finalité. Le [rapport public borné](../../docs/qualification/owned-copy-physical-admission-20261015/README.md) distingue les résultats mesurés, les anciennes acceptations d’alias et la portée distincte des résultats ARM directs et AMD filtrés.

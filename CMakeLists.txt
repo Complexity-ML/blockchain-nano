@@ -2181,3 +2181,15 @@ target_link_libraries(nano-capella-durable-owned-admission-tests PRIVATE nano_co
 target_compile_definitions(nano-capella-durable-owned-admission-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_capella_durable_owned_admission COMMAND nano-capella-durable-owned-admission-tests --self-test)
 set_tests_properties(consensus_capella_durable_owned_admission PROPERTIES TIMEOUT 180 LABELS qualification_consensus_recovery)
+
+# Standalone physical-independence qualification for stopped owned copies.
+if(UNIX)
+ add_executable(nano-pruned-schema-migration tools/storage-maintenance/migrate-pruned-owned-copy.cpp)
+ target_link_libraries(nano-pruned-schema-migration PRIVATE nano_core)
+ add_executable(nano-owned-copy-physical-admission-tests tests/test_owned_copy_physical_admission.cpp)
+ target_link_libraries(nano-owned-copy-physical-admission-tests PRIVATE nano_core)
+ target_compile_definitions(nano-owned-copy-physical-admission-tests PRIVATE NANO_TEST_COMPACT="$<TARGET_FILE:nano-storage-maintenance>" NANO_TEST_MIGRATE="$<TARGET_FILE:nano-pruned-schema-migration>")
+ add_dependencies(nano-owned-copy-physical-admission-tests nano-storage-maintenance nano-pruned-schema-migration)
+ add_test(NAME storage_owned_copy_physical_independence COMMAND nano-owned-copy-physical-admission-tests --self-test)
+ set_tests_properties(storage_owned_copy_physical_independence PROPERTIES TIMEOUT 130 LABELS qualification_storage_owned_copy_public)
+endif()

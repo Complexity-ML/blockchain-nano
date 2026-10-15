@@ -1,0 +1,308 @@
+{
+  "format": "nano-owned-copy-physical-admission-public-test-contract-v1",
+  "target": "nano-owned-copy-physical-admission-tests",
+  "selector": "--self-test",
+  "ctest": "storage_owned_copy_physical_independence",
+  "timeoutSeconds": 130,
+  "maximumConsumerElapsedMs": 120000,
+  "maximumConsumerRssKiB": 131072,
+  "maximumInventoryEntries": 4096,
+  "maximumInventoryRegularBytes": 67108864,
+  "maximumLogicalRecords": 256,
+  "maximumLogicalBytes": 1048576,
+  "maximumChildSeconds": 10,
+  "expectedTotalRows": 10,
+  "expectedScenarioRowsBeforeSummary": 9,
+  "actualCliInvocations": 21,
+  "successfulCliInvocations": 3,
+  "unsafeCliRefusals": 18,
+  "newSignaturesCreated": 0,
+  "rows": [
+    {
+      "scenario": "owned-copy-independent-cli-success",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "actualCliInvocations": 3,
+        "compactionLogicalRowsExact": true,
+        "migrationOnlySchemaChanged": true,
+        "migrationReplayWritesZero": true,
+        "originalBytesAndMaterialUnchanged": true,
+        "descendantDirectoriesAccepted": true,
+        "root0755Accepted": true
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-external-hardlink-refusal",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "caseId": 1,
+        "actualCliInvocations": 2,
+        "bothCliRefused": true,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-internal-hardlink-refusal",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "caseId": 2,
+        "actualCliInvocations": 2,
+        "bothCliRefused": true,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-symlink-refusal",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "caseId": 3,
+        "actualCliInvocations": 2,
+        "bothCliRefused": true,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-special-file-refusal",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "caseId": 4,
+        "actualCliInvocations": 2,
+        "bothCliRefused": true,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-directory-current-refusal",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "caseId": 5,
+        "actualCliInvocations": 2,
+        "bothCliRefused": true,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-descendant-hardlink-refusal",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "caseId": 6,
+        "actualCliInvocations": 2,
+        "bothCliRefused": true,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-lock-hardlink-refusal",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "caseId": 7,
+        "actualCliInvocations": 2,
+        "bothCliRefused": true,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-marker-alias-refusal",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "caseId": 8,
+        "actualCliInvocations": 4,
+        "bothCliRefused": true,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "markerHardlinkAndSymlinkRefused": true
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    {
+      "scenario": "owned-copy-physical-admission-summary",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "scenarioRows": 9,
+        "actualCliInvocations": 21,
+        "unsafeCliRefusals": 18,
+        "successfulCliInvocations": 3,
+        "oldTestsReplayed": false,
+        "liveWriterOrSameUidAdversaryQualified": false,
+        "sourceCopyIndependenceQualified": true,
+        "runtimeStarted": false,
+        "networkUsed": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    }
+  ],
+  "baseline": {
+    "selector": "--baseline-aliased-cli OLD-COMPACT OLD-MIGRATE",
+    "expectedTotalRows": 1,
+    "actualCliInvocations": 2,
+    "row": {
+      "scenario": "owned-copy-old-cli-alias-acceptance",
+      "equals": {
+        "result": "PASS",
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "actualCliInvocations": 2,
+        "oldAcceptedPhysicallyAliasedCopy": true,
+        "originalBytesAndMaterialUnchanged": true,
+        "baselineConsumerObjectMayDiffer": true,
+        "correctedCodeQualified": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 119999
+        },
+        "maxRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        }
+      }
+    },
+    "status": "EXPECTED_ONLY_NOT_MEASURED"
+  },
+  "scope": {
+    "physicalOwnedCopyCliAdmission": true,
+    "opaqueSyntheticCheckpointFields": true,
+    "canonicalCapellaCheckpointQualification": false,
+    "fullNodeBackupRestore": false,
+    "liveSameUidNamespaceRace": false,
+    "physicalPowerLoss": false,
+    "productionQualified": false
+  }
+}

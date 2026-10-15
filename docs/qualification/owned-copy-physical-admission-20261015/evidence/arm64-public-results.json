@@ -1,0 +1,270 @@
+{
+  "format": "nano-public-owned-copy-arm-json-evidence-v1",
+  "copiedJsonValuesExact": true,
+  "originalRawBytesRetainedByRootOutsidePackage": true,
+  "origins": [
+    {
+      "originalPublicArtifactLabel": "arm64-unit-terminal",
+      "sha256": "129b1f306ce38697aa17109de890957fbeeb227b1a020076d41c58311674e3d0",
+      "bytes": 645
+    },
+    {
+      "originalPublicArtifactLabel": "arm64-unit-scenario-rows",
+      "sha256": "4dae37fcbd851c1a461993b43bfc92108f030ec9694f4710b757906263e4e2f2",
+      "bytes": 3311
+    },
+    {
+      "originalPublicArtifactLabel": "arm64-baseline-terminal",
+      "sha256": "1e73c7120c28fecddef9ff7a9673e51e92564583bdca7ef8d3e183a63e86dd76",
+      "bytes": 656
+    },
+    {
+      "originalPublicArtifactLabel": "arm64-baseline-scenario-rows",
+      "sha256": "9cfc5117baed770f8287161632a132b5c7df92d4409aeb1b5c02c3a878c7c65f",
+      "bytes": 357
+    },
+    {
+      "originalPublicArtifactLabel": "arm64-core-byte-comparison",
+      "sha256": "f788a5697e1492884db5aba32ba02dabf8d9901c0bee780bf2fd36b53b55eec8",
+      "bytes": 525
+    }
+  ],
+  "results": {
+    "arm64-unit-terminal": {
+      "actualCliInvocations": 21,
+      "actualTestProcessExitCode": 0,
+      "compilerInvocations": 0,
+      "cppConsumerInvocations": 1,
+      "ctestCases": 2,
+      "elapsedMs": 7123,
+      "format": "nano-public-owned-copy-arm-docker-typed-v1",
+      "imagesBuilt": 0,
+      "maxConsumerRssKiB": 16768,
+      "mode": "unit",
+      "newSignaturesCreated": 0,
+      "observedFinalVolumeKiB": 212,
+      "oldCliAcceptances": null,
+      "operationalRuntimeStarted": false,
+      "ownedContainersAbsent": true,
+      "ownedVolumeAbsent": true,
+      "privateInputsRead": false,
+      "productionQualified": false,
+      "protectedInputsUnchanged": true,
+      "scenarioRows": 10,
+      "semanticGroups": 9,
+      "status": "PASS_SCOPED_PUBLIC_OWNED_COPY_TWO_CTESTS",
+      "successfulCliInvocations": 3,
+      "unsafeCliRefusals": 18
+    },
+    "arm64-unit-scenario-rows": [
+      {
+        "actualCliInvocations": 3,
+        "compactionLogicalRowsExact": true,
+        "descendantDirectoriesAccepted": true,
+        "elapsedMs": 68,
+        "maxRssKiB": 16512,
+        "migrationOnlySchemaChanged": true,
+        "migrationReplayWritesZero": true,
+        "newSignaturesCreated": 0,
+        "originalBytesAndMaterialUnchanged": true,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "root0755Accepted": true,
+        "scenario": "owned-copy-independent-cli-success"
+      },
+      {
+        "actualCliInvocations": 2,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "bothCliRefused": true,
+        "caseId": 1,
+        "elapsedMs": 134,
+        "maxRssKiB": 16768,
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-external-hardlink-refusal"
+      },
+      {
+        "actualCliInvocations": 2,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "bothCliRefused": true,
+        "caseId": 2,
+        "elapsedMs": 207,
+        "maxRssKiB": 16768,
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-internal-hardlink-refusal"
+      },
+      {
+        "actualCliInvocations": 2,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "bothCliRefused": true,
+        "caseId": 3,
+        "elapsedMs": 275,
+        "maxRssKiB": 16768,
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-symlink-refusal"
+      },
+      {
+        "actualCliInvocations": 2,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "bothCliRefused": true,
+        "caseId": 4,
+        "elapsedMs": 349,
+        "maxRssKiB": 16768,
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-special-file-refusal"
+      },
+      {
+        "actualCliInvocations": 2,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "bothCliRefused": true,
+        "caseId": 5,
+        "elapsedMs": 426,
+        "maxRssKiB": 16768,
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-directory-current-refusal"
+      },
+      {
+        "actualCliInvocations": 2,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "bothCliRefused": true,
+        "caseId": 6,
+        "elapsedMs": 498,
+        "maxRssKiB": 16768,
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-descendant-hardlink-refusal"
+      },
+      {
+        "actualCliInvocations": 2,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "bothCliRefused": true,
+        "caseId": 7,
+        "elapsedMs": 568,
+        "maxRssKiB": 16768,
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-lock-hardlink-refusal"
+      },
+      {
+        "actualCliInvocations": 4,
+        "allBytesAndNineMaterialFieldsUnchanged": true,
+        "atimeCompared": false,
+        "bothCliRefused": true,
+        "caseId": 8,
+        "elapsedMs": 705,
+        "markerHardlinkAndSymlinkRefused": true,
+        "maxRssKiB": 16768,
+        "newSignaturesCreated": 0,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-marker-alias-refusal"
+      },
+      {
+        "actualCliInvocations": 21,
+        "elapsedMs": 705,
+        "liveWriterOrSameUidAdversaryQualified": false,
+        "maxRssKiB": 16768,
+        "networkUsed": false,
+        "newSignaturesCreated": 0,
+        "oldTestsReplayed": false,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "runtimeStarted": false,
+        "scenario": "owned-copy-physical-admission-summary",
+        "scenarioRows": 9,
+        "sourceCopyIndependenceQualified": true,
+        "successfulCliInvocations": 3,
+        "unsafeCliRefusals": 18
+      }
+    ],
+    "arm64-baseline-terminal": {
+      "actualCliInvocations": 2,
+      "actualTestProcessExitCode": 0,
+      "compilerInvocations": 0,
+      "cppConsumerInvocations": 1,
+      "ctestCases": null,
+      "elapsedMs": 4988,
+      "format": "nano-public-owned-copy-arm-docker-typed-v1",
+      "imagesBuilt": 0,
+      "maxConsumerRssKiB": 16760,
+      "mode": "baseline",
+      "newSignaturesCreated": 0,
+      "observedFinalVolumeKiB": 12,
+      "oldCliAcceptances": 2,
+      "operationalRuntimeStarted": false,
+      "ownedContainersAbsent": true,
+      "ownedVolumeAbsent": true,
+      "privateInputsRead": false,
+      "productionQualified": false,
+      "protectedInputsUnchanged": true,
+      "scenarioRows": 1,
+      "semanticGroups": null,
+      "status": "EXPECTED_OLD_CLI_PHYSICAL_ALIAS_ACCEPTANCE",
+      "successfulCliInvocations": null,
+      "unsafeCliRefusals": null
+    },
+    "arm64-baseline-scenario-rows": [
+      {
+        "actualCliInvocations": 2,
+        "baselineConsumerObjectMayDiffer": true,
+        "correctedCodeQualified": false,
+        "elapsedMs": 39,
+        "maxRssKiB": 16760,
+        "newSignaturesCreated": 0,
+        "oldAcceptedPhysicallyAliasedCopy": true,
+        "originalBytesAndMaterialUnchanged": true,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "result": "PASS",
+        "scenario": "owned-copy-old-cli-alias-acceptance"
+      }
+    ],
+    "arm64-core-byte-comparison": {
+      "format": "nano-arm-core-code-byte-comparison-v1",
+      "coreObjects": 143,
+      "coreObjectDifferences": [],
+      "artifacts": {
+        "libnano_core.a": {
+          "sha256": "f358e1cf090239b934d07b44ed82480d12255a94787488b6c43a28a4e6b3f0c5",
+          "bytes": 40983320,
+          "sameAsParent": true
+        },
+        "nano": {
+          "sha256": "1d596c284777747edfe00eb58d8c52e8627546bf2067fc098da899e04262c390",
+          "bytes": 13385184,
+          "sameAsParent": true
+        }
+      },
+      "actualKzgRecompilationObserved": true,
+      "notFreshCoreTests": true
+    }
+  }
+}

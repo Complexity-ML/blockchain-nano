@@ -1,0 +1,73 @@
+{
+  "format": "nano-public-owned-copy-physical-source-bindings-v1",
+  "baseCommitReportedByRoot": "de6f231a96b121f857c820e7910c8112ded65c87",
+  "frozenProposalOrigins": [
+    {
+      "proposalNamespace": "owned-copy-physical-admission-proposal-20261015",
+      "manifest": {
+        "sha256": "b893a92c28b681df6ef540cc9483b3fdb63c63614a4ce3b575cc5e7df20b2f9f",
+        "bytes": 3056
+      }
+    },
+    {
+      "proposalNamespace": "owned-copy-physical-admission-tests-proposal-20261015",
+      "manifest": {
+        "sha256": "61e8ae1c201422e92c57b00d77153bd163318f2f1423c2238f456dde404db78b",
+        "bytes": 2043
+      }
+    }
+  ],
+  "functionalSources": [
+    {
+      "repositoryPath": "tools/storage-maintenance/rocksdb-owned-copy.hpp",
+      "sha256": "2d75a4a1745804479efc55b5bc7844de522169e403291e1269dd8dc4a68a660c",
+      "bytes": 6727,
+      "proposalNamespace": "owned-copy-physical-admission-proposal-20261015"
+    },
+    {
+      "repositoryPath": "tools/storage-maintenance/migrate-pruned-owned-copy.cpp",
+      "sha256": "c4fa8ea559818ce63d41f70a89793269ab8a112e41814a53e5d0194ad88e5dad",
+      "bytes": 7069,
+      "proposalNamespace": "owned-copy-physical-admission-proposal-20261015"
+    },
+    {
+      "repositoryPath": "tests/test_owned_copy_physical_admission.cpp",
+      "sha256": "4c915aa022a7ccbc1916f932b93153a4c918ba01300c7d16c00a0ab1817ce110",
+      "bytes": 14276,
+      "proposalNamespace": "owned-copy-physical-admission-tests-proposal-20261015"
+    },
+    {
+      "repositoryPath": "CMakeLists.txt",
+      "sha256": "a2d38d74ca6ebbe06386ef7f3ae9c91ecbbb24bcd43e5c1627484134d9980436",
+      "bytes": 168837,
+      "proposalNamespace": "owned-copy-physical-admission-tests-proposal-20261015"
+    }
+  ],
+  "operatorDocument": {
+    "repositoryPath": "tools/storage-maintenance/README.md",
+    "baseline": {
+      "sha256": "5530a9891c7bd5f09486023b5d272f696baf558ed57543674480d92501c907e4",
+      "bytes": 6821
+    },
+    "final": {
+      "sha256": "a5af72343e0a03f05120276f1c8e979719231811f556dc3814449de4c2d77be0",
+      "bytes": 9402
+    },
+    "historicalBytesPreservedAsPrefix": true
+  },
+  "compactSourceUnchanged": {
+    "repositoryPath": "tools/storage-maintenance/compact-owned-copy.cpp",
+    "sha256": "0d17feb4c32be71886a4dce875176498c3d7b3cf5bb0bf7e75f3866275c4435e",
+    "bytes": 12093,
+    "guardAppliedThroughSharedHeader": true
+  },
+  "consensusFormatsAndCoreClassLayoutsChanged": false,
+  "transactionRulesFeesForksOrRpcApiChanged": false,
+  "measuredExecutionSources": {
+    "armDriverSha256": "067e95e07e25aeb3a724234b6792ebe9a932127d391fa5c361e2958b4b1ae9df",
+    "amdPrepareBuildControllerSha256": "0034c2b6e2d373ccac51675215785943e164f8b1aba91c0ecb86eac60a8c4f7b",
+    "amdUnitControllerSha256": "1d28e93565e7cbd8100a5ea7c9a0538c30dde85ff8da433afd8c7b53acd80a87",
+    "standardCmakeHelperSha256": "b428d7562ef0aaf4d8858ee5cd057c30367d8cd5d1c5c709cee1a7617ab61067",
+    "controllerSourcesNotIncludedInPublicPackage": true
+  }
+}
