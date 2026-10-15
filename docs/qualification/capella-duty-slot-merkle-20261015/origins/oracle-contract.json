@@ -1,0 +1,29 @@
+{
+  "format": "nano-capella-slot-merkle-public-oracle-contract-v2",
+  "status": "SOURCE_DRAFT_NOT_EXECUTED_NOT_QUALIFIED",
+  "selector": "--slot-merkle-self-test",
+  "expectedActualCppInvocations": 1,
+  "expectedGroups": 3,
+  "expectedRowsIncludingSummary": 4,
+  "expectedActualCliInvocations": 0,
+  "expectedDatabaseOpens": 0,
+  "expectedNewTestOnlySignatures": 2,
+  "maximumRssKiB": 131072,
+  "maximumElapsedMs": 180000,
+  "maximumTestOnlySignatures": 1024,
+  "historicalSelfTestSelectorUnchanged": "--self-test",
+  "commonExactKeys": ["scenario", "result", "syntheticFixtureOnly", "privateInputsRead", "newTestOnlySignaturesCreated", "runtimeDutiesAuthorized", "newForkActivated", "productionQualified"],
+  "commonValues": {"result": "PASS", "syntheticFixtureOnly": true, "privateInputsRead": false, "runtimeDutiesAuthorized": false, "newForkActivated": false, "productionQualified": false},
+  "scenarios": [
+    {"scenario": "slot-merkle-manual-ssz-context-frontier-oracle", "trueKeys": ["officialGoldenRootsObservedAndUnobserved", "officialOneSlotPostBytes", "manualPerSlotRootRecurrence", "exactSszProcessedEpochAndRoots", "epochHistorySyncEth1Frontiers", "twoCircularHistoryWraps", "nonPowerOfTwoHistoryPadding", "independentDutyProposerAndSyncContexts", "sameExecutedSlotCount", "shaCounterScopeExcludesUnchangedEpochAndExecutionHeaderHelpers", "noChronometricGainClaim", "allSourcesUnchanged"], "integerKeys": ["actualSlotTransitions", "strictSlotTransitions", "actualBeaconAndBatchMerklePairs", "strictBeaconMerklePairs"]},
+    {"scenario": "slot-merkle-malformed-bounds-and-public-contract", "trueKeys": ["noncanonicalOffsetsRejected", "invalidBooleanRejected", "markerAndFutureHeaderRejected", "malformedProfileAndByteRegistryLimitsRejected", "backwardsAndChunkBudgetsRejected", "zeroTrialsRefusedAtActualSyncSamplingOnly", "sourceUnchanged"], "integerKeys": []},
+    {"scenario": "slot-merkle-owned-inputs-and-epoch-cancellation", "trueKeys": ["beforeInsideAfterEpochCancellation", "partialWorkUnknownNotCompletion", "continuationChunkAtomicAndReusable", "inputMarkerRulesAndLimitsOwnedBeforeCallback", "observerMutationNotAlgorithmAuthority", "allRetainedSourcesUnchanged"], "integerKeys": []}
+  ],
+  "summary": {"scenario": "slot-merkle-public-summary", "fixed": {"groups": 3, "rows": 4, "actualCliInvocations": 0, "databaseOpens": 0, "maximumRssKiB": 131072, "maximumElapsedMs": 180000, "maximumTestOnlySignatures": 1024, "noChronometricGainClaim": true, "noForkActivation": true}, "integerKeys": ["actualSlotTransitions", "strictSlotTransitions", "actualBeaconAndBatchMerklePairs", "strictBeaconMerklePairs", "actualPeakRssKiB", "elapsedMs"]},
+  "crossRowRequirements": ["actualSlotTransitions == strictSlotTransitions > 0", "0 < actualBeaconAndBatchMerklePairs < strictBeaconMerklePairs", "summary counts exactly equal first scenario", "actualPeakRssKiB <= 131072", "elapsedMs <= 180000", "newTestOnlySignaturesCreated == 2"],
+  "counterScope": "Real SHA pair calls inside strict BeaconState hasher plus local batch; unchanged epoch and execution-header helper internals excluded equally. Strict BeaconState count also omits the manual loop separate beacon-header hashes, so it is a conservative lower bound versus the batch count; no total-CPU or private timing claim.",
+  "failureMarker": {"stream": "stderr", "diagnostic": "capella-duty-readiness-public-failure-v1", "knownActualCppMarker": true, "actualCliDispatchAttempts": 0, "scope": "public-synthetic-consumer-only", "publicSyntheticExceptionMaximumBytes": 512},
+  "invocationCounting": "zero before dispatch; unknown after attempt without a known scenario or diagnostic marker; one after either fixed C++ marker even with nonzero exit; failure never converted to PASS",
+  "sourceOnly": true,
+  "productionQualified": false
+}

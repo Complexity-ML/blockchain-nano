@@ -1,4 +1,5 @@
 #include "nano/consensus_beacon_state.hpp"
+#include "consensus_capella_slot_merkle.hpp"
 #include <algorithm>
 #include <array>
 #include <bit>
@@ -14,14 +15,20 @@ Root scalar(View b){require(b.size()<=32);Root r{};std::copy(b.begin(),b.end(),r
 Root length_root(uint64_t n){Root r{};for(unsigned i=0;i<8;++i)r[i]=uint8_t(n>>(8*i));return r;}
 struct Hasher {
  const std::function<void()>& cancel;
+ capella_detail::SlotMerkleCounter* work=nullptr;
  void tick()const{if(cancel)cancel();}
+ Root pair(const Root& a,const Root& b)const{
+  const auto root=consensus_signing_root(a,b);
+  if(work)work->increment(work->value.slot_merkle_pairs);
+  return root;
+ }
  Root merkle(std::vector<Root> nodes,uint64_t limit)const{
   require(limit&&nodes.size()<=limit);Root zero{};if(nodes.empty())nodes.push_back(zero);
   const auto depth=std::bit_width(limit-1);
   for(unsigned level=0;level<depth;++level){
    if(nodes.size()%2)nodes.push_back(zero);
-   for(size_t i=0;i<nodes.size()/2;++i){tick();nodes[i]=consensus_signing_root(nodes[2*i],nodes[2*i+1]);}
-   nodes.resize(nodes.size()/2);zero=consensus_signing_root(zero,zero);
+   for(size_t i=0;i<nodes.size()/2;++i){tick();nodes[i]=pair(nodes[2*i],nodes[2*i+1]);}
+   nodes.resize(nodes.size()/2);zero=pair(zero,zero);
   }
   require(nodes.size()==1);return nodes[0];
  }
@@ -31,7 +38,7 @@ struct Hasher {
   for(size_t i=0;i<b.size();i+=32){tick();nodes.push_back(scalar(b.subspan(i,std::min(size_t(32),b.size()-i))));}
   return merkle(std::move(nodes),chunks);
  }
- Root mix(const Root& root,uint64_t count)const{return consensus_signing_root(root,length_root(count));}
+ Root mix(const Root& root,uint64_t count)const{return pair(root,length_root(count));}
  Root checkpoint(View b)const{require(b.size()==40);return container({scalar(b.first(8)),scalar(b.subspan(8))});}
  Root data(View b)const{require(b.size()==128);return container({scalar(b.first(8)),scalar(b.subspan(8,8)),scalar(b.subspan(16,32)),checkpoint(b.subspan(48,40)),checkpoint(b.subspan(88,40))});}
  Root header(View b)const{require(b.size()==112);return container({scalar(b.first(8)),scalar(b.subspan(8,8)),scalar(b.subspan(16,32)),scalar(b.subspan(48,32)),scalar(b.subspan(80,32))});}
@@ -40,10 +47,10 @@ struct Hasher {
   require(b.size()==121&&b[88]<=1);
   // Validator has exactly eight fields: no padding subtrees or heap buffers.
   // Its 48-byte public key is two chunks, with the final 16 bytes zero-padded.
-  tick();const auto key=consensus_signing_root(scalar(b.first(32)),scalar(b.subspan(32,16)));
+  tick();const auto key=pair(scalar(b.first(32)),scalar(b.subspan(32,16)));
   std::array<Root,8> nodes{key,scalar(b.subspan(48,32)),scalar(b.subspan(80,8)),scalar(b.subspan(88,1)),scalar(b.subspan(89,8)),scalar(b.subspan(97,8)),scalar(b.subspan(105,8)),scalar(b.subspan(113,8))};
   for(size_t width=nodes.size();width>1;width/=2)
-   for(size_t i=0;i<width/2;++i){tick();nodes[i]=consensus_signing_root(nodes[2*i],nodes[2*i+1]);}
+   for(size_t i=0;i<width/2;++i){tick();nodes[i]=pair(nodes[2*i],nodes[2*i+1]);}
   return nodes[0];
  }
  Root bitlist(View b,uint64_t limit)const{
@@ -72,9 +79,9 @@ struct Hasher {
 }
 namespace {
 struct FieldCache {std::array<View,28> values{};std::array<Root,28> roots{};};
-ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint,const ExecutionPayloadLimits* execution=nullptr,bool capella=false,FieldCache* capture=nullptr,const FieldCache* reuse=nullptr){
+ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint,const ExecutionPayloadLimits* execution=nullptr,bool capella=false,FieldCache* capture=nullptr,const FieldCache* reuse=nullptr,std::array<Root,28>* all_fields=nullptr,capella_detail::SlotMerkleCounter* work=nullptr){
  require(b.size()<=UINT32_MAX&&limits.slots_per_historical_root&&limits.epochs_per_historical_vector&&limits.epochs_per_slashings_vector&&limits.historical_roots_limit&&limits.eth1_votes_limit&&limits.validator_registry_limit&&limits.pending_attestations_limit&&limits.validators_per_committee);
- Hasher h{checkpoint};h.tick();size_t cursor=0;
+ Hasher h{checkpoint,work};h.tick();size_t cursor=0;
  auto take=[&](size_t n){auto v=part(b,cursor,n);cursor+=n;return v;};
  auto vector_size=[&](uint64_t count,size_t width){require(count<=UINT32_MAX/width);return size_t(count)*width;};
  const size_t field_count=capella?28:execution?25:sync_size?24:21;
@@ -120,6 +127,7 @@ ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t 
   }
  }
  if(capture){for(size_t i=0;i<variable.size();++i){const auto [field,start]=variable[i];const auto end=i+1==variable.size()?b.size():variable[i+1].second;capture->values[field]=b.subspan(start,end-start);capture->roots[field]=fields[field];}}
+ if(all_fields){require(capella&&field_count==all_fields->size());std::copy(fields.begin(),fields.end(),all_fields->begin());}
  const auto result=h.merkle(std::move(fields),field_count);h.tick();return result;
 }
 }
@@ -148,6 +156,92 @@ std::optional<CapellaSszTransform> transform_capella_beacon_state(View input,con
  require(post->size()<=maximum_bytes);
  const auto root=beacon_state_root(*post,limits,l.sync_committee_size,checkpoint,&e,true,nullptr,&cache);
  if(checkpoint)checkpoint();return CapellaSszTransform{std::move(*post),root};
+}
+
+namespace capella_detail {
+namespace {
+Root batch_strict_root(View b,const AltairStateLimits& l,const ExecutionPayloadLimits& e,
+ size_t maximum_bytes,const std::function<void()>& check,SlotMerkleCounter& work,
+ std::array<Root,28>* fields=nullptr){
+ require(l.sync_committee_size&&b.size()<=maximum_bytes&&b.size()<=UINT32_MAX);
+ work.increment(work.value.full_state_roots_started);
+ const auto root=beacon_state_root(b,{l.slots_per_historical_root,l.epochs_per_historical_vector,l.epochs_per_slashings_vector,l.historical_roots_limit,l.eth1_votes_limit,l.validator_registry_limit,1,1},l.sync_committee_size,check,&e,true,nullptr,nullptr,fields,&work);
+ work.increment(work.value.full_state_roots_completed);return root;
+}
+void batch_put(Bytes& b,size_t at,View value){
+ require(at<=b.size()&&value.size()<=b.size()-at);std::copy(value.begin(),value.end(),b.begin()+at);
+}
+}
+ConsensusRoot capella_beacon_state_root_observed(View input,const AltairStateLimits& limits,
+ const ExecutionPayloadLimits& execution,size_t maximum_bytes,
+ const std::function<void()>& checkpoint,SlotMerkleWork* output){
+ SlotMerkleCounter work(output);
+ try{
+  // Bound the allocation first; detach all values before any external callback.
+  require(input.size()<=maximum_bytes&&input.size()<=UINT32_MAX);
+  const auto l=limits;const auto e=execution;const auto check=checkpoint;
+  const Bytes owned(input.begin(),input.end());
+  return batch_strict_root(owned,l,e,maximum_bytes,check,work);
+ }catch(...){work.failed();throw;}
+}
+OwnedCapellaSlotMerkle::OwnedCapellaSlotMerkle(CapellaSlotState state,
+ AltairStateLimits limits,ExecutionPayloadLimits execution,size_t maximum_bytes,
+ std::function<void()> check,SlotMerkleCounter& work)
+ :state_(std::move(state)),limits_(limits),execution_(execution),
+  maximum_bytes_(maximum_bytes),check_(std::move(check)),work_(work){rebuild();}
+OwnedCapellaSlotMerkle::Ring OwnedCapellaSlotMerkle::ring(size_t base){
+ const auto count=limits_.slots_per_historical_root;
+ require(count&&count<=UINT32_MAX/32);
+ Ring out;out.leaves=std::bit_ceil(size_t(count));
+ require(out.leaves<=out.nodes.max_size()/2);
+ const auto total=out.leaves*2;Hasher h{check_,&work_};h.tick();
+ // Reservation/padding is bounded by the already validated ring byte length,
+ // never registry/list maxima. Touch each node under the existing checkpoint.
+ out.nodes.reserve(total);
+ for(size_t i=0;i<total;++i){h.tick();out.nodes.emplace_back();}
+ for(size_t i=0;i<size_t(count);++i){h.tick();out.nodes[out.leaves+i]=scalar(part(state_.ssz,base+32*i,32));}
+ for(size_t i=out.leaves;i-- >1;){h.tick();out.nodes[i]=h.pair(out.nodes[2*i],out.nodes[2*i+1]);}
+ return out;
+}
+void OwnedCapellaSlotMerkle::update(Ring& tree,size_t position,const Root& value){
+ require(position<limits_.slots_per_historical_root&&tree.leaves+position<tree.nodes.size());
+ auto i=tree.leaves+position;tree.nodes[i]=value;Hasher h{check_,&work_};
+ while(i>1){i/=2;h.tick();tree.nodes[i]=h.pair(tree.nodes[2*i],tree.nodes[2*i+1]);}
+}
+Root OwnedCapellaSlotMerkle::compose(){
+ Hasher h{check_,&work_};return h.merkle(std::vector<Root>(fields_.begin(),fields_.end()),fields_.size());
+}
+void OwnedCapellaSlotMerkle::rebuild(){
+ root_=batch_strict_root(state_.ssz,limits_,execution_,maximum_bytes_,check_,work_,&fields_);
+ // No views from the old epoch buffer survive this reconstruction.
+ blocks_=Ring{};states_=Ring{};
+ blocks_=ring(176);states_=ring(176+32*size_t(limits_.slots_per_historical_root));
+ require(blocks_.nodes[1]==fields_[5]&&states_.nodes[1]==fields_[6]);
+}
+void OwnedCapellaSlotMerkle::process_slot_roots(uint64_t slot){
+ require(little(part(state_.ssz,40,8))==slot);Hasher h{check_,&work_};h.tick();
+ const auto before=root_;const auto pos=size_t(slot%limits_.slots_per_historical_root);
+ batch_put(state_.ssz,176+32*size_t(limits_.slots_per_historical_root)+32*pos,before);
+ update(states_,pos,before);fields_[6]=states_.nodes[1];
+ if(scalar(part(state_.ssz,112,32))==Root{})batch_put(state_.ssz,112,before);
+ // The same five-field header root as consensus_beacon_header_root; using this
+ // Hasher also counts its actual pairs in both the strict and incremental path.
+ fields_[4]=h.header(part(state_.ssz,64,112));
+ batch_put(state_.ssz,176+32*pos,fields_[4]);update(blocks_,pos,fields_[4]);fields_[5]=blocks_.nodes[1];
+ root_=compose();
+}
+void OwnedCapellaSlotMerkle::reset_epoch(CapellaSlotState post){
+ require(post.ssz.size()<=maximum_bytes_&&post.ssz.size()<=UINT32_MAX);
+ state_=std::move(post);rebuild();
+}
+void OwnedCapellaSlotMerkle::set_slot(uint64_t next){
+ const auto value=length_root(next);batch_put(state_.ssz,40,View(value).first(8));
+ fields_[2]=value;root_=compose();
+}
+CapellaSlotState OwnedCapellaSlotMerkle::finish(){
+ const auto strict=batch_strict_root(state_.ssz,limits_,execution_,maximum_bytes_,check_,work_);
+ require(strict==root_);if(check_)check_();return std::move(state_);
+}
 }
 
 }

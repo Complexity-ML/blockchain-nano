@@ -1,0 +1,516 @@
+--- a/src/consensus_beacon_state.cpp
++++ b/src/consensus_beacon_state.cpp
+@@ -1,4 +1,5 @@
+ #include "nano/consensus_beacon_state.hpp"
++#include "consensus_capella_slot_merkle.hpp"
+ #include <algorithm>
+ #include <array>
+ #include <bit>
+@@ -14,14 +15,20 @@
+ Root length_root(uint64_t n){Root r{};for(unsigned i=0;i<8;++i)r[i]=uint8_t(n>>(8*i));return r;}
+ struct Hasher {
+  const std::function<void()>& cancel;
++ capella_detail::SlotMerkleCounter* work=nullptr;
+  void tick()const{if(cancel)cancel();}
++ Root pair(const Root& a,const Root& b)const{
++  const auto root=consensus_signing_root(a,b);
++  if(work)work->increment(work->value.slot_merkle_pairs);
++  return root;
++ }
+  Root merkle(std::vector<Root> nodes,uint64_t limit)const{
+   require(limit&&nodes.size()<=limit);Root zero{};if(nodes.empty())nodes.push_back(zero);
+   const auto depth=std::bit_width(limit-1);
+   for(unsigned level=0;level<depth;++level){
+    if(nodes.size()%2)nodes.push_back(zero);
+-   for(size_t i=0;i<nodes.size()/2;++i){tick();nodes[i]=consensus_signing_root(nodes[2*i],nodes[2*i+1]);}
+-   nodes.resize(nodes.size()/2);zero=consensus_signing_root(zero,zero);
++   for(size_t i=0;i<nodes.size()/2;++i){tick();nodes[i]=pair(nodes[2*i],nodes[2*i+1]);}
++   nodes.resize(nodes.size()/2);zero=pair(zero,zero);
+   }
+   require(nodes.size()==1);return nodes[0];
+  }
+@@ -31,7 +38,7 @@
+   for(size_t i=0;i<b.size();i+=32){tick();nodes.push_back(scalar(b.subspan(i,std::min(size_t(32),b.size()-i))));}
+   return merkle(std::move(nodes),chunks);
+  }
+- Root mix(const Root& root,uint64_t count)const{return consensus_signing_root(root,length_root(count));}
++ Root mix(const Root& root,uint64_t count)const{return pair(root,length_root(count));}
+  Root checkpoint(View b)const{require(b.size()==40);return container({scalar(b.first(8)),scalar(b.subspan(8))});}
+  Root data(View b)const{require(b.size()==128);return container({scalar(b.first(8)),scalar(b.subspan(8,8)),scalar(b.subspan(16,32)),checkpoint(b.subspan(48,40)),checkpoint(b.subspan(88,40))});}
+  Root header(View b)const{require(b.size()==112);return container({scalar(b.first(8)),scalar(b.subspan(8,8)),scalar(b.subspan(16,32)),scalar(b.subspan(48,32)),scalar(b.subspan(80,32))});}
+@@ -40,10 +47,10 @@
+   require(b.size()==121&&b[88]<=1);
+   // Validator has exactly eight fields: no padding subtrees or heap buffers.
+   // Its 48-byte public key is two chunks, with the final 16 bytes zero-padded.
+-  tick();const auto key=consensus_signing_root(scalar(b.first(32)),scalar(b.subspan(32,16)));
++  tick();const auto key=pair(scalar(b.first(32)),scalar(b.subspan(32,16)));
+   std::array<Root,8> nodes{key,scalar(b.subspan(48,32)),scalar(b.subspan(80,8)),scalar(b.subspan(88,1)),scalar(b.subspan(89,8)),scalar(b.subspan(97,8)),scalar(b.subspan(105,8)),scalar(b.subspan(113,8))};
+   for(size_t width=nodes.size();width>1;width/=2)
+-   for(size_t i=0;i<width/2;++i){tick();nodes[i]=consensus_signing_root(nodes[2*i],nodes[2*i+1]);}
++   for(size_t i=0;i<width/2;++i){tick();nodes[i]=pair(nodes[2*i],nodes[2*i+1]);}
+   return nodes[0];
+  }
+  Root bitlist(View b,uint64_t limit)const{
+@@ -72,9 +79,9 @@
+ }
+ namespace {
+ struct FieldCache {std::array<View,28> values{};std::array<Root,28> roots{};};
+-ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint,const ExecutionPayloadLimits* execution=nullptr,bool capella=false,FieldCache* capture=nullptr,const FieldCache* reuse=nullptr){
++ConsensusRoot beacon_state_root(View b,const Phase0StateLimits& limits,uint64_t sync_size,const std::function<void()>& checkpoint,const ExecutionPayloadLimits* execution=nullptr,bool capella=false,FieldCache* capture=nullptr,const FieldCache* reuse=nullptr,std::array<Root,28>* all_fields=nullptr,capella_detail::SlotMerkleCounter* work=nullptr){
+  require(b.size()<=UINT32_MAX&&limits.slots_per_historical_root&&limits.epochs_per_historical_vector&&limits.epochs_per_slashings_vector&&limits.historical_roots_limit&&limits.eth1_votes_limit&&limits.validator_registry_limit&&limits.pending_attestations_limit&&limits.validators_per_committee);
+- Hasher h{checkpoint};h.tick();size_t cursor=0;
++ Hasher h{checkpoint,work};h.tick();size_t cursor=0;
+  auto take=[&](size_t n){auto v=part(b,cursor,n);cursor+=n;return v;};
+  auto vector_size=[&](uint64_t count,size_t width){require(count<=UINT32_MAX/width);return size_t(count)*width;};
+  const size_t field_count=capella?28:execution?25:sync_size?24:21;
+@@ -120,6 +127,7 @@
+   }
+  }
+  if(capture){for(size_t i=0;i<variable.size();++i){const auto [field,start]=variable[i];const auto end=i+1==variable.size()?b.size():variable[i+1].second;capture->values[field]=b.subspan(start,end-start);capture->roots[field]=fields[field];}}
++ if(all_fields){require(capella&&field_count==all_fields->size());std::copy(fields.begin(),fields.end(),all_fields->begin());}
+  const auto result=h.merkle(std::move(fields),field_count);h.tick();return result;
+ }
+ }
+@@ -150,4 +158,90 @@
+  if(checkpoint)checkpoint();return CapellaSszTransform{std::move(*post),root};
+ }
+ 
+-}
++namespace capella_detail {
++namespace {
++Root batch_strict_root(View b,const AltairStateLimits& l,const ExecutionPayloadLimits& e,
++ size_t maximum_bytes,const std::function<void()>& check,SlotMerkleCounter& work,
++ std::array<Root,28>* fields=nullptr){
++ require(l.sync_committee_size&&b.size()<=maximum_bytes&&b.size()<=UINT32_MAX);
++ work.increment(work.value.full_state_roots_started);
++ const auto root=beacon_state_root(b,{l.slots_per_historical_root,l.epochs_per_historical_vector,l.epochs_per_slashings_vector,l.historical_roots_limit,l.eth1_votes_limit,l.validator_registry_limit,1,1},l.sync_committee_size,check,&e,true,nullptr,nullptr,fields,&work);
++ work.increment(work.value.full_state_roots_completed);return root;
++}
++void batch_put(Bytes& b,size_t at,View value){
++ require(at<=b.size()&&value.size()<=b.size()-at);std::copy(value.begin(),value.end(),b.begin()+at);
++}
++}
++ConsensusRoot capella_beacon_state_root_observed(View input,const AltairStateLimits& limits,
++ const ExecutionPayloadLimits& execution,size_t maximum_bytes,
++ const std::function<void()>& checkpoint,SlotMerkleWork* output){
++ SlotMerkleCounter work(output);
++ try{
++  // Bound the allocation first; detach all values before any external callback.
++  require(input.size()<=maximum_bytes&&input.size()<=UINT32_MAX);
++  const auto l=limits;const auto e=execution;const auto check=checkpoint;
++  const Bytes owned(input.begin(),input.end());
++  return batch_strict_root(owned,l,e,maximum_bytes,check,work);
++ }catch(...){work.failed();throw;}
++}
++OwnedCapellaSlotMerkle::OwnedCapellaSlotMerkle(CapellaSlotState state,
++ AltairStateLimits limits,ExecutionPayloadLimits execution,size_t maximum_bytes,
++ std::function<void()> check,SlotMerkleCounter& work)
++ :state_(std::move(state)),limits_(limits),execution_(execution),
++  maximum_bytes_(maximum_bytes),check_(std::move(check)),work_(work){rebuild();}
++OwnedCapellaSlotMerkle::Ring OwnedCapellaSlotMerkle::ring(size_t base){
++ const auto count=limits_.slots_per_historical_root;
++ require(count&&count<=UINT32_MAX/32);
++ Ring out;out.leaves=std::bit_ceil(size_t(count));
++ require(out.leaves<=out.nodes.max_size()/2);
++ const auto total=out.leaves*2;Hasher h{check_,&work_};h.tick();
++ // Reservation/padding is bounded by the already validated ring byte length,
++ // never registry/list maxima. Touch each node under the existing checkpoint.
++ out.nodes.reserve(total);
++ for(size_t i=0;i<total;++i){h.tick();out.nodes.emplace_back();}
++ for(size_t i=0;i<size_t(count);++i){h.tick();out.nodes[out.leaves+i]=scalar(part(state_.ssz,base+32*i,32));}
++ for(size_t i=out.leaves;i-- >1;){h.tick();out.nodes[i]=h.pair(out.nodes[2*i],out.nodes[2*i+1]);}
++ return out;
++}
++void OwnedCapellaSlotMerkle::update(Ring& tree,size_t position,const Root& value){
++ require(position<limits_.slots_per_historical_root&&tree.leaves+position<tree.nodes.size());
++ auto i=tree.leaves+position;tree.nodes[i]=value;Hasher h{check_,&work_};
++ while(i>1){i/=2;h.tick();tree.nodes[i]=h.pair(tree.nodes[2*i],tree.nodes[2*i+1]);}
++}
++Root OwnedCapellaSlotMerkle::compose(){
++ Hasher h{check_,&work_};return h.merkle(std::vector<Root>(fields_.begin(),fields_.end()),fields_.size());
++}
++void OwnedCapellaSlotMerkle::rebuild(){
++ root_=batch_strict_root(state_.ssz,limits_,execution_,maximum_bytes_,check_,work_,&fields_);
++ // No views from the old epoch buffer survive this reconstruction.
++ blocks_=Ring{};states_=Ring{};
++ blocks_=ring(176);states_=ring(176+32*size_t(limits_.slots_per_historical_root));
++ require(blocks_.nodes[1]==fields_[5]&&states_.nodes[1]==fields_[6]);
++}
++void OwnedCapellaSlotMerkle::process_slot_roots(uint64_t slot){
++ require(little(part(state_.ssz,40,8))==slot);Hasher h{check_,&work_};h.tick();
++ const auto before=root_;const auto pos=size_t(slot%limits_.slots_per_historical_root);
++ batch_put(state_.ssz,176+32*size_t(limits_.slots_per_historical_root)+32*pos,before);
++ update(states_,pos,before);fields_[6]=states_.nodes[1];
++ if(scalar(part(state_.ssz,112,32))==Root{})batch_put(state_.ssz,112,before);
++ // The same five-field header root as consensus_beacon_header_root; using this
++ // Hasher also counts its actual pairs in both the strict and incremental path.
++ fields_[4]=h.header(part(state_.ssz,64,112));
++ batch_put(state_.ssz,176+32*pos,fields_[4]);update(blocks_,pos,fields_[4]);fields_[5]=blocks_.nodes[1];
++ root_=compose();
++}
++void OwnedCapellaSlotMerkle::reset_epoch(CapellaSlotState post){
++ require(post.ssz.size()<=maximum_bytes_&&post.ssz.size()<=UINT32_MAX);
++ state_=std::move(post);rebuild();
++}
++void OwnedCapellaSlotMerkle::set_slot(uint64_t next){
++ const auto value=length_root(next);batch_put(state_.ssz,40,View(value).first(8));
++ fields_[2]=value;root_=compose();
++}
++CapellaSlotState OwnedCapellaSlotMerkle::finish(){
++ const auto strict=batch_strict_root(state_.ssz,limits_,execution_,maximum_bytes_,check_,work_);
++ require(strict==root_);if(check_)check_();return std::move(state_);
++}
++}
++
++}
+--- a/src/consensus_capella_slots.cpp
++++ b/src/consensus_capella_slots.cpp
+@@ -1,12 +1,11 @@
+ #include "nano/consensus_capella_slots.hpp"
++#include "consensus_capella_slot_merkle.hpp"
+ #include "consensus_capella_projection.hpp"
+ #include "consensus_epoch_common.hpp"
+ namespace nano {namespace {
+ void require(bool ok){if(!ok)throw std::invalid_argument("incoherent Capella epoch/slot state");}
+ uint64_t number(const Bytes& b,size_t at,size_t width=8){require(at<=b.size()&&width<=b.size()-at);uint64_t n=0;for(size_t i=0;i<width;++i)n|=uint64_t(b[at+i])<<(8*i);return n;}
+-void put(Bytes& b,size_t at,uint64_t n,size_t width=8){require(at<=b.size()&&width<=b.size()-at&&(width!=4||n<=UINT32_MAX));for(size_t i=0;i<width;++i)b[at+i]=uint8_t(n>>(8*i));}
+ ConsensusRoot root_at(const Bytes& b,size_t at){require(at<=b.size()&&32<=b.size()-at);ConsensusRoot r{};std::copy_n(b.begin()+at,32,r.begin());return r;}
+-void put_root(Bytes& b,size_t at,const ConsensusRoot& r){require(at<=b.size()&&32<=b.size()-at);std::copy(r.begin(),r.end(),b.begin()+at);}
+ // Used only after complete schema validation, which bounds every vector and
+ // offset. Common Altair fields precede the Capella header, cursors and summaries.
+ struct Layout {
+@@ -19,15 +18,21 @@
+   execution=previous+229+96*l.sync_committee_size;
+  }
+ };
+-ConsensusRoot validate(const CapellaSlotState& state,const CapellaEpochRules& r,
+- const AltairStateLimits& l,const std::function<void()>& check){
++void config(const CapellaEpochRules& r,const AltairStateLimits& l){
+  validate_altair_epoch_rules(r.operations,l);
+  require(r.operations.ffg.slots_per_epoch&&l.slots_per_historical_root>=r.operations.ffg.slots_per_epoch&&l.slots_per_historical_root%r.operations.ffg.slots_per_epoch==0);
+  require(r.execution.extra_data_bytes&&r.execution.transaction_bytes&&r.execution.transactions&&r.execution.transactions<=UINT32_MAX/4);
+- const auto root=capella_beacon_state_root(state.ssz,l,r.execution,r.maximum_state_bytes,check);
++}
++void coherent(const CapellaSlotState& state,const AltairStateLimits& l){
++ // Called only after complete SSZ schema validation has bounded this layout.
+  const Layout layout(l);const auto& b=state.ssz;
+  const auto v=number(b,layout.lists[2],4),balances=number(b,layout.lists[3],4),previous=number(b,layout.lists[4],4),current=number(b,layout.lists[5],4),scores=number(b,layout.lists[6],4),end=number(b,layout.execution,4),count=(balances-v)/121;
+  require((previous-balances)/8==count&&current-previous==count&&scores-current==count&&(end-scores)/8==count);
++}
++ConsensusRoot validate(const CapellaSlotState& state,const CapellaEpochRules& r,
++ const AltairStateLimits& l,const std::function<void()>& check){
++ config(r,l);const auto root=capella_beacon_state_root(state.ssz,l,r.execution,r.maximum_state_bytes,check);
++ coherent(state,l);
+  return root;
+ }
+ }
+@@ -52,22 +57,36 @@
+ }
+ CapellaSlotState prepare_capella_slots(const CapellaSlotState& input,const CapellaEpochRules& r,
+  const AltairStateLimits& l,uint64_t target,uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
+- auto state_root=validate(input,r,l,check);const auto slots=r.operations.ffg.slots_per_epoch;
+- const auto start=number(input.ssz,40),epoch=start/slots;
+- require(target>start&&number(input.ssz,64)<=start&&(!input.last_processed_epoch||(epoch&&*input.last_processed_epoch==epoch-1)));
+- if(target-start>maximum_slots)throw std::length_error("Capella slot work budget exceeded");
+- auto out=input;
+- for(uint64_t slot=start;slot<target;++slot){
+-  if(check)check();
+-  if(slot!=start)state_root=capella_beacon_state_root(out.ssz,l,r.execution,r.maximum_state_bytes,check);
+-  const auto pos=slot%l.slots_per_historical_root;
+-  put_root(out.ssz,176+32*l.slots_per_historical_root+32*pos,state_root);
+-  if(root_at(out.ssz,112)==ConsensusRoot{})put_root(out.ssz,112,state_root);
+-  const ConsensusBeaconHeader h{number(out.ssz,64),number(out.ssz,72),root_at(out.ssz,80),root_at(out.ssz,112),root_at(out.ssz,144)};
+-  put_root(out.ssz,176+32*pos,consensus_beacon_header_root(h));
+-  if((slot+1)%slots==0)out=prepare_capella_epoch(out,r,l,slot/slots,trials,check);
+-  put(out.ssz,40,slot+1);
+- }
+- validate(out,r,l,check);if(check)check();return out;
++ return capella_detail::prepare_capella_slots_observed(input,r,l,target,maximum_slots,trials,check,nullptr);
++}
++CapellaSlotState capella_detail::prepare_capella_slots_observed(const CapellaSlotState& input,
++ const CapellaEpochRules& rules,const AltairStateLimits& limits,uint64_t target,
++ uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint,SlotMerkleWork* output){
++ SlotMerkleCounter work(output);
++ try{
++  // Reject an excessive copy before allocation. No callback runs until bytes,
++  // metadata, rules, limits and the callback itself have detached ownership.
++  require(input.ssz.size()<=rules.maximum_state_bytes&&input.ssz.size()<=UINT32_MAX);
++  const auto r=rules;const auto l=limits;const auto check=checkpoint;auto owned=input;
++  config(r,l);
++  OwnedCapellaSlotMerkle out(std::move(owned),l,r.execution,r.maximum_state_bytes,check,work);
++  coherent(out.state(),l);const auto slots=r.operations.ffg.slots_per_epoch;
++  const auto start=number(out.state().ssz,40),epoch=start/slots;
++  require(target>start&&number(out.state().ssz,64)<=start&&(!out.state().last_processed_epoch||(epoch&&*out.state().last_processed_epoch==epoch-1)));
++  if(target-start>maximum_slots)throw std::length_error("Capella slot work budget exceeded");
++  for(uint64_t slot=start;slot<target;++slot){
++   if(check)check();
++   // Exact process_slot order: pre-slot root, state ring, zero header root,
++   // block ring, unchanged process_epoch at its real boundary, then slot++.
++   out.process_slot_roots(slot);
++   if((slot+1)%slots==0){
++    work.increment(work.value.epochs_started);
++    auto post=prepare_capella_epoch(out.state(),r,l,slot/slots,trials,check);
++    work.increment(work.value.epochs_completed);out.reset_epoch(std::move(post));
++   }
++   out.set_slot(slot+1);work.increment(work.value.slots_completed);
++  }
++  coherent(out.state(),l);auto result=out.finish();work.publish();return result;
++ }catch(...){work.failed();throw;}
+ }
+ }
+--- /dev/null
++++ b/src/consensus_capella_slot_merkle.hpp
+@@ -0,0 +1,64 @@
++#pragma once
++// Private implementation/test interface. No caller-provided roots or cache.
++#include "nano/consensus_capella_slots.hpp"
++#include <array>
++#include <limits>
++#include <vector>
++namespace nano::capella_detail {
++// Counts actual direct BeaconState/batch Merkle pairs, not hashes inside the
++// unchanged epoch/execution-header helpers. This is work evidence, not a quota.
++// On failure no state is returned; counters retain completed operations and
++// mark the unfinished operation unknown. Callback mutations of this output
++// never influence preparation: the authoritative counters are private copies.
++struct SlotMerkleWork {
++ uint64_t slots_completed=0,full_state_roots_started=0,full_state_roots_completed=0;
++ uint64_t slot_merkle_pairs=0,epochs_started=0,epochs_completed=0;
++ bool incomplete_work_unknown=false;
++};
++struct SlotMerkleCounter {
++ SlotMerkleWork value{};SlotMerkleWork* output;
++ explicit SlotMerkleCounter(SlotMerkleWork* p):output(p){publish();}
++ void publish()const noexcept{if(output)*output=value;}
++ void increment(uint64_t& n)noexcept{
++  if(n==std::numeric_limits<uint64_t>::max())value.incomplete_work_unknown=true;
++  else ++n;
++  publish();
++ }
++ void failed()noexcept{value.incomplete_work_unknown=true;publish();}
++};
++ConsensusRoot capella_beacon_state_root_observed(std::span<const uint8_t>,
++ const AltairStateLimits&,const ExecutionPayloadLimits&,size_t maximum_bytes,
++ const std::function<void()>&,SlotMerkleWork*);
++CapellaSlotState prepare_capella_slots_observed(const CapellaSlotState&,
++ const CapellaEpochRules&,const AltairStateLimits&,uint64_t target_slot,
++ uint64_t maximum_slots,uint64_t maximum_sync_trials,
++ const std::function<void()>&,SlotMerkleWork*);
++
++// Only this owned local object can update its byte snapshot and field roots.
++// Mutation methods correspond to process_slot, slot++, and a complete epoch
++// replacement. No mutable view of cached bytes/roots escapes this interface.
++class OwnedCapellaSlotMerkle {
++ struct Ring {size_t leaves=0;std::vector<ConsensusRoot> nodes;};
++ CapellaSlotState state_;
++ AltairStateLimits limits_;
++ ExecutionPayloadLimits execution_;
++ size_t maximum_bytes_;
++ std::function<void()> check_;
++ SlotMerkleCounter& work_;
++ std::array<ConsensusRoot,28> fields_{};
++ Ring blocks_,states_;
++ ConsensusRoot root_{};
++ void rebuild();
++ Ring ring(size_t base);
++ void update(Ring&,size_t position,const ConsensusRoot&);
++ ConsensusRoot compose();
++public:
++ OwnedCapellaSlotMerkle(CapellaSlotState,AltairStateLimits,ExecutionPayloadLimits,
++  size_t maximum_bytes,std::function<void()>,SlotMerkleCounter&);
++ const CapellaSlotState& state()const noexcept{return state_;}
++ void process_slot_roots(uint64_t slot);
++ void reset_epoch(CapellaSlotState);
++ void set_slot(uint64_t next_slot);
++ CapellaSlotState finish();
++};
++}
+--- a/tests/test_capella_duty_readiness.cpp
++++ b/tests/test_capella_duty_readiness.cpp
+@@ -10,6 +10,9 @@
+ #include "nano/consensus_deposit_history.hpp"
+ #include "nano/consensus_bls.hpp"
+ #include "nano/consensus_message_ssz.hpp"
++#include "nano/consensus_proposer.hpp"
++#include "nano/committee.hpp"
++#include "../src/consensus_capella_slot_merkle.hpp"
+ #include "nano/storage_memory_policy.hpp"
+ #include "nano/checkpoint_blob_gc.hpp"
+ #include "bootstrap-readonly-replica.hpp"
+@@ -185,6 +188,151 @@
+  const auto retained=frame.head_state();const auto other=prepare_capella_store_tick(f.initial,at_slot(f,sequence.back()),f.rules,f.limits.replay_slots,f.limits.sync_trials,checkpoint);check(capella_fork_head(other,f.rules,checkpoint)->header!=capella_fork_head(store,f.rules,checkpoint)->header&&!frame.matches(other,f.rules,sequence.back(),checkpoint)&&!frame.retarget(other,f.rules,sequence.back()+1,checkpoint),"different real source parent cannot reuse the old authenticated prefix");same_slot_state(frame.head_state(),retained,"refused different-parent retarget preserves completed owned continuation");check(frame.matches(store,f.rules,sequence.back(),checkpoint)&&capella_store_snapshot(admitted,f.rules,f.limits,checkpoint)==source,"retarget oracle retains original source and its completed frame");return {actual_total,strict_total};
+ }
+ 
++// This reference is deliberately NOT prepare_capella_slots. It preserves the
++// old process_slots recurrence with a strict public hash before EVERY slot,
++// the unchanged public epoch primitive, and a final strict schema/root check.
++// Only test-local owned copies are mutated; no signed header is manufactured.
++struct ManualSlotWork {uint64_t slots=0,epochs=0,strict_roots=0;};
++CapellaSlotState manual_strict_slots(CapellaSlotState out,CapellaEpochRules rules,
++ AltairStateLimits limits,uint64_t target,uint64_t maximum,uint64_t trials,
++ ManualSlotWork* work=nullptr,const std::function<void()>& cancel=checkpoint,
++ nano::capella_detail::SlotMerkleWork* hashes=nullptr){
++ validate_altair_epoch_rules(rules.operations,limits);
++ const auto epoch_slots=rules.operations.ffg.slots_per_epoch;
++ check(epoch_slots&&limits.slots_per_historical_root>=epoch_slots&&limits.slots_per_historical_root%epoch_slots==0&&rules.execution.extra_data_bytes&&rules.execution.transaction_bytes&&rules.execution.transactions&&rules.execution.transactions<=UINT32_MAX/4,"manual strict profile coherence");
++ auto strict_root=[&]{if(work)++work->strict_roots;if(!hashes)return capella_beacon_state_root(out.ssz,limits,rules.execution,rules.maximum_state_bytes,cancel);capella_detail::SlotMerkleWork one;const auto root=capella_detail::capella_beacon_state_root_observed(out.ssz,limits,rules.execution,rules.maximum_state_bytes,cancel,&one);check(!one.incomplete_work_unknown&&one.full_state_roots_started==1&&one.full_state_roots_completed==1&&one.slot_merkle_pairs<=UINT64_MAX-hashes->slot_merkle_pairs,"each observed strict full root completes once without counter overflow");hashes->slot_merkle_pairs+=one.slot_merkle_pairs;hashes->full_state_roots_started+=one.full_state_roots_started;hashes->full_state_roots_completed+=one.full_state_roots_completed;return root;};
++ auto state_root=strict_root();
++ const size_t historical=176+64*limits.slots_per_historical_root,previous=historical+96+32*limits.epochs_per_historical_vector+8*limits.epochs_per_slashings_vector,field=previous+229+96*limits.sync_committee_size;
++ const auto validators=test_little(out.ssz,historical+88,4),balances=test_little(out.ssz,historical+92,4),prior=test_little(out.ssz,previous,4),current_flags=test_little(out.ssz,previous+4,4),scores=test_little(out.ssz,previous+129,4),end=test_little(out.ssz,field,4),count=(balances-validators)/121;
++ check((prior-balances)/8==count&&current_flags-prior==count&&scores-current_flags==count&&(end-scores)/8==count,"manual strict participation and balance cardinalities");
++ const auto start=test_little(out.ssz,40),epoch=start/epoch_slots;
++ check(target>start&&target-start<=maximum&&maximum&&trials&&test_little(out.ssz,64)<=start&&(!out.last_processed_epoch||(epoch&&*out.last_processed_epoch==epoch-1)),"manual strict slot and marker bounds");
++ for(uint64_t slot=start;slot<target;++slot){
++  if(cancel)cancel();if(slot!=start)state_root=strict_root();const auto pos=slot%limits.slots_per_historical_root;
++  std::copy(state_root.begin(),state_root.end(),out.ssz.begin()+176+32*limits.slots_per_historical_root+32*pos);
++  if(test_root(out.ssz,112)==ConsensusRoot{})std::copy(state_root.begin(),state_root.end(),out.ssz.begin()+112);
++  const ConsensusBeaconHeader header{test_little(out.ssz,64),test_little(out.ssz,72),test_root(out.ssz,80),test_root(out.ssz,112),test_root(out.ssz,144)};
++  const auto block_root=consensus_beacon_header_root(header);std::copy(block_root.begin(),block_root.end(),out.ssz.begin()+176+32*pos);
++  if((slot+1)%epoch_slots==0){out=prepare_capella_epoch(out,rules,limits,slot/epoch_slots,trials,cancel);if(work)++work->epochs;}
++  test_put(out.ssz,40,slot+1);if(work)++work->slots;
++ }
++ (void)strict_root();if(cancel)cancel();return out;
++}
++CapellaSlotState manual_at(const CapellaSlotState& input,const CapellaEpochRules& rules,const AltairStateLimits& limits,uint64_t target,uint64_t trials){
++ return test_little(input.ssz,40)==target?input:manual_strict_slots(input,rules,limits,target,4096,trials);
++}
++// Projection of independently replayed bytes; this decoder never advances a
++// slot and never calls the candidate helper or a duty continuation.
++Phase0ForkVoteContext manual_vote_context(const CapellaSlotState& state,const CapellaEpochRules& rules,const AltairStateLimits& limits,const ConsensusCheckpoint& target){
++ (void)capella_beacon_state_root(state.ssz,limits,rules.execution,rules.maximum_state_bytes,checkpoint);
++ const auto slot=test_little(state.ssz,40),epoch=slot/rules.operations.ffg.slots_per_epoch;
++ const size_t historical=176+64*limits.slots_per_historical_root,randao=historical+96,slashings=randao+32*limits.epochs_per_historical_vector;
++ const auto validators=test_little(state.ssz,historical+88,4),balances=test_little(state.ssz,historical+92,4),count=(balances-validators)/121;
++ ConsensusSlashingState registry;registry.epoch=epoch;ConsensusRandaoState randomness;randomness.epoch=epoch;randomness.last_reveal_slot=test_little(state.ssz,64);
++ for(size_t i=0;i<limits.epochs_per_historical_vector;++i)randomness.mixes.push_back(test_root(state.ssz,randao+32*i));
++ for(size_t i=0;i<limits.epochs_per_slashings_vector;++i)registry.slashings.push_back(test_little(state.ssz,slashings+8*i));
++ for(size_t i=0;i<count;++i){checkpoint();const auto at=validators+121*i;ConsensusSlashingValidator v{};std::copy_n(state.ssz.begin()+at,48,v.public_key.begin());std::copy_n(state.ssz.begin()+at+48,32,v.withdrawal_credentials.begin());v.effective_balance=test_little(state.ssz,at+80);v.slashed=state.ssz.at(at+88);v.activation_eligibility_epoch=test_little(state.ssz,at+89);v.activation_epoch=test_little(state.ssz,at+97);v.exit_epoch=test_little(state.ssz,at+105);v.withdrawable_epoch=test_little(state.ssz,at+113);v.balance=test_little(state.ssz,balances+8*i);registry.validators.emplace(i,v);}
++ Phase0StateFork fork{};std::copy_n(state.ssz.begin()+48,4,fork.previous_version.begin());std::copy_n(state.ssz.begin()+52,4,fork.current_version.begin());fork.epoch=test_little(state.ssz,56);
++ return {target,std::move(registry),std::move(randomness),fork,test_root(state.ssz,8)};
++}
++std::optional<CapellaProposerIdentity> manual_proposer(const CapellaSlotState& state,const CapellaEpochRules& rules,const AltairStateLimits& limits,const Phase0FfgRules& duties){
++ const auto slot=test_little(state.ssz,40);const auto context=manual_vote_context(state,rules,limits,{slot/rules.operations.ffg.slots_per_epoch,{}});std::vector<Phase0ProposerValidator> validators;
++ for(const auto& [index,v]:context.registry.validators)validators.push_back({index,v.effective_balance,v.activation_epoch,v.exit_epoch});
++ const auto index=phase0_proposer_index(validators,context.randao,{duties.slots_per_epoch,duties.min_seed_lookahead},slot,duties.maximum_effective_balance,duties.shuffle_rounds,checkpoint);const auto& selected=context.registry.validators.at(index);if(selected.slashed)return std::nullopt;
++ return CapellaProposerIdentity{index,slot/duties.slots_per_epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version,context.genesis_root,Bytes(selected.public_key.begin(),selected.public_key.end())};
++}
++void slot_batch_contexts(const Fixture& f,const CapellaForkStore& store,CapellaDutyPreparation& frame,uint64_t slot){
++ const auto head=capella_fork_head(store,f.rules,checkpoint);const auto head_id=consensus_beacon_header_root(head->header);const auto& transition=f.rules.transition;const auto& limits=transition.consensus.state;const CapellaEpochRules rules{transition.consensus.epoch,transition.execution,transition.maximum_state_bytes};const auto E=rules.operations.ffg.slots_per_epoch;
++ const auto strict=manual_at(head->state,rules,limits,slot,f.limits.sync_trials);same_slot_state(frame.head_state(),strict,"batch HEAD equals independent per-slot strict state");
++ const auto* block=frame.block();check(bool(block)==(slot>head->header.slot),"batch block availability bound to actual signed parent");if(block){same_slot_state(block->prepared_state(),manual_at(head->state,rules,limits,slot-1,f.limits.sync_trials),"batch block preceding state equals manual strict");check(block->proposer_for_block(slot,f.limits.sync_trials,checkpoint)==manual_proposer(strict,rules,limits,transition.consensus.attestation.duties),"batch proposer equals manual-state public proposer formula");}
++ const auto sync=frame.try_sync_state(f.limits.sync_trials,checkpoint);check(bool(sync),"active batch fixture has next-slot sync context");same_slot_state(*sync,manual_at(head->state,rules,limits,slot+1,f.limits.sync_trials),"batch sync bytes and marker equal independent per-slot strict");
++ auto boundary=head_id;const auto start=slot/E*E;while(store.timed.view.nodes.at(boundary).slot>start){checkpoint();check(boundary!=store.timed.view.anchor,"manual batch fixture retains epoch ancestor");boundary=store.timed.view.nodes.at(boundary).parent;}
++ const auto source=store.blocks.at(boundary).lease(checkpoint);const ConsensusCheckpoint target{slot/E,boundary};const auto target_state=manual_at(source->state,rules,limits,start,f.limits.sync_trials);const auto context=manual_vote_context(target_state,rules,limits,target);const auto* prepared=frame.target_preparation();check(prepared&&prepared->target()==target&&prepared->prepared_slot()==start,"batch target exact retained ancestor and boundary");same_slot_state(prepared->prepared_state(),target_state,"batch target state equals manual strict");same_vote_context(prepared->context(store,f.rules,checkpoint),context);
++ const auto committees=phase0_attestation_duties(context.registry,context.randao,transition.consensus.attestation.duties,slot/E,checkpoint);const auto justified=capella_fork_checkpoints(strict,rules,limits,checkpoint).realized.current_justified;const auto head_context=capella_fork_block_context(head->state,head->header,rules,limits,checkpoint);std::map<uint64_t,CapellaAttestationDuty> expected;
++ for(uint64_t c=0;c<committees.committees_per_slot;++c){const auto committee=partition_committee(committees.shuffled,(slot%E)*committees.committees_per_slot+c,committees.committees_per_slot*E);for(size_t position=0;position<committee.size();++position){const auto index=committee[position];const auto member=context.registry.validators.find(index),current_member=head_context.registry.validators.find(index);if(member==context.registry.validators.end()||current_member==head_context.registry.validators.end()||store.timed.view.equivocating_indices.contains(index)||member->second.slashed||current_member->second.slashed||member->second.activation_epoch>slot/E||member->second.exit_epoch<=slot/E)continue;check(member->second.public_key==current_member->second.public_key&&context.genesis_root==head_context.genesis_root,"manual duty identity closure");std::vector<bool> bits(committee.size());bits[position]=true;expected.emplace(index,CapellaAttestationDuty{index,Bytes(member->second.public_key.begin(),member->second.public_key.end()),context.genesis_root,slot/E<context.fork.epoch?context.fork.previous_version:context.fork.current_version,{{slot,c,head_id,justified,target},std::move(bits),{}}});}}
++ same_attestation_duties(frame.duties(store,checkpoint),expected);
++}
++uint64_t slot_batch_pairs=0,slot_strict_pairs=0,slot_batch_transitions=0,slot_strict_transitions=0;
++void slot_merkle_official_golden(const Fixture& f){
++ current_phase="slot-merkle-official-golden-roots";const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures";const auto slots=fixtures/"consensus-capella-slots-official",containers=fixtures/"consensus-capella-containers-official";const auto& t=f.rules.transition;const auto& l=t.consensus.state;
++ auto pinned=[&](const fs::path& p,size_t size,const char* expected){const auto text=read(p);check(text.size()==size&&hex(sha256(bytes_of(text))).substr(2)==expected,"official independent golden fixture SHA/length");return bytes_of(text);};
++ const auto manifest=pinned(slots/"manifest.json",6018,"4ae10a776342808a5b0eb98dedae873bdd06ef71bfd1acb7117fe4407da2ebc3");const auto sm=Json::parse(manifest.begin(),manifest.end());check(sm.at("repository")=="https://github.com/ethereum/consensus-spec-tests"&&sm.at("commit")=="194a91fd9e6f97118156421aac4c80e6e47a9a7f","official slot golden origin");
++ const auto pre=pinned(slots/"slots_1/pre.ssz",19717,"f5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d"),post=pinned(slots/"slots_1/post.ssz",19717,"76db391274f7c1aa76a93c223c652a067884fce567d3d312512b62bd681d90dc"),next=pinned(slots/"slots_2/post.ssz",19717,"c7421f306151870a2d8ef4c86588fee679c7a6185bbf74c47c58b8c88d97ef7d");
++ // These are upstream state_roots[0] and state_roots[1], read from the pinned
++ // official next states, NOT calculated by any implementation under test.
++ const auto pre_root=test_root(unhex("0x459eed23bb94dc52a0c7e374a0acae5c5ad5fa0209507e7379d5f000610e8ac1")),post_root=test_root(unhex("0x257ce932e3480f37e76165502007bc3ed4acf21fcad5b19bf8e0ed46eabc4600"));
++ check(l.slots_per_historical_root==64&&test_little(pre,40)==0&&test_little(post,40)==1&&test_little(next,40)==2&&test_root(post,176+32*64)==pre_root&&test_root(next,176+32*64+32)==post_root,"upstream pre/post root literal provenance in independent history vectors");
++ auto golden=[&](const Bytes& bytes,const ConsensusRoot& expected){capella_detail::SlotMerkleWork work;check(capella_beacon_state_root(bytes,l,t.execution,t.maximum_state_bytes,checkpoint)==expected&&capella_detail::capella_beacon_state_root_observed(bytes,l,t.execution,t.maximum_state_bytes,checkpoint,&work)==expected&&!work.incomplete_work_unknown&&work.full_state_roots_completed==1,"unobserved and observed strict SSZ roots must equal independent published golden literal");};golden(pre,pre_root);golden(post,post_root);
++ // A direct published roots.yaml also guards the shared generic Hasher with
++ // a structurally different official BeaconState, not merely the slot loop.
++ (void)pinned(containers/"manifest.json",8733,"1517c9c51ba9cf8c78717ebfa36839b1b0b31530914dac46b014cf3e9fc0b0ea");const auto published=pinned(containers/"BeaconState/case_0/roots.yaml",75,"6df80915996e920979b940ec457667ccf175b50ee77cf947bf04e2e92801eb9b");const std::string yaml(published.begin(),published.end());const std::string literal="0x733d5249765043bb956c2a669100af3b40b3ed268982ff529206e3cc76c66b1e";check(yaml.find(literal)!=std::string::npos,"direct upstream root literal retained unchanged");golden(pinned(containers/"BeaconState/case_0/serialized.ssz",11784,"046ea898574439e181a6cfec134d44f15f44580f9dcc67f757a33a44d4a61986"),test_root(unhex(literal)));
++ const CapellaEpochRules rules{t.consensus.epoch,t.execution,t.maximum_state_bytes};const CapellaSlotState initial{pre,std::nullopt};const auto actual=prepare_capella_slots(initial,rules,l,1,1,f.limits.sync_trials,checkpoint);check(actual.ssz==post&&!actual.last_processed_epoch,"new batch also equals the one official post-state without replaying the old seven-case test");
++}
++void slot_merkle_frontiers(const Fixture& f){
++ slot_merkle_official_golden(f);
++ current_phase="slot-merkle-manual-frontiers";const auto& t=f.rules.transition;const CapellaEpochRules rules{t.consensus.epoch,t.execution,t.maximum_state_bytes};const auto limits=t.consensus.state;const auto E=rules.operations.ffg.slots_per_epoch,H=limits.slots_per_historical_root;
++ check(E>=2&&H>=E&&H<=256&&rules.operations.sync.epochs_per_sync_committee_period<=32&&rules.operations.epochs_per_eth1_voting_period<=32,"bounded public slot-batch fixture profile");
++ const auto sync=E*rules.operations.sync.epochs_per_sync_committee_period,eth1=E*rules.operations.epochs_per_eth1_voting_period;
++ std::set<uint64_t> frontiers{1,E-1,E,E+1,H-1,H,H+1,2*H-1,2*H,2*H+1,sync-1,sync,sync+1,eth1-1,eth1,eth1+1};check(*frontiers.rbegin()<=4096,"batch oracle administrative gap unchanged");
++ const auto admitted=current(f);const auto source_snapshot=capella_store_snapshot(admitted,f.rules,f.limits,checkpoint);const auto head=capella_fork_head(admitted,f.rules,checkpoint);const auto genesis_copy=f.pre,head_copy=head->state;
++ for(const auto& source:std::array<CapellaSlotState,2>{f.pre,head->state}){
++  auto actual=source,strict=source;const auto initial_slot=test_little(source.ssz,40);
++  for(const auto target:frontiers){if(target<=test_little(actual.ssz,40))continue;
++   while(test_little(actual.ssz,40)<target){
++    const auto start=test_little(actual.ssz,40),next=std::min(target,start+E);const auto before=actual;ManualSlotWork manual;capella_detail::SlotMerkleWork counted_strict,counted_batch;
++    const auto want=manual_strict_slots(strict,rules,limits,next,E,f.limits.sync_trials,&manual);
++    const auto counted=manual_strict_slots(strict,rules,limits,next,E,f.limits.sync_trials,nullptr,checkpoint,&counted_strict);
++    const auto got=capella_detail::prepare_capella_slots_observed(actual,rules,limits,next,E,f.limits.sync_trials,checkpoint,&counted_batch);
++    const auto public_wrapper=prepare_capella_slots(actual,rules,limits,next,E,f.limits.sync_trials,checkpoint);
++    same_slot_state(counted,want,"observed strict root codec is the same independent public hash oracle");same_slot_state(got,want,"local Merkle batch exact SSZ and last epoch at every chunk");same_slot_state(public_wrapper,want,"unchanged public slot entry delegates exact batch result");same_slot_state(actual,before,"batch and strict oracle preserve caller input");
++    check(!counted_batch.incomplete_work_unknown&&!counted_strict.incomplete_work_unknown&&counted_batch.slots_completed==manual.slots&&manual.slots==next-start&&counted_batch.epochs_started==manual.epochs&&counted_batch.epochs_completed==manual.epochs,"batch executes every slot and every actual epoch");
++    check(counted_strict.full_state_roots_started==manual.strict_roots&&counted_strict.full_state_roots_completed==manual.strict_roots&&manual.strict_roots==next-start+1,"strict baseline counts exactly old entry/per-slot/final hashes without first-slot double hash");
++    slot_batch_pairs+=counted_batch.slot_merkle_pairs;slot_strict_pairs+=counted_strict.slot_merkle_pairs;slot_batch_transitions+=counted_batch.slots_completed;slot_strict_transitions+=manual.slots;actual=got;strict=want;
++   }
++   const auto root=capella_beacon_state_root(actual.ssz,limits,rules.execution,rules.maximum_state_bytes,checkpoint);check(root==capella_beacon_state_root(strict.ssz,limits,rules.execution,rules.maximum_state_bytes,checkpoint),"frontier strict root equality closes the local batch");
++  }
++  check(test_little(actual.ssz,40)-initial_slot>=2*H-1,"oracle crosses two complete circular-history wraps from each real parent");
++ }
++ // A separate schema-valid PURE preset exercises sparse padding. Its enlarged
++ // history vectors are not installed as an existing signed/DB source record.
++ current_phase="slot-merkle-non-power-two-history";auto odd_limits=limits;odd_limits.slots_per_historical_root=H+E;auto odd_rules=rules;odd_rules.operations.history.slots_per_historical_root=H+E;auto odd=f.pre;const size_t inserted=64*size_t(E),old_end=176+64*size_t(H);Bytes resized;
++ resized.insert(resized.end(),odd.ssz.begin(),odd.ssz.begin()+176+32*H);resized.insert(resized.end(),32*E,0);resized.insert(resized.end(),odd.ssz.begin()+176+32*H,odd.ssz.begin()+old_end);resized.insert(resized.end(),32*E,0);resized.insert(resized.end(),odd.ssz.begin()+old_end,odd.ssz.end());odd.ssz=std::move(resized);
++ const size_t oh=176+64*odd_limits.slots_per_historical_root,op=oh+96+32*odd_limits.epochs_per_historical_vector+8*odd_limits.epochs_per_slashings_vector,of=op+229+96*odd_limits.sync_committee_size;
++ for(const size_t at:std::array<size_t,9>{oh,oh+76,oh+88,oh+92,op,op+4,op+129,of,of+20})test_put(odd.ssz,at,test_little(odd.ssz,at,4)+inserted,4);
++ check((odd_limits.slots_per_historical_root&(odd_limits.slots_per_historical_root-1))!=0,"new pure history preset genuinely requires sparse Merkle padding");(void)capella_beacon_state_root(odd.ssz,odd_limits,odd_rules.execution,odd_rules.maximum_state_bytes,checkpoint);auto actual_odd=odd,strict_odd=odd;
++ const auto odd_target=2*odd_limits.slots_per_historical_root+1;
++ while(test_little(actual_odd.ssz,40)<odd_target){const auto next=std::min(odd_target,test_little(actual_odd.ssz,40)+E);ManualSlotWork manual;capella_detail::SlotMerkleWork a,b;const auto expected=manual_strict_slots(strict_odd,odd_rules,odd_limits,next,E,f.limits.sync_trials,&manual);const auto measured=manual_strict_slots(strict_odd,odd_rules,odd_limits,next,E,f.limits.sync_trials,nullptr,checkpoint,&b);const auto actual=capella_detail::prepare_capella_slots_observed(actual_odd,odd_rules,odd_limits,next,E,f.limits.sync_trials,checkpoint,&a);same_slot_state(actual,expected,"non-power-two history padding preserves exact per-slot strict bytes");same_slot_state(measured,expected,"non-power-two measured strict root remains independent");check(!a.incomplete_work_unknown&&a.slots_completed==manual.slots&&a.epochs_completed==manual.epochs,"non-power-two batch still executes every actual slot and epoch");slot_batch_pairs+=a.slot_merkle_pairs;slot_strict_pairs+=b.slot_merkle_pairs;slot_batch_transitions+=a.slots_completed;slot_strict_transitions+=manual.slots;actual_odd=actual;strict_odd=expected;}
++ check(slot_batch_transitions==slot_strict_transitions&&slot_batch_pairs>0&&slot_batch_pairs<slot_strict_pairs,"fewer measured BeaconState/batch Merkle SHA pairs with identical executed slot count");
++ current_phase="slot-merkle-manual-duty-contexts";
++ for(const auto slot:std::set<uint64_t>{0,1,E-1,E,E+1,H-1,H,H+1,2*H+1}){
++  const auto& origin=slot?admitted:f.initial;auto store=prepare_capella_store_tick(origin,at_slot(f,slot),f.rules,f.limits.replay_slots,f.limits.sync_trials,checkpoint);CapellaDutyPreparation frame(store,f.rules,slot,checkpoint);(void)finish_prefix(frame,f);slot_batch_contexts(f,store,frame,slot);
++ }
++ same_slot_state(f.pre,genesis_copy,"manual root oracle never mutates public genesis state");same_slot_state(head->state,head_copy,"manual root oracle never mutates signed head state");check(capella_store_snapshot(admitted,f.rules,f.limits,checkpoint)==source_snapshot,"slot batch never persists projected state into fork store");
++ emit("slot-merkle-manual-ssz-context-frontier-oracle",{{"officialGoldenRootsObservedAndUnobserved",true},{"officialOneSlotPostBytes",true},{"manualPerSlotRootRecurrence",true},{"exactSszProcessedEpochAndRoots",true},{"epochHistorySyncEth1Frontiers",true},{"twoCircularHistoryWraps",true},{"nonPowerOfTwoHistoryPadding",true},{"independentDutyProposerAndSyncContexts",true},{"sameExecutedSlotCount",true},{"actualSlotTransitions",slot_batch_transitions},{"strictSlotTransitions",slot_strict_transitions},{"actualBeaconAndBatchMerklePairs",slot_batch_pairs},{"strictBeaconMerklePairs",slot_strict_pairs},{"shaCounterScopeExcludesUnchangedEpochAndExecutionHeaderHelpers",true},{"noChronometricGainClaim",true},{"allSourcesUnchanged",true}});
++}
++void slot_merkle_invalid(const Fixture& f){
++ current_phase="slot-merkle-malformed-and-bounds";const auto& t=f.rules.transition;const CapellaEpochRules rules{t.consensus.epoch,t.execution,t.maximum_state_bytes};const auto limits=t.consensus.state;const auto before=f.pre;const auto E=rules.operations.ffg.slots_per_epoch;
++ auto refused=[&](CapellaSlotState input,CapellaEpochRules r,AltairStateLimits l,uint64_t target,uint64_t maximum,uint64_t trials){const auto original=input;bool got=false;try{(void)prepare_capella_slots(input,r,l,target,maximum,trials,checkpoint);}catch(const std::invalid_argument&){got=true;}catch(const std::length_error&){got=true;}catch(const std::overflow_error&){got=true;}check(got,"malformed or out-of-bound slot batch must refuse");same_slot_state(input,original,"refused malformed batch cannot mutate caller state");};
++ const size_t historical=176+64*limits.slots_per_historical_root;auto offset=f.pre;test_put(offset.ssz,historical,test_little(offset.ssz,historical,4)+1,4);refused(offset,rules,limits,1,1,f.limits.sync_trials);
++ auto boolean=f.pre;const auto validators=test_little(boolean.ssz,historical+88,4);boolean.ssz.at(validators+88)=2;refused(boolean,rules,limits,1,1,f.limits.sync_trials);
++ auto marker=f.pre;marker.last_processed_epoch=0;refused(marker,rules,limits,1,1,f.limits.sync_trials);auto future=f.pre;test_put(future.ssz,64,1);refused(future,rules,limits,1,1,f.limits.sync_trials);
++ auto zero=limits;zero.slots_per_historical_root=0;refused(f.pre,rules,zero,1,1,f.limits.sync_trials);auto registry=limits;registry.validator_registry_limit=63;refused(f.pre,rules,registry,1,1,f.limits.sync_trials);auto bad_rules=rules;bad_rules.operations.ffg.slots_per_epoch=0;refused(f.pre,bad_rules,limits,1,1,f.limits.sync_trials);auto bytes=rules;bytes.maximum_state_bytes=f.pre.ssz.size()-1;refused(f.pre,bytes,limits,1,1,f.limits.sync_trials);
++ refused(f.pre,rules,limits,0,1,f.limits.sync_trials);refused(f.pre,rules,limits,E+1,E,f.limits.sync_trials);refused(f.pre,rules,limits,1,0,f.limits.sync_trials);
++ // Zero trials is not rejected for an ordinary slot by the old API. Exercise
++ // its genuine refusal only when the epoch actually samples a new committee.
++ const auto sync=E*rules.operations.sync.epochs_per_sync_committee_period;refused(f.pre,rules,limits,sync,sync,0);
++ same_slot_state(f.pre,before,"all negative batch inputs are disjoint owned copies");emit("slot-merkle-malformed-bounds-and-public-contract",{{"noncanonicalOffsetsRejected",true},{"invalidBooleanRejected",true},{"markerAndFutureHeaderRejected",true},{"malformedProfileAndByteRegistryLimitsRejected",true},{"backwardsAndChunkBudgetsRejected",true},{"zeroTrialsRefusedAtActualSyncSamplingOnly",true},{"sourceUnchanged",true}});
++}
++void slot_merkle_cancellation_and_ownership(const Fixture& f){
++ current_phase="slot-merkle-epoch-cancellation";const auto& t=f.rules.transition;const CapellaEpochRules rules{t.consensus.epoch,t.execution,t.maximum_state_bytes};const auto limits=t.consensus.state;const auto E=rules.operations.ffg.slots_per_epoch;const auto before=manual_at(f.pre,rules,limits,E-1,f.limits.sync_trials);const auto expected=manual_at(before,rules,limits,E+1,f.limits.sync_trials);struct Cancelled{};
++ for(unsigned phase=0;phase<3;++phase){auto input=before;capella_detail::SlotMerkleWork observed;bool reached=false;throws_exact<Cancelled>([&]{(void)capella_detail::prepare_capella_slots_observed(input,rules,limits,E+1,2,f.limits.sync_trials,[&]{checkpoint();const bool hit=phase==0?observed.epochs_started==0:phase==1?observed.epochs_started>observed.epochs_completed:observed.epochs_completed>0;if(hit){reached=true;throw Cancelled{};}},&observed);},"typed cancellation must escape before, inside, and after actual epoch work");check(reached&&observed.incomplete_work_unknown,"cancelled chunk retains uncertainty instead of a fake zero-work completion");if(phase==1)check(observed.epochs_started>observed.epochs_completed,"during-epoch cancellation is discriminated by actual operation counters");if(phase==2)check(observed.epochs_completed>0,"after-epoch cancellation follows a completed epoch operation");same_slot_state(input,before,"epoch-cancelled batch preserves caller bytes and marker");}
++ const auto admitted=current(f);const auto head=capella_fork_head(admitted,f.rules,checkpoint);CapellaSlotPreparation continuation(head->state,head->header,rules,limits,checkpoint);check(continuation.advance(E-1,E,f.limits.sync_trials,checkpoint),"real signed-parent continuation reaches pre-epoch boundary");const auto committed=continuation.state();throws_exact<Cancelled>([&]{(void)continuation.advance(E+1,2,f.limits.sync_trials,[]{throw Cancelled{};});},"failed bounded continuation cannot commit unfinished chunk");same_slot_state(continuation.state(),committed,"continuation is atomic on chunk failure");check(continuation.advance(E+1,2,f.limits.sync_trials,checkpoint),"cancelled frame remains reusable");same_slot_state(continuation.state(),manual_at(head->state,rules,limits,E+1,f.limits.sync_trials),"reused frame continues exact authenticated parent after cancellation");
++ current_phase="slot-merkle-owned-input-and-profile";auto caller=before;auto caller_rules=rules;auto caller_limits=limits;bool mutated=false;capella_detail::SlotMerkleWork owned_work;
++ const auto owned=capella_detail::prepare_capella_slots_observed(caller,caller_rules,caller_limits,E+1,2,f.limits.sync_trials,[&]{checkpoint();if(!mutated){mutated=true;caller.ssz.assign(1,0);caller.last_processed_epoch=UINT64_MAX;caller_rules.operations.ffg.slots_per_epoch=0;caller_rules.execution.extra_data_bytes=0;caller_limits.slots_per_historical_root=0;caller_limits.validator_registry_limit=0;owned_work.slot_merkle_pairs=UINT64_MAX;owned_work.epochs_started=UINT64_MAX;}},&owned_work);
++ check(mutated&&caller.ssz==Bytes{0}&&caller.last_processed_epoch==UINT64_MAX,"caller callback really mutated all preexisting source aliases");same_slot_state(owned,expected,"batch owns input bytes, marker, rules and limits before its first callback");check(!owned_work.incomplete_work_unknown&&owned_work.slots_completed==2&&owned_work.epochs_started==1&&owned_work.epochs_completed==1&&owned_work.slot_merkle_pairs<UINT64_MAX,"algorithm never reads caller-tampered observer counters as progress or hash authority");same_slot_state(before,manual_at(f.pre,rules,limits,E-1,f.limits.sync_trials),"independent retained source stays unchanged despite caller mutation");
++ emit("slot-merkle-owned-inputs-and-epoch-cancellation",{{"beforeInsideAfterEpochCancellation",true},{"partialWorkUnknownNotCompletion",true},{"continuationChunkAtomicAndReusable",true},{"inputMarkerRulesAndLimitsOwnedBeforeCallback",true},{"observerMutationNotAlgorithmAuthority",true},{"allRetainedSourcesUnchanged",true}});
++}
++
+ void pure_contexts(const Fixture& f){genesis_version_contract();const auto prefix=prefix_frontier_oracle(f);current_phase="pure-contexts-current";const auto store=current(f);current_phase="pure-contexts-source-snapshot";const auto input=capella_store_snapshot(store,f.rules,f.limits,checkpoint);auto full=evaluate(f,store,at_slot(f,8),all_keys(f));safety(full);check(full.at("result")=="PREPARED_READONLY_ONLY"&&full.at("completeDutyContexts")==true&&full.at("headProjectionReady")==true&&full.at("targetEpochReady")==true&&full.at("blockStateReady")==true&&full.at("syncCommitteeReady")==true,"four independent current duty contexts");
+  current_phase="pure-contexts-trusted-late-anchor";const auto signed_head=capella_fork_head(store,f.rules,checkpoint);const auto singleton=initialize_capella_fork_store(signed_head->state,std::span<const uint8_t>(f.wire).subspan(100),signed_head->execution_block,signed_head->execution_state,signed_head->receipts,{f.genesis.block.header},f.rules,checkpoint,signed_head->deposit_history);auto anchored=evaluate(f,singleton,at_slot(f,1),all_keys(f));safety(anchored);CapellaDutyPreparation ready_alone(singleton,f.rules,1,checkpoint);check(ready_alone.advance(8,f.limits.sync_trials,checkpoint)&&ready_alone.ready()&&!ready_alone.target_preparation(),"real ready() alone has no epoch boundary");check(anchored.at("headProjectionReady")==true&&anchored.at("targetEpochReady")==false&&anchored.at("completeDutyContexts")==false,"ready alone must not certify all contexts");
+  check(capella_store_snapshot(store,f.rules,f.limits,checkpoint)==input,"projection preserves source and does not assimilate state root/head root");
+@@ -317,4 +465,13 @@
+  auto stopped=child(a,"observed-request-pread-sigterm-and-join",{},true);check(stopped.stopped&&stopped.event.find('S')!=std::string::npos&&WIFEXITED(stopped.status)&&WEXITSTATUS(stopped.status)==1&&stopped.typed.at("status")=="REFUSED_NO_AUTOMATIC_RETRY"&&stopped.typed.at("reason")=="cancelled"&&!fs::exists(stopped.report)&&fs::is_empty(a.scratch),"actual observed cancellation refused and fully joined; no publication");tool_safety(stopped.typed);++tool_refusals;emit("duty-readiness-cli-path-fencing-and-observed-cooperative-cancellation",{{"actualCliInvocations",5},{"literalEnvPathRefused",true},{"symlinkAndNoWriterFifoRefused",true},{"outputSourceAliasRefused",true},{"actualRequestPreadEventObserved",true},{"childStoppedTerminatedAndJoined",true},{"newProductionHooks",0},{"physicalPowerLossQualified",false}});
+ }
+ } // anonymous namespace
+-int main(int argc,char** argv){::umask(0077);try{check(argc==2&&std::string(argv[1])=="--self-test","exact public readiness selector");const ChainStoreMemoryPolicy policy{4*1024*1024,2,16*1024*1024,4*1024*1024};ScopedChainStoreMemoryPolicy scope(policy);current_case="setup-first-fixture";const auto f=fixture();current_case="setup-exiting-fixture";const auto exiting=fixture(2,true);current_case="pure-contexts";pure_contexts(f);current_case="pure-availability";pure_availability(f,exiting);current_case="pure-key-states";pure_key_states(f);current_case="pure-budgets";pure_budgets(f);current_case="pure-ownership-and-freshness";pure_ownership_and_freshness(f);cli_positive();cli_current_and_evidence();cli_paths_and_cancellation();checkpoint();check(tool_calls==11&&tool_accepts==2&&tool_refusals==9&&io_events==1&&test_signatures<=1024,"exact actual completed child counts");emit("capella-duty-readiness-public-summary",{{"groups",8},{"actualCliInvocations",tool_calls},{"acceptedCliInvocations",tool_accepts},{"refusedCliInvocations",tool_refusals},{"actualIoEvents",io_events},{"actualPeakRssKiB",rss()},{"maximumRssKiB",131072},{"maximumElapsedMs",180000},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()},{"maximumTestOnlySignatures",1024},{"syntheticRwSetupOnly",true},{"signerConstructorsUsed",0},{"cliUsesRealUtcOnly",true},{"fixtureBlockCacheBytes",4*1024*1024},{"historicalStrict4MiBLongFinalizationQualified",false},{"noForkActivation",true}});return 0;}catch(const std::exception& error){std::string why=error.what();const bool truncated=why.size()>512;if(truncated)why.resize(512);Json j{{"diagnostic","capella-duty-readiness-public-failure-v1"},{"case",current_case},{"phase",current_phase},{"diagnosticScope","public-synthetic-consumer-only"},{"publicSyntheticException",why},{"exceptionTruncated",truncated},{"newTestOnlySignaturesCreated",test_signatures},{"actualCliDispatchAttempts",tool_calls},{"acceptedCliInvocations",tool_accepts},{"refusedCliInvocations",tool_refusals},{"toolExit",last_exit?Json(*last_exit):Json(nullptr)},{"actualPeakRssKiB",rss()},{"syntheticFixtureOnly",true},{"privateInputsRead",false},{"runtimeDutiesAuthorized",false},{"productionQualified",false}};if(last_tool.is_object())for(const auto* key:{"status","refusedStage","reason","probeCompleted"})if(last_tool.contains(key))j[key]=last_tool.at(key);std::cerr<<j.dump()<<std::endl;return 1;}catch(...){const Json why=nullptr;const bool truncated=false;Json j{{"diagnostic","capella-duty-readiness-public-failure-v1"},{"case",current_case},{"phase",current_phase},{"diagnosticScope","public-synthetic-consumer-only"},{"publicSyntheticException",why},{"exceptionTruncated",truncated},{"newTestOnlySignaturesCreated",test_signatures},{"actualCliDispatchAttempts",tool_calls},{"acceptedCliInvocations",tool_accepts},{"refusedCliInvocations",tool_refusals},{"toolExit",last_exit?Json(*last_exit):Json(nullptr)},{"actualPeakRssKiB",rss()},{"syntheticFixtureOnly",true},{"privateInputsRead",false},{"runtimeDutiesAuthorized",false},{"productionQualified",false}};if(last_tool.is_object())for(const auto* key:{"status","refusedStage","reason","probeCompleted"})if(last_tool.contains(key))j[key]=last_tool.at(key);std::cerr<<j.dump()<<std::endl;return 1;}}
++int main(int argc,char** argv){::umask(0077);try{
++ if(argc==2&&std::string(argv[1])=="--slot-merkle-self-test"){
++  current_case="slot-merkle-public-fixture";const auto f=fixture();
++  current_case="slot-merkle-frontiers";slot_merkle_frontiers(f);
++  current_case="slot-merkle-invalid";slot_merkle_invalid(f);
++  current_case="slot-merkle-cancellation-ownership";slot_merkle_cancellation_and_ownership(f);
++  checkpoint();check(tool_calls==0&&tool_accepts==0&&tool_refusals==0&&io_events==0&&test_signatures==2&&test_signatures<=1024,"new pure slot oracle executes no historical CLI or database campaign");
++  emit("slot-merkle-public-summary",{{"groups",3},{"rows",4},{"actualCliInvocations",0},{"databaseOpens",0},{"actualSlotTransitions",slot_batch_transitions},{"strictSlotTransitions",slot_strict_transitions},{"actualBeaconAndBatchMerklePairs",slot_batch_pairs},{"strictBeaconMerklePairs",slot_strict_pairs},{"actualPeakRssKiB",rss()},{"maximumRssKiB",131072},{"maximumElapsedMs",180000},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()},{"maximumTestOnlySignatures",1024},{"noChronometricGainClaim",true},{"noForkActivation",true}});return 0;
++ }
++ check(argc==2&&std::string(argv[1])=="--self-test","exact public readiness selector");const ChainStoreMemoryPolicy policy{4*1024*1024,2,16*1024*1024,4*1024*1024};ScopedChainStoreMemoryPolicy scope(policy);current_case="setup-first-fixture";const auto f=fixture();current_case="setup-exiting-fixture";const auto exiting=fixture(2,true);current_case="pure-contexts";pure_contexts(f);current_case="pure-availability";pure_availability(f,exiting);current_case="pure-key-states";pure_key_states(f);current_case="pure-budgets";pure_budgets(f);current_case="pure-ownership-and-freshness";pure_ownership_and_freshness(f);cli_positive();cli_current_and_evidence();cli_paths_and_cancellation();checkpoint();check(tool_calls==11&&tool_accepts==2&&tool_refusals==9&&io_events==1&&test_signatures<=1024,"exact actual completed child counts");emit("capella-duty-readiness-public-summary",{{"groups",8},{"actualCliInvocations",tool_calls},{"acceptedCliInvocations",tool_accepts},{"refusedCliInvocations",tool_refusals},{"actualIoEvents",io_events},{"actualPeakRssKiB",rss()},{"maximumRssKiB",131072},{"maximumElapsedMs",180000},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()},{"maximumTestOnlySignatures",1024},{"syntheticRwSetupOnly",true},{"signerConstructorsUsed",0},{"cliUsesRealUtcOnly",true},{"fixtureBlockCacheBytes",4*1024*1024},{"historicalStrict4MiBLongFinalizationQualified",false},{"noForkActivation",true}});return 0;}catch(const std::exception& error){std::string why=error.what();const bool truncated=why.size()>512;if(truncated)why.resize(512);Json j{{"diagnostic","capella-duty-readiness-public-failure-v1"},{"case",current_case},{"phase",current_phase},{"diagnosticScope","public-synthetic-consumer-only"},{"publicSyntheticException",why},{"exceptionTruncated",truncated},{"newTestOnlySignaturesCreated",test_signatures},{"actualCliDispatchAttempts",tool_calls},{"acceptedCliInvocations",tool_accepts},{"refusedCliInvocations",tool_refusals},{"toolExit",last_exit?Json(*last_exit):Json(nullptr)},{"actualPeakRssKiB",rss()},{"syntheticFixtureOnly",true},{"privateInputsRead",false},{"runtimeDutiesAuthorized",false},{"productionQualified",false}};if(last_tool.is_object())for(const auto* key:{"status","refusedStage","reason","probeCompleted"})if(last_tool.contains(key))j[key]=last_tool.at(key);std::cerr<<j.dump()<<std::endl;return 1;}catch(...){const Json why=nullptr;const bool truncated=false;Json j{{"diagnostic","capella-duty-readiness-public-failure-v1"},{"case",current_case},{"phase",current_phase},{"diagnosticScope","public-synthetic-consumer-only"},{"publicSyntheticException",why},{"exceptionTruncated",truncated},{"newTestOnlySignaturesCreated",test_signatures},{"actualCliDispatchAttempts",tool_calls},{"acceptedCliInvocations",tool_accepts},{"refusedCliInvocations",tool_refusals},{"toolExit",last_exit?Json(*last_exit):Json(nullptr)},{"actualPeakRssKiB",rss()},{"syntheticFixtureOnly",true},{"privateInputsRead",false},{"runtimeDutiesAuthorized",false},{"productionQualified",false}};if(last_tool.is_object())for(const auto* key:{"status","refusedStage","reason","probeCompleted"})if(last_tool.contains(key))j[key]=last_tool.at(key);std::cerr<<j.dump()<<std::endl;return 1;}}
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -2159,4 +2159,6 @@
+ add_dependencies(nano-capella-duty-readiness-tests nano-capella-duty-readiness nano-journal-observer-io-fault)
+ add_test(NAME consensus_capella_readonly_duty_readiness COMMAND nano-capella-duty-readiness-tests --self-test)
+ set_tests_properties(consensus_capella_readonly_duty_readiness PROPERTIES TIMEOUT 180 LABELS qualification_consensus_duty_observer)
+-endif()
++add_test(NAME consensus_capella_slot_merkle_batch_manual_oracle COMMAND nano-capella-duty-readiness-tests --slot-merkle-self-test)
++set_tests_properties(consensus_capella_slot_merkle_batch_manual_oracle PROPERTIES TIMEOUT 180 LABELS qualification_consensus_duty_observer)
++endif()

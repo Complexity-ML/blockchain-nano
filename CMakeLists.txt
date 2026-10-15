@@ -2159,4 +2159,6 @@ target_compile_definitions(nano-capella-duty-readiness-tests PRIVATE NANO_TEST_S
 add_dependencies(nano-capella-duty-readiness-tests nano-capella-duty-readiness nano-journal-observer-io-fault)
 add_test(NAME consensus_capella_readonly_duty_readiness COMMAND nano-capella-duty-readiness-tests --self-test)
 set_tests_properties(consensus_capella_readonly_duty_readiness PROPERTIES TIMEOUT 180 LABELS qualification_consensus_duty_observer)
+add_test(NAME consensus_capella_slot_merkle_batch_manual_oracle COMMAND nano-capella-duty-readiness-tests --slot-merkle-self-test)
+set_tests_properties(consensus_capella_slot_merkle_batch_manual_oracle PROPERTIES TIMEOUT 180 LABELS qualification_consensus_duty_observer)
 endif()

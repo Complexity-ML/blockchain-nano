@@ -1,0 +1,62 @@
+{
+  "format": "nano-duty-slot-merkle-batch-source-proposal-v1",
+  "status": "SOURCE_ONLY_NOT_COMPILED_NOT_EXECUTED",
+  "files": [
+    {
+      "path": "src/consensus_beacon_state.cpp",
+      "source": {"path": "source/src/consensus_beacon_state.cpp", "sha256": "44537ca4e11d8ca265081cbba483d9fbbbdf5e1ae7edb9a071badf3ccee62b78", "bytes": 17562},
+      "baseline": {"sha256": "0f8ca251f2812f15b2f7855dc366ab2d866f7369947c964d4589919b71807a5d", "bytes": 12278}
+    },
+    {
+      "path": "src/consensus_capella_slots.cpp",
+      "source": {"path": "source/src/consensus_capella_slots.cpp", "sha256": "79e408c4ff6d0ac44dda5a035329136da48908f4d0e02ee57405854f394f1318", "bytes": 6230},
+      "baseline": {"sha256": "82cd1a5858f740ca8cf0e0baa5f6b317ef5ffc3b18de9cbf5c9214dc717e0904", "bytes": 5442}
+    },
+    {
+      "path": "src/consensus_capella_slot_merkle.hpp",
+      "source": {"path": "source/src/consensus_capella_slot_merkle.hpp", "sha256": "8140114cc40e3e141a8bdb8532c88180d7c4ec5d429f0413c0e61f71c7a8da29", "bytes": 2780},
+      "baseline": null
+    }
+  ],
+  "payloads": [
+    {"path": "source/src/consensus_beacon_state.cpp", "sha256": "44537ca4e11d8ca265081cbba483d9fbbbdf5e1ae7edb9a071badf3ccee62b78", "bytes": 17562},
+    {"path": "source/src/consensus_capella_slots.cpp", "sha256": "79e408c4ff6d0ac44dda5a035329136da48908f4d0e02ee57405854f394f1318", "bytes": 6230},
+    {"path": "source/src/consensus_capella_slot_merkle.hpp", "sha256": "8140114cc40e3e141a8bdb8532c88180d7c4ec5d429f0413c0e61f71c7a8da29", "bytes": 2780},
+    {"path": "candidate.patch", "sha256": "bc6b652e9e0ba8e89461c908a04af5f8f92531ccad148e4e9b19afebfbc2c9c3", "bytes": 19196},
+    {"path": "README.md", "sha256": "1a3d1cdfdac93cbf69f393f2dc3cfde48c0906f6911dd28ef97f5505b5bdd4e5", "bytes": 5245}
+  ],
+  "payloadCount": 5,
+  "payloadBytes": 51013,
+  "scope": {
+    "existingCoreTranslationUnitsChanged": 2,
+    "newPrivateHeaders": 1,
+    "publicHeadersChanged": 0,
+    "existingClassLayoutChanged": false,
+    "cmakeChanged": false,
+    "allInputBytesRulesLimitsAndCallbackOwnedBeforeFirstCheckpoint": true,
+    "allocationByteBoundBeforeInputCopy": true,
+    "completeStrictSchemaAtEntryAndFinal": true,
+    "cachedFinalRootMustEqualStrictFinalRoot": true,
+    "allFieldRootsRebuiltAfterUnchangedEpochFunction": true,
+    "nonPowerOfTwoHistoricalRingSupported": true,
+    "noCallerProvidedRootAuthority": true,
+    "globalCacheOrPersistentState": false,
+    "slotsOrEpochsSkipped": false,
+    "deadlineRssOrWorkQuotaChanged": false,
+    "stateReturnedOnFailure": false,
+    "callerOwnedWorkIsObservationNotCommittedState": true,
+    "actualHashCountsExcludeUnchangedEpochAndExecutionHeaderInternals": true,
+    "independentOracleIsSeparateSourceLot": true,
+    "privateDeadlineResolved": false,
+    "performanceOrOperationQualified": false,
+    "productionQualified": false
+  },
+  "authorActions": {
+    "publicSourceReadAndOverlayWrittenOnly": true,
+    "cppCompilerOrTestExecuted": false,
+    "proposalProgramImportedOrExecuted": false,
+    "gitSshDockerOrHelperUsed": false,
+    "privateInputsRead": false,
+    "repositoryModified": false
+  }
+}

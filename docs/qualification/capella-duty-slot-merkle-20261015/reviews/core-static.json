@@ -1,0 +1,63 @@
+{
+  "format": "nano-duty-slot-merkle-core-independent-static-review-v1",
+  "verdict": "STATIC_GO_CORE_SOURCE_FOR_ROOT_BUILD_AND_INDEPENDENT_ORACLE_ONLY",
+  "manifest": {
+    "path": "duty-slot-merkle-batch-proposal-20261015/manifest.json",
+    "sha256": "f54b92fbd2bac79b9faa830019fff46b8abee20b76592566d71e7145ea53db58",
+    "bytes": 3130
+  },
+  "materialBlockersFound": false,
+  "materialBlockers": [],
+  "scope": {
+    "allThreeProductionOverlaysAndFullDeltaRead": true,
+    "allFivePayloadSealsAndTwoBaselinesMatched": true,
+    "patchAppliesExactlyToPublicBaselines": true,
+    "newPrivateHeaderAbsentFromCurrentSource": true,
+    "publicHeaderSignaturesExistingLayoutsWireAndDurableFormatsUnchanged": true,
+    "ownedBytesMarkerRulesLimitsAndCallbackBeforeCheckpoint": true,
+    "inputCopySizeBoundBeforeAllocation": true,
+    "strictCompleteSchemaAndProfileCardinalityAtEntry": true,
+    "allTwentyEightFieldRootsOwnedNoBorrowedViews": true,
+    "twoRingTreesCheckedAgainstStrictFieldsFiveAndSix": true,
+    "nonPowerOfTwoPaddingMatchesExistingMerkleSemantics": true,
+    "oldPreSlotRootThenStateRingHeaderBlockRingEpochSlotOrderPreserved": true,
+    "onlyFieldsTwoFourFiveSixUpdatedBetweenEpochs": true,
+    "unchangedEpochHelperRunsAtEveryBoundary": true,
+    "allRootsAndTreesRebuiltAfterEpochBufferReplacement": true,
+    "finalStrictRootMustEqualCachedRoot": true,
+    "noStateReturnedOnCancellationAllocationOrValidationFailure": true,
+    "workIsPrivateLocalAndNeverReadsCallerObserverAsAuthority": true,
+    "counterSaturationMarksUnknownInsteadOfWrapping": true,
+    "treeMemoryBoundByValidatedActualRingsNotRegistryMaximum": true,
+    "checkpointCoverageDuringPaddingTreeAndPaths": true,
+    "sameSlotWorkDeadlineRssAndSyncTrialLimits": true,
+    "noGlobalOrPersistentCacheOrCallerSuppliedRoot": true,
+    "parent143EffectiveMdPredictTwoCoreUnitsAnd141RetainedOnly": true,
+    "newGenuinePreflightAndActualMdStillRequiredByRoot": true
+  },
+  "expectedBuildScope": {
+    "changedCoreSources": [
+      "src/consensus_beacon_state.cpp",
+      "src/consensus_capella_slots.cpp"
+    ],
+    "newPrivateHeader": "src/consensus_capella_slot_merkle.hpp",
+    "expectedChangedCoreMembers": 2,
+    "expectedRetainedCoreMembers": 141,
+    "publicHeadersOrCmakeChanged": false,
+    "independentConsumerIsSeparateSourceLot": true
+  },
+  "limitations": [
+    "No compiler, C++ program, test, proposal function, Docker, SSH, Git or private input was executed or accessed by the reviewer; R was not modified.",
+    "The final strict hash alone does not prove all intermediate historical roots. ROOT must qualify the separately reviewed independent per-slot SSZ/context/cancellation oracle on the actual coherent archive.",
+    "Hash counters cover the documented direct BeaconState/batch pairs and exclude unchanged epoch/execution helper internals. No measured performance, private 60-second deadline resolution, duties, finality or production readiness is claimed."
+  ],
+  "authorActions": {
+    "publicSourceAndApprovedPublicArmMdReadOnly": true,
+    "programsCompilersTestsOrProposalsExecuted": false,
+    "privateInputsRead": false,
+    "repositoryModified": false
+  },
+  "performanceOrOperationQualified": false,
+  "runtimeDutiesAuthorized": false,
+  "productionQualified": false
+}
