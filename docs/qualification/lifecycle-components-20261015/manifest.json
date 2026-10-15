@@ -1,0 +1,958 @@
+{
+  "format": "nano-lifecycle-components-qualified-public-delivery-v1",
+  "status": "FROZEN_SCOPED_PUBLIC_COMPONENT_DELIVERY",
+  "baseCommit": "dff9df7fb8fcef8dd2275ea0f92a7570f14fbc63",
+  "qualificationPackageDestination": "docs/qualification/lifecycle-components-20261015",
+  "sourceOverlays": [
+    {
+      "path": "src/capella_beacon_api.cpp",
+      "baseline": {
+        "sha256": "577a2bf6b4ea283935a83da667a35757882ecd35034170e614a1a332a48f491d",
+        "bytes": 13420
+      },
+      "source": {
+        "path": "source/src/capella_beacon_api.cpp",
+        "sha256": "c4dd87d9b678b5f28fc3bcf1875469205dca05ddc072893f5f7e39dac5095b1d",
+        "bytes": 15278
+      },
+      "component": "validator-read"
+    },
+    {
+      "path": "src/beacon_validator_json.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/src/beacon_validator_json.hpp",
+        "sha256": "6ec4ec77490bc9447e6066c2193e02c303bcc39a7b388fbd7dee689cee5bc4c9",
+        "bytes": 1410
+      },
+      "component": "validator-read"
+    },
+    {
+      "path": "tests/test_capella_validator_read.cpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/test_capella_validator_read.cpp",
+        "sha256": "8ac5c59067d85fa8cf8d127968bae94762b4a95841421dcbcdf01ab5c9911347",
+        "bytes": 10367
+      },
+      "component": "validator-read"
+    },
+    {
+      "path": "tests/support/capella_canonical_stream.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/capella_canonical_stream.hpp",
+        "sha256": "ed2cb1cbe01d720464a407a5705e84b85478096a7fbc6c2abb999f202e5cd8b4",
+        "bytes": 3221
+      },
+      "component": "canonical-stream"
+    },
+    {
+      "path": "tests/support/capella_canonical_stream.ipp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/capella_canonical_stream.ipp",
+        "sha256": "26507fa05882fc059331dda6adc4616ff880be2f04422212ef1fb1756f7e4755",
+        "bytes": 15171
+      },
+      "component": "canonical-stream"
+    },
+    {
+      "path": "tests/support/capella_canonical_stream_self_test.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/capella_canonical_stream_self_test.hpp",
+        "sha256": "9d046347a59d77bfb4af71648621e9f90adfa29acf23952b57b51e6e66cbb57a",
+        "bytes": 8585
+      },
+      "component": "canonical-stream"
+    },
+    {
+      "path": "tests/support/capella_stream_signed_fixture.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/capella_stream_signed_fixture.hpp",
+        "sha256": "5d751a71a00d0ecb4344c9292eeb72ff4e24a6fc3785e517d00da7516675c08d",
+        "bytes": 27220
+      },
+      "component": "canonical-stream"
+    },
+    {
+      "path": "tests/capella/deposit_audit.cpp",
+      "baseline": {
+        "sha256": "7800cb8cdef189ce8ad80d26f4234468943a587e4e0c14f49ef35bcf040e2454",
+        "bytes": 15836
+      },
+      "source": {
+        "path": "source/tests/capella/deposit_audit.cpp",
+        "sha256": "610412c124ebb3e631499e3b63ffac01b7db5400512f82592a72c3aadb6de8c3",
+        "bytes": 16370
+      },
+      "component": "actions-v2"
+    },
+    {
+      "path": "tests/support/fresh_lifecycle.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/fresh_lifecycle.hpp",
+        "sha256": "2f86a9dbf52b84c6b35b11cf59d6ad570df84e5317328e8123edfacc0c53b3c6",
+        "bytes": 34465
+      },
+      "component": "actions-v2"
+    },
+    {
+      "path": "tests/support/fresh_lifecycle_terminal.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/fresh_lifecycle_terminal.hpp",
+        "sha256": "07993c65ce97b3e2db1bd640abaabd7abce393e1dea57135bb08c0ad8f2729b8",
+        "bytes": 24334
+      },
+      "component": "actions-v2"
+    },
+    {
+      "path": "tests/support/fresh_lifecycle_self_test.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/fresh_lifecycle_self_test.hpp",
+        "sha256": "8589f8b6cc61dd3ce08f60314114aa5f45538b75bf3f05689a86ee37137e0a9f",
+        "bytes": 8323
+      },
+      "component": "actions-v2"
+    },
+    {
+      "path": "tests/multihost/lifecycle.mjs",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/multihost/lifecycle.mjs",
+        "sha256": "3eedb790f38e9dcf3f3c56a53cfb44f6b86d9e54bdfef76597d8136c9d11c214",
+        "bytes": 23995
+      },
+      "component": "orchestration-v2"
+    },
+    {
+      "path": "tests/multihost/lifecycle.test.mjs",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/multihost/lifecycle.test.mjs",
+        "sha256": "3abdb2ea85848b8620f90a22b8437938064f33f99b030c4da4edfd0b728fa9f0",
+        "bytes": 14400
+      },
+      "component": "orchestration-v2"
+    },
+    {
+      "path": "tests/multihost/prepare.mjs",
+      "baseline": {
+        "sha256": "d8964320fdeaf3c42213d84c37131262ea55dd7051755189c0802aa2b461403d",
+        "bytes": 24794
+      },
+      "source": {
+        "path": "source/tests/multihost/prepare.mjs",
+        "sha256": "3dc631707379fb30160e518cfbded8d638f641c41b0c2451272050a268090ed7",
+        "bytes": 25214
+      },
+      "component": "orchestration-v2"
+    },
+    {
+      "path": "tests/multihost/run.mjs",
+      "baseline": {
+        "sha256": "8e979cf22e72c12a54f9a68afbe21356a654c41c45896f64ba4b35b29a87e1b1",
+        "bytes": 137116
+      },
+      "source": {
+        "path": "source/tests/multihost/run.mjs",
+        "sha256": "220a6cdb741690f9a7c0a7e29f0c7476e922c6df4a6156e86476ad39546e35c6",
+        "bytes": 137252
+      },
+      "component": "orchestration-v2"
+    },
+    {
+      "path": "tests/multihost/lifecycle-driver-guard.test.mjs",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/multihost/lifecycle-driver-guard.test.mjs",
+        "sha256": "fb1688a552a36e3656350426c1491425fa2e94b0f758245e999940737b2d269e",
+        "bytes": 6205
+      },
+      "component": "orchestration-v2"
+    },
+    {
+      "path": "tests/support/fresh_managed_submission.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/fresh_managed_submission.hpp",
+        "sha256": "a4fa687f995fee990784ddd20d76b3469a84bb9ebede83ba6049d5cc2d6c2e06",
+        "bytes": 20531
+      },
+      "component": "managed-submission"
+    },
+    {
+      "path": "tests/support/fresh_managed_submission_self_test.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/fresh_managed_submission_self_test.hpp",
+        "sha256": "7a8fdfbb31c6df68a604ff8324fe1a0b13b6670cc1fa1c6025d257697e1692e4",
+        "bytes": 8305
+      },
+      "component": "managed-submission"
+    },
+    {
+      "path": "tests/multihost/lifecycle_submit.cpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/multihost/lifecycle_submit.cpp",
+        "sha256": "43687eebe75dc51f31cf55371bd901d34236b8e6908a1a4533a9f3d29eccf153",
+        "bytes": 583
+      },
+      "component": "managed-submission"
+    },
+    {
+      "path": "CMakeLists.txt",
+      "baseline": {
+        "sha256": "16d69ea682a08d973898f2e34fe74351936e9f890dd86885e07baaeadf83aa2f",
+        "bytes": 170440
+      },
+      "source": {
+        "path": "source/CMakeLists.txt",
+        "sha256": "03f1aeeb2b2f25b6c7f683e2552aec9226470522c71c1f4d8fbb6039aed785db",
+        "bytes": 172929
+      },
+      "component": "composed-registration"
+    }
+  ],
+  "documentPrefixes": {
+    "docs/PRODUCTION-GOAL.md": {
+      "path": "prefixes/docs/PRODUCTION-GOAL.md",
+      "sha256": "9a226b444eb5f419035fbb9e8b2229628fff550028ad2e911746841fda74fd8f",
+      "bytes": 1654
+    },
+    "docs/VALIDATOR-EIP-ROADMAP.md": {
+      "path": "prefixes/docs/VALIDATOR-EIP-ROADMAP.md",
+      "sha256": "9c8375ecb89605c92ee66091ab23a74c90aa008b88356b27fa2254405d8b39b6",
+      "bytes": 1651
+    },
+    "docs/EIP-IMPLEMENTATION-STATUS.md": {
+      "path": "prefixes/docs/EIP-IMPLEMENTATION-STATUS.md",
+      "sha256": "50c03ca64f41ca55c18a8c2e3cbcf9bfeef164b64439fe68d00c9de8db89aa64",
+      "bytes": 1658
+    },
+    "docs/EVM-PRODUCTION-EIP-ROADMAP.md": {
+      "path": "prefixes/docs/EVM-PRODUCTION-EIP-ROADMAP.md",
+      "sha256": "ea31408c6c944e047c72ebdc4df0bcb4995c448d563957fa23fd1acd37e1d8e4",
+      "bytes": 1655
+    }
+  },
+  "documentHistoricalBodies": {
+    "docs/PRODUCTION-GOAL.md": {
+      "sha256": "c7e072f010c558d340ecd5b5b90b95ef794b2f0bbc8e5c79f9eaf8facc0eee8f",
+      "bytes": 636780
+    },
+    "docs/VALIDATOR-EIP-ROADMAP.md": {
+      "sha256": "031d1135fb73c6ce97f6ae940c04f34da96ce08a73c23be904c149fbcaa78a71",
+      "bytes": 856634
+    },
+    "docs/EIP-IMPLEMENTATION-STATUS.md": {
+      "sha256": "5011b3f7f0097fe585b117757be897335467e08cde9489a4a602bf3ec8205761",
+      "bytes": 860288
+    },
+    "docs/EVM-PRODUCTION-EIP-ROADMAP.md": {
+      "sha256": "06a898d4993a321f679d1b36e2cff820977131e8c86f517c13926ddc02a100c3",
+      "bytes": 656597
+    }
+  },
+  "documentFinalComposition": {
+    "docs/PRODUCTION-GOAL.md": {
+      "sha256": "08d9520fb7488d1db1231d845ac0c0f52bfec4dbeda317a68be821543dd48593",
+      "bytes": 638434,
+      "historicalBodyStartsAtByte": 1654,
+      "historicalBodyByteExact": true,
+      "materialized": false,
+      "recipe": "prefix bytes followed by all exact baseline bytes, without normalization"
+    },
+    "docs/VALIDATOR-EIP-ROADMAP.md": {
+      "sha256": "13bf46abef6017fde49b4653e996bd35a71a51b579e5bf7f6539f7cb34c246e1",
+      "bytes": 858285,
+      "historicalBodyStartsAtByte": 1651,
+      "historicalBodyByteExact": true,
+      "materialized": false,
+      "recipe": "prefix bytes followed by all exact baseline bytes, without normalization"
+    },
+    "docs/EIP-IMPLEMENTATION-STATUS.md": {
+      "sha256": "c3fcfe485ba1440cc795a6eebdc2d6dcf14d167e39c144d9e1bb1000b090fbe6",
+      "bytes": 861946,
+      "historicalBodyStartsAtByte": 1658,
+      "historicalBodyByteExact": true,
+      "materialized": false,
+      "recipe": "prefix bytes followed by all exact baseline bytes, without normalization"
+    },
+    "docs/EVM-PRODUCTION-EIP-ROADMAP.md": {
+      "sha256": "f982a7e3676df09801028afcd0a0d53249c2b100bee5a8104da9328028246307",
+      "bytes": 658252,
+      "historicalBodyStartsAtByte": 1655,
+      "historicalBodyByteExact": true,
+      "materialized": false,
+      "recipe": "prefix bytes followed by all exact baseline bytes, without normalization"
+    }
+  },
+  "csvUnchanged": {
+    "path": "docs/EIP-IMPLEMENTATION-STATUS.csv",
+    "sha256": "618205e9c9932b7804497314b4bcc9271c33100e15e8ed1ce1521d1780de3ed7",
+    "bytes": 11822
+  },
+  "rpcDocumentationUnchanged": {
+    "path": "docs/RPC-BEHAVIOR.md",
+    "sha256": "32d65b23c0b8e9fe4f800f8bedcf64abf49306d41333e25c4b6b9bb903327726",
+    "bytes": 18537
+  },
+  "payloads": [
+    {
+      "path": "QUALIFICATION.json",
+      "sha256": "7e656df2dd900961a98a4495a86225e2f79019b892b075a3678b7aa756300cd6",
+      "bytes": 4104
+    },
+    {
+      "path": "README.md",
+      "sha256": "a287d190be5eceddec057e5b320f50377ef0dc594109ac74d202fd2cfcabf06d",
+      "bytes": 5875
+    },
+    {
+      "path": "SOURCE-BINDINGS.json",
+      "sha256": "9447d982ed196a8dd321c6b99675bfd3b5bce60ce6b70772509da59d135b9dde",
+      "bytes": 9447
+    },
+    {
+      "path": "components/actions-v2.manifest.json",
+      "sha256": "27f0f3a0eb1b28e8153744b5a52a1560d61fb4ed0105424dc1b39b9c77cf59d5",
+      "bytes": 9128
+    },
+    {
+      "path": "components/canonical-stream.manifest.json",
+      "sha256": "795f403d176adc6557dcfa31e561d12be0a5f99e0d41cd770277a538c5168167",
+      "bytes": 5743
+    },
+    {
+      "path": "components/document-prefixes.manifest.json",
+      "sha256": "4a0a06b9cc4b41dd5184941e4a0400f908b9ab7b9f73516821631e9934ef052d",
+      "bytes": 7195
+    },
+    {
+      "path": "components/managed-submission.manifest.json",
+      "sha256": "53e369ee97383bd06f9098a13b56a871c4c8ff1dcad61ff2651c8c9aa53d3014",
+      "bytes": 5597
+    },
+    {
+      "path": "components/orchestration-v2.manifest.json",
+      "sha256": "773936089cd1c13cf4153339ae8bf21c695f9bc8db773a864da60077d9f1dffb",
+      "bytes": 6611
+    },
+    {
+      "path": "components/validator-read.manifest.json",
+      "sha256": "54ecd15d7b3c95473f19013ea3cab41ee0a2f072cc9621c83775e84494bd52c9",
+      "bytes": 3659
+    },
+    {
+      "path": "composition/action-CMake.registration.patch",
+      "sha256": "1e1364575f833f206f9e4ef3e1f22cac681da457a9cf63026f50bb030b0ee520",
+      "bytes": 1217
+    },
+    {
+      "path": "composition/api-CMake.fragment.txt",
+      "sha256": "39ca5a27f8f415220415320ada3604e4fdd00a1a805bda1a59a9600651b8cf01",
+      "bytes": 726
+    },
+    {
+      "path": "composition/shim-CMake.registration.cmake",
+      "sha256": "399a0396b4facaa202af870e9e8fde243628c5ce276fb23fab318d6ddec4058d",
+      "bytes": 474
+    },
+    {
+      "path": "contracts/action-and-audit-api.md",
+      "sha256": "facb8c12769d3d6f0b349fc2d64a111941bd98bb74b47aae7b66f32146cc35e9",
+      "bytes": 7932
+    },
+    {
+      "path": "contracts/actions-v2.json",
+      "sha256": "80d454871427a3eaec2cae85e3c5907968c11bfd7e338604495047f3fd9f6f93",
+      "bytes": 5810
+    },
+    {
+      "path": "contracts/canonical-stream.json",
+      "sha256": "e4c9e684346401bfe7c39b2068adbfc9855342b94d74263a398e4739c7243ce8",
+      "bytes": 5152
+    },
+    {
+      "path": "contracts/managed-submission.json",
+      "sha256": "271137498b0b2e6a997d36ef4a9f4c05588208cb8d46b1247a9535dfa8ae7b92",
+      "bytes": 3912
+    },
+    {
+      "path": "contracts/orchestration-v2.json",
+      "sha256": "c79e011c8ad824671bfe6c3adde1820b732757cc64c95159785a9e73eeecafe0",
+      "bytes": 6096
+    },
+    {
+      "path": "contracts/validator-read.json",
+      "sha256": "19d1593920bd8022f088aa0f76bd7e31e330fb9b3ea04117bc86f077ca0f478f",
+      "bytes": 1550
+    },
+    {
+      "path": "evidence/action-policy-interim-arm-result.json",
+      "sha256": "83a6d2aa0b31c47fc39d0bb61b348024c14174edefec076d75e0fe531f152633",
+      "bytes": 707
+    },
+    {
+      "path": "evidence/action-v1-compile-failure.json",
+      "sha256": "89e8d47c40927ce49cfd1126b373bd2b29dc0e02f2a62ff00cf3ebe86da18868",
+      "bytes": 710
+    },
+    {
+      "path": "evidence/actions-and-stream-arm-cleanup.json",
+      "sha256": "eb207b1da47fd7887be3e920b1affb638c74f284447a68c520dbff71ef32bf2b",
+      "bytes": 78
+    },
+    {
+      "path": "evidence/actions-and-stream-arm-terminal.json",
+      "sha256": "1671993a72fd662eec342dda5177de9a638ae9aa037249a90c029d40e7ef1216",
+      "bytes": 2607
+    },
+    {
+      "path": "evidence/driver-guard-attempt03-pass.json",
+      "sha256": "edca0a21571c8b91f8f88601e4a835470f4bf150eb128fb8bfe614f13ca0a6f3",
+      "bytes": 842
+    },
+    {
+      "path": "evidence/driver-guard-first-failure.json",
+      "sha256": "bd1dca4741a18e23852e5f0d6c74451267399dc7f14308b495ae0aa2181e40ba",
+      "bytes": 844
+    },
+    {
+      "path": "evidence/managed-submit-arm-cleanup.json",
+      "sha256": "eb207b1da47fd7887be3e920b1affb638c74f284447a68c520dbff71ef32bf2b",
+      "bytes": 78
+    },
+    {
+      "path": "evidence/managed-submit-arm-terminal.json",
+      "sha256": "9385a42ffecc13f2ce6cf568797083b15eeb79de75a9d4d323de9a8314275274",
+      "bytes": 1770
+    },
+    {
+      "path": "evidence/pure-js-root-result.json",
+      "sha256": "77422ed5c78c2ea603128686cf58d3ca49af78b69610a3315cb671b50279a046",
+      "bytes": 585
+    },
+    {
+      "path": "evidence/validator-read-arm-terminal.json",
+      "sha256": "291abb17c73eeb6491c1be718568495740eefc717da786ad4cdafe64e30df2fb",
+      "bytes": 2382
+    },
+    {
+      "path": "history/actions-v1-compile-failed.manifest.json",
+      "sha256": "34551d2876da3e642bef012339f207652608646c6a9e84b5ac6eb3c6d00322a7",
+      "bytes": 7975
+    },
+    {
+      "path": "history/document-prefix-stated-gates.json",
+      "sha256": "3f497216d0c5d355d4ee8f6012046e60e31cfd329f2a83ea2febbfa5af65bbbe",
+      "bytes": 4126
+    },
+    {
+      "path": "prefixes/docs/EIP-IMPLEMENTATION-STATUS.md",
+      "sha256": "50c03ca64f41ca55c18a8c2e3cbcf9bfeef164b64439fe68d00c9de8db89aa64",
+      "bytes": 1658
+    },
+    {
+      "path": "prefixes/docs/EVM-PRODUCTION-EIP-ROADMAP.md",
+      "sha256": "ea31408c6c944e047c72ebdc4df0bcb4995c448d563957fa23fd1acd37e1d8e4",
+      "bytes": 1655
+    },
+    {
+      "path": "prefixes/docs/PRODUCTION-GOAL.md",
+      "sha256": "9a226b444eb5f419035fbb9e8b2229628fff550028ad2e911746841fda74fd8f",
+      "bytes": 1654
+    },
+    {
+      "path": "prefixes/docs/VALIDATOR-EIP-ROADMAP.md",
+      "sha256": "9c8375ecb89605c92ee66091ab23a74c90aa008b88356b27fa2254405d8b39b6",
+      "bytes": 1651
+    },
+    {
+      "path": "reviews/actions-and-stream-arm-scope.json",
+      "sha256": "12f9f9c43ab479059fa2b0e02a09a97aba73781286f949fa91d837b85a6967ed",
+      "bytes": 4536
+    },
+    {
+      "path": "reviews/actions-v1-source.json",
+      "sha256": "6e37e150a01e086243290f0befa33ceaf34c45428dc91a096363a0864655189d",
+      "bytes": 1705
+    },
+    {
+      "path": "reviews/actions-v2-source-delta.json",
+      "sha256": "4e20f99e4cc2e2c01b13e29a448773fb83a89cfe14bbc3946e5635be3e095baf",
+      "bytes": 924
+    },
+    {
+      "path": "reviews/canonical-stream-source.json",
+      "sha256": "a50a00345963aae16603a9f7ad99190660c684ed7e562968f11738388a63df8d",
+      "bytes": 2907
+    },
+    {
+      "path": "reviews/document-prefixes-source.json",
+      "sha256": "24af62cdbd26b5b09847a88db25d0779ad7f19ed34cd927e97611d48a99a6cd1",
+      "bytes": 1507
+    },
+    {
+      "path": "reviews/driver-guard-root-attempt-scope.json",
+      "sha256": "00376686bbbb57df5cfdf883c1de7a3e458e6c6d7d68e02613f5a9ff4ef761de",
+      "bytes": 2070
+    },
+    {
+      "path": "reviews/driver-guard-source.json",
+      "sha256": "417bdfaf24e79d3d97adb34e4a68922788e9d8c1b9e1badeeeaccdffeb947ff1",
+      "bytes": 2141
+    },
+    {
+      "path": "reviews/managed-submit-arm-scope.json",
+      "sha256": "ab381f8c5f1b278504c9e1be455c71feb44a8a0f883218e2e9dc621a3b63cdcf",
+      "bytes": 2650
+    },
+    {
+      "path": "reviews/managed-submit-source.json",
+      "sha256": "c15631cff1c5ae648f6cffc7af1c24c24458eb90edb1169143a05a3b1e321779",
+      "bytes": 2635
+    },
+    {
+      "path": "reviews/orchestration-pure-source.json",
+      "sha256": "ad59a982e0c0b3bc4cf1fdb31bcb4c87e0f955abb9c6d497489724e62866e653",
+      "bytes": 1526
+    },
+    {
+      "path": "reviews/validator-read-arm-scope.json",
+      "sha256": "592709d6685d3f832a23ba48cb0f6438eefcfed5441d814378c98d0e9b601615",
+      "bytes": 2316
+    },
+    {
+      "path": "reviews/validator-read-source.json",
+      "sha256": "602bf80142931455b9da9708a109f859e03027745bc3ae19e1973beb4fafa75c",
+      "bytes": 1925
+    }
+  ],
+  "payloadCount": 46,
+  "payloadBytes": 146392,
+  "sourceCount": 20,
+  "documentCount": 4,
+  "expectedGitPathCount": 71,
+  "componentOrigins": [
+    {
+      "component": "validator-read",
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/beacon-validator-read-implementation-20261015/manifest.json",
+      "sha256": "54ecd15d7b3c95473f19013ea3cab41ee0a2f072cc9621c83775e84494bd52c9",
+      "bytes": 3659
+    },
+    {
+      "component": "canonical-stream",
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-streaming-implementation-20261015/manifest.json",
+      "sha256": "795f403d176adc6557dcfa31e561d12be0a5f99e0d41cd770277a538c5168167",
+      "bytes": 5743
+    },
+    {
+      "component": "actions-v2",
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-implementation-v2-20261015/manifest.json",
+      "sha256": "27f0f3a0eb1b28e8153744b5a52a1560d61fb4ed0105424dc1b39b9c77cf59d5",
+      "bytes": 9128
+    },
+    {
+      "component": "orchestration-v2",
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-v2-20261015/manifest.json",
+      "sha256": "773936089cd1c13cf4153339ae8bf21c695f9bc8db773a864da60077d9f1dffb",
+      "bytes": 6611
+    },
+    {
+      "component": "managed-submission",
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-submission-proposal-20261015/manifest.json",
+      "sha256": "53e369ee97383bd06f9098a13b56a871c4c8ff1dcad61ff2651c8c9aa53d3014",
+      "bytes": 5597
+    }
+  ],
+  "copiedPayloadOrigins": [
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/beacon-validator-read-implementation-20261015/manifest.json",
+        "sha256": "54ecd15d7b3c95473f19013ea3cab41ee0a2f072cc9621c83775e84494bd52c9",
+        "bytes": 3659
+      },
+      "publishedPath": "components/validator-read.manifest.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/beacon-validator-read-implementation-20261015/CONTRACT.json",
+        "sha256": "19d1593920bd8022f088aa0f76bd7e31e330fb9b3ea04117bc86f077ca0f478f",
+        "bytes": 1550
+      },
+      "publishedPath": "contracts/validator-read.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-streaming-implementation-20261015/manifest.json",
+        "sha256": "795f403d176adc6557dcfa31e561d12be0a5f99e0d41cd770277a538c5168167",
+        "bytes": 5743
+      },
+      "publishedPath": "components/canonical-stream.manifest.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-streaming-implementation-20261015/CONTRACT.json",
+        "sha256": "e4c9e684346401bfe7c39b2068adbfc9855342b94d74263a398e4739c7243ce8",
+        "bytes": 5152
+      },
+      "publishedPath": "contracts/canonical-stream.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-implementation-v2-20261015/manifest.json",
+        "sha256": "27f0f3a0eb1b28e8153744b5a52a1560d61fb4ed0105424dc1b39b9c77cf59d5",
+        "bytes": 9128
+      },
+      "publishedPath": "components/actions-v2.manifest.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-implementation-v2-20261015/CONTRACT.json",
+        "sha256": "80d454871427a3eaec2cae85e3c5907968c11bfd7e338604495047f3fd9f6f93",
+        "bytes": 5810
+      },
+      "publishedPath": "contracts/actions-v2.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-v2-20261015/manifest.json",
+        "sha256": "773936089cd1c13cf4153339ae8bf21c695f9bc8db773a864da60077d9f1dffb",
+        "bytes": 6611
+      },
+      "publishedPath": "components/orchestration-v2.manifest.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-v2-20261015/CONTRACT.json",
+        "sha256": "c79e011c8ad824671bfe6c3adde1820b732757cc64c95159785a9e73eeecafe0",
+        "bytes": 6096
+      },
+      "publishedPath": "contracts/orchestration-v2.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-submission-proposal-20261015/manifest.json",
+        "sha256": "53e369ee97383bd06f9098a13b56a871c4c8ff1dcad61ff2651c8c9aa53d3014",
+        "bytes": 5597
+      },
+      "publishedPath": "components/managed-submission.manifest.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-submission-proposal-20261015/CONTRACT.json",
+        "sha256": "271137498b0b2e6a997d36ef4a9f4c05588208cb8d46b1247a9535dfa8ae7b92",
+        "bytes": 3912
+      },
+      "publishedPath": "contracts/managed-submission.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-implementation-20261015/manifest.json",
+        "sha256": "34551d2876da3e642bef012339f207652608646c6a9e84b5ac6eb3c6d00322a7",
+        "bytes": 7975
+      },
+      "publishedPath": "history/actions-v1-compile-failed.manifest.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-implementation-v2-20261015/API.md",
+        "sha256": "facb8c12769d3d6f0b349fc2d64a111941bd98bb74b47aae7b66f32146cc35e9",
+        "bytes": 7932
+      },
+      "publishedPath": "contracts/action-and-audit-api.md"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/lifecycle-read-qualification-docs-20261015/manifest.json",
+        "sha256": "4a0a06b9cc4b41dd5184941e4a0400f908b9ab7b9f73516821631e9934ef052d",
+        "bytes": 7195
+      },
+      "publishedPath": "components/document-prefixes.manifest.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/lifecycle-read-qualification-docs-20261015/STATED-GATES.json",
+        "sha256": "3f497216d0c5d355d4ee8f6012046e60e31cfd329f2a83ea2febbfa5af65bbbe",
+        "bytes": 4126
+      },
+      "publishedPath": "history/document-prefix-stated-gates.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/beacon-validator-read-implementation-20261015/arm-03/terminal.json",
+        "sha256": "291abb17c73eeb6491c1be718568495740eefc717da786ad4cdafe64e30df2fb",
+        "bytes": 2382
+      },
+      "publishedPath": "evidence/validator-read-arm-terminal.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-build-root-20261015/arm-01-compile-failure-public.json",
+        "sha256": "89e8d47c40927ce49cfd1126b373bd2b29dc0e02f2a62ff00cf3ebe86da18868",
+        "bytes": 710
+      },
+      "publishedPath": "evidence/action-v1-compile-failure.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-build-root-20261015/arm-02-action-policy-public.json",
+        "sha256": "83a6d2aa0b31c47fc39d0bb61b348024c14174edefec076d75e0fe531f152633",
+        "bytes": 707
+      },
+      "publishedPath": "evidence/action-policy-interim-arm-result.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-build-root-20261015/arm-02/terminal.json",
+        "sha256": "1671993a72fd662eec342dda5177de9a638ae9aa037249a90c029d40e7ef1216",
+        "bytes": 2607
+      },
+      "publishedPath": "evidence/actions-and-stream-arm-terminal.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-build-root-20261015/arm-02/cleanup.json",
+        "sha256": "eb207b1da47fd7887be3e920b1affb638c74f284447a68c520dbff71ef32bf2b",
+        "bytes": 78
+      },
+      "publishedPath": "evidence/actions-and-stream-arm-cleanup.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/pure-js-root-received-public.json",
+        "sha256": "77422ed5c78c2ea603128686cf58d3ca49af78b69610a3315cb671b50279a046",
+        "bytes": 585
+      },
+      "publishedPath": "evidence/pure-js-root-result.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-v2-20261015/root-guard-public-result.json",
+        "sha256": "bd1dca4741a18e23852e5f0d6c74451267399dc7f14308b495ae0aa2181e40ba",
+        "bytes": 844
+      },
+      "publishedPath": "evidence/driver-guard-first-failure.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-v2-20261015/root-attempt-03/root-guard-public-result.json",
+        "sha256": "edca0a21571c8b91f8f88601e4a835470f4bf150eb128fb8bfe614f13ca0a6f3",
+        "bytes": 842
+      },
+      "publishedPath": "evidence/driver-guard-attempt03-pass.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-build-root-20261015/arm-01/terminal.json",
+        "sha256": "9385a42ffecc13f2ce6cf568797083b15eeb79de75a9d4d323de9a8314275274",
+        "bytes": 1770
+      },
+      "publishedPath": "evidence/managed-submit-arm-terminal.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-build-root-20261015/arm-01/cleanup.json",
+        "sha256": "eb207b1da47fd7887be3e920b1affb638c74f284447a68c520dbff71ef32bf2b",
+        "bytes": 78
+      },
+      "publishedPath": "evidence/managed-submit-arm-cleanup.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/reviews/terminal-static-beacon-single-validator-and-focused-test-review.json",
+        "sha256": "602bf80142931455b9da9708a109f859e03027745bc3ae19e1973beb4fafa75c",
+        "bytes": 1925
+      },
+      "publishedPath": "reviews/validator-read-source.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/reviews/terminal-public-beacon-validator-arm-causal-typed-addendum.json",
+        "sha256": "592709d6685d3f832a23ba48cb0f6438eefcfed5441d814378c98d0e9b601615",
+        "bytes": 2316
+      },
+      "publishedPath": "reviews/validator-read-arm-scope.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-capella-independent-review-20261015/terminal-static-bounded-canonical-stream-index-and-replay-closure-review.json",
+        "sha256": "a50a00345963aae16603a9f7ad99190660c684ed7e562968f11738388a63df8d",
+        "bytes": 2907
+      },
+      "publishedPath": "reviews/canonical-stream-source.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-capella-independent-review-20261015/terminal-static-fresh-lifecycle-action-and-vps-terminal-review.json",
+        "sha256": "6e37e150a01e086243290f0befa33ceaf34c45428dc91a096363a0864655189d",
+        "bytes": 1705
+      },
+      "publishedPath": "reviews/actions-v1-source.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-capella-independent-review-20261015/terminal-static-v2-lifecycle-terminal-gmp-string-portability-review.json",
+        "sha256": "4e20f99e4cc2e2c01b13e29a448773fb83a89cfe14bbc3946e5635be3e095baf",
+        "bytes": 924
+      },
+      "publishedPath": "reviews/actions-v2-source-delta.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/reviews/terminal-public-arm-phase1-stream-and-action-scoped-review.json",
+        "sha256": "12f9f9c43ab479059fa2b0e02a09a97aba73781286f949fa91d837b85a6967ed",
+        "bytes": 4536
+      },
+      "publishedPath": "reviews/actions-and-stream-arm-scope.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-capella-independent-review-20261015/terminal-static-phase1-lifecycle-pure-parameters-identities-and-phase-model-review.json",
+        "sha256": "ad59a982e0c0b3bc4cf1fdb31bcb4c87e0f955abb9c6d497489724e62866e653",
+        "bytes": 1526
+      },
+      "publishedPath": "reviews/orchestration-pure-source.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-capella-independent-review-20261015/terminal-static-lifecycle-runtime-unavailable-preseed-guard-review.json",
+        "sha256": "417bdfaf24e79d3d97adb34e4a68922788e9d8c1b9e1badeeeaccdffeb947ff1",
+        "bytes": 2141
+      },
+      "publishedPath": "reviews/driver-guard-source.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/reviews/terminal-public-driver-guard-root-attempt-readback.json",
+        "sha256": "00376686bbbb57df5cfdf883c1de7a3e458e6c6d7d68e02613f5a9ff4ef761de",
+        "bytes": 2070
+      },
+      "publishedPath": "reviews/driver-guard-root-attempt-scope.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/reviews/terminal-static-managed-child-lifecycle-submission-review.json",
+        "sha256": "c15631cff1c5ae648f6cffc7af1c24c24458eb90edb1169143a05a3b1e321779",
+        "bytes": 2635
+      },
+      "publishedPath": "reviews/managed-submit-source.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/reviews/terminal-public-managed-submission-arm-component-review.json",
+        "sha256": "ab381f8c5f1b278504c9e1be455c71feb44a8a0f883218e2e9dc621a3b63cdcf",
+        "bytes": 2650
+      },
+      "publishedPath": "reviews/managed-submit-arm-scope.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/reviews/terminal-static-component-qualification-four-prefixes-review.json",
+        "sha256": "24af62cdbd26b5b09847a88db25d0779ad7f19ed34cd927e97611d48a99a6cd1",
+        "bytes": 1507
+      },
+      "publishedPath": "reviews/document-prefixes-source.json"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-implementation-v2-20261015/CMake.registration.patch",
+        "sha256": "1e1364575f833f206f9e4ef3e1f22cac681da457a9cf63026f50bb030b0ee520",
+        "bytes": 1217
+      },
+      "publishedPath": "composition/action-CMake.registration.patch"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/beacon-validator-read-implementation-20261015/CMake.fragment.txt",
+        "sha256": "39ca5a27f8f415220415320ada3604e4fdd00a1a805bda1a59a9600651b8cf01",
+        "bytes": 726
+      },
+      "publishedPath": "composition/api-CMake.fragment.txt"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-submission-proposal-20261015/CMake.registration.cmake",
+        "sha256": "399a0396b4facaa202af870e9e8fde243628c5ce276fb23fab318d6ddec4058d",
+        "bytes": 474
+      },
+      "publishedPath": "composition/shim-CMake.registration.cmake"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/lifecycle-read-qualification-docs-20261015/prefixes/docs/PRODUCTION-GOAL.md",
+        "sha256": "9a226b444eb5f419035fbb9e8b2229628fff550028ad2e911746841fda74fd8f",
+        "bytes": 1654
+      },
+      "publishedPath": "prefixes/docs/PRODUCTION-GOAL.md"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/lifecycle-read-qualification-docs-20261015/prefixes/docs/VALIDATOR-EIP-ROADMAP.md",
+        "sha256": "9c8375ecb89605c92ee66091ab23a74c90aa008b88356b27fa2254405d8b39b6",
+        "bytes": 1651
+      },
+      "publishedPath": "prefixes/docs/VALIDATOR-EIP-ROADMAP.md"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/lifecycle-read-qualification-docs-20261015/prefixes/docs/EIP-IMPLEMENTATION-STATUS.md",
+        "sha256": "50c03ca64f41ca55c18a8c2e3cbcf9bfeef164b64439fe68d00c9de8db89aa64",
+        "bytes": 1658
+      },
+      "publishedPath": "prefixes/docs/EIP-IMPLEMENTATION-STATUS.md"
+    },
+    {
+      "source": {
+        "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/lifecycle-read-qualification-docs-20261015/prefixes/docs/EVM-PRODUCTION-EIP-ROADMAP.md",
+        "sha256": "ea31408c6c944e047c72ebdc4df0bcb4995c448d563957fa23fd1acd37e1d8e4",
+        "bytes": 1655
+      },
+      "publishedPath": "prefixes/docs/EVM-PRODUCTION-EIP-ROADMAP.md"
+    }
+  ],
+  "documentPrefixOrigin": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/lifecycle-read-qualification-docs-20261015/manifest.json",
+    "sha256": "4a0a06b9cc4b41dd5184941e4a0400f908b9ab7b9f73516821631e9934ef052d",
+    "bytes": 7195
+  },
+  "sourcePatchImportAid": {
+    "path": "source.patch",
+    "sha256": "53de807b159057be3aa130c0b9139bcbdca6cace32ae5af36c69186f7cb46afc",
+    "bytes": 224624
+  },
+  "historicalBodyCopiesCreated": false,
+  "wholeDocumentsMaterialized": false,
+  "scope": {
+    "componentQualificationOnly": true,
+    "rootActualOwner": "mac-docker for C++ / local Node for JS",
+    "privateInputsReadByAssembler": false,
+    "projectExecutedByAssembler": false,
+    "rOrLWrittenByAssembler": false,
+    "runtimeDriverAvailable": false,
+    "actualLifecycleCampaignExecuted": false,
+    "actualPrivateTerminalAuditExecuted": false,
+    "managedSubmissionRealHttpSupervisorExecQualified": false,
+    "coldHistoricalAudits": "PARTIAL_2_OF_3",
+    "campaign08RemainsFailed": true,
+    "privateVpsApproval": "PENDING",
+    "forkOrEipPromotion": false,
+    "productionQualified": false
+  },
+  "requiredImportChecks": [
+    "ROOT verifies clean expected base before mutation and exact per-target baselines/new absence.",
+    "All source/package bytes equal this manifest, and package manifest itself is imported.",
+    "For each document, append every old baseline byte after exact prefix; virtual SHA/size/offset all match.",
+    "EIP CSV and RPC documentation remain exact; no path outside derived allowlist is admitted.",
+    "This source assembly does not authorize or execute any runtime/private campaign or Git operation."
+  ],
+  "documentPrefixesPublishedInPackage": true
+}

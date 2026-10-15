@@ -511,6 +511,7 @@ async function runFreshCampaign(args){
  async function fence(){for(const z of [...held.values()])await observe(z.path,z);}
  async function save(path,value){const bytes=Buffer.isBuffer(value)?value:Buffer.from(typeof value==='string'?value:JSON.stringify(value,null,2)+'\n');const f=await open(path,'wx',0o600);try{await f.writeFile(bytes);await f.sync();}finally{await f.close();}const directory=await open(dirname(path),'r');try{await directory.sync();}finally{await directory.close();}const expected={sha256:sha(bytes),bytes:bytes.length};await observe(path,expected,false,false);newFiles.set(resolve(path),expected);return bytes;}
  const spec=validateFreshCampaignSpec(JSON.parse(await observe(resolve(specFile),{sha256:specSha},true)),{target,sourceBaseRevision:revision});
+ need(!spec.lifecycle,'Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required');
  need(!output.includes(',')&&await realpath(dirname(output))===dirname(output),'New output parent must be canonical');
  const within=(a,b)=>a===b||a.startsWith(b+'/');
  for(const z of [spec.fixture.seedFile,spec.fixture.ledgerDirectory,...names.flatMap(n=>[spec.owners[n].coreBuildRoot,spec.owners[n].networkBuildRoot])])need(!within(output,z)&&!within(z,output),'Fresh output/code/seed/ledger roots must be disjoint');

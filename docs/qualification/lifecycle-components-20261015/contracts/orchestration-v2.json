@@ -1,0 +1,170 @@
+{
+  "format": "nano-fresh-lifecycle-orchestration-pure-contract-v2",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "phase": 1,
+  "baseRevision": "dff9df7fb8fcef8dd2275ea0f92a7570f14fbc63",
+  "sourceFiles": [
+    "tests/multihost/lifecycle.mjs",
+    "tests/multihost/lifecycle.test.mjs",
+    "tests/multihost/prepare.mjs",
+    "tests/multihost/run.mjs",
+    "tests/multihost/lifecycle-driver-guard.test.mjs"
+  ],
+  "pureApi": [
+    "lifecycleQuantity",
+    "validateLifecycleMode",
+    "deriveLifecycleParameters",
+    "bindLifecycleIdentities",
+    "validateLifecycleObservation",
+    "lifecycleObservationFromBeacon",
+    "validateLifecycleDeposit",
+    "requireLifecycleTenure",
+    "requireExactFullWithdrawal",
+    "createLifecycleProgress"
+  ],
+  "mode": {
+    "optionalSpecProperty": "lifecycle",
+    "format": "nano-fresh-validator-lifecycle-v1",
+    "identities": [
+      "voluntaryExit",
+      "slashing"
+    ],
+    "identityFields": [
+      "owner",
+      "keyEnv",
+      "publicKey"
+    ],
+    "requiresBackupRestoreFalse": true,
+    "mutuallyExclusiveWith": "partitionRotation",
+    "programRole": "lifecycleTool",
+    "programLeaf": "nano-capella-deposit-audit",
+    "privateVpsLifecycleTransferAuthorizedDefault": false,
+    "privateVpsLifecycleTransferCanOnlyBeAuthorizedByHumanRoot": true,
+    "keyEnvPrefix": "NANO_TEST_CAPELLA_NETWORK_KEY_",
+    "keyEnvSuffixIsRegistryAuthority": false
+  },
+  "deadlines": {
+    "fields": [
+      "registrationMs",
+      "activationMs",
+      "finalityMs",
+      "restoreMs",
+      "actionMs",
+      "auditMs",
+      "maximumEpochsAfterActivation",
+      "maximumRunMs"
+    ],
+    "positiveSafeIntegers": true,
+    "maximumWholeTimerMs": 2147483647,
+    "currentProfileLowerBoundEpochsAfterActivation": 325,
+    "profileValuesHardcodedInImplementation": false,
+    "indexRecordBytes": 112,
+    "maximumIndexBytesAtLeastHistoryTimesRecord": true,
+    "wallClockCompletionGuaranteed": false
+  },
+  "resources": [
+    "maximumWallSeconds",
+    "maximumHistoryBlocks",
+    "maximumArchiveBytes",
+    "maximumIndexBytes",
+    "maximumInventoryFiles",
+    "maximumInventoryBytes"
+  ],
+  "tests": {
+    "invocation": "node --max-old-space-size=32 --max-semi-space-size=1 tests/multihost/lifecycle.test.mjs",
+    "tapTests": 8,
+    "expectedRefusals": 79,
+    "groups": [
+      {
+        "name": "profile-derived-bounds",
+        "expectedRefusals": 9
+      },
+      {
+        "name": "explicit-synthetic-authority",
+        "expectedRefusals": 7
+      },
+      {
+        "name": "public-key-owner-binding",
+        "expectedRefusals": 8
+      },
+      {
+        "name": "actual-observation-and-tenure",
+        "expectedRefusals": 9
+      },
+      {
+        "name": "exact-withdrawal-step-accounting",
+        "expectedRefusals": 9
+      },
+      {
+        "name": "ordered-actions-jobs-restarts",
+        "expectedRefusals": 16
+      },
+      {
+        "name": "pinned-state-validator-adapter",
+        "expectedRefusals": 11
+      },
+      {
+        "name": "fresh-exported-deposit-only",
+        "expectedRefusals": 10
+      }
+    ],
+    "externalWallSeconds": 30,
+    "externalMaximumRssKiB": 131072,
+    "syntheticDeclaredPublicIdentities": 4,
+    "cryptographicAuthenticityMocked": false,
+    "actualSignatureCreations": 0,
+    "databaseOpens": 0,
+    "rpcCalls": 0,
+    "networkStarted": false,
+    "projectChildrenSpawned": 0,
+    "actualExecution": false,
+    "pureTestSourceUnchangedFromPhase1": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-orchestration-implementation-20261015/source/tests/multihost/lifecycle.test.mjs",
+      "sha256": "3abdb2ea85848b8620f90a22b8437938064f33f99b030c4da4edfd0b728fa9f0",
+      "bytes": 14400
+    },
+    "rootPreviouslyExecutedPureTests": 8,
+    "newGuardTest": {
+      "path": "tests/multihost/lifecycle-driver-guard.test.mjs",
+      "tapTests": 1,
+      "outerWallSeconds": 15,
+      "childNodeWallSeconds": 10,
+      "actualFrozenRunChild": true,
+      "syntheticParserValidSpec": true,
+      "seedLedgerOutputAndAllHostArtifactLocatorsAbsent": true,
+      "specificGuardAndExit1Required": true,
+      "sourceAndSpecNineFieldShaBeforeAfter": true,
+      "childProcessInvocations": 1,
+      "actualExecuted": false
+    }
+  },
+  "semantics": {
+    "registeredIndexResolvedByPublicKeyOnly": true,
+    "configuredIndexNullPreserved": true,
+    "secondRestartRequiresThirdActiveUnslashedLocalKey": true,
+    "threeStoppedOwnerCapturesMeansThreeSeparateCapturesNotThreeTerminalReplays": true,
+    "terminalCanonicalReplayMustBeRealCppAudit": true,
+    "terminalFullAuditOwner": "vps-docker",
+    "vmRawCapsulesActionsJobsMustRemainInSitu": true,
+    "fullPayoutCreditMeasuredAtWithdrawalStep": true,
+    "parentToPostBalanceDifferenceIsPayout": false,
+    "strictlyIncreasingWithdrawalIndices": true,
+    "laterNewSyncRewardsMayBeWithdrawnLegitimately": true
+  },
+  "openIntegration": [
+    "run.mjs adds only lifecycle-unavailable guard immediately after validatedSPEC; complete runtime driver remains unavailable",
+    "managed child lifecycleSubmit shim required; private supervisor token must never be exposed to JS",
+    "new single-validator endpoint qualified only by ROOT scoped ARM beacon_read test; no three-owner HTTP/server claim",
+    "owner-local stopped physical-copy action preparation, explicit resume then Submit/Job acceptance, both two-root restarts and VPS terminal streaming audit must still be wired",
+    "cross-owner private action/job transfer requires explicit human authority and independently SHA-approved REQUEST",
+    "no lifecycle campaign, source authority, seed, export or signing has been run by these pure helpers"
+  ],
+  "productionQualified": false,
+  "runtimeGuard": {
+    "beforeSeedLedgerStatOutputMkdirAndExport": true,
+    "condition": "!spec.lifecycle",
+    "message": "Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required",
+    "ordinaryFreshModesUnchanged": true,
+    "lifecycleRuntimeImplemented": false
+  }
+}

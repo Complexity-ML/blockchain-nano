@@ -1,0 +1,149 @@
+{
+  "format": "nano-fresh-lifecycle-managed-submission-contract-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "target": "nano-capella-lifecycle-submit",
+  "programRole": "lifecycleSubmit",
+  "translationUnits": 1,
+  "phase1AndCoreUnchanged": true,
+  "childArgv": [
+    "rpcPort",
+    "identityPath",
+    "listenAddress",
+    "zeroOrMorePeers"
+  ],
+  "controlEnvironment": [
+    "NANO_TEST_FRESH_SUBMISSION_PLAN",
+    "NANO_TEST_FRESH_SUBMISSION_PLAN_SHA256"
+  ],
+  "supervisorOnlyEnvironment": [
+    "NANO_NETWORK_TOKEN",
+    "NANO_SUPERVISOR_PID"
+  ],
+  "otherEnvironmentRead": false,
+  "planFormat": "nano-fresh-lifecycle-submission-plan-v1",
+  "planExactFields": [
+    "format",
+    "campaignId",
+    "owner",
+    "manifest",
+    "action",
+    "realP2p",
+    "resultFile",
+    "maximumWallSeconds"
+  ],
+  "artifactExactFields": [
+    "path",
+    "sha256",
+    "bytes"
+  ],
+  "externallyApprovedPlanShaRequired": true,
+  "planMode": "0600",
+  "controlAndResultParentMode": "0700",
+  "actionMode": "0600",
+  "allInputsSingleLinkOwnedRegular": true,
+  "allInputsNoGroupOrWorldWrite": true,
+  "inputFullNineFieldsAndShaSizeNeverRebased": true,
+  "inputFencesBeforeAndAfterRpcAndOnRefusal": true,
+  "maximums": {
+    "argvCount": 128,
+    "argvBytes": 65536,
+    "planBytes": 65536,
+    "manifestBytes": 16777216,
+    "actionBytes": 65536,
+    "publicP2pBytes": 67108864,
+    "rpcResponseBytes": 1048576,
+    "httpHeaderBytes": 8192,
+    "minimumWallSeconds": 10,
+    "maximumWallSeconds": 60
+  },
+  "rpcProtocol": [
+    "nano_capellaStatus",
+    "nano_capellaJobs",
+    "nano_capellaSubmit exactly once",
+    "nano_capellaJob while pending",
+    "nano_capellaForget after accepted"
+  ],
+  "rpcHost": "127.0.0.1",
+  "noLostSubmitRetry": true,
+  "pendingJobsRefusedBeforeSubmit": true,
+  "sequence": "observed highWater + 1 with uint64 overflow refusal",
+  "submitEnvelopeIsString": true,
+  "acceptedJobFormat": "nano-fresh-lifecycle-accepted-job-v1",
+  "acceptedJobExactFields": [
+    "format",
+    "campaignId",
+    "owner",
+    "kind",
+    "actionSha256",
+    "session",
+    "sequence",
+    "job"
+  ],
+  "jobExactFields": [
+    "sequence",
+    "payloadDigest",
+    "cancelRequested",
+    "state",
+    "decision"
+  ],
+  "privateResultReservedBeforeRpc": true,
+  "privateResultRetainedOnFailure": true,
+  "authenticationTokenStoredInResult": false,
+  "sessionStaysPrivateOwnerLocal": true,
+  "publicAcceptedEventFields": [
+    "event",
+    "accepted",
+    "receiptSha256",
+    "receiptBytes",
+    "authExported",
+    "newSignaturesCreated",
+    "execPending",
+    "productionQualified"
+  ],
+  "refusalOutputFixedNoExceptionContents": true,
+  "exec": {
+    "realP2pExactHashAndSize": true,
+    "requiredLeaf": "nano-p2p",
+    "originalBoundedArgvForwarded": true,
+    "planControlVarsRemoved": true,
+    "supervisorTokenRetainedForRealP2p": true,
+    "sameUidAdversarialWriterProtectionClaimed": false
+  },
+  "selfTest": {
+    "selector": "--self-test",
+    "ctest": "consensus_fresh_lifecycle_managed_submission",
+    "cooperativeSeconds": 25,
+    "externalTimeoutSeconds": 30,
+    "groups": 3,
+    "rows": 4,
+    "expectedRefusals": 26,
+    "groupRefusals": [
+      9,
+      11,
+      6
+    ],
+    "realFilesystemFixtures": true,
+    "rpcCallbackOnly": true,
+    "realHttpTested": false,
+    "execExecuted": false,
+    "envRead": false,
+    "signaturesCreated": 0,
+    "databasesOpened": 0,
+    "scenarios": [
+      "fresh-lifecycle-managed-submit-policy",
+      "fresh-lifecycle-managed-submit-ipc",
+      "fresh-lifecycle-managed-submit-input-fences",
+      "fresh-lifecycle-managed-submit-summary"
+    ]
+  },
+  "qualification": {
+    "agentCompilerInvocations": 0,
+    "agentTestInvocations": 0,
+    "agentProjectInvocations": 0,
+    "agentNetworkInvocations": 0,
+    "rOrLWrites": false,
+    "runtimeSubmissionQualified": false,
+    "campaignAuthorized": false,
+    "productionQualified": false
+  }
+}

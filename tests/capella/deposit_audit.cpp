@@ -10,6 +10,9 @@
 #include "blst.h"
 #include <fstream>
 #include <iostream>
+#include "../support/fresh_lifecycle.hpp"
+#include "../support/fresh_lifecycle_self_test.hpp"
+#include "../support/capella_canonical_stream_self_test.hpp"
 using namespace nano;
 namespace {
 void require(bool b,const char* message){if(!b)throw std::runtime_error(message);}
@@ -19,7 +22,11 @@ uint64_t number(const Json& v){return u64(quantity(v));}
 ConsensusRoot root(const Json& value){const auto text=value.get<std::string>();const auto bytes=unhex(text);require(bytes.size()==32&&hex(bytes)==text,"canonical audit root required");ConsensusRoot r{};std::copy(bytes.begin(),bytes.end(),r.begin());return r;}
 std::string text(const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));}
 }
-int main(int argc,char** argv){try{
+int main(int argc,char** argv){
+ if(argc==2&&std::string(argv[1])=="--fresh-stream-self-test")return nano::test::lifecycle::fresh_stream_self_test();
+ if(argc==2&&std::string(argv[1])=="--fresh-lifecycle-self-test")return nano::test::fresh_lifecycle::self_test();
+ if(argc>1&&(std::string(argv[1])=="--fresh-action"||std::string(argv[1])=="--fresh-audit"))return nano::test::fresh_lifecycle::main(argc,argv);
+ try{
  require(argc==7&&std::string(argv[1])=="--audit","usage: --audit synthetic-genesis node-config stopped-db external-audit-request deposit-metadata");
  const auto genesis=Genesis::from_json(json(argv[2]));require(genesis.chain_id==1337&&genesis.consensus=="beacon"&&genesis.evm_revision==EvmRevision::Shanghai,"private Beacon Shanghai fixture only");
  const auto c=json(argv[3]).at("capella"),request=json(argv[5]),deposit=json(argv[6]);

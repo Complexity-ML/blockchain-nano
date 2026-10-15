@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {validateLifecycleMode} from './lifecycle.mjs';
 // Repartition PUBLIC exporter fixtures only. Never use a production genesis.
 import {readFile,writeFile,mkdir,copyFile,cp,lstat,realpath} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -117,22 +118,23 @@ function freshArtifact(v){exactKeys(v,['path','sha256','bytes'],'Artifact');fres
 // This is an externally SHA-approved ROOT campaign authority. It is never
 // manufactured from the build bindings or genesis that it is supposed to admit.
 export function validateFreshCampaignSpec(value,{target,sourceBaseRevision}){
- const spec=structuredClone(value),partitionRotation=Object.hasOwn(spec,'partitionRotation');exactKeys(spec,['format','sourceBaseRevision','overlayManifest','owners','fixture','clock','backupRestore','productionQualified',...(partitionRotation?['partitionRotation']:[])],'Fresh spec');
+ const spec=structuredClone(value),partitionRotation=Object.hasOwn(spec,'partitionRotation'),lifecycle=Object.hasOwn(spec,'lifecycle');exactKeys(spec,['format','sourceBaseRevision','overlayManifest','owners','fixture','clock','backupRestore','productionQualified',...(partitionRotation?['partitionRotation']:[]),...(lifecycle?['lifecycle']:[])],'Fresh spec');
  freshNeed(spec.format==='nano-fresh-capella-three-owner-campaign-v1'&&spec.sourceBaseRevision===sourceBaseRevision&&/^[0-9a-f]{40}$/.test(sourceBaseRevision)&&spec.productionQualified===false&&typeof spec.backupRestore==='boolean','Fresh source authority');freshArtifact(spec.overlayManifest);
  if(partitionRotation){
   exactKeys(spec.partitionRotation,['format','owner','recoveryMs','windowTimeoutMs'],'Partition/rotation');
   const mode=spec.partitionRotation;freshNeed(mode.format==='nano-fresh-partition-rotation-v1'&&mode.owner==='vps-docker'&&mode.recoveryMs===180000&&mode.windowTimeoutMs===720000&&spec.backupRestore===false,'Explicit bounded quorum-loss partition/rotation without backup replay');
  }
+ if(lifecycle){freshNeed(!partitionRotation&&spec.backupRestore===false,'Lifecycle owns its two restart phases and cannot silently combine other campaigns');spec.lifecycle=validateLifecycleMode(spec.lifecycle);}
  exactKeys(spec.owners,ownerNames,'Owners');
  for(const name of ownerNames){
   const a=spec.owners[name];exactKeys(a,['host','kind','image','uid','gid','coreBuildRoot','networkBuildRoot','coreArchive','programs','admission'],'Owner');
   freshNeed(a.host===(name==='vps-docker'?target:'mac')&&a.kind===(name==='mac-native'?'native-macos-arm64':name==='mac-docker'?'linux-arm64':'linux-amd64'),'Exact three runtime/two physical host identity');freshAbsolute(a.coreBuildRoot);freshAbsolute(a.networkBuildRoot);freshNeed(a.coreBuildRoot!==a.networkBuildRoot&&!a.coreBuildRoot.startsWith(a.networkBuildRoot+'/')&&!a.networkBuildRoot.startsWith(a.coreBuildRoot+'/'),'Disjoint current code roots');
   freshNeed(a.uid===(name==='vps-docker'?1000:501)&&a.gid===(name==='vps-docker'?1000:20),'Actual current public build owners');
   freshNeed(a.image===(name==='mac-native'?null:name==='mac-docker'?'sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb':'sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14'),'Existing immutable dependency image only');
-  freshArtifact(a.coreArchive);freshArtifact(a.admission);exactKeys(a.programs,[...requiredFreshPrograms[name],...(partitionRotation?['rotationAudit']:[])],'Required programs');for(const z of Object.values(a.programs))freshArtifact(z);
+  freshArtifact(a.coreArchive);freshArtifact(a.admission);exactKeys(a.programs,[...requiredFreshPrograms[name],...(partitionRotation?['rotationAudit']:[]),...(lifecycle?['lifecycleTool']:[])],'Required programs');for(const z of Object.values(a.programs))freshArtifact(z);
   const expectedCore=name==='mac-native'?a.coreBuildRoot+'/libnano_core.a':'/outputs/libnano_core.a';freshNeed(a.coreArchive.path===expectedCore,'Core archive must be selected root');
   for(const [role,z] of Object.entries(a.programs)){
-   const leaf={nano:'nano',p2p:'nano-p2p',exporter:'nano-capella-transition-tests',bootstrapImport:'nano-capella-isolated-bootstrap-import',bootstrapAudit:'nano-capella-isolated-bootstrap-audit',stoppedCapture:'nano-capella-isolated-stopped-capture',rotationAudit:'nano-capella-rotation-audit'}[role];
+   const leaf={nano:'nano',p2p:'nano-p2p',exporter:'nano-capella-transition-tests',bootstrapImport:'nano-capella-isolated-bootstrap-import',bootstrapAudit:'nano-capella-isolated-bootstrap-audit',stoppedCapture:'nano-capella-isolated-stopped-capture',rotationAudit:'nano-capella-rotation-audit',lifecycleTool:'nano-capella-deposit-audit'}[role];
    freshNeed(z.path===(name==='mac-native'?(role==='p2p'?a.networkBuildRoot:a.coreBuildRoot):role==='p2p'?'/network-build':'/outputs')+'/'+leaf,'Program belongs to admitted current root');
   }
  }

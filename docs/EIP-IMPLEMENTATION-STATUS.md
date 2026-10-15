@@ -1,3 +1,15 @@
+> **15 octobre 2026 — Preuves locales supplémentaires, statuts EIP inchangés.**
+>
+> Docker ARM64 : la fonction C++ de lecture validateur passe 5 groupes, 21 lectures et 16 refus attendus ; 2 signatures de fixture, aucune signature créée par l’API. Archive core de 143 objets, un recompilé et 142 inchangés ; le test causal utilise le même objet de test. Le transport HTTP n’est pas testé.
+>
+> Les outils synthétiques passent sur ARM64 : politique d’action 3 groupes/12 refus/3 signatures de fixture ; replay canonique de 1026 blocs réellement signés, 4 groupes/9 refus, 125 prunings, 10783 signatures de fixture, en 95215 ms. Pic de 33 records ; les mesures SSZ et de réserve ne sont pas une mesure RSS. L’échec de compilation GMP V1 sans test est conservé ; le PASS V2 est distinct.
+>
+> Les 8 groupes JavaScript purs passent sans réseau ni transfert privé. Ces preuves de fonctions et composants ne démontrent ni audit privé réel, ni soumission runtime, ni cycle long ; le shim Submit/Job est un lot suivant OPEN.
+>
+> VPS privé : autorisation humaine toujours en attente ; audits à froid conservés PARTIELS 2/3. V37 et campagne08 restent FAILED ; les originaux Mac ne sont pas récupérés et le NAS est refusé/hors périmètre. CI 38755615669 est refusée avant jobs pour billing/spending ; ce n’est pas un PASS CI.
+>
+> Le cycle frais complet garde le profil réel : au plus tôt 325 epochs après activation (environ 4 h 20, plus files et délais) ; il n’est pas exécuté. Aucune promotion de fork/EIP ou de production ; CSV EIP et documentation RPC inchangés. Tout l’historique intégral suit sans modification.
+
 # Partition et rotation — qualification à froid partielle2/3
 
 Objectif ACTIVE. Le présent lot qualifie deux audits à froid sur trois et un composant FS V7 ; il ne clôt pas la production. La campagne08 reste définitivement FAILED : exit1 après1188201ms, sans timeout, au premier auditeur RO natif. La précondition immédiate est identifiée : répertoire0755 au lieu des0700 requis ; les refus de métadonnées ultérieurs gardent une cause physique UNKNOWN. Ses observations acquises sont conservées : deux avancées communes initiales et trois échantillons stables ; coupure de102s entre slots125 et142/142/141, franchissant la frontière128 ; puis trois avancées communes aux epochs18/19/20 et trois échantillons stables, sans conflit de finalité observé. Elles ne remplacent pas le résultat global refusé.

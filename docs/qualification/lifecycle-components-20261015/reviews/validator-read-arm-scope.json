@@ -1,0 +1,53 @@
+{
+  "format": "nano-independent-public-beacon-validator-arm-typed-review-v1",
+  "verdict": "GO_SCOPED_ROOT_TYPED_ACTUAL",
+  "inputs": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/beacon-validator-read-implementation-20261015/manifest.json",
+      "sha256": "54ecd15d7b3c95473f19013ea3cab41ee0a2f072cc9621c83775e84494bd52c9",
+      "bytes": 3659
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/beacon-validator-read-implementation-20261015/arm-03/terminal.json",
+      "sha256": "291abb17c73eeb6491c1be718568495740eefc717da786ad4cdafe64e30df2fb",
+      "bytes": 2382
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/beacon-validator-read-implementation-20261015/arm-03/cleanup.json",
+      "sha256": "eb207b1da47fd7887be3e920b1affb638c74f284447a68c520dbff71ef32bf2b",
+      "bytes": 78
+    }
+  ],
+  "sourcePayloadsRehashed": 6,
+  "observedRootTypedResult": {
+    "oldCoreMissingEndpoint": true,
+    "sameTestObjectForBothCores": true,
+    "test": {
+      "auditSignatures": 0,
+      "databaseAccessed": false,
+      "expectedRefusals": 16,
+      "fixtureBlsSignatures": 2,
+      "groups": 5,
+      "httpReads": 21,
+      "networkStarted": false,
+      "passed": true,
+      "peakRssKiB": 17760,
+      "productionQualified": false,
+      "runtimeStarted": false,
+      "scenario": "validator_read_summary",
+      "statuses": 9
+    },
+    "coreCompilations": 1,
+    "testCompilations": 1,
+    "testLinks": 2,
+    "coreMembers": 143,
+    "unchangedCoreMembers": 142,
+    "oldArchiveUnchanged": true,
+    "genuineMEqualsActualMD": true,
+    "cleanupContainerAbsent": true
+  },
+  "reviewScope": "Source full-read completed in prior602bf801 receipt; this addendum rehashes unchanged payloads and reads only the two ROOT-authorized fixed typed receipts. No raw compiler logs, SDK, artifact maps, binary or HTTP transport independently examined. Test method named httpReads means beacon_read calls; httpTransportTested=false. ARM only, no combined lifecycle server/campaign qualification.",
+  "agentProjectExecutions": 0,
+  "agentVmReads": 0,
+  "productionQualified": false
+}

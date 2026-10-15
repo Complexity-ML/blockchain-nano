@@ -1,0 +1,93 @@
+{
+  "format": "nano-scoped-root-public-phase1-canonical-stream-and-actions-v1",
+  "verdict": "GO_SOURCE_PINS_AND_ROOT_TYPED_ACTUAL_SCOPE",
+  "inputs": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-streaming-implementation-20261015/manifest.json",
+      "sha256": "795f403d176adc6557dcfa31e561d12be0a5f99e0d41cd770277a538c5168167",
+      "bytes": 5743
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-implementation-v2-20261015/manifest.json",
+      "sha256": "27f0f3a0eb1b28e8153744b5a52a1560d61fb4ed0105424dc1b39b9c77cf59d5",
+      "bytes": 9128
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-build-root-20261015/arm-02/terminal.json",
+      "sha256": "1671993a72fd662eec342dda5177de9a638ae9aa037249a90c029d40e7ef1216",
+      "bytes": 2607
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-build-root-20261015/arm-02/cleanup.json",
+      "sha256": "eb207b1da47fd7887be3e920b1affb638c74f284447a68c520dbff71ef32bf2b",
+      "bytes": 78
+    }
+  ],
+  "sourcePayloadsRehashed": {
+    "stream": 7,
+    "actionV2": 10
+  },
+  "targetedActionSelfTestSourceReview": {
+    "path": "source/tests/support/fresh_lifecycle_self_test.hpp",
+    "sha256": "8589f8b6cc61dd3ce08f60314114aa5f45538b75bf3f05689a86ee37137e0a9f",
+    "fullSelfTestRead": true,
+    "scope": "Real signed exit and conflicting-header proof, registry public-key resolution29/93 plus null configuration, true tenure/credential/explicit-action refusals, unchanged context and opaque IO mutation/symlink negative cases. Environment test names now use NANO_TEST_CAPELLA_NETWORK_KEY_ prefix. Threegroups/twelve refusals/threefixtureBLS. Terminal body V1 .convert_to compilefailure retained; V2 two .get_str substitutions source-reviewed, no broader posthoc claim."
+  },
+  "rootTypedActual": {
+    "owner": "mac-docker",
+    "imageId": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+    "actionPolicyTest": {
+      "databaseAccessed": false,
+      "envRead": false,
+      "expectedRefusals": 12,
+      "fixtureBlsSignatures": 3,
+      "groups": 3,
+      "networkUsed": false,
+      "operationalSignatures": 0,
+      "passed": true,
+      "productionQualified": false,
+      "runtimeStarted": false,
+      "scenario": "fresh-lifecycle-summary"
+    },
+    "canonicalStreamPositive": {
+      "actualFinalizedEpoch": 126,
+      "generatorPeakRecords": 32,
+      "generatorPrunes": 125,
+      "historicalForkChoiceVerified": false,
+      "liveRecordPeak": 33,
+      "liveStateSszPeakBytes": 686517,
+      "liveStateSszPlusNextReservePeakBytes": 4861032,
+      "passed": true,
+      "productionQualified": false,
+      "prunes": 125,
+      "scenario": "fresh-stream-real-signed-1026",
+      "signedBlocks": 1026,
+      "stateReservationIsProcessRss": false
+    },
+    "canonicalStreamTest": {
+      "canonicalExecutionIndexChecks": 1155,
+      "expectedRefusals": 9,
+      "groups": 4,
+      "newDatabasesOpened": 0,
+      "passed": true,
+      "productionQualified": false,
+      "projectSourceOrProfileChanged": false,
+      "runtimeStarted": false,
+      "scenario": "fresh-stream-summary",
+      "signedBlocksInSuccessfulStream": 1026,
+      "sourceArchiveReads": 3462,
+      "testFixtureBlsSignatures": 10783
+    },
+    "canonicalStreamProcessMs": 95215,
+    "consumerCompilations": 1,
+    "consumerLinks": 1,
+    "coreCompilations": 0,
+    "coreArchiveUnchanged": true,
+    "actualLifecycleNetworkExecuted": false,
+    "actualPrivateAuditExecuted": false,
+    "cleanupContainerAbsent": true
+  },
+  "limitsInterpretation": "liveRecordPeak/stateSsz metrics describe bounded replay data, not measured process RSS. No numeric RSS peak is in the authorized terminal. Fixture source contains300s/128MiB/20000BLS guards; this receipt does not invent a reported peak.95.215s is the stream subprocess event, not whole build/test wall time.",
+  "reviewLimit": "Only public source and two ROOT-authorized typed ARM receipts read. No raw process logs, SDK/dependency maps, binaries, VM, DB/private assets read and no project execution by reviewer. Core/P2P/network lifecycle and private audit not promoted by these synthetic tests.",
+  "productionQualified": false
+}

@@ -1,0 +1,211 @@
+{
+  "format": "nano-fresh-lifecycle-actions-source-contract-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "target": "nano-capella-deposit-audit",
+  "programRole": "lifecycleTool",
+  "modes": {
+    "action": {
+      "selector": "--fresh-action",
+      "argc": 11,
+      "maximumWallSeconds": 60,
+      "stdoutFormat": "nano-fresh-lifecycle-action-result-v1",
+      "successStatus": "PREPARED",
+      "maximumSignatures": {
+        "voluntary_exit": 1,
+        "proposer_slashing": 2
+      },
+      "privateOutput": "action.private.json",
+      "submitted": false,
+      "canonicalInclusionVerified": false
+    },
+    "audit": {
+      "selector": "--fresh-audit",
+      "argc": 11,
+      "maximumWallSeconds": 600,
+      "stages": [
+        "observe",
+        "terminal"
+      ],
+      "stdoutFormat": "nano-fresh-lifecycle-audit-result-v1",
+      "statusByStage": {
+        "observe": "OBSERVED_SCOPED_SEALED_HEAD",
+        "terminal": "PASS_SCOPED_FRESH_LIFECYCLE"
+      },
+      "terminalOwner": "vps-docker",
+      "newSignaturesCreated": 0,
+      "envRead": false,
+      "privateOutputs": [
+        "canonical.index.private",
+        "audit.private.json"
+      ]
+    }
+  },
+  "argv": [
+    "mode",
+    "manifest",
+    "configuration",
+    "stop",
+    "request",
+    "requestSha256",
+    "dataOwnerRoot",
+    "witnessOwnerRoot",
+    "owner",
+    "newOutputRoot"
+  ],
+  "requestKeys": [
+    "format",
+    "owner",
+    "manifestSha256",
+    "configurationSha256",
+    "stopSha256",
+    "expectedHead",
+    "identities",
+    "resources",
+    "stage",
+    "action",
+    "syntheticActionAuthorized",
+    "intentionallyAuthorConflictingHeaders",
+    "crossOwnerEvidenceTransferAuthorized",
+    "evidence"
+  ],
+  "resourceKeys": [
+    "maximumWallSeconds",
+    "maximumHistoryBlocks",
+    "maximumArchiveBytes",
+    "maximumIndexBytes",
+    "maximumInventoryFiles",
+    "maximumInventoryBytes"
+  ],
+  "identityDeclarationKeys": [
+    "owner",
+    "keyEnv",
+    "publicKey"
+  ],
+  "identityObservationKeys": [
+    "owner",
+    "keyEnv",
+    "publicKey",
+    "resolvedIndex",
+    "registered",
+    "epoch",
+    "activationEligibilityEpoch",
+    "activationEpoch",
+    "exitEpoch",
+    "withdrawableEpoch",
+    "slashed",
+    "balanceGwei",
+    "effectiveBalanceGwei",
+    "withdrawalCredentials",
+    "withdrawalRecipient"
+  ],
+  "terminalEvidenceKeys": [
+    "requiredFinalized",
+    "deposit",
+    "actions",
+    "restarts"
+  ],
+  "depositEvidenceKeys": [
+    "transactionHash",
+    "rawTransaction",
+    "amountGwei",
+    "withdrawalCredentials"
+  ],
+  "actionEvidenceKeys": [
+    "action",
+    "acceptedJob",
+    "inclusionRoot"
+  ],
+  "acceptedJobKeys": [
+    "format",
+    "campaignId",
+    "owner",
+    "kind",
+    "actionSha256",
+    "session",
+    "sequence",
+    "job"
+  ],
+  "jobKeys": [
+    "sequence",
+    "payloadDigest",
+    "cancelRequested",
+    "state",
+    "decision"
+  ],
+  "restartEvidenceKeys": [
+    "cutoffSlot",
+    "beforeProposalRoot",
+    "afterProposalRoot",
+    "dutyPublicKey",
+    "sourceCapture",
+    "restoredCapture"
+  ],
+  "artifactKeys": [
+    "path",
+    "sha256",
+    "bytes"
+  ],
+  "schemas": {
+    "requestFormat": "nano-fresh-lifecycle-request-v1",
+    "actionFormat": "nano-fresh-lifecycle-action-v1",
+    "acceptedJobFormat": "nano-fresh-lifecycle-accepted-job-v1",
+    "sha256": "64 lowercase hex chars without 0x",
+    "consensusIntegers": "canonical lowercase 0x quantities, including UINT64_MAX sentinel",
+    "countsAndArtifactBytes": "JSON unsigned integers",
+    "signedWeiDelta": "canonical signed decimal string",
+    "nullRegistryIndex": "absent by authenticated public key, never inferred"
+  },
+  "tests": [
+    {
+      "selector": "--fresh-lifecycle-self-test",
+      "ctest": "consensus_fresh_lifecycle_action_policy",
+      "timeoutSeconds": 30,
+      "rows": [
+        "fresh-lifecycle-public-identity",
+        "fresh-lifecycle-real-operation-policy",
+        "fresh-lifecycle-immutable-file-refusals",
+        "fresh-lifecycle-summary"
+      ],
+      "summaryEquals": {
+        "groups": 3,
+        "expectedRefusals": 12,
+        "fixtureBlsSignatures": 3,
+        "operationalSignatures": 0,
+        "databaseAccessed": false,
+        "envRead": false,
+        "networkUsed": false,
+        "runtimeStarted": false,
+        "productionQualified": false
+      }
+    },
+    {
+      "selector": "--fresh-stream-self-test",
+      "ctest": "consensus_fresh_lifecycle_canonical_stream",
+      "timeoutSeconds": 300,
+      "contractAuthority": "sibling frozen fresh-lifecycle-streaming component; do not invent its counters"
+    }
+  ],
+  "scope": {
+    "sourceOnly": true,
+    "newCoreImplementation": false,
+    "legacyAuditBodyChanged": false,
+    "readOnlyModeConstructsReactor": false,
+    "readOnlyModeConstructsJournal": false,
+    "readOnlyModeReadsKeyEnvironment": false,
+    "terminalPrivateVpsTransferAuthorizationRequired": true,
+    "threeIdenticalTerminalReplaysClaimed": false,
+    "historicalForkChoiceVerified": false,
+    "restorationProcessExecutionInferred": false,
+    "productionQualified": false,
+    "campaignAuthorized": false,
+    "runtimeSubmissionImplemented": false,
+    "runtimeLifecycleLaunchAuthorized": false
+  },
+  "openGates": [
+    "Managed-child RPC submission adapter is a separate next lot; no externally readable supervisor token and no direct-JS Submit/Job path is claimed",
+    "ROOT must compile and execute new synthetic tests against both component freezes",
+    "VPS private configuration authority and Native-to-VPS nonpublic artifact transfer require specific human approval",
+    "No complete multi-hour lifecycle campaign is authorized or qualified by source or synthetic tests",
+    "Original operational restart, independent external audit, fresh installable RC and CI billing gates remain open"
+  ]
+}

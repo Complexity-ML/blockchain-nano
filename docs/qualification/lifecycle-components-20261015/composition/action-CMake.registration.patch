@@ -1,0 +1,14 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -104,6 +104,11 @@
+ set_tests_properties(consensus_bls_positive_verification_cache PROPERTIES TIMEOUT 70 LABELS qualification_consensus_crypto_cache)
+ add_executable(nano-capella-deposit-audit tests/capella/deposit_audit.cpp)
+ target_link_libraries(nano-capella-deposit-audit PRIVATE nano_core)
++target_compile_definitions(nano-capella-deposit-audit PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
++add_test(NAME consensus_fresh_lifecycle_action_policy COMMAND nano-capella-deposit-audit --fresh-lifecycle-self-test)
++set_tests_properties(consensus_fresh_lifecycle_action_policy PROPERTIES TIMEOUT 30 LABELS qualification_consensus_lifecycle)
++add_test(NAME consensus_fresh_lifecycle_canonical_stream COMMAND nano-capella-deposit-audit --fresh-stream-self-test)
++set_tests_properties(consensus_fresh_lifecycle_canonical_stream PROPERTIES TIMEOUT 300 LABELS qualification_consensus_lifecycle)
+ target_include_directories(nano-capella-deposit-audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
+ add_executable(nano-capella-slashing-audit tests/capella/slashing_audit.cpp)
+ target_link_libraries(nano-capella-slashing-audit PRIVATE nano_core)

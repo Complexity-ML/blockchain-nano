@@ -1,0 +1,32 @@
+{
+  "format": "nano-capella-single-validator-read-contract-v1",
+  "baseRevision": "dff9df7fb8fcef8dd2275ea0f92a7570f14fbc63",
+  "route": "/eth/v1/beacon/states/{head|retained_state_root}/validators/{public_key|index}",
+  "stateSelectorScope": "same retained authenticated states as existing state root/fork/finality endpoints; not full Beacon StateId support",
+  "validatorSelector": "uint64 decimal index including leading zeroes or 0x-prefixed 48-byte public key; malformed400/absent404",
+  "response": "standard ValidatorResponse index/balance/status/validator, all uint64 decimal strings, original execution_optimistic/finalized metadata",
+  "changesConsensusRulesOrStorage": false,
+  "bulkRegistryEndpointAdded": false,
+  "validatorCountCapAdded": false,
+  "sourceProjection": "authenticated publication is pinned once, state commitment checked, registry decoded by existing Capella context, public-key scan cancellable, no mutable journal/reactor constructed",
+  "newTest": {
+    "groups": 5,
+    "rows": 6,
+    "pureStatuses": 9,
+    "realGenuineSignedTransitionFixture": true,
+    "retainedHistoricalBalanceDiffersFromHead": true,
+    "corruptStateAndCancellationRefused": true,
+    "fixtureBlsSignaturesPerInvocation": 2,
+    "apiSignatures": 0,
+    "databaseAccessed": false,
+    "runtimeStarted": false,
+    "httpTransportTested": false,
+    "expectedRefusals": 16,
+    "expectedHttpReads": 21,
+    "deadlineSeconds": 70,
+    "rssGuardKiB": 131072
+  },
+  "sourceOnly": true,
+  "compiledOrExecuted": false,
+  "productionQualified": false
+}

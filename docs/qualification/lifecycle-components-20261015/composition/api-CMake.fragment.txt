@@ -1,0 +1,7 @@
+# CMake integration fragment against dff9df7f; ROOT merges with lifecycle-tool registration.
+add_executable(nano-capella-validator-read-tests tests/test_capella_validator_read.cpp)
+target_link_libraries(nano-capella-validator-read-tests PRIVATE nano_core)
+target_include_directories(nano-capella-validator-read-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
+target_compile_definitions(nano-capella-validator-read-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_capella_validator_state_read COMMAND nano-capella-validator-read-tests)
+set_tests_properties(consensus_capella_validator_state_read PROPERTIES TIMEOUT 70 LABELS qualification_consensus_beacon_read)

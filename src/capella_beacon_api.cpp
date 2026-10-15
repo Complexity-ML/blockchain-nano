@@ -3,6 +3,8 @@
 #include <charconv>
 #include <chrono>
 #include "beacon_block_json.hpp"
+#include "beacon_validator_json.hpp"
+#include "nano/consensus_capella_fork_state.hpp"
 namespace nano {
 namespace {
 uint64_t number(const Bytes& b,size_t at){uint64_t n=0;for(unsigned i=0;i<8;++i)n|=uint64_t(b.at(at+i))<<(8*i);return n;}
@@ -22,10 +24,23 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
   if(slash!=std::string_view::npos){selector=tail.substr(0,slash);operation=tail.substr(slash+1);}
  }
  const bool root=operation=="root",fork=operation=="fork",finality=operation=="finality_checkpoints";
- if(!root&&!fork&&!finality&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
+ const bool validator=operation.starts_with("validators/");
+ std::optional<uint64_t> validator_index;Bytes validator_key;
+ if(validator){
+  const auto id=operation.substr(std::string_view("validators/").size());
+  if(id.starts_with("0x")){
+   try{if(id.size()!=98)throw std::invalid_argument("validator public key width");validator_key=unhex(std::string(id));if(validator_key.size()!=48)throw std::invalid_argument("validator public key width");}
+   catch(const std::invalid_argument&){return {400,{{"code",400},{"message","Invalid validator ID"}}};}
+  }else{
+   uint64_t index=0;const auto parsed=std::from_chars(id.data(),id.data()+id.size(),index);
+   if(id.empty()||parsed.ec!=std::errc{}||parsed.ptr!=id.data()+id.size())return {400,{{"code",400},{"message","Invalid validator ID"}}};
+   validator_index=index;
+  }
+ }
+ if(!root&&!fork&&!finality&&!validator&&!genesis&&!spec)return {404,{{"code",404},{"message","Beacon endpoint not implemented"}}};
  stage(BeaconReadPhase::selection);if(checkpoint)checkpoint();
  std::shared_ptr<const CapellaForkBlock> selected;
- if(root||fork||finality){
+ if(root||fork||finality||validator){
   if(selector=="head"){stage(BeaconReadPhase::fork_choice);selected=capella_fork_head(store,rules,checkpoint);}
   else{
    ConsensusRoot state_root{};
@@ -89,6 +104,20 @@ BeaconReadResponse capella_beacon_read(const CapellaForkStore& store,
   if(checkpoint)checkpoint();return {200,{{"data",std::move(values)}}};
  }
  Json data;
+ if(validator){
+  // Decode only the selected authenticated publication. Public-key lookup is
+  // cancellable; no bulk registry response or new validator-count cap exists.
+  const auto context=capella_fork_block_context(head.state,head.header,
+   {c.epoch,rules.transition.execution,rules.transition.maximum_state_bytes},l,checkpoint);
+  const auto& validators=context.registry.validators;
+  auto found=validators.end();
+  if(validator_index)found=validators.find(*validator_index);
+  else found=std::find_if(validators.begin(),validators.end(),[&](const auto& row){
+   if(checkpoint)checkpoint();return std::equal(row.second.public_key.begin(),row.second.public_key.end(),validator_key.begin(),validator_key.end());
+  });
+  if(found==validators.end())return {404,{{"code",404},{"message","Validator not found in selected state"}}};
+  data=detail::beacon_validator_json(found->first,found->second,context.registry.epoch);
+ }
  if(root)data={{"root",hex(Bytes(head.header.state_root.begin(),head.header.state_root.end()))}};
  if(fork)data={{"previous_version",octets(b,48,4)},{"current_version",octets(b,52,4)},{"epoch",std::to_string(number(b,56))}};
  if(finality){
