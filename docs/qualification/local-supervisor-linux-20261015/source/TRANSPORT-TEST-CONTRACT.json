@@ -1,0 +1,19 @@
+{
+  "format": "nano-linux-stat9-newline-focused-test-contract-v1",
+  "sourceOnly": true,
+  "authorExecuted": false,
+  "requiredActualGate": "Root executes the exact v2 helper on a fresh owned Linux volume before the next private fixture.",
+  "positive": [
+    "Actual write receipt has the unchanged exact19 keys and nine authorityMaterial strings with neither CR nor LF, including ctime.",
+    "Use original returned authority nine strings in verify stdin; verify and raw read still match known bytes."
+  ],
+  "negative": [
+    "The existing strict receipt parser must reject a receipt whose last material component includes LF; never strip it in the driver or verifier.",
+    "Missing terminal LF, CRLF, duplicate LF and embedded CR/LF stat rows refuse under the v2 source rule."
+  ],
+  "nonGoals": [
+    "No revalidation, conversion or rebaseline of any old v1 Linux authority.",
+    "No fixture, seed, ledger, Nano runtime, duties, finality or production qualification claimed by a helper probe."
+  ],
+  "oldSourceSha256": "2a8ccc4a0c6355cb43f24422a04332d7981f9977261928866aa447d5ddf66944"
+}

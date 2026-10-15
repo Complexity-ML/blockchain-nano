@@ -1,0 +1,97 @@
+{
+  "format": "nano-local-supervisor-linux-control-source-proposal-v4",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "predecessor": {
+    "path": "../fresh-local-supervisor-linux-control-driver-v3-20261015/manifest.json",
+    "sha256": "46c38abe3c3383eaf69ae189106869d778200be2e7d06dd114d897f616122014",
+    "bytes": 4427,
+    "driverSha256": "c62b3be707218beca91a5c3a703aeb8be51bbef5e39f68dd9d591d0b95b04a1e",
+    "unchanged": true
+  },
+  "payloads": [
+    {"path":"run-local-supervisor-linux-control.mjs","sha256":"02a5cd44c77d27d36fd20096b7c10c5fbaa5abb1918f05e103375acbe2e649f4","bytes":41847},
+    {"path":"assemble-local-inputs.mjs","sha256":"09f05ab2000d83df239c6644de511e7d18d8eaffc25d5ac57dd6de19b0efeec5","bytes":8381},
+    {"path":"WORK-ORDER.schema.json","sha256":"5e5525320fc160b49a0401dd35715b14187de11d2a37b3cb7eddf708dea2936c","bytes":7823},
+    {"path":"CONTRACT.md","sha256":"5278957e93abe8689983dd75fc1a21305521b33d3ddf3d57de121ab31ce6e7d0","bytes":10028},
+    {"path":"README.md","sha256":"f58d26b3b5223b0cc5ef52060a1c1c7bd852eee3a40382f896e4ed72d88005a3","bytes":3330},
+    {"path":"known-files.pl","sha256":"7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6","bytes":12273},
+    {"path":"delta-from-v3.patch","sha256":"ad3e09db8c628309406887d0823bbedb71ba48dfc5bd955b2391f11c2a2c306d","bytes":2864}
+  ],
+  "payloadCount": 7,
+  "payloadBytes": 86546,
+  "onlyDriverCodeDelta": {
+    "location": "run-local-supervisor-linux-control.mjs:130",
+    "before": "ipc.profile === 'capellaIpc'",
+    "after": "ipc.profile === 'capella'",
+    "actualCppSource": "network/main.cpp:66,78,101",
+    "explanation": "capellaIpc is an RPC status field; the actual altair-ipc-ready event obtains its profile value capella from consensus_field().",
+    "noOtherDriverByteChange": true
+  },
+  "completedSourceAuditsBeforeFreeze": [
+    {
+      "path": "../fresh-local-supervisor-linux-pipeline-independent-review-20261015/source-start-stop-proc-http-capture-audit-after06.json",
+      "sha256": "1f6e022a0c196cb13fddff18e3c2288162f4e3416b132c445a1fb6d4174560bb",
+      "bytes": 7579,
+      "scope": "startup, actual profile, direct parent-child probe, two validator HTTP reads, healthy stops, four stopped captures and restore count",
+      "additionalDefiniteMismatches": 0
+    },
+    {
+      "path": "../fresh-local-supervisor-linux-pipeline-independent-review-20261015/source-post-stop-observe-action-managed-ipc-audit-after06.json",
+      "sha256": "74163774ed72f54672e3d45a9aa154cade45cc7ca4e5098e1fa608acffa52039",
+      "bytes": 19768,
+      "scope": "sixteen source joints for post-stop observation, request/action, plan, managed child, receipt, real P2P handoff, supervisor and IPC",
+      "additionalDefiniteMismatches": 0,
+      "author": "cross_arch_source_plan"
+    }
+  ],
+  "parentReportedAttempt06": {
+    "preparation": "PASS",
+    "preparationElapsedMs": 64558,
+    "outerIndependentFences": "PASS",
+    "localDriver": "FAILED_PRESERVED",
+    "localElapsedMs": 36504,
+    "refusedStage": "first-runtime",
+    "actualNanoStarts": 1,
+    "realP2pAndIpcReadyReported": true,
+    "procIdentityVerified": false,
+    "validatorHttpQualified": false,
+    "identifiedMismatch": "The actual C++ event profile capella was refused against the incorrect expected value capellaIpc.",
+    "cleanupStoppedOwnedContainers": true,
+    "domain06NeverReexportedOrReused": true,
+    "allPriorFailuresRemainFailures": true,
+    "authorReadPrivateEvidence": false
+  },
+  "unchanged": {
+    "workOrderFormat": "nano-local-supervisor-work-order-v2",
+    "workOrderFields": 29,
+    "assemblerSchemaContractAndReadmeBytes": true,
+    "helper7ddBytesAndNineteenFieldReceipt": true,
+    "strictOldAuthorityOwnerNineAndCrLfChecks": true,
+    "linuxPrivateVolumeTransportAndHostFences": true,
+    "networkProtocolActiveTrueRequirement": true,
+    "realNanoParentP2pAndTypedIpcChecks": true,
+    "twoBoundedActualValidatorHttpReads": true,
+    "twoStartsTwoHealthyStopsFourCaptures": true,
+    "boundedSyntheticActionAndPrivateEvidence": true,
+    "startupAgeCheck120000msAnd900SecondBudget": true,
+    "profileGenesisClockAndResources": true,
+    "ownedContainerCleanupAndVolumeRetention": true,
+    "cppBuildImageOrOperationalAssetsChanged": false
+  },
+  "operations": {
+    "publicSourceGenericTextJsonShaDiffOnly": true,
+    "privateInputsOutputsLogsKeysLedgerSoftwareBinariesOrDatabasesRead": false,
+    "projectNodePerlPythonDockerCompilerGitOrSshExecuted": false,
+    "earlierFrozenSourcesOrRepositoryChanged": false
+  },
+  "scope": {
+    "sourceSchemaAgreementProvesActualRuntimeSuccess": false,
+    "actualV4DriverQualified": false,
+    "realP2pElfSourceJoinIndependentlyProvenByAuthor": false,
+    "canonicalInclusionOrPenaltyVerified": false,
+    "restoredDutiesQualified": false,
+    "wholeLifecycleOrMultiownerFinalityQualified": false,
+    "productionQualified": false
+  },
+  "rootRequired": "Independently review this exact frozen source closure, retain all old authorities and failed domains, bind actual ELF/software inputs to the existing source authority, and use a new reserved domain for one bounded trial. Source audit completion and earlier component passes do not certify the resulting runtime or production."
+}

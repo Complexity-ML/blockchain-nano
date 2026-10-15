@@ -1,0 +1,99 @@
+{
+  "format": "nano-local-supervisor-runtime-schema-source-audit-v1",
+  "status": "SOURCE_ONLY_ONE_BLOCKER_IDENTIFIED",
+  "author": "local_pipeline_review",
+  "reviewedDriver": {
+    "path": "../fresh-local-supervisor-linux-control-driver-v3-20261015/run-local-supervisor-linux-control.mjs",
+    "sha256": "c62b3be707218beca91a5c3a703aeb8be51bbef5e39f68dd9d591d0b95b04a1e",
+    "bytes": 41850
+  },
+  "repository": "/Users/boris/Dev/blockchain-nano",
+  "sourcePins": [
+    {"path":"network/main.cpp","sha256":"7ff135825cd5eb3b80711225830b8dce95a369efa30888a7c1d7b186e42b89b9"},
+    {"path":"src/node.cpp","sha256":"a980a58444846f3ffd929c9ddaa419cd2307fcf93c8e941796e8834ee4aa9e3c"},
+    {"path":"src/http.cpp","sha256":"9012d3bfbe954326e4c7ac0348922358f53ac52fa0b39e7877b41fe2171aef06"},
+    {"path":"src/capella_beacon_api.cpp","sha256":"c4dd87d9b678b5f28fc3bcf1875469205dca05ddc072893f5f7e39dac5095b1d"},
+    {"path":"src/beacon_validator_json.hpp","sha256":"6ec4ec77490bc9447e6066c2193e02c303bcc39a7b388fbd7dee689cee5bc4c9"},
+    {"path":"src/consensus_capella_runtime.cpp","sha256":"8e6cb49a36978961a9413f2d0f40f67f4ae0d05287530d691ee25dc4f834ae63"},
+    {"path":"src/consensus_capella_validator.cpp","sha256":"2470ca28dc5f16b89103d10d8467fb3e458566d786853e41a4931e5cafaec5d6"},
+    {"path":"tests/capella/isolated_stopped_capture.cpp","sha256":"2c0f727b3c6816af2a7f49180d1a7224b8b007def004a5eb0c12dff08c27164c"},
+    {"path":"tests/multihost/restore-config.mjs","sha256":"b6dbe7a48cfa4763a8ac800604e131c6eb14289c0bb5e029468438d2c4eac7cd"}
+  ],
+  "blockingMismatch": {
+    "driverLocation": "run-local-supervisor-linux-control.mjs:130",
+    "asserted": "altair-ipc-ready.profile === capellaIpc",
+    "actualCppSource": "network/main.cpp:66,78,101",
+    "emitted": "altair-ipc-ready.profile === capella",
+    "explanation": "capellaIpc names the internal RPC status boolean. The emitted profile value comes from consensus_field(), whose Capella value is capella.",
+    "narrowCorrection": "Require ipc.profile === 'capella'. Keep networkProtocolActive === true and every other typed assertion unchanged."
+  },
+  "auditedJoins": [
+    {
+      "area": "startup event identity and ordering",
+      "driverLines": "119-135",
+      "cppLines": "src/node.cpp:56-60,77-86; network/main.cpp:76-101",
+      "result": "MATCH_EXCEPT_PROFILE_BLOCKER",
+      "details": "run_node starts the Capella runtime before the child, emits capella-runtime-ready with executionBound true, emits the direct child's integer PID, then the real P2P process emits altair-ipc-ready. Existing exact-once checks and 90s wait remain. Initial runtime-ready networkProtocolActive false is not confused with the later P2P ingress true."
+    },
+    {
+      "area": "real Linux process parent-child proof",
+      "driverLines": "131-133",
+      "cppLines": "src/node.cpp:31-43,78-83",
+      "result": "MATCH",
+      "details": "Child uses posix_spawn directly under /core/nano. The reported p2p PID is child.pid(). The probe reads only /proc/PID/status and executable symlinks, requires parent PID >1, /network-build/nano-p2p and /core/nano. Docker --init preserves this immediate parent-child relationship. Source string backslash bytes were inspected: JS double backslashes produce the intended Perl whitespace/digit regexes. Actual /proc proof remains unexecuted."
+    },
+    {
+      "area": "positive and negative actual validator HTTP",
+      "driverLines": "137-145",
+      "cppLines": "src/capella_beacon_api.cpp:107-119,139; src/beacon_validator_json.hpp; src/http.cpp:72,83,105,146-147",
+      "result": "MATCH",
+      "details": "The selected head registry response supplies execution_optimistic false, finalized boolean, decimal-string index and canonical pubkey. Missing zero pubkey returns code404 with exactly Validator not found in selected state. Beast prepare_payload for the JSON string sets Content-Length; Connection: close ends the body at EOF, matching the bounded client and decoder. Existing two GETs, 2s socket/alarm and 65536-byte bound remain. JS-to-Perl HTTP CRLF escape bytes were inspected. Actual HTTP requests remain unexecuted."
+    },
+    {
+      "area": "healthy stop event and key commitments",
+      "driverLines": "147-152",
+      "cppLines": "src/node.cpp:81-88; src/http.cpp:154-165; src/consensus_capella_runtime.cpp:289-302; src/consensus_capella_validator.cpp:111-118,124-126",
+      "result": "MATCH",
+      "details": "HTTP signal handling stops the server; run_node joins the monitor, stops the child, then emits exactly one capella-runtime-stopped event and returns zero absent unexpected child failure. Stop joins admission/validator/clock. healthy, failure:null, localKeys16, clockHealthy and validatorKeys16 are emitted by the actual status/commitment functions for the 16-key logical owner. Docker stop30s, command35s and client join5s remain. Runtime success must still be observed."
+    },
+    {
+      "area": "four stopped captures and external witness pins",
+      "driverLines": "153-166",
+      "cppLines": "tests/capella/isolated_stopped_capture.cpp:145-187",
+      "result": "MATCH",
+      "details": "--capture expects the exact seven arguments after executable, with mac-native16 owner keys. The first receipt lacks witnessCommitments and emits externalWitnessTokensMatched false. The second supplies exact format/sourceCaptureSha256/core/validatorKeys with witness token restarts and must emit both external witness flags true. Actual output names match all required booleans, primaryWitnessPairs16, no new signatures and no journal writes. Two cold read-only captures per stopped runtime compare core/key/inventory values, for four captures total; each capture separately reopens and fences all observed files. This is not a claim of execution, ancestry, canonical inclusion or finality."
+    },
+    {
+      "area": "restored configuration count",
+      "driverLines": "pinnedRestoreConfiguration call before second runtime",
+      "cppLines": "tests/multihost/restore-config.mjs: pinnedRestoreConfiguration",
+      "result": "MATCH",
+      "details": "The selected restore export binds the independent key identities and stop receipt for exactly16 keys, replaces recovery commitments and disables automatic recovery. It does not require nonzero attestation counters; no inferred duty/finality qualification is added. Post-stop action/submit semantic audit is assigned separately to cross_arch_source_plan."
+    }
+  ],
+  "parentReportedAttempt06": {
+    "preparation": "PASS",
+    "outerIndependentFences": "PASS",
+    "driver": "FAILED_PRESERVED",
+    "refusedStage": "first-runtime",
+    "actualNanoStarts": 1,
+    "realP2pReadyReported": true,
+    "procIdentityVerified": false,
+    "validatorHttpQualified": false,
+    "allPriorFailuresPreserved": true,
+    "evidenceSource": "Trusted Root report; no private output was read by this author."
+  },
+  "remainingBeforeSuccessorFreeze": "Complete the independent post-stop observe/action/plan/managed-submit/receipt audit; include any demonstrated schema mismatches only. Do not execute another reserved fixture merely after this profile patch.",
+  "operations": {
+    "publicSourceAndGenericTextShaOnly": true,
+    "privateInputsOutputsLogsKeysLedgerSoftwareBinariesOrDatabasesRead": false,
+    "projectNodePerlPythonDockerCompilerGitOrSshExecuted": false,
+    "repositoryOrEarlierFrozenPackagesChanged": false
+  },
+  "scope": {
+    "sourceAuditProvesActualRuntimeSuccess": false,
+    "wholeLifecycleQualified": false,
+    "multiownerFinalityQualified": false,
+    "productionQualified": false
+  }
+}

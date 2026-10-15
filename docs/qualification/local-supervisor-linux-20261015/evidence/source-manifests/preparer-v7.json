@@ -1,0 +1,93 @@
+{
+  "format": "nano-local-supervisor-fixture-preparer-source-proposal-v7",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "predecessor": {
+    "path": "../fresh-local-supervisor-fixture-prep-controller-v6-20261015/manifest.json",
+    "sha256": "72f323295660dad79e60a19211a0d5d178e7b864731a8b85cf2d80426bedca81",
+    "bytes": 5381,
+    "unchanged": true
+  },
+  "payloads": [
+    {"path":"prepare-local-fixture-root.mjs","sha256":"51bdab611b47783ab663f5b796b9de6a27d8a3ab40b1dbd8a576a7091f61e2dc","bytes":41900},
+    {"path":"copy-bootstrap-pairs.pl","sha256":"9fcd47d3bee3530c163e00e8b6a8dd475645336ba48579db45bdc9e20bb3bdf3","bytes":10433},
+    {"path":"copier-from-v6.patch","sha256":"b2e9ceb37bbc55ebcf3e669a5f7712336c920347d3168c97d743b9d3fa6fc2ee","bytes":15251},
+    {"path":"INPUT.schema.json","sha256":"406462ddca20096b82f098e0554cca32f7a44724f3dc52ee05d74cb23558c8d9","bytes":7860},
+    {"path":"CONTRACT.md","sha256":"f58dbd47b76e6ad7be98adc73927a93338f20f20a4208a9eac80cd8958725622","bytes":14364},
+    {"path":"README.md","sha256":"b4cbe5631fcc062f0db2bfd511bffabe8cb304c29954206f23a76dd87d643cd3","bytes":5125},
+    {"path":"known-files.pl","sha256":"7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6","bytes":12273}
+  ],
+  "payloadCount": 7,
+  "payloadBytes": 107206,
+  "onlyControllerCodeDelta": {
+    "location": "prepare-local-fixture-root.mjs:21",
+    "beforeDriverSha": "c62b3be707218beca91a5c3a703aeb8be51bbef5e39f68dd9d591d0b95b04a1e",
+    "driverSha": "02a5cd44c77d27d36fd20096b7c10c5fbaa5abb1918f05e103375acbe2e649f4",
+    "allOtherControllerBytesUnchanged": true,
+    "transportShaUnchanged": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
+    "allOtherPayloadsByteIdenticalToV6": true
+  },
+  "successorJoins": {
+    "driverManifest": {"path":"../fresh-local-supervisor-linux-control-driver-v4-20261015/manifest.json","sha256":"dc73d6d146e0665d57c0bb899676c28643cd838bf4c79499d4917903ebea4e7b","bytes":5242},
+    "driver": {"sha256":"02a5cd44c77d27d36fd20096b7c10c5fbaa5abb1918f05e103375acbe2e649f4","bytes":41847},
+    "helperManifest": {"path":"../linux-known-files-transport-source-v2-20261015/manifest.json","sha256":"99a7821ed0cc48ee424bcd561b96a0fa31764a4df648cf3346f6f2a16b7453e4","bytes":1777},
+    "helper": {"sha256":"7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6","bytes":12273}
+  },
+  "identifiedDriverBug": "The actual C++ altair-ipc-ready event emits profile capella via consensus_field(). The predecessor driver incorrectly required the RPC status-field name capellaIpc. V4 corrects that single exact value after completing startup/stop/proc/HTTP/capture and independent post-stop/action/IPC source audits.",
+  "completedSourceAudits": [
+    {"path":"../fresh-local-supervisor-linux-pipeline-independent-review-20261015/source-start-stop-proc-http-capture-audit-after06.json","sha256":"1f6e022a0c196cb13fddff18e3c2288162f4e3416b132c445a1fb6d4174560bb","bytes":7579},
+    {"path":"../fresh-local-supervisor-linux-pipeline-independent-review-20261015/source-post-stop-observe-action-managed-ipc-audit-after06.json","sha256":"74163774ed72f54672e3d45a9aa154cade45cc7ca4e5098e1fa608acffa52039","bytes":19768}
+  ],
+  "parentReportedAttempt06": {
+    "preparation": "PASS",
+    "preparationElapsedMs": 64558,
+    "outerIndependentFences": "PASS",
+    "driver": "FAILED_PRESERVED",
+    "driverElapsedMs": 36504,
+    "refusedStage": "first-runtime",
+    "actualNanoStarts": 1,
+    "realP2pAndIpcReadyReported": true,
+    "procIdentityVerified": false,
+    "validatorHttpQualified": false,
+    "overallFailurePreservedDespiteComponentPasses": true,
+    "domain06NeverReexportedOrReused": true,
+    "older04ExactMismatchCauseRemainsUnknown": true,
+    "allPriorFailuresPreserved": true,
+    "authorReadPrivateEvidence": false
+  },
+  "unchanged": {
+    "inputFormat": "nano-local-supervisor-fixture-prep-input-v4",
+    "inputFields": 23,
+    "oldLedgerCount": "All N>=8 old records, exact51+N external descriptors",
+    "nativeProducerDependenciesAndAliasFences": true,
+    "linuxProgramsImporterInventoriesAndCopier": true,
+    "threeKnownTransportBatchesAndOriginalAuthorities": true,
+    "handoffThreeSampleStabilityAndPublicKnownPins": true,
+    "privateFailureDiagnosticsAndNoOldRefresh": true,
+    "apfsAppendDirectoryCollector": true,
+    "workOrderFormat": "nano-local-supervisor-work-order-v2",
+    "workOrderFields": 29,
+    "strictDriverNoCrLfMaterialCheck": true,
+    "preparationDeadlineFromExporterSeconds": 120,
+    "ordinaryConsensusMaximumForwardStepMs": 120000,
+    "driverBudgetSeconds": 900,
+    "profileGenesisClockResourcesAndContainers": true,
+    "newCppBuildImageOrSdkDependency": false
+  },
+  "operations": {
+    "publicSourceGenericTextJsonShaDiffOnly": true,
+    "privateInputsOutputsLogsKeysLedgerSoftwareBinariesOrDatabasesRead": false,
+    "projectNodePerlPythonDockerCompilerGitOrSshExecuted": false,
+    "earlierFrozenSourcesOrRepositoryChanged": false
+  },
+  "scope": {
+    "actualV7PreparationQualified": false,
+    "actualV4LocalSupervisorQualified": false,
+    "sourceAuditProvesActualRuntimeSuccess": false,
+    "validatorHttpQualified": false,
+    "canonicalInclusionOrPenaltyVerified": false,
+    "restoredDutiesQualified": false,
+    "wholeLifecycleOrMultiownerFinalityQualified": false,
+    "productionQualified": false
+  },
+  "rootRequired": "Verify this exact frozen closure and its independent source peer, hold all original ledger/software nine-field authorities without refresh, provide a wholly new reserved domain, and evaluate one bounded actual terminal trial. Keep failed domains and component/overall outcomes distinct; do not infer production from this source correction."
+}

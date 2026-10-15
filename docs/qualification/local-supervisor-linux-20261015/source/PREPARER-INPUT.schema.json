@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Prospective ROOT local fixture preparer input; no actual values",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "image",
+    "node",
+    "docker",
+    "dockerEndpoint",
+    "protectedMaterials",
+    "programs",
+    "supportLibrary",
+    "nativeExporter",
+    "nativeSupportLibrary",
+    "nativeRuntimeFiles",
+    "nativeRuntimeAliases",
+    "modules",
+    "driver",
+    "legacyPublicIdentity",
+    "fixtureFiles",
+    "ledgerDirectory",
+    "oldLedgerRecords",
+    "seedDirectory",
+    "volumes",
+    "containerPrefix",
+    "resources",
+    "authorizeSyntheticProposerSlashing"
+  ],
+  "properties": {
+    "format": {
+      "const": "nano-local-supervisor-fixture-prep-input-v4"
+    },
+    "image": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "node": {
+      "$ref": "#/$defs/artifact"
+    },
+    "docker": {
+      "$ref": "#/$defs/artifact"
+    },
+    "dockerEndpoint": {
+      "type": "string",
+      "pattern": "^unix:///[^\\u0000\\r\\n,]+$"
+    },
+    "driver": {
+      "$ref": "#/$defs/artifact"
+    },
+    "legacyPublicIdentity": {
+      "$ref": "#/$defs/artifact"
+    },
+    "supportLibrary": {
+      "$ref": "#/$defs/artifact"
+    },
+    "nativeExporter": { "$ref": "#/$defs/artifact" },
+    "nativeSupportLibrary": { "$ref": "#/$defs/artifact" },
+    "nativeRuntimeFiles": {
+      "type": "array", "minItems": 11, "maxItems": 11,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "nativeRuntimeAliases": {
+      "type": "array", "minItems": 16, "maxItems": 16,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "target", "resolvedTarget", "material"],
+        "properties": {
+          "path": { "$ref": "#/$defs/path" },
+          "target": { "type": "string", "minLength": 1, "pattern": "^[^\\u0000\\r\\n]+$" },
+          "resolvedTarget": { "$ref": "#/$defs/path" },
+          "material": {
+            "type": "array", "minItems": 9, "maxItems": 9,
+            "items": { "type": "string", "pattern": "^-?[0-9]+$" }
+          }
+        }
+      }
+    },
+    "ledgerDirectory": {
+      "$ref": "#/$defs/path"
+    },
+    "seedDirectory": {
+      "$ref": "#/$defs/path"
+    },
+    "containerPrefix": {
+      "type": "string",
+      "pattern": "^nano-local-[a-z0-9-]{8,56}$"
+    },
+    "authorizeSyntheticProposerSlashing": {
+      "const": true
+    },
+    "programs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nano",
+        "nano-p2p",
+        "nano-capella-isolated-bootstrap-audit",
+        "nano-capella-isolated-stopped-capture",
+        "nano-capella-deposit-audit",
+        "nano-capella-lifecycle-submit",
+        "nano-capella-transition-tests",
+        "nano-capella-isolated-bootstrap-import"
+      ],
+      "properties": {
+        "nano": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-p2p": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-isolated-bootstrap-audit": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-isolated-stopped-capture": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-deposit-audit": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-lifecycle-submit": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-transition-tests": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-isolated-bootstrap-import": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "modules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assembler",
+        "verifier",
+        "planner",
+        "restore",
+        "copy"
+      ],
+      "properties": {
+        "assembler": {
+          "$ref": "#/$defs/artifact"
+        },
+        "verifier": {
+          "$ref": "#/$defs/artifact"
+        },
+        "planner": {
+          "$ref": "#/$defs/artifact"
+        },
+        "restore": {
+          "$ref": "#/$defs/artifact"
+        },
+        "copy": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "protectedMaterials": {
+      "type": "array",
+      "minItems": 59,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "material"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "#/$defs/path"
+          },
+          "material": {
+            "type": "array",
+            "minItems": 9,
+            "maxItems": 9,
+            "items": {
+              "type": "string",
+              "pattern": "^-?[0-9]+$"
+            }
+          }
+        }
+      }
+    },
+    "fixtureFiles": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "relativePath",
+          "artifact"
+        ],
+        "properties": {
+          "relativePath": {
+            "type": "string",
+            "pattern": "^tests/fixtures/[A-Za-z0-9_./-]+$"
+          },
+          "artifact": {
+            "$ref": "#/$defs/artifact"
+          }
+        }
+      }
+    },
+    "oldLedgerRecords": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "volumes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bootstrap",
+        "data",
+        "witness"
+      ],
+      "properties": {
+        "bootstrap": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}$"
+        },
+        "data": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}$"
+        },
+        "witness": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}$"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumWallSeconds",
+        "maximumHistoryBlocks",
+        "maximumArchiveBytes",
+        "maximumIndexBytes",
+        "maximumInventoryFiles",
+        "maximumInventoryBytes"
+      ],
+      "properties": {
+        "maximumWallSeconds": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]*$"
+        },
+        "maximumHistoryBlocks": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]*$"
+        },
+        "maximumArchiveBytes": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]*$"
+        },
+        "maximumIndexBytes": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]*$"
+        },
+        "maximumInventoryFiles": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]*$"
+        },
+        "maximumInventoryBytes": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]*$"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "path": {
+      "type": "string",
+      "pattern": "^/[^\\u0000\\r\\n,]+$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        }
+      }
+    }
+  },
+  "description": "External SHA pins the entire ROOT-populated input. protectedMaterials is the exact prior full9 table for all descriptor paths. JSON shape does not establish source/provenance, physical paths, no-alias, permission, image or fresh ledger authority. See CONTRACT.md."
+}

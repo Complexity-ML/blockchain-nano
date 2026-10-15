@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ROOT local supervisor work order v2; Linux owned config and controls",
+  "description": "Source-only schema, not operational authority. Adds transportScript/configVolume/controlVolume to the 26 original fields. ROOT must verify all known bytes, actual owner-local Linux inventories, external P/W commitments and ordinary startup age. See CONTRACT.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "uid",
+    "gid",
+    "image",
+    "docker",
+    "dockerEndpoint",
+    "programDirectory",
+    "networkDirectory",
+    "publicDirectory",
+    "programs",
+    "modules",
+    "publicFiles",
+    "configuration",
+    "environment",
+    "plan",
+    "anchors",
+    "sourceInventory",
+    "importAudit",
+    "freshAuthority",
+    "bootstrapVolume",
+    "dataVolume",
+    "witnessVolume",
+    "containerPrefix",
+    "identities",
+    "resources",
+    "authorizeSyntheticProposerSlashing",
+    "transportScript",
+    "configVolume",
+    "controlVolume"
+  ],
+  "properties": {
+    "format": {
+      "const": "nano-local-supervisor-work-order-v2"
+    },
+    "uid": {
+      "const": 501
+    },
+    "gid": {
+      "const": 20
+    },
+    "image": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "docker": {
+      "$ref": "#/$defs/artifact"
+    },
+    "dockerEndpoint": {
+      "type": "string",
+      "pattern": "^unix:///[^\\u0000\\r\\n,]+$",
+      "description": "Existing canonical local Unix socket; driver forces --host and ignores inherited remote context."
+    },
+    "programDirectory": {
+      "$ref": "#/$defs/path"
+    },
+    "networkDirectory": {
+      "$ref": "#/$defs/path"
+    },
+    "publicDirectory": {
+      "$ref": "#/$defs/path"
+    },
+    "programs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nano",
+        "nano-p2p",
+        "nano-capella-isolated-bootstrap-audit",
+        "nano-capella-isolated-stopped-capture",
+        "nano-capella-deposit-audit",
+        "nano-capella-lifecycle-submit"
+      ],
+      "properties": {
+        "nano": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-p2p": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-isolated-bootstrap-audit": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-isolated-stopped-capture": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-deposit-audit": {
+          "$ref": "#/$defs/artifact"
+        },
+        "nano-capella-lifecycle-submit": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "modules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "restore",
+        "copy"
+      ],
+      "properties": {
+        "restore": {
+          "$ref": "#/$defs/artifact"
+        },
+        "copy": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "publicFiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "isolated-domain.json",
+        "genesis.json",
+        "profile.json",
+        "initial.json",
+        "genesis-validators.ssz",
+        "genesis-state.ssz"
+      ],
+      "properties": {
+        "isolated-domain.json": {
+          "$ref": "#/$defs/artifact"
+        },
+        "genesis.json": {
+          "$ref": "#/$defs/artifact"
+        },
+        "profile.json": {
+          "$ref": "#/$defs/artifact"
+        },
+        "initial.json": {
+          "$ref": "#/$defs/artifact"
+        },
+        "genesis-validators.ssz": {
+          "$ref": "#/$defs/artifact"
+        },
+        "genesis-state.ssz": {
+          "$ref": "#/$defs/artifact"
+        }
+      }
+    },
+    "configuration": {
+      "$ref": "#/$defs/artifact"
+    },
+    "environment": {
+      "$ref": "#/$defs/artifact"
+    },
+    "plan": {
+      "$ref": "#/$defs/artifact"
+    },
+    "anchors": {
+      "$ref": "#/$defs/artifact"
+    },
+    "sourceInventory": {
+      "$ref": "#/$defs/artifact"
+    },
+    "importAudit": {
+      "$ref": "#/$defs/artifact"
+    },
+    "freshAuthority": {
+      "$ref": "#/$defs/artifact"
+    },
+    "bootstrapVolume": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}$"
+    },
+    "dataVolume": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}$"
+    },
+    "witnessVolume": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}$"
+    },
+    "containerPrefix": {
+      "type": "string",
+      "pattern": "^nano-local-[a-z0-9-]{8,60}$"
+    },
+    "identities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "voluntaryExit",
+        "slashing"
+      ],
+      "properties": {
+        "voluntaryExit": {
+          "$ref": "#/$defs/identity"
+        },
+        "slashing": {
+          "$ref": "#/$defs/identity"
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumWallSeconds",
+        "maximumHistoryBlocks",
+        "maximumArchiveBytes",
+        "maximumIndexBytes",
+        "maximumInventoryFiles",
+        "maximumInventoryBytes"
+      ],
+      "properties": {
+        "maximumWallSeconds": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]{0,15}$"
+        },
+        "maximumHistoryBlocks": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]{0,15}$"
+        },
+        "maximumArchiveBytes": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]{0,15}$"
+        },
+        "maximumIndexBytes": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]{0,15}$"
+        },
+        "maximumInventoryFiles": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]{0,15}$"
+        },
+        "maximumInventoryBytes": {
+          "type": "string",
+          "pattern": "^0x[1-9a-f][0-9a-f]{0,15}$"
+        }
+      }
+    },
+    "authorizeSyntheticProposerSlashing": {
+      "const": true
+    },
+    "transportScript": {
+      "$ref": "#/$defs/artifact"
+    },
+    "configVolume": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}$",
+      "description": "Must equal containerPrefix+'-config'; absent before driver. Created by driver as own Linux volume 501:20/0700."
+    },
+    "controlVolume": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,120}$",
+      "description": "Must equal containerPrefix+'-known'; absent before driver. Created by driver as own Linux volume 501:20/0700."
+    }
+  },
+  "$defs": {
+    "path": {
+      "type": "string",
+      "pattern": "^/[^\\u0000\\r\\n,]+$",
+      "description": "Also require canonical absolute real path, no symlink component. Schema alone does not perform filesystem verification."
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "keyEnv",
+        "publicKey"
+      ],
+      "properties": {
+        "owner": {
+          "const": "mac-native"
+        },
+        "keyEnv": {
+          "type": "string",
+          "pattern": "^NANO_TEST_CAPELLA_NETWORK_KEY_[0-9]+$"
+        },
+        "publicKey": {
+          "type": "string",
+          "pattern": "^0x[0-9a-f]{96}$"
+        }
+      }
+    }
+  }
+}

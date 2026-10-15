@@ -1,0 +1,163 @@
+{
+  "format": "nano-linux-known-files-source-contract-v1",
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "script": "known-files.pl",
+  "runtime": "Linux Perl with Fcntl, Digest::SHA, JSON::PP, Cwd, Time::HiRes, IO::Handle and GNU stat; no Python or Node in image required",
+  "rootExactChoices": [
+    "/export",
+    "/proof",
+    "/known",
+    "/config"
+  ],
+  "rootPrecondition": "Existing canonical Linux volume directory, effective and real UID501, directory UID501 GID20 mode0700; no root/chown/chmod performed by helper",
+  "rootIdentity": [
+    "device",
+    "inode",
+    "mode",
+    "nlink",
+    "uid",
+    "gid"
+  ],
+  "rootTimePolicy": "Full nine-field root material participates in the initial three stable samples. Own later leaf/sidecar additions may change directory size/mtime/ctime. Root identity six fields never change. Separate complete namespace inventories remain the caller's responsibility.",
+  "leafPattern": "[A-Za-z0-9_.-]{1,180}, excluding . and ..; no slash, aliases or existing leaf overwrite; .known-files- prefix reserved for authority sidecars",
+  "newLeaf": "O_EXCL O_NOFOLLOW, UID501 GID20 mode0600, regular file, nlink1, stable FD/path GNU-stat nine strings, exact externally known SHA256 and byte length, fsync file and root directory",
+  "limits": {
+    "files": 64,
+    "fileBytes": 67108864,
+    "totalPayloadBytes": 67108864,
+    "frameBytes": 134217728,
+    "authorityBytes": 1048576,
+    "verifyControlBytes": 4096,
+    "alarmSeconds": 120,
+    "stabilityBudgetSeconds": 30,
+    "stabilitySamplesMinimum": 3,
+    "stabilitySpanMsMinimum": 2000
+  },
+  "write": {
+    "argv": [
+      "write",
+      "ROOT",
+      "FRAME_SHA256",
+      "FRAME_BYTES"
+    ],
+    "stdin": "Exactly FRAME_BYTES bytes then EOF. Compact ASCII JSON with recursively sorted object keys, optional one final LF; exact frame SHA known to Root before invocation.",
+    "frame": {
+      "format": "nano-linux-known-files-v1",
+      "files": [
+        {
+          "name": "LEAF",
+          "sha256": "KNOWN_LOWERCASE_SHA256",
+          "bytes": "JSON integer",
+          "hex": "EXACT_LOWERCASE_HEX_PAYLOAD"
+        }
+      ]
+    },
+    "prewriteChecks": "Entire frame schema, all known lengths/hashes/hex and all target absences checked before first target is created. Every target is freshly created; partial failed outputs remain for Root and are never removed or replayed.",
+    "authorityName": ".known-files-<FRAME_SHA256>.authority.private.json",
+    "authorityContents": "New metadata-only canonical JSON: frame hash, root six-field identity, all initial admitted leaf nine-field/SHA/bytes commitments and three-sample stability counts. No payloads, hex, environment values, key scalars or configurations are copied into the authority.",
+    "postwriteChecks": "Three consecutive exact full-nine/SHA samples spanning at least two seconds within thirty seconds before first authority; fresh EXCL/fsync authority; all leaf pins and authority nine-field/SHA checked again after publication. No refreshed old admission."
+  },
+  "verify": {
+    "argv": [
+      "verify",
+      "ROOT",
+      "AUTHORITY_SHA256",
+      "AUTHORITY_BYTES",
+      "AUTHORITY_NAME"
+    ],
+    "stdin": {
+      "format": "nano-linux-known-files-verify-v1",
+      "authorityMaterial": [
+        "dev",
+        "ino",
+        "hexMode",
+        "nlink",
+        "uid",
+        "gid",
+        "size",
+        "mtime-ns-string",
+        "ctime-ns-string"
+      ]
+    },
+    "stdinPolicy": "Mandatory compact ASCII recursively sorted JSON, optional one final LF, maximum4096 bytes and EOF. authorityMaterial MUST be the original nine strings returned by write and already retained by caller; never a newly sampled authority record.",
+    "checks": "Authority external SHA/bytes plus exact supplied original nine fields before/after; canonical authority schema and root identity; every leaf's original nine fields and known SHA/bytes; distinct leaf inodes. No writes, no stability resampling or metadata refresh. Original stability counts are returned unchanged."
+  },
+  "read": {
+    "argv": [
+      "read",
+      "ROOT",
+      "NAME",
+      "EXPECTED_SHA256",
+      "EXPECTED_BYTES"
+    ],
+    "stdout": "Only the exact payload bytes, after full buffered FD/path/UID/GID/mode/nlink/SHA/length checks. Root must require command exit0 AND expected SHA/length; stdout is private, never published.",
+    "scope": "Byte-pinned stable read of a leaf. It is not a replacement for verify or an existing original-nine-field admission."
+  },
+  "writeVerifyReceiptExactFields": [
+    "format",
+    "mode",
+    "passed",
+    "filesWritten",
+    "filesVerified",
+    "payloadBytes",
+    "knownBytesMatched",
+    "fullNineFieldPinsRetained",
+    "privateModesAndOwnerVerified",
+    "rootFdIdentityRetained",
+    "existingFilesMutated",
+    "namespaceInventoryQualified",
+    "authorityName",
+    "authoritySha256",
+    "authorityBytes",
+    "authorityMaterial",
+    "stabilitySamples",
+    "stabilitySpanMs",
+    "productionQualified"
+  ],
+  "receiptValues": {
+    "format": "nano-linux-known-files-result-v1",
+    "mode": "write or verify",
+    "passed": true,
+    "filesWritten": "write:N; verify:0, excluding the separate new authority sidecar",
+    "filesVerified": "N payload leaves, excluding authority sidecar (which is separately checked)",
+    "payloadBytes": "Sum of N payload leaf lengths, excludes authority",
+    "knownBytesMatched": true,
+    "fullNineFieldPinsRetained": true,
+    "privateModesAndOwnerVerified": true,
+    "rootFdIdentityRetained": true,
+    "existingFilesMutated": false,
+    "namespaceInventoryQualified": false,
+    "authorityName": "Derived exact new authority leaf",
+    "authoritySha256": "Known serialized authority bytes SHA256",
+    "authorityBytes": "Positive integer <=1048576",
+    "authorityMaterial": "Exactly nine original GNU-stat strings",
+    "stabilitySamples": "Original integer>=3, unchanged by verify",
+    "stabilitySpanMs": "Original integer>=2000 and<=30000, unchanged by verify",
+    "productionQualified": false
+  },
+  "configurationScope": "A /config upload contains exactly the six expected public payload leaves plus this one explicitly named metadata-only sidecar. The host public directory remains exactly six public files. No environment/key/capsule upload to /config is authorized by this helper.",
+  "callerRequirements": [
+    "Pin helper source SHA/bytes before any private fixture generation or consumption.",
+    "Keep source host full-nine/SHA guards before and after preparing/transmitting known frames.",
+    "Run helper only in explicitly owned existing immutable-image containers; no network, UID501:20, dropped capabilities and bounded container cleanup.",
+    "Keep write/verify receipt including original authorityMaterial private and immutable; use that original record for every later verify.",
+    "Never publish read output, raw frames, authorities, inventories or private tool logs. Public output is a filtered fixed scoped count/hash summary.",
+    "Check all subprocess exit codes. A timeout or refused operation does not authorize recreating or rebasing a consumed fixture.",
+    "A successful helper is transport/ownership evidence, not Nano runtime, slashing, duties, finality, recovery or production qualification."
+  ],
+  "authorExecutions": {
+    "helper": 0,
+    "project": 0,
+    "compiler": 0,
+    "cmake": 0,
+    "node": 0,
+    "docker": 0,
+    "git": 0,
+    "ssh": 0
+  },
+  "authorActualPrivateAssetSdkBinaryLogDatabaseReads": 0,
+  "productionQualified": false,
+  "sourceRevision": "v2-explicit-single-terminal-lf",
+  "stat9Wire": "GNU stat output must have exactly one terminal LF. Remove it by explicit regex independent of local $/; reject any remaining CR/LF before returning nine strings. Every material component, including ctime, is newline-free.",
+  "oldAuthorityPolicy": "Do not normalize, migrate or re-admit old v1 material. A v1 material containing LF is not silently converted to v2. Earlier passed opaque helper probes retain their limited scope; failed runtime trials and reservation records remain failed and preserved."
+}

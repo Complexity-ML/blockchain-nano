@@ -1,0 +1,98 @@
+{
+  "format": "nano-local-supervisor-fixture-preparer-source-proposal-v6",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "predecessor": {
+    "path": "../fresh-local-supervisor-fixture-prep-controller-v5-20261015/manifest.json",
+    "sha256": "65cb9d753314ff01fb7b657e5872510d71f44cc542b5629c07ea4a5c1d515185",
+    "bytes": 4632,
+    "unchanged": true
+  },
+  "payloads": [
+    {"path":"prepare-local-fixture-root.mjs","sha256":"2dd3684200b3bb983f8830f1863d6ae22f1d872d418c45a5d8875180f16cc7ad","bytes":41900},
+    {"path":"copy-bootstrap-pairs.pl","sha256":"9fcd47d3bee3530c163e00e8b6a8dd475645336ba48579db45bdc9e20bb3bdf3","bytes":10433},
+    {"path":"copier-from-v6.patch","sha256":"b2e9ceb37bbc55ebcf3e669a5f7712336c920347d3168c97d743b9d3fa6fc2ee","bytes":15251},
+    {"path":"INPUT.schema.json","sha256":"406462ddca20096b82f098e0554cca32f7a44724f3dc52ee05d74cb23558c8d9","bytes":7860},
+    {"path":"CONTRACT.md","sha256":"f58dbd47b76e6ad7be98adc73927a93338f20f20a4208a9eac80cd8958725622","bytes":14364},
+    {"path":"README.md","sha256":"b4cbe5631fcc062f0db2bfd511bffabe8cb304c29954206f23a76dd87d643cd3","bytes":5125},
+    {"path":"known-files.pl","sha256":"7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6","bytes":12273}
+  ],
+  "payloadCount": 7,
+  "payloadBytes": 107206,
+  "onlyControllerCodeDelta": {
+    "driverSha": "c62b3be707218beca91a5c3a703aeb8be51bbef5e39f68dd9d591d0b95b04a1e",
+    "transportSha": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
+    "allOtherControllerBytesUnchanged": true,
+    "copiedHelperByteExact": true
+  },
+  "successorJoins": {
+    "driverManifest": {"path":"../fresh-local-supervisor-linux-control-driver-v3-20261015/manifest.json","sha256":"46c38abe3c3383eaf69ae189106869d778200be2e7d06dd114d897f616122014","bytes":4427},
+    "driver": {"sha256":"c62b3be707218beca91a5c3a703aeb8be51bbef5e39f68dd9d591d0b95b04a1e","bytes":41850},
+    "helperManifest": {"path":"../linux-known-files-transport-source-v2-20261015/manifest.json","sha256":"99a7821ed0cc48ee424bcd561b96a0fa31764a4df648cf3346f6f2a16b7453e4","bytes":1777},
+    "helper": {"sha256":"7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6","bytes":12273}
+  },
+  "identifiedTransportBug": "Old helper stat9 localized $/ to undef, so chomp retained the terminal GNU-stat record LF in material[8]. The driver's existing strict CR/LF refusal correctly rejected it. The new helper explicitly removes exactly one terminal LF and rejects every remaining CR/LF before splitting; old authorities are never normalized or reused.",
+  "rootReportedAttempt05": {
+    "preparation": "PASS",
+    "preparationElapsedMs": 69923,
+    "independentOuterFences": "PASS",
+    "driver": "FAILED_PRESERVED",
+    "driverElapsedMs": 4325,
+    "refusedStage": "inputs",
+    "actualNanoStarts": 0,
+    "overallFailurePreservedDespiteSetupPasses": true,
+    "domain05NeverReexportedOrReused": true,
+    "older04ExactMismatchCauseRemainsUnknown": true,
+    "authorReadPrivateEvidence": false
+  },
+  "rootReportedChangedHelperProbe": {
+    "passed": true,
+    "terminalExitCode": 0,
+    "writeBatches": 2,
+    "knownFiles": 3,
+    "exactReadbacks": 2,
+    "positiveVerifications": 5,
+    "expectedRefusals": 4,
+    "includesLfAuthorityMismatchRefusal": true,
+    "allNineStringsNoCrLf": true,
+    "sourceNineAndBytesUnchanged": true,
+    "ownedContainersAbsent": true,
+    "authorExecutedOrReadPrivateProbe": false,
+    "notReplayedInThisController": true
+  },
+  "unchanged": {
+    "inputFormat": "nano-local-supervisor-fixture-prep-input-v4",
+    "inputFields": 23,
+    "oldLedgerCount": "All N>=8 old records, exact51+N external descriptors",
+    "nativeProducerDependenciesAndAliasFences": true,
+    "linuxProgramsImporterInventoriesAndCopier": true,
+    "threeKnownTransportBatchesAndOriginalAuthorities": true,
+    "handoffThreeSampleStabilityAndPublicKnownPins": true,
+    "privateFailureDiagnosticsAndNoOldRefresh": true,
+    "apfsAppendDirectoryCollector": true,
+    "workOrderFormat": "nano-local-supervisor-work-order-v2",
+    "workOrderFields": 29,
+    "strictDriverNoCrLfMaterialCheck": true,
+    "preparationDeadlineFromExporterSeconds": 120,
+    "ordinaryConsensusMaximumForwardStepMs": 120000,
+    "driverBudgetSeconds": 900,
+    "profileGenesisClockAndResources": true,
+    "newCppBuildImageOrSdkDependency": false
+  },
+  "authorOperations": {
+    "publicSourceGenericTextJsonShaDiffOnly": true,
+    "privateInputsAssetsLogsKeysLedgerOrDatabasesRead": false,
+    "nodePerlPythonDockerProjectCompilerCmakeGitOrSshExecuted": false,
+    "earlierFrozenSourcesOrRepositoryChanged": false
+  },
+  "scope": {
+    "actualV6PreparationQualified": false,
+    "actualLocalSupervisorQualified": false,
+    "validatorHttpQualified": false,
+    "canonicalInclusionOrPenaltyVerified": false,
+    "restoredDutiesQualified": false,
+    "wholeLifecycleOrMultiownerFinalityQualified": false,
+    "productionQualified": false,
+    "allPriorFailuresPreserved": true
+  },
+  "rootRequired": "ROOT verifies this exact helper/driver closure and their source peers, independently pins actual software and retained old ledger authorities, supplies entirely new reserved domain/material, preserves original failed LF-bearing authorities and all earlier failures, and evaluates the actual terminal scope. No new helper or runtime PASS follows from this source publication."
+}

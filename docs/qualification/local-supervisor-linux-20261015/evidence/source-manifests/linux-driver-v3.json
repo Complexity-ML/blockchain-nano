@@ -1,0 +1,75 @@
+{
+  "format": "nano-local-supervisor-linux-control-source-proposal-v3",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "predecessor": {
+    "path": "../fresh-local-supervisor-linux-control-driver-v2-20261015/manifest.json",
+    "sha256": "3ee196187fb76fec37507a4a043eff4d079380ad43ad0ff1f2fe7dd12695c49b",
+    "bytes": 6740,
+    "driverSha256": "5987b6311ba79deac60207ffce07b3124367e1eac440bf30e1cae7e7c8689c5c",
+    "unchanged": true
+  },
+  "payloads": [
+    {"path":"run-local-supervisor-linux-control.mjs","sha256":"c62b3be707218beca91a5c3a703aeb8be51bbef5e39f68dd9d591d0b95b04a1e","bytes":41850},
+    {"path":"assemble-local-inputs.mjs","sha256":"09f05ab2000d83df239c6644de511e7d18d8eaffc25d5ac57dd6de19b0efeec5","bytes":8381},
+    {"path":"WORK-ORDER.schema.json","sha256":"5e5525320fc160b49a0401dd35715b14187de11d2a37b3cb7eddf708dea2936c","bytes":7823},
+    {"path":"CONTRACT.md","sha256":"5278957e93abe8689983dd75fc1a21305521b33d3ddf3d57de121ab31ce6e7d0","bytes":10028},
+    {"path":"README.md","sha256":"f58d26b3b5223b0cc5ef52060a1c1c7bd852eee3a40382f896e4ed72d88005a3","bytes":3330},
+    {"path":"known-files.pl","sha256":"7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6","bytes":12273},
+    {"path":"delta-from-v2.patch","sha256":"5e6e02dee91335c944a8b7f5fde5d44b59ea8bdd7b9c5ea99a18d1aa7d0eb42a","bytes":712}
+  ],
+  "payloadCount": 7,
+  "payloadBytes": 84397,
+  "requiredHelperSource": {
+    "manifest": "../linux-known-files-transport-source-v2-20261015/manifest.json",
+    "manifestSha256": "99a7821ed0cc48ee424bcd561b96a0fa31764a4df648cf3346f6f2a16b7453e4",
+    "manifestBytes": 1777,
+    "helperSha256": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
+    "helperBytes": 12273,
+    "copiedHelperByteExact": true
+  },
+  "singleDriverCodeDelta": "Update only the exact transportSha and transportBytes constants to the independently frozen helper V2. Existing strict receipt/material CRLF rejection, ownership, old-nine checks and all runtime code remain byte-identical.",
+  "helperSourceFix": "GNU-stat emits one terminal LF. Because stat9 localized $/ to undef, old chomp did not remove it. V2 explicitly requires/removes one terminal LF and rejects all remaining CR/LF before splitting. No old authority is normalized or refreshed.",
+  "rootReportedAttempt05": {
+    "preparation": "PASS",
+    "outerIndependentFences": "PASS",
+    "localDriver": "FAILED_PRESERVED",
+    "localElapsedMs": 4325,
+    "refusedStage": "inputs",
+    "actualNanoStarts": 0,
+    "identifiedCause": "Old helper's ninth authorityMaterial string retained its GNU-stat record LF, correctly refused by the driver's strict material validator.",
+    "earlierComponentsDoNotMakeOverallPass": true,
+    "authorReadPrivateEvidence": false
+  },
+  "unchanged": {
+    "workOrderFormat": "nano-local-supervisor-work-order-v2",
+    "workOrderFields": 29,
+    "assemblerAndSchemaBytes": true,
+    "nineteenFieldHelperReceiptAndCli": true,
+    "oldAuthorityChecksAndNoNormalization": true,
+    "privateLinuxVolumesAndHostFences": true,
+    "realNanoParentP2pIpcAndValidatorHttpChecks": true,
+    "twoStartsTwoHealthyStopsFourCaptures": true,
+    "boundedSyntheticActionAndPrivateEvidence": true,
+    "startupAgeCheckAnd900SecondBudget": true,
+    "profileGenesisClockAndResourceLimits": true,
+    "ownedContainerCleanupAndVolumeRetention": true,
+    "newCppBuildImageOrLibraryDependency": false
+  },
+  "authorOperations": {
+    "publicSourceGenericTextJsonShaDiffOnly": true,
+    "privateInputsAssetsLogsKeysLedgerOrDatabasesRead": false,
+    "nodePerlPythonDockerProjectCompilerCmakeGitOrSshExecuted": false,
+    "oldFrozenSourcesOrRepositoryChanged": false
+  },
+  "scope": {
+    "changedHelperActuallyQualifiedByAuthor": false,
+    "actualDriverQualified": false,
+    "validatorHttpQualified": false,
+    "canonicalInclusionOrPenaltyVerified": false,
+    "restoredDutiesQualified": false,
+    "wholeLifecycleOrMultiownerFinalityQualified": false,
+    "productionQualified": false,
+    "allPriorFailuresPreserved": true
+  },
+  "rootRequired": "ROOT independently qualifies the changed helper against the existing image, reviews this exact source closure, stages only the new helper bytes with explicit known pins and new authority, preserves all prior LF-bearing authorities unchanged, and assesses actual new terminal results without reusing a failed domain or claiming runtime from component setup success."
+}

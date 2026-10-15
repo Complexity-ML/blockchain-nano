@@ -1,0 +1,47 @@
+# Superviseur local Linux — sources et qualification bornée
+
+**La campagne07 passe avec le vrai Nano et son superviseur dans Docker ARM64. La production reste ouverte.** Le [reçu public ROOT](evidence/preparation-07-real-local-supervisor-pass.json) lie cette exécution à la base `7f1c95c2421a4ccd41034d7a4d94b76663ed53af`. Ce paquet fournit cinq sources complètes, leurs interfaces et les preuves publiques utiles. Aucun input privé, clé, environnement, base, capsule, inventaire privé, log brut, binaire, map SDK ou contrôleur Python ROOT n’est publié.
+
+## Ce qui est qualifié
+
+La préparation importe65 paires, vérifie4 signatures BLS bootstrap et32 réouvertures à froid, prépare16 clés et ne démarre pas Nano. Le composant démarre ensuite **deux vrais Nano**, vérifie le parent Nano et l’exécutable P2P réels dans `/proc`, leur identité IPC, puis deux arrêts sains. Il lit l’API validateur du vrai Nano : un HTTP200 et un HTTP404 attendu. Ses **quatre captures complètes** vérifient chacune16 paires primaire/témoin ; les pins des témoins externes, le head arrêté authentifié, les fences du core/source et les14 autorités Linux sont conservés jusqu’au contrôle final des neuf champs.
+
+Deux signatures BLS de headers contradictoires préparent l’action synthétique de proposer-slashing. Le vrai RPC du superviseur l’accepte ; le reçu d’acceptation est lié aux hashes de l’action et de sa requête. **Acceptation ne prouve pas inclusion canonique ni sanction économique**, explicitement fausses dans le reçu. Ces deux signatures d’action ne sont pas un décompte indépendant de toutes les signatures runtime. Le cycle complet et la finalité multiowner ne sont pas qualifiés.
+
+Les63 anciens matériaux épinglés et16 aliases natifs restent identiques, ainsi que les ensembles antérieurs46/61/62 ; les12 anciens reçus du registre restent intacts et la nouvelle réservation est conservée sans réemploi. Les conteneurs possédés sont absents à la fin. Aucun nouveau core ou build d’image ; profil, clock et limites inchangés. Il s’agit d’un **nouveau propriétaire synthétique**, pas d’une restauration des originaux V37. Aucun VPS privé n’est exécuté par cette campagne.
+
+## Pourquoi le transport change
+
+Les répertoires bind du Mac apparaissent UID0 dans la VM ; aucun assouplissement d’ownership n’a été introduit. Le préparateur appelle une seule fois le producteur natif qualifié avec son registre canonique, puis transporte douze nouveaux fichiers aux octets connus dans un volume Linux possédé. L’importeur Linux et les couples primaire/témoin restent inchangés. Les programmes sont vérifiés avant seed : neuf fichiers code/ownership et huit loaders.
+
+Le driver utilise de vrais volumes Linux UID501:GID20/0700 pour config, contrôles et sorties, avec feuilles0600. Le helper stdin crée uniquement des fichiers neufs EXCL/fsync, épingle leurs octets et leurs neuf champs réels, puis vérifie la première autorité sans la rafraîchir. `/config` contient six feuilles publiques et un sidecar explicite de métadonnées. Les originaux hôte restent épinglés ; le fichier privé `--env-file` est lu par le client Docker. Aucun ancien pin Mac n’est présenté comme une autorité Linux, aucun SSZ de remplacement n’est dérivé dans la VM. Les contrôles APFS du registre admettent exactement une nouvelle feuille et nlink+1, avec identité et anciens fichiers strictement conservés.
+
+## Échecs conservés
+
+| Essai / preuve | Résultat et limite |
+| --- | --- |
+| [Refus de source initial](evidence/source-review-refusals.json) | d632/9139 **refusé, non exécuté** : `docker run -i` absent. Le successeur5987 corrige stdin et borne le reader du reçu accepté avant sa première exécution. |
+| [01](evidence/preparation-01-failed.json) | FAILED : bibliothèque absente, exporter127 avant main ;0 export/réservation/Nano. |
+| [02](evidence/preparation-02-failed.json) | FAILED : huit loaders passent, exporter main refuse le bind UID0 ;0 export/réservation/Nano. |
+| [03](evidence/preparation-03-partial-overall-failed.json) | **Overall FAILED** malgré import65/copie16 paires et audit32 réussis ;0 Nano. Cause finale inférée par source/probe nlink, refus original non enregistré directement. |
+| [04](evidence/preparation-04-pass-outer-overall-failed.json) | Préparation PASS, wrapper **FAILED** avant Nano au fence de métadonnées. Fichier et cause d’origine **inconnus** ;25 fichiers stables postmortem ne requalifient pas l’admission. La stabilisation prospective du handoff ne prouve pas l’ancienne cause. |
+| [05 initial](evidence/preparation-05-initial-sandbox-failed.json) | FAILED : permission sandbox du socket Docker avant seed/export ;0 réservation/Nano. L’exécution autorisée suivante ne réutilise pas un domaine consommé. |
+| [05 autorisé](evidence/preparation-05-authorized-pass-driver-before-runtime-failed.json) | Préparation/fence ROOT PASS, driver **FAILED avant Nano** : le helper garde le LF final de stat9 ; le driver applique correctement son rejet CR/LF. |
+| [HelperV1 opaque](evidence/transport-opaque-pass.json) | PASS scoped :2 écritures/3 feuilles/2 relectures/5 vérifications/3 refus ; n’exerce pas le rejet CR/LF du vrai driver. Aucune qualification rétroactive de leur intégration. |
+| [HelperV2 ciblé](evidence/transport-v2-opaque-pass.json) | PASS : mêmes opérations positives,4 refus dont autoritéLF ; neuf chaînes explicitement sans CR/LF. Correction du framing seulement, aucune normalisation d’ancienne autorité. |
+| [06](evidence/preparation-06-pass-first-nano-overall-failed.json) | Préparation/fence PASS, **overall FAILED** : un Nano et un arrêt sains, puis assertion erronée `capellaIpc` au lieu du profil C++`capella`.2 attestations/10 messages sync/0 proposition rapportés ; total runtime non audité.0 GET/proc/capture/action. |
+| [07](evidence/preparation-07-real-local-supervisor-pass.json) | **PASS réel borné**, détaillé ci-dessus ; ne ferme ni V37 ni les gates de production. |
+
+## Sources et traçabilité
+
+La génération cohérente est préparateurV7 (`51bd…`, manifeste `ece95827…`), driverV4 (`02a5…`, manifeste `dc73d6d1…`) et helperV2 (`7dd8…`, manifeste `99a7821e…`). L’[assembleur pur](source/assemble-local-inputs.mjs) et le [copieur](source/copy-bootstrap-pairs.pl) sont inchangés. Les fichiers complets du [préparateur](source/prepare-local-fixture-root.mjs), [driver](source/run-local-supervisor-linux-control.mjs) et [helper](source/known-files.pl) sont fournis ensemble. Leurs schémas définissent23 champs d’input et29 champs de work-order ; le contrat du transport conserve ses19 champs de reçu. Aucun input réel ni hook automatique CMake/CTest n’est ajouté.
+
+Les [manifestes originaux](evidence/source-manifests/) servent de références exactes ; seuls les cinq programmes sélectionnés et leurs interfaces sont recopiés, sans dupliquer tous les anciens patches ou packets. V2/V3 du driver et V4/V5/V6 du préparateur restent en provenance des échecs. V4 corrige une seule valeur attendue de profil IPC, V7 uniquement son pin ; aucun code C++, ressource, clock, format de journal ou ancienne autorité ne change. La [revue finale des sources](evidence/source-reviews/terminal-static-v4-driver-v7-preparer-root07-closure-review.json) est distincte du résultat réel07.
+
+Les audits [startup/stop/proc/HTTP/capture](evidence/source-reviews/source-start-stop-proc-http-capture-audit-after06.json) et [16 joints post-stop](evidence/source-reviews/source-post-stop-observe-action-managed-ipc-audit-after06.json) ne trouvent que le mismatch de profil corrigé. Dans ces audits, l’équivalence indépendante source/ELF P2P reste **UNKNOWN**. Le [reçu ROOT séparé](evidence/p2p-prior-exact-byte-authority.json) tient le SHA complet du programme historique exact ; le contrôle `/proc` réel07 vérifie le programme admis, sans transformer la revue de source en preuve de compilation. Le second auditeur a signalé deux snippets accidentels de métadonnées privées de build, sans clé/actif opérationnel lu ni fait dérivé ; aucun de ces snippets n’est publié. L’auteur de la correction helper n’est pas son auditeur indépendant ; les probes ROOT sont séparés.
+
+Le [build de trois consommateurs ARM](evidence/arm-current-programs-build.json) identifie Nano, audit et captureur avec core inchangé : il n’ajoute aucun test/runtime/image ni qualification native/AMD. La [revue de scalabilité](evidence/scaling/ANALYSIS.md) reste une analyse de33 pins : aucun cap global arbitraire1 000 trouvé dans les chemins inspectés, mais budgets/profils authentifiés réels. Les cas synthétiques100K/1M ne sont pas un réseau qualifié de cette taille.
+
+## Gates de production maintenus
+
+Inclusion canonique et sanction économique de l’action, cycle long des validateurs, restauration/duties et finalité commune de la candidate cohérente sur Mac natif/Docker Mac/Docker VPS, partitions prolongées/asymétriques, reconnexion, rotation, anomalie WAN A, charge bornée/ressources, persistance/pruning et reprise restent à qualifier selon les quatre documents de production. Livraison cohérente multiarchitecture, CI/reproductibilité, supervision/alertes, sauvegarde/restauration/mise à jour et revue de sécurité indépendante restent ouverts. Relation jeton Base/actif natif, bridgeUSDC (couverture, finalité/reorgs, retraits), fair launch et migration de liquidité/Doppler restent séparés. V37/campagne08 restent **FAILED**. Aucun EIP/fork activé ou statut de production n’est promu ; aucun fonds, vente, déploiement public, nouvelle machine ou dépense n’est autorisé par ce paquet.
