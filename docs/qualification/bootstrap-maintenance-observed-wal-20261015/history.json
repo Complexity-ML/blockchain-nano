@@ -1,0 +1,124 @@
+{
+  "actualCampaignAccounting": {
+    "actualCtestsExecuted": 6,
+    "amd64TestsReplayedByPosttestFinalizer": 0,
+    "campaigns": 3,
+    "historicalMacBindFailedCtests": 2,
+    "linuxController62891DispatchedTests": 0,
+    "qualifiedCliInvocationsAcrossTwoArchitectures": 72,
+    "qualifiedSemanticRowsAcrossTwoArchitectures": 22,
+    "qualifiedSigkillJoinsAcrossTwoArchitectures": 12,
+    "qualifyingCtests": 4
+  },
+  "allEarlierHistoricalBodiesAndCsvByteExact": true,
+  "amd64DistinctPosttestAdmission64213": {
+    "actualCliInvocationsAdmitted": 36,
+    "actualCtestExitCode": 0,
+    "actualSigkillJoinsAdmitted": 6,
+    "evidence": "evidence/amd64-distinct-posttest-admission-root-filtered.json",
+    "exitCode": 0,
+    "measuredPeakRssKiB": 25372,
+    "newTestDispatches": 0,
+    "originalControllerExitCode": 1,
+    "semanticRowsAdmitted": 11
+  },
+  "amd64OriginalTest88543": {
+    "actualCtestExitCode": 0,
+    "actualTests": 2,
+    "collectorFailure": "JUnit semantic output truncated; full LastTest log retained; no test replay",
+    "controllerExitCode": 1
+  },
+  "arm64Build9264": {
+    "actualCppCommands": 2,
+    "actualLinks": 2,
+    "compilerWorkerExitCode": 0,
+    "controllerExitCode": 1,
+    "refusal": "Only new command-events output st_ctime_ns at final fence; no recompile",
+    "workerElapsedSecondsReportedByRoot": 7.0184
+  },
+  "arm64IndependentCurrentAdmission92762": {
+    "currentRows": 68001,
+    "exitCode": 0,
+    "newCompiles": 0,
+    "oldRows": 67985,
+    "originalControllerRefusalRetained": true
+  },
+  "arm64LinuxVolume84928": {
+    "actualCliInvocations": 36,
+    "actualCtestExitCode": 0,
+    "actualSigkillJoins": 6,
+    "actualTests": 2,
+    "allOldAdmittedInputsUnchanged": true,
+    "controllerExitCode": 0,
+    "elapsedSeconds": 32.70345737505704,
+    "evidence": "evidence/arm64-linux-volume-root-filtered.json",
+    "maximumObservedVolumeUsedKiB": 6924,
+    "measuredPeakRssKiB": 23804,
+    "newCompiles": 0,
+    "newLinks": 0,
+    "newOutputBytesRecheckedAfterOldFence": true,
+    "ownedVolumeAndContainersObservedAbsent": true,
+    "priorMacBindProfileQualified": false,
+    "semanticRows": 11,
+    "volumeUsageSamples": 13
+  },
+  "arm64LinuxVolumeController62891": {
+    "controllerExitCode": 1,
+    "refusal": "Only new control-envelope st_ctime_ns; old admitted rows not relaxed",
+    "tests": 0,
+    "volumeCreations": 0
+  },
+  "arm64MacBindTest45942": {
+    "actualCtestExitCode": 8,
+    "cause": "UNKNOWN",
+    "failureClassReportedByRoot": "filesystem copy permission denied before CLI execution in the failing scenarios",
+    "notQualified": true,
+    "status": "FAIL_UNRESOLVED_DB_COPY_WORKFLOW_ON_MAC_BIND_PROFILE"
+  },
+  "format": "nano-bootstrap-wal-public-correction-history-v1",
+  "genericPublicCopyProbe": {
+    "fileCreateWriteFsyncReadAndCpRecursivePassedOnBothMacBindAndLinuxVolume": true,
+    "newDatabaseOrCppTests": 0,
+    "notProofOfCauseForDatabaseCopyFailure": true,
+    "version2ExitCodeReportedByRoot": 0
+  },
+  "linuxVolumeSourceRepair": {
+    "initialNewControl": "externally pinned bytes and stable FD/path without premature historical M9 admission",
+    "lateAdmission": "same bytes re-read after complete old-input fence, then strict M9/SHA",
+    "overlap": "explicitly refused if any old admitted row uses the control path",
+    "sourceOnlyVariantsNotExecuted": "V2; V3 subsequently executed once by ROOT84928"
+  },
+  "oldPrivate28722CauseUnknownAndNoDiagnosticWorkaround": true,
+  "precompileMetadataRefusals": {
+    "12163": {
+      "controllerExitCode": 1,
+      "cppCommands": 0,
+      "exactNewRootDesktopFileContentDifferences": 2,
+      "oldParentRowsChanged": 0,
+      "sourceCtimeOnlyRows": 720
+    },
+    "2892": {
+      "configureCompleted": 1,
+      "controllerExitCode": 1,
+      "cppCommands": 0,
+      "pathAndField": "UNKNOWN",
+      "preflightCompleted": 1
+    },
+    "79900": {
+      "allOldMaterialAndShaPassed": true,
+      "controllerExitCode": 1,
+      "cppCommands": 0,
+      "exactAdditionalNewSourceDesktopFiles": 3,
+      "manifestSourceRows": 20890
+    }
+  },
+  "privateAndProductionGatesNotPromoted": true,
+  "sourceV1": {
+    "finding": "Only exact OUTPUT retention root may intercept directory fsync; existing replica descendant directories pass through",
+    "status": "STATIC_STOP_NOT_EXECUTED"
+  },
+  "sourceV2": {
+    "repair": "Exact OUTPUT root predicate; three qualified source overlays unchanged subsequently",
+    "status": "SOURCE_ONLY_INDEPENDENTLY_REVIEWED"
+  }
+}

@@ -3,6 +3,10 @@
 #include "nano/consensus_beacon_header.hpp"
 #include "nano/checkpoint_blob_gc.hpp"
 #include "rocksdb-owned-copy.hpp"
+#include "bootstrap-readonly-replica.hpp"
+#ifdef __linux__
+#include <rocksdb/transaction_log.h>
+#endif
 #include <rocksdb/db.h>
 #include <algorithm>
 #include <array>
@@ -156,8 +160,134 @@ void retention_fsync(const Fixture& f,const Sources& s,const fs::path& root){
  emit("maintenance-retention-fsync-not-covered-on-this-platform",{{"actualFsyncFaultCases",0},{"qualificationOpen",true}});
 #endif
 }
+#ifdef __linux__
+// TEST-ONLY wire ABI, identical to the bounded preload packet declarations.
+struct WalStat{uint64_t dev,ino,size,uid,gid,mode,nlink;};
+struct WalPacket{uint32_t magic,case_id,index,pid,stage,call,role;int32_t fd;int64_t position,result;int32_t error;uint32_t reserved;WalStat before,after;char leaf[256];};
+struct WalControl{uint32_t magic,index,command,reserved;uint64_t dev,ino;};
+static_assert(sizeof(WalPacket)<=512&&sizeof(WalControl)<=512);
+constexpr uint32_t event_magic=0x4e574531,control_magic=0x4e574331;
+struct OwnedFd{int n=-1;OwnedFd()=default;explicit OwnedFd(int value):n(value){require(n>=0,"owned descriptor");}~OwnedFd(){if(n>=0)::close(n);}OwnedFd(const OwnedFd&)=delete;OwnedFd& operator=(const OwnedFd&)=delete;void reset(int value=-1){if(n>=0)::close(n);n=value;}};
+bool wal_same(const WalStat& a,const WalStat& b){return a.dev==b.dev&&a.ino==b.ino&&a.uid==b.uid&&a.gid==b.gid&&a.mode==b.mode&&a.nlink==b.nlink;}
+WalStat wal_stat(const struct stat& s){require(s.st_size>=0,"nonnegative file size");return {uint64_t(s.st_dev),uint64_t(s.st_ino),uint64_t(s.st_size),uint64_t(s.st_uid),uint64_t(s.st_gid),uint64_t(s.st_mode),uint64_t(s.st_nlink)};}
+void wal_file(const WalStat& s){require(S_ISREG(s.mode)&&s.nlink==1&&s.uid==::geteuid()&&s.gid==::getegid()&&(s.mode&0022)==0&&s.size<=64*1024*1024,"observed private regular candidate");}
+std::string wal_leaf(const WalPacket& p){const auto end=std::find(std::begin(p.leaf),std::end(p.leaf),'\0');require(end!=std::end(p.leaf),"bounded event leaf");const std::string name(p.leaf,end);if(!name.empty()){const fs::path rel(name);require(!rel.is_absolute()&&rel==rel.lexically_normal(),"relative event path");for(const auto& part:rel)require(part!="."&&part!="..","event path component");}return name;}
+struct WalChild{
+ Child process;OwnedFd events,controls;fs::path logs;uint32_t case_id,index=0;bool stopped=false;uint64_t started;Json journal=Json::array();
+ WalChild(Case& c,const char* operation,const fs::path& out,const fs::path& next,uint32_t id,bool retention_only):logs(c.root/("wal-log-"+std::to_string(c.run_id++))),case_id(id),started(elapsed()){
+  require(id>=1&&id<=6,"case id");checkpoint();directory(logs);int e[2]{-1,-1},k[2]{-1,-1};require(::pipe(e)==0,"event pipe");OwnedFd er(e[0]),ew(e[1]);require(::pipe(k)==0,"control pipe");OwnedFd kr(k[0]),kw(k[1]);
+  const auto exe=fs::canonical(NANO_TEST_TOOL).string(),shim=fs::canonical(NANO_TEST_FSYNC_SHIM).string();
+  std::vector<std::string> args{exe,operation,c.request.string(),sha_file(c.request),out.string(),(next/"primary-next.json").string(),sha_file(next/"primary-next.json"),(next/"witness-next.json").string(),sha_file(next/"witness-next.json")};
+  std::vector<std::string> env{"PATH=/usr/bin:/bin","LD_PRELOAD="+shim,"NANO_TEST_WAL_MODE="+std::string(retention_only?"retention-only":"observe"),"NANO_TEST_WAL_PRIMARY="+c.p.string(),"NANO_TEST_WAL_WITNESS="+c.w.string(),"NANO_TEST_WAL_OUTPUT="+out.string(),"NANO_TEST_WAL_CASE="+std::to_string(id),"NANO_TEST_WAL_EVENT_FD="+std::to_string(ew.n),"NANO_TEST_WAL_CONTROL_FD="+std::to_string(kr.n)};
+  std::vector<char*> av,ep;for(auto& x:args)av.push_back(x.data());av.push_back(nullptr);for(auto& x:env)ep.push_back(x.data());ep.push_back(nullptr);
+  OwnedFd stdout_fd(::open((logs/"out").c_str(),O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC,0600)),stderr_fd(::open((logs/"err").c_str(),O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC,0600));
+  process.pid=::fork();require(process.pid>=0,"observed fresh exec fork");
+  if(process.pid==0){::close(er.n);::close(kw.n);if(::dup2(stdout_fd.n,STDOUT_FILENO)<0||::dup2(stderr_fd.n,STDERR_FILENO)<0)_exit(125);::close(stdout_fd.n);::close(stderr_fd.n);::execve(exe.c_str(),av.data(),ep.data());_exit(126);}
+  events.reset(er.n);er.n=-1;controls.reset(kw.n);kw.n=-1;
+ }
+ void bound(){checkpoint();require(elapsed()-started<20000,"observed child wall bound");for(const char* name:{"out","err"})require(fs::file_size(logs/name)<=65536,"observed child log bound");}
+ void wait_stopped(){int state=0;for(;;){bound();const auto n=::waitpid(process.pid,&state,WNOHANG|WUNTRACED);if(n<0){require(errno==EINTR,"observed stop wait");continue;}if(n==process.pid){if(WIFEXITED(state)||WIFSIGNALED(state))process.pid=-1;require(WIFSTOPPED(state)&&WSTOPSIG(state)==SIGSTOP,"genuine whole process SIGSTOP");stopped=true;return;}::usleep(1000);}}
+ WalPacket next(){
+  require(!stopped&&process.pid>0,"event read phase");WalPacket p{};size_t at=0;
+  while(at<sizeof(p)){bound();pollfd f{events.n,POLLIN,0};const auto r=::poll(&f,1,10);if(r<0){require(errno==EINTR,"event poll");continue;}if(!r)continue;require(f.revents&POLLIN,"child ended before required observed event");const auto n=::read(events.n,reinterpret_cast<char*>(&p)+at,sizeof(p)-at);if(n<0&&errno==EINTR)continue;require(n>0,"complete binary event");at+=size_t(n);}
+  require(p.magic==event_magic&&p.case_id==case_id&&p.index==++index&&index<=64&&p.pid==uint32_t(process.pid)&&p.stage>=1&&p.stage<=6&&p.call>=1&&p.call<=8&&!p.reserved,"fixed packet index/pid/stage");
+  const auto leaf=wal_leaf(p);require(p.role>=1&&p.role<=3&&p.fd>=0&&wal_same(p.before,p.after),"observed same linked inode");
+  if(p.role!=3){wal_file(p.before);wal_file(p.after);require(!leaf.empty(),"DB event leaf");}
+  journal.push_back(Json{{"eventIndex",p.index},{"stage",p.stage},{"syscall",p.call},{"role",p.role},{"relativeLeaf",leaf},{"device",p.before.dev},{"inode",p.before.ino},{"fd",p.fd},{"sizeBefore",p.before.size},{"sizeAfter",p.after.size},{"actualOffset",p.position},{"returnValue",p.result},{"errnoOnFailure",p.error}});
+  require(journal.dump().size()<=131072,"event stream bound");if(p.stage==1||p.stage==2||p.stage==5||p.stage==6)wait_stopped();return p;
+ }
+ void resume(const WalPacket& p,uint32_t command){
+  require(stopped&&p.index==index,"control bound to actual stopped event");WalControl c{control_magic,p.index,command,0,p.before.dev,p.before.ino};require(::fpathconf(controls.n,_PC_PIPE_BUF)>=long(sizeof(c)),"atomic control bound");ssize_t n;do{n=::write(controls.n,&c,sizeof(c));}while(n<0&&errno==EINTR);require(n==ssize_t(sizeof(c)),"atomic exact control write");require(::kill(process.pid,SIGCONT)==0,"resume unique owned pid");stopped=false;
+ }
+ void killed(){require(stopped&&process.pid>0,"kill requires observed stopped process");require(::kill(process.pid,SIGKILL)==0,"kill unique stopped child");int status=0;for(;;){bound();const auto n=::waitpid(process.pid,&status,WNOHANG);if(n<0){require(errno==EINTR,"kill join");continue;}if(n==process.pid){process.pid=-1;require(WIFSIGNALED(status)&&WTERMSIG(status)==SIGKILL,"actual SIGKILL joined");stopped=false;break;}::usleep(1000);}require(read(logs/"out",65536).empty(),"interrupted apply unexpectedly completed");save(logs/"observed-events.json",journal);}
+ Run completed(){require(!stopped&&process.pid>0,"completed child phase");int status=0;for(;;){bound();const auto n=::waitpid(process.pid,&status,WNOHANG);if(n<0){require(errno==EINTR,"completed child join");continue;}if(n==process.pid){process.pid=-1;require(WIFEXITED(status),"completed child was signalled");break;}::usleep(1000);}const auto text=read(logs/"out",65536),err=read(logs/"err",65536);auto j=Json::parse(text);require(j.is_object()&&j.at("completed").is_boolean()&&j.at("runtimeStarted")==false&&j.at("productionQualified")==false&&!j.contains("primary")&&!j.contains("witness")&&!j.contains("digest"),"observed CLI public stdout");save(logs/"observed-events.json",journal);return {WEXITSTATUS(status),std::move(j),err};}
+};
+using Replica=maintenance::SealedReadonlyReplica;
+struct ClosedAudit{ForkCheckpointToken p,w;Rows primary,witness;bool witness_next=false;};
+ClosedAudit audit(Case& c,const Rows& old_p,const Next& n,bool require_next,bool require_old_p=false){
+ const auto scratch=c.root/"audit";if(!fs::exists(scratch))directory(scratch);
+ auto pr=Replica::capture(c.p,scratch,4096,64*1024*1024,checkpoint),wr=Replica::capture(c.w,scratch,4096,64*1024*1024,checkpoint);ClosedAudit a{};
+ {ChainStore p(pr.read_only_path(),ChainStore::OpenMode::ReadOnly),w(wr.read_only_path(),ChainStore::OpenMode::ReadOnly);p.require_existing_chain_binding(c.f.g.chain_id,c.f.g.block.header.hash(),c.f.g.consensus,c.f.g.staking_contract);w.require_existing_chain_binding(c.f.g.chain_id,c.f.g.block.header.hash(),"nano-capella-recovery-v1");
+  const auto pc=p.fork_checkpoint(c.f.g.chain_id,c.f.g.block.header.hash(),c.f.limits.envelope_bytes),wc=w.fork_checkpoint(c.f.g.chain_id,c.f.g.block.header.hash(),2048+8*c.f.limits.envelope_bytes);require(bool(pc)&&bool(wc),"independent RO replica checkpoints");a.p=pc->token;a.w=wc->token;
+  require((a.p==c.s.pt||a.p==n.p)&&pc->snapshot==old_p.at("fork-checkpoint/v1/payload"),"same raw primary at previous or next exact commitment");if(require_old_p)require(a.p==c.s.pt,"PRIMARY already changed before its gate");
+  a.witness_next=a.w==n.w;if(require_next)require(a.witness_next,"WITNESS is not independently retained NEXT");
+  if(a.witness_next){const auto intent=Json::parse(wc->snapshot);const auto root=consensus_beacon_header_root(c.f.proof.header());const auto br=Bytes(root.begin(),root.end());const Json want{{"format","nano-capella-bootstrap-archive-recovery-v1"},{"previous",token_json(c.s.pt)},{"next",token_json(n.p)},{"snapshot",pc->snapshot},{"archive",Json::array({Json::array({hex(br),quantity(Int(1)),hex(c.f.wire)})})}};require(intent==want&&intent.dump()==wc->snapshot,"exact canonical pending witness intent/proof/archive");
+   const std::vector<CheckpointArchiveEntry> archive{{br,1,c.f.wire}};
+   const auto cp=authenticate_capella_checkpoint_blob_closure(pc->snapshot,a.p.digest,c.f.rules,c.f.limits,[&](const Bytes& id,size_t max){return p.checkpoint_blob(c.f.g.chain_id,c.f.g.block.header.hash(),id,max);},archive,checkpoint);
+   const auto cw=authenticate_capella_checkpoint_blob_closure(intent.at("snapshot").get<std::string>(),n.p.digest,c.f.rules,c.f.limits,[&](const Bytes& id,size_t max){return w.checkpoint_blob(c.f.g.chain_id,c.f.g.block.header.hash(),id,max);},archive,checkpoint);
+   require(cp.description()==cw.description(),"independent full cold/fragment witness closure");const auto head=cp.description().at("executionHead");const auto tip=p.latest();require(bool(tip)&&quantity(tip->header.number)==head.at("number").get<std::string>()&&hex(tip->header.hash())==head.at("hash").get<std::string>(),"actual canonical execution marker");const auto state=p.state_at(tip->header.number);require(bool(state)&&hex(state->root())==head.at("stateRoot").get<std::string>(),"actual canonical head state");
+  }else require(a.w==c.s.wt,"unexpected WITNESS commitment");
+ }
+ a.primary=rows(pr.read_only_path());a.witness=rows(wr.read_only_path());pr.recheck();wr.recheck();pr.close();wr.close();return a; // all readers/capabilities closed before SIGCONT
 }
-int main(int argc,char** argv){try{if(argc==4&&std::string(argv[1])=="--hold-lock")return hold_lock(fs::path(argv[2]),std::stoi(argv[3]));require(argc==2&&std::string(argv[1])=="--self-test","usage --self-test");Temp temp;directory(temp.path/"inputs");const auto f=fixture(temp.path/"inputs");const auto s=sources(f,temp.path/"sources");existing_refusals(f,s,temp.path);locked_and_stopped(f,s,temp.path,fs::path(argv[0]));provenance(f,s,temp.path);retain_refusals(f,s,temp.path);retention_fsync(f,s,temp.path);apply_and_recover(f,s,temp.path,"hot");for(unsigned format=1;format<=2;++format){const auto name=format==1?"cold":"fragmented";const auto source=sources(f,temp.path/(std::string(name)+"-sources"),false,format);directory(temp.path/name);apply_and_recover(f,source,temp.path/name,name);}const auto archived=sources(f,temp.path/"archived-sources",true);no_work(f,archived,temp.path);checkpoint();emit("bootstrap-archive-maintenance-wrapper-self-test",{{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"actualCliUsed",true},{"alreadySignedPublicFixtureOnly",true},{"newSignaturesCreated",0},{"wholeNodeBackupQualified",false},{"interruptedWalRecoveryQualified",false},{"physicalPowerLossQualified",false},{"clockReadOrReset",false},{"dutiesResumed",false},{"networkUsed",false}
+void retained_observed(Case& c,const fs::path& out,const fs::path& plan,const WalPacket& e,const Rows& p,const Rows& w){
+ require(e.stage==1&&e.role==3&&e.call>=7&&e.result==0&&!e.leaf[0]&&S_ISDIR(e.after.mode)&&(e.after.mode&0777)==0700,"both real NEXT syncs then successful output dirsync");require(!fs::exists(out/"complete.json"),"no completion before Pair");
+ struct stat x{},y{},px{},py{};for(const char* name:{"primary-next.json","witness-next.json"}){private_file(out/name);private_file(plan/name);require(read(out/name)==read(plan/name),"both independently retained original NEXT bytes before protocol IO");}
+ require(::lstat((out/"primary-next.json").c_str(),&x)==0&&::lstat((out/"witness-next.json").c_str(),&y)==0&&::lstat((plan/"primary-next.json").c_str(),&px)==0&&::lstat((plan/"witness-next.json").c_str(),&py)==0,"NEXT inode observations");
+ require((x.st_dev!=y.st_dev||x.st_ino!=y.st_ino)&&(x.st_dev!=px.st_dev||x.st_ino!=px.st_ino)&&(y.st_dev!=py.st_dev||y.st_ino!=py.st_ino),"four distinct retained files");const auto scratch=c.root/"retention-audit";if(!fs::exists(scratch))directory(scratch);
+ auto pr=Replica::capture(c.p,scratch,4096,64*1024*1024,checkpoint),wr=Replica::capture(c.w,scratch,4096,64*1024*1024,checkpoint);require(rows(pr.read_only_path())==p&&rows(wr.read_only_path())==w,"both protocol stores unchanged before retained-NEXT return");pr.recheck();wr.recheck();pr.close();wr.close();unchanged_sources(c.s);
+}
+struct Append{WalPacket first{},pending_event{};uint64_t end=0;bool pending=false,valid=true;};
+using AppendKey=std::pair<uint64_t,uint64_t>;
+void append_event(std::map<AppendKey,Append>& seen,const WalPacket& e){
+ require(e.role==1&&e.stage>=3&&e.stage<=4&&e.call<=6,"primary actual write event");const AppendKey key{e.before.dev,e.before.ino};
+ if(e.stage==3){auto [it,added]=seen.try_emplace(key);require(seen.size()<=16,"bounded observed FD candidates");auto& x=it->second;if(added){x.first=e;x.end=e.before.size;}require(!x.pending&&wal_same(x.first.before,e.before)&&wal_leaf(x.first)==wal_leaf(e),"same candidate identity through paired observations");x.valid=x.valid&&e.position>=0&&uint64_t(e.position)==e.before.size&&x.end==e.before.size;x.pending_event=e;x.pending=true;
+ }else{const auto it=seen.find(key);require(it!=seen.end(),"append return without its prior metadata");auto& x=it->second;require(x.pending&&wal_same(x.pending_event.before,e.before)&&x.pending_event.before.size==e.before.size&&wal_leaf(x.pending_event)==wal_leaf(e)&&x.pending_event.position==e.position&&x.pending_event.call==e.call&&x.pending_event.fd==e.fd,"actual write paired to its metadata");x.valid=x.valid&&e.position>=0&&uint64_t(e.position)==x.end&&e.before.size==x.end&&e.result>0&&uint64_t(e.result)<=UINT64_MAX-x.end&&e.after.size==x.end+uint64_t(e.result);x.end=e.after.size;x.pending=false;}
+}
+struct SelectedWal{OwnedFd fd;WalPacket first{},sync{};uint64_t prefix=0,end=0,log_number=0;};
+std::unique_ptr<SelectedWal> classified(Case& c,const WalPacket& e,const std::map<AppendKey,Append>& seen){
+ require(e.stage==5&&e.role==1&&e.call>=7,"actual primary pre-backend sync");const auto observed=seen.find({e.before.dev,e.before.ino});if(observed==seen.end()||observed->second.end==observed->second.first.before.size)return {}; // remain in observation until a real positive append exists
+ const auto scratch=c.root/"wal-audit";if(!fs::exists(scratch))directory(scratch);auto replica=Replica::capture(c.p,scratch,4096,64*1024*1024,checkpoint);const auto root=replica.read_only_path();std::string selected;uint64_t log_number=0;
+ {rocksdb::Options o;o.create_if_missing=false;o.paranoid_checks=true;auto db=maintenance::open_read_only_copy(o,root.string());rocksdb::VectorLogPtr files;require(db->GetSortedWalFiles(files).ok()&&files.size()<=16,"SDK-native RO WAL classification supported and bounded");
+  for(const auto& f:files){require(bool(f),"SDK WAL entry");const fs::path name(f->PathName());const auto rel=name.relative_path();require(!rel.empty()&&rel==rel.lexically_normal(),"SDK relative WAL pathname");for(const auto& part:rel)require(part!="."&&part!="..","SDK WAL path component");if(f->Type()==rocksdb::kAliveLogFile&&rel.generic_string()==wal_leaf(e)){require(selected.empty()&&f->LogNumber()>0,"unique SDK live WAL");selected=rel.generic_string();log_number=f->LogNumber();}}
+ } // SDK DB/iterator/metadata owners closed before replica close and resume
+ std::unique_ptr<SelectedWal> result;
+ if(!selected.empty()){const auto it=seen.find({e.before.dev,e.before.ino});require(it!=seen.end()&&!it->second.pending&&it->second.valid,"selected live WAL had a safe observed append chain before sync");const auto& a=it->second;require(a.end>a.first.before.size&&a.end==e.before.size&&wal_same(a.first.before,e.before)&&wal_leaf(a.first)==selected,"selected WAL exact append chain at actual sync");
+  result=std::make_unique<SelectedWal>();result->fd.reset(::open((c.p/selected).c_str(),O_RDWR|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));require(result->fd.n>=0,"hold exact selected WAL inode before kill");struct stat live{},linked{},copy{};require(::fstat(result->fd.n,&live)==0&&::lstat((c.p/selected).c_str(),&linked)==0,"selected WAL live binding");require(maintenance::readonly_replica_detail::stable(live,linked)&&wal_same(wal_stat(live),e.before)&&uint64_t(live.st_size)==a.end,"live FD/path and event identity");OwnedFd copied(::open((root/selected).c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));require(::fstat(copied.n,&copy)==0&&uint64_t(copy.st_size)==a.end&&(copy.st_dev!=live.st_dev||copy.st_ino!=live.st_ino),"independent copied WAL bytes");
+  require(maintenance::readonly_replica_detail::file_hash(result->fd.n,live,checkpoint)==maintenance::readonly_replica_detail::file_hash(copied.n,copy,checkpoint),"SDK-classified replica file transferred byte-exact from same live inode");result->first=a.first;result->sync=e;result->prefix=a.first.before.size;result->end=a.end;result->log_number=log_number;
+ }
+ replica.recheck();replica.close();return result;
+}
+void lose_observed_suffix(Case& c,SelectedWal& wal){
+ const auto path=c.p/wal_leaf(wal.sync);struct stat fd{},linked{};require(::fstat(wal.fd.n,&fd)==0&&::lstat(path.c_str(),&linked)==0&&maintenance::readonly_replica_detail::stable(fd,linked)&&wal_same(wal_stat(fd),wal.sync.before)&&uint64_t(fd.st_size)==wal.end&&wal.end>wal.prefix&&wal.first.position>=0&&uint64_t(wal.first.position)==wal.prefix,"post-kill exact held WAL append suffix");
+ require(::ftruncate(wal.fd.n,off_t(wal.prefix))==0&&::fsync(wal.fd.n)==0,"explicit simulated volatile suffix loss after joined SIGKILL");require(::fstat(wal.fd.n,&fd)==0&&::lstat(path.c_str(),&linked)==0&&maintenance::readonly_replica_detail::stable(fd,linked)&&uint64_t(fd.st_size)==wal.prefix&&wal_same(wal_stat(fd),wal.sync.before),"same inode after simulated suffix loss");wal.fd.reset();
+}
+void retention_detail(const Fixture& f,const Sources& s,const fs::path& root){
+ const auto shim=fs::canonical(NANO_TEST_FSYNC_SHIM).string();for(unsigned i=0;i<3;++i){Case c(f,s,root/("detail-fsync-"+std::to_string(i)));const auto plan=c.root/"plan";planned(c,plan);const auto p=rows(c.p),w=rows(c.w);const auto out=c.root/"apply",target=i==0?out/"primary-next.json":i==1?out/"witness-next.json":out;
+  std::vector<std::string> env{"LD_PRELOAD="+shim,"NANO_TEST_RETENTION_FSYNC_TARGET="+target.string()};if(i==2)env.push_back("NANO_TEST_RETENTION_ARM_AFTER="+(out/"witness-next.json").string());const auto r=c.call("apply",out,plan,env);require(r.err.find("nano-test-retention-fsync-failed\n")!=std::string::npos,"genuine legacy retention fsync fault not reached");refused(c,r,p,w,out);require(fs::exists(out/"primary-next.json")&&(i==0||fs::exists(out/"witness-next.json")),"fault at actual retained NEXT boundary");
+  emit(i==0?"maintenance-retention-primary-file-fsync":i==1?"maintenance-retention-witness-file-fsync":"maintenance-retention-post-witness-directory-fsync",{{"runtimeStarted",false},{"dutiesResumed",false},{"networkUsed",false},{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"actualFsyncFaultCases",1},{"beforeProtocolPublication",true},{"protocolRowsAndOriginalsUnchanged",true}});
+ }
+ emit("bootstrap-maintenance-retention-fsync-summary",{{"runtimeStarted",false},{"dutiesResumed",false},{"networkUsed",false},{"actualCliInvocations",6},{"actualFsyncFaultCases",3},{"scenarioRows",3},{"oldSelfTestReplayed",false},{"interruptedWalRecoveryQualified",false},{"elapsedMs",elapsed()},{"maxRssKiB",rss()}});
+}
+void interrupted_case(const Fixture& f,const Sources& source,const fs::path& root,unsigned format,unsigned disposition,uint32_t id){
+ Case c(f,source,root);const auto plan=c.root/"plan";const auto n=planned(c,plan);require(n.work,"crash requires real missing bootstrap archive");const auto previous=rows(c.p),previous_w=rows(c.w);const auto out=c.root/"interrupted";
+ WalChild child(c,"apply",out,plan,id,false);auto e=child.next();retained_observed(c,out,plan,e,previous,previous_w);child.resume(e,1);bool witnessed=false;unsigned candidates=0;std::map<AppendKey,Append> append;std::unique_ptr<SelectedWal> wal;
+ for(;;){e=child.next();if(e.stage==2){require(!witnessed&&e.role==2&&e.result==0&&++candidates<=32,"bounded real successful WITNESS sync candidates");const auto a=audit(c,previous,n,false,true);if(a.witness_next){witnessed=true;child.resume(e,2);}else child.resume(e,1);continue;}
+  require(witnessed,"PRIMARY gate before independent WITNESSNEXT");if(e.stage==3||e.stage==4){append_event(append,e);continue;}require(e.stage==5,"unexpected observed barrier");wal=classified(c,e,append);if(!wal){child.resume(e,3);continue;}const auto a=audit(c,previous,n,true);(void)a;require(!fs::exists(out/"complete.json"),"apply completed before observed fatal WAL boundary");
+  if(disposition==2){child.resume(e,4);const auto done=child.next();require(done.stage==6&&done.result==0&&done.fd==e.fd&&wal_same(done.before,e.before)&&wal_leaf(done)==wal_leaf(e)&&done.after.size==wal->end,"real selected WAL sync returned0 before caller");audit(c,previous,n,true);e=done;}
+  child.killed();break;
+ }
+ require(bool(wal)&&witnessed,"observed WAL and witnessed NEXT");if(disposition==1)lose_observed_suffix(c,*wal);else wal->fd.reset();
+ const auto recovered_from=audit(c,previous,n,true);if(disposition==1)require(recovered_from.p==c.s.pt,"simulated observed suffix loss must yield previous PRIMARY");else if(disposition==2)require(recovered_from.p==n.p,"successful WAL sync must yield next PRIMARY");
+ const auto state=recovered_from.primary,wit=recovered_from.witness;bool rejected=false;{Blockchain owner(c.p,f.g,ChainStore::OpenMode::ReadWriteExisting);ChainStore w(c.w,ChainStore::OpenMode::ReadWriteExisting);try{CapellaDurableReactor generic(owner,f.rules,f.limits,w,checkpoint);}catch(const std::invalid_argument&){rejected=true;}}
+ require(rejected&&rows(c.p)==state&&rows(c.w)==wit,"generic recovery must refuse distinct pending/completed archive intent without protocol repair");
+ auto wrong=Json::parse(read(plan/"primary-next.json"));wrong["next"]["sequence"]=quantity(Int(std::to_string(n.p.sequence+1)));save(c.root/"wrong-next.json",wrong);const auto wrongout=c.root/"wrong-recovery";std::vector<std::string> argv{"recover",c.request.string(),sha_file(c.request),wrongout.string(),(c.root/"wrong-next.json").string(),sha_file(c.root/"wrong-next.json"),(plan/"witness-next.json").string(),sha_file(plan/"witness-next.json")};refused(c,c.call("recover",wrongout,{}, {},argv),state,wit,wrongout);
+ for(unsigned repeat=0;repeat<2;++repeat){const auto before=rows(c.p),before_w=rows(c.w);const auto recovery=c.root/("typed-recovery-"+std::to_string(repeat));WalChild resumed(c,"recover",recovery,plan,id,true);const auto barrier=resumed.next();retained_observed(c,recovery,plan,barrier,before,before_w);resumed.resume(barrier,5);const auto result=resumed.completed();require(result.code==0&&result.status.at("completed")==true,"actual typed recovery failed");for(const char* name:{"primary-next.json","witness-next.json","complete.json"})private_file(recovery/name);verified_result(c,previous,previous_w,n);if(repeat)require(rows(c.p)==before&&rows(c.w)==before_w,"repeat typed recovery advanced commitment or rewrote WITNESS protocol");}
+ unchanged_sources(source);const auto name=std::string("maintenance-wal-")+(format==1?"cold-":"fragmented-")+(disposition==0?"before-sync-retained":disposition==1?"before-sync-simulated-loss":"after-successful-sync-retained");checkpoint();
+ emit(name.c_str(),{{"actualDurableFormat",format==1?"cold":"fragmented"},{"runtimeStarted",false},{"dutiesResumed",false},{"networkUsed",false},{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"actualCliInvocations",5},{"actualSigkillJoined",1},{"witnessNextIndependentlyAuthenticated",true},{"walSdkClassified",true},{"firstAppendOffsetPhysicallyObserved",true},{"bothNextReretainedBeforeIo",true},{"volatileWalSuffixLossSimulated",disposition==1},{"primaryDispositionBeforeTypedRecovery",recovered_from.p==n.p?"NEXT":"PREVIOUS"},{"ordinaryAndWrongNextRecoveryRefused",true},{"typedRecoveryRepetitions",2},{"rawSnapshotArchiveAndUnrelatedRowsExact",true},{"originalSourcesUnchanged",true},{"auditReadersClosedBeforeEveryResume",true},{"interruptedWalRecoveryQualified",true},{"physicalPowerLossQualified",false},{"nonemptyQueueQualified",false}});
+}
+void crash_tests(const Fixture& f,const fs::path& root){
+ unsigned id=0;for(unsigned format=1;format<=2;++format)for(unsigned mode=0;mode<3;++mode){const auto name=std::to_string(++id);const auto s=sources(f,root/("crash-source-"+name),false,format);interrupted_case(f,s,root/("crash-case-"+name),format,mode,id);checkpoint();}
+ emit("bootstrap-maintenance-observed-wal-crash-summary",{{"runtimeStarted",false},{"dutiesResumed",false},{"networkUsed",false},{"scenarioRows",6},{"actualCliInvocations",30},{"actualSigkillJoined",6},{"actualObservedWalBoundaries",6},{"actualTwoNextRetentionBarriers",18},{"actualTypedRecoveryInvocations",12},{"actualWrongNextRefusals",6},{"oldSelfTestReplayed",false},{"interruptedWalRecoveryQualified",true},{"volatileWalSuffixLossSimulationCases",2},{"physicalPowerLossQualified",false},{"nonemptyQueueQualified",false},{"wholeNodeBackupQualified",false},{"newSignaturesCreated",0},{"elapsedMs",elapsed()},{"maxRssKiB",rss()}});
+}
+#endif
+
+}
+int main(int argc,char** argv){try{if(argc==4&&std::string(argv[1])=="--hold-lock")return hold_lock(fs::path(argv[2]),std::stoi(argv[3]));
+#ifdef __linux__
+if(argc==2&&(std::string(argv[1])=="--crash-test"||std::string(argv[1])=="--retention-tests")){Temp temp;directory(temp.path/"inputs");const auto f=fixture(temp.path/"inputs");if(std::string(argv[1])=="--crash-test")crash_tests(f,temp.path);else{const auto s=sources(f,temp.path/"retention-sources");retention_detail(f,s,temp.path);}checkpoint();return 0;}
+#endif
+require(argc==2&&std::string(argv[1])=="--self-test","usage --self-test");Temp temp;directory(temp.path/"inputs");const auto f=fixture(temp.path/"inputs");const auto s=sources(f,temp.path/"sources");existing_refusals(f,s,temp.path);locked_and_stopped(f,s,temp.path,fs::path(argv[0]));provenance(f,s,temp.path);retain_refusals(f,s,temp.path);retention_fsync(f,s,temp.path);apply_and_recover(f,s,temp.path,"hot");for(unsigned format=1;format<=2;++format){const auto name=format==1?"cold":"fragmented";const auto source=sources(f,temp.path/(std::string(name)+"-sources"),false,format);directory(temp.path/name);apply_and_recover(f,source,temp.path/name,name);}const auto archived=sources(f,temp.path/"archived-sources",true);no_work(f,archived,temp.path);checkpoint();emit("bootstrap-archive-maintenance-wrapper-self-test",{{"elapsedMs",elapsed()},{"maxRssKiB",rss()},{"actualCliUsed",true},{"alreadySignedPublicFixtureOnly",true},{"newSignaturesCreated",0},{"wholeNodeBackupQualified",false},{"interruptedWalRecoveryQualified",false},{"physicalPowerLossQualified",false},{"clockReadOrReset",false},{"dutiesResumed",false},{"networkUsed",false}
 #ifdef NANO_TEST_FSYNC_SHIM
  ,{"retentionFsyncFaultCases",3}
 #else

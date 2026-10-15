@@ -1,0 +1,125 @@
+{
+  "format": "nano-bootstrap-wal-actual-public-arm-independent-review-v1",
+  "verdict": "PASS_SCOPED_ACTUAL_ARM_PUBLIC_WAL_NATIVE_LINUX_VOLUME_ONLY",
+  "materialBlockersFound": false,
+  "evidence": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-arm-linux-volume-test-control-v2-root-20261015/test-actual-exit.json",
+      "sha256": "38df379acfc0b9376675543bf3911fc1728b1e654251a2500eb54526d12441f8",
+      "bytes": 1426
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-tests-arm64-linux-volume-v2-20261015/terminal-tests.private.json",
+      "sha256": "65a5541a3008404336a5b26d2b92c8294ebb90a8a72ab9e8f9366855863d8722",
+      "bytes": 1755
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-tests-arm64-linux-volume-v2-20261015/receipts/tests-exit.private.json",
+      "sha256": "8c2d8bc1b6fa76f893f68b5193324c2c2403d0c641cd6a63d8f594ebf58f899f",
+      "bytes": 99
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-tests-arm64-linux-volume-v2-20261015/ctest/results.xml",
+      "sha256": "1c627e8b63c58209959810697a017f383ad361c274e53d336710df9a06885f65",
+      "bytes": 7983
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-tests-arm64-linux-volume-v2-20261015/ctest/Testing/Temporary/LastTest.log",
+      "sha256": "8b673b47b51f5ed5fa5c709b9cce040bbabd97adaaabf7ebd065539a7370f74f",
+      "bytes": 8876
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-tests-arm64-linux-volume-v2-20261015/scenario-rows.private.json",
+      "sha256": "0173e696ba554574a54752318ebe97d4db428b550266919eead55f09a66c4c20",
+      "bytes": 8858
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-tests-arm64-linux-volume-v2-20261015/new-output-current-material.private.json",
+      "sha256": "2edec743fc6ed330770f891843d6b7777cc3bb4e5394d119f7d374f4b414b80c",
+      "bytes": 11907
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-observed-wal-crash-source-proposal-v2-20261015/CONTRACT.json",
+      "sha256": "8d8a0a6d6bff5c2eee06338d6d30c9e5c5425ed379e59398ce3c5736f8001512",
+      "bytes": 15574
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-amd64-posttest-safe-root-20261015.json",
+      "sha256": "f67dd5af8ecf0dcc49de35d63e7582c030d3061e1868cdeb5d34320b56d046c9",
+      "bytes": 1528
+    }
+  ],
+  "sourceReview": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-wal-linux-volume-test-independent-review-20261015/terminal-static-v3-new-envelope-deferred-material-and-no-old-overlap-review.json",
+    "sha256": "e62cbab6913c4e8d626c444975ea3f43fcf792063e81ef9f54a095df5511a298",
+    "bytes": 3093
+  },
+  "actualArm": {
+    "rootProcessExitCode": 0,
+    "ctestExitCode": 0,
+    "ctestProcesses": 2,
+    "ctestCaseResults": "both PASS; no skip/failure/error",
+    "semanticRowsIncludingSummaries": 11,
+    "scenarioRows": 9,
+    "actualCliInvocations": 36,
+    "actualSigkillJoins": 6,
+    "observedWalBoundaries": 6,
+    "twoNextRetentionBarriers": 18,
+    "typedRecoveryInvocations": 12,
+    "wrongNextRefusals": 6,
+    "simulatedVolatileSuffixLossCases": 2,
+    "fsyncFaultCases": 3,
+    "newSignaturesCreated": 0,
+    "cppSummaryElapsedMs": [
+      5340,
+      466
+    ],
+    "cppPeakRssKiB": 23804,
+    "ctestWorkerElapsedSeconds": 6.519976624986157,
+    "wholeControllerElapsedSeconds": 32.70345737505704,
+    "filesystemProfile": "new-owned-docker-local-volume",
+    "statfsObservation": "ext2/ext3",
+    "volumeInitialAndFinalUsedKiB": 4,
+    "maximumSampledVolumeUsedKiBRootReported": 6924,
+    "volumeUsageSamplesRootReported": 13,
+    "oldMaterialRowsComparedStructurally": 68001,
+    "allOldRowsEqualSavedAfterMap": true,
+    "newCompilesLinksAndImageBuilds": 0
+  },
+  "independentReadback": {
+    "junitRowsAndCompleteLastTestRowsAndSavedScenarioRowsExactlyEqual": true,
+    "allContractTypesFlagsEnumsBoundsPassed": true,
+    "simulatedLossPrimaryDisposition": [
+      "PREVIOUS",
+      "PREVIOUS"
+    ],
+    "afterSuccessfulSyncPrimaryDisposition": [
+      "NEXT",
+      "NEXT"
+    ],
+    "oldAdmittedMapComparedAgainstSavedAfterMap": true,
+    "allPhysicalOldFilesStatOrBytesRescannedByThisReviewer": false,
+    "physicalConservationAndDockerAbsenceAreActualRootControllerObservationsWithReviewedGuards": true,
+    "reviewerDidNotReexecuteRuntimeOrDocker": true
+  },
+  "amdScope": {
+    "actualRootTypedAdmissionOnly": true,
+    "rawVmMetadataOrLogsRead": false,
+    "twoTestsElevenRowsThirtySixCliSixKillsRootAttested": true,
+    "peakRssKiBRootAttested": 25372,
+    "original88543ControllerExit1Preserved": true,
+    "distinct64213PosttestAdmissionExit0": true
+  },
+  "scope": {
+    "publicSyntheticInterruptedCliWalRecoveryQualified": true,
+    "macBind45942FailureRetainedAndGeneralCauseOpen": true,
+    "linux62891PretestRefusalRetained": true,
+    "physicalPowerLossQualified": false,
+    "nonemptyQueueQualified": false,
+    "wholeNodeBackupOrOriginalPrivateRestoreQualified": false,
+    "nativeMacProfileQualified": false,
+    "runtimeDutiesCommonFinalityOrProductionQualified": false,
+    "private28722ErrorReadOrReclassified": false,
+    "reviewerExecutedAnyProposalCompilerTestsDockerSshGitOrDb": false
+  }
+}

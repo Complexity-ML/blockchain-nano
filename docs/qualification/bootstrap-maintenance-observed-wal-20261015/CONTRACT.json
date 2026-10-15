@@ -1,0 +1,440 @@
+{
+  "format": "nano-bootstrap-maintenance-observed-wal-public-test-contract-v1",
+  "status": "SOURCE_ONLY_NOT_COMPILED_OR_EXECUTED",
+  "platform": "Linux only; unsupported platform is not a passing crash test",
+  "productionCliAndCoreUnchanged": true,
+  "designManifestSha256": "a55c1b95cc5a5a6a5083c544a7843262c4caba61e2e930dbbf1211c8739d3f17",
+  "tests": [
+    {
+      "selector": "--crash-test",
+      "ctest": "storage_capella_bootstrap_archive_owned_copies_crash",
+      "timeoutSeconds": 130,
+      "rows": [
+        {
+          "scenario": "maintenance-wal-cold-before-sync-retained",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualDurableFormat": "cold",
+            "actualCliInvocations": 5,
+            "actualSigkillJoined": 1,
+            "witnessNextIndependentlyAuthenticated": true,
+            "walSdkClassified": true,
+            "firstAppendOffsetPhysicallyObserved": true,
+            "bothNextReretainedBeforeIo": true,
+            "volatileWalSuffixLossSimulated": false,
+            "ordinaryAndWrongNextRecoveryRefused": true,
+            "typedRecoveryRepetitions": 2,
+            "rawSnapshotArchiveAndUnrelatedRowsExact": true,
+            "originalSourcesUnchanged": true,
+            "auditReadersClosedBeforeEveryResume": true,
+            "interruptedWalRecoveryQualified": true,
+            "physicalPowerLossQualified": false,
+            "nonemptyQueueQualified": false
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          },
+          "enumFields": {
+            "primaryDispositionBeforeTypedRecovery": [
+              "PREVIOUS",
+              "NEXT"
+            ]
+          }
+        },
+        {
+          "scenario": "maintenance-wal-cold-before-sync-simulated-loss",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualDurableFormat": "cold",
+            "actualCliInvocations": 5,
+            "actualSigkillJoined": 1,
+            "witnessNextIndependentlyAuthenticated": true,
+            "walSdkClassified": true,
+            "firstAppendOffsetPhysicallyObserved": true,
+            "bothNextReretainedBeforeIo": true,
+            "volatileWalSuffixLossSimulated": true,
+            "ordinaryAndWrongNextRecoveryRefused": true,
+            "typedRecoveryRepetitions": 2,
+            "rawSnapshotArchiveAndUnrelatedRowsExact": true,
+            "originalSourcesUnchanged": true,
+            "auditReadersClosedBeforeEveryResume": true,
+            "interruptedWalRecoveryQualified": true,
+            "physicalPowerLossQualified": false,
+            "nonemptyQueueQualified": false,
+            "primaryDispositionBeforeTypedRecovery": "PREVIOUS"
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        },
+        {
+          "scenario": "maintenance-wal-cold-after-successful-sync-retained",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualDurableFormat": "cold",
+            "actualCliInvocations": 5,
+            "actualSigkillJoined": 1,
+            "witnessNextIndependentlyAuthenticated": true,
+            "walSdkClassified": true,
+            "firstAppendOffsetPhysicallyObserved": true,
+            "bothNextReretainedBeforeIo": true,
+            "volatileWalSuffixLossSimulated": false,
+            "ordinaryAndWrongNextRecoveryRefused": true,
+            "typedRecoveryRepetitions": 2,
+            "rawSnapshotArchiveAndUnrelatedRowsExact": true,
+            "originalSourcesUnchanged": true,
+            "auditReadersClosedBeforeEveryResume": true,
+            "interruptedWalRecoveryQualified": true,
+            "physicalPowerLossQualified": false,
+            "nonemptyQueueQualified": false,
+            "primaryDispositionBeforeTypedRecovery": "NEXT"
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        },
+        {
+          "scenario": "maintenance-wal-fragmented-before-sync-retained",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualDurableFormat": "fragmented",
+            "actualCliInvocations": 5,
+            "actualSigkillJoined": 1,
+            "witnessNextIndependentlyAuthenticated": true,
+            "walSdkClassified": true,
+            "firstAppendOffsetPhysicallyObserved": true,
+            "bothNextReretainedBeforeIo": true,
+            "volatileWalSuffixLossSimulated": false,
+            "ordinaryAndWrongNextRecoveryRefused": true,
+            "typedRecoveryRepetitions": 2,
+            "rawSnapshotArchiveAndUnrelatedRowsExact": true,
+            "originalSourcesUnchanged": true,
+            "auditReadersClosedBeforeEveryResume": true,
+            "interruptedWalRecoveryQualified": true,
+            "physicalPowerLossQualified": false,
+            "nonemptyQueueQualified": false
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          },
+          "enumFields": {
+            "primaryDispositionBeforeTypedRecovery": [
+              "PREVIOUS",
+              "NEXT"
+            ]
+          }
+        },
+        {
+          "scenario": "maintenance-wal-fragmented-before-sync-simulated-loss",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualDurableFormat": "fragmented",
+            "actualCliInvocations": 5,
+            "actualSigkillJoined": 1,
+            "witnessNextIndependentlyAuthenticated": true,
+            "walSdkClassified": true,
+            "firstAppendOffsetPhysicallyObserved": true,
+            "bothNextReretainedBeforeIo": true,
+            "volatileWalSuffixLossSimulated": true,
+            "ordinaryAndWrongNextRecoveryRefused": true,
+            "typedRecoveryRepetitions": 2,
+            "rawSnapshotArchiveAndUnrelatedRowsExact": true,
+            "originalSourcesUnchanged": true,
+            "auditReadersClosedBeforeEveryResume": true,
+            "interruptedWalRecoveryQualified": true,
+            "physicalPowerLossQualified": false,
+            "nonemptyQueueQualified": false,
+            "primaryDispositionBeforeTypedRecovery": "PREVIOUS"
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        },
+        {
+          "scenario": "maintenance-wal-fragmented-after-successful-sync-retained",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualDurableFormat": "fragmented",
+            "actualCliInvocations": 5,
+            "actualSigkillJoined": 1,
+            "witnessNextIndependentlyAuthenticated": true,
+            "walSdkClassified": true,
+            "firstAppendOffsetPhysicallyObserved": true,
+            "bothNextReretainedBeforeIo": true,
+            "volatileWalSuffixLossSimulated": false,
+            "ordinaryAndWrongNextRecoveryRefused": true,
+            "typedRecoveryRepetitions": 2,
+            "rawSnapshotArchiveAndUnrelatedRowsExact": true,
+            "originalSourcesUnchanged": true,
+            "auditReadersClosedBeforeEveryResume": true,
+            "interruptedWalRecoveryQualified": true,
+            "physicalPowerLossQualified": false,
+            "nonemptyQueueQualified": false,
+            "primaryDispositionBeforeTypedRecovery": "NEXT"
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        },
+        {
+          "scenario": "bootstrap-maintenance-observed-wal-crash-summary",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "scenarioRows": 6,
+            "actualCliInvocations": 30,
+            "actualSigkillJoined": 6,
+            "actualObservedWalBoundaries": 6,
+            "actualTwoNextRetentionBarriers": 18,
+            "actualTypedRecoveryInvocations": 12,
+            "actualWrongNextRefusals": 6,
+            "oldSelfTestReplayed": false,
+            "interruptedWalRecoveryQualified": true,
+            "volatileWalSuffixLossSimulationCases": 2,
+            "physicalPowerLossQualified": false,
+            "nonemptyQueueQualified": false,
+            "wholeNodeBackupQualified": false
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        }
+      ],
+      "summaryScenario": "bootstrap-maintenance-observed-wal-crash-summary",
+      "actualCliInvocations": 30,
+      "actualSigkillJoins": 6
+    },
+    {
+      "selector": "--retention-tests",
+      "ctest": "storage_capella_bootstrap_archive_retention_fsync",
+      "timeoutSeconds": 70,
+      "rows": [
+        {
+          "scenario": "maintenance-retention-primary-file-fsync",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualFsyncFaultCases": 1,
+            "beforeProtocolPublication": true,
+            "protocolRowsAndOriginalsUnchanged": true
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        },
+        {
+          "scenario": "maintenance-retention-witness-file-fsync",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualFsyncFaultCases": 1,
+            "beforeProtocolPublication": true,
+            "protocolRowsAndOriginalsUnchanged": true
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        },
+        {
+          "scenario": "maintenance-retention-post-witness-directory-fsync",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualFsyncFaultCases": 1,
+            "beforeProtocolPublication": true,
+            "protocolRowsAndOriginalsUnchanged": true
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        },
+        {
+          "scenario": "bootstrap-maintenance-retention-fsync-summary",
+          "equals": {
+            "result": "PASS",
+            "newSignaturesCreated": 0,
+            "privateInputsRead": false,
+            "productionQualified": false,
+            "runtimeStarted": false,
+            "dutiesResumed": false,
+            "networkUsed": false,
+            "actualCliInvocations": 6,
+            "actualFsyncFaultCases": 3,
+            "scenarioRows": 3,
+            "oldSelfTestReplayed": false,
+            "interruptedWalRecoveryQualified": false
+          },
+          "integerFields": {
+            "elapsedMs": {
+              "minimum": 0,
+              "maximum": 119999
+            },
+            "maxRssKiB": {
+              "minimum": 0,
+              "maximum": 131072
+            }
+          }
+        }
+      ],
+      "summaryScenario": "bootstrap-maintenance-retention-fsync-summary",
+      "actualCliInvocations": 6,
+      "actualSigkillJoins": 0
+    }
+  ],
+  "resources": {
+    "parentWallMs": 120000,
+    "parentMaximumRssKiB": 131072,
+    "childWallMs": 20000,
+    "maximumEventsPerChild": 64,
+    "maximumAtomicEventBytes": 512,
+    "maximumStreamBytes": 131072,
+    "maximumWitnessCandidates": 32,
+    "maximumObservedFileCandidates": 16,
+    "maximumFilesPerPhysicalReplica": 4096,
+    "maximumPhysicalBytesPerReplica": 67108864
+  },
+  "authority": {
+    "originalTwoNextFilesAndRequestShaRetained": true,
+    "noReadOnlyDbOpenAgainstLiveRwOwner": true,
+    "allAuditReadersUseSealedIndependentReplicas": true,
+    "walClassifiedByActualSdkGetSortedWalFilesVectorLogPtr": true,
+    "noGuessedWalFilenameOrRecordOffset": true,
+    "truncateOnlyActualObservedPhysicalPrefixAfterSigkillJoin": true,
+    "originalSourcesNeverOpenedRw": true,
+    "noNewSignatures": true,
+    "oldSelfTest13NotSelected": true,
+    "oldSelfTestBodyAndOldThreeFaultSemanticsPreserved": true,
+    "queueNonemptyQualified": false,
+    "physicalPowerLossQualified": false,
+    "wholeNodeBackupQualified": false,
+    "currentUtcOrDutiesQualified": false,
+    "productionQualified": false
+  },
+  "executionByAuthor": false
+}

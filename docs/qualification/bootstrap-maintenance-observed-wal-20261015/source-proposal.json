@@ -1,0 +1,166 @@
+{
+  "format": "nano-bootstrap-maintenance-observed-wal-source-proposal-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_COMPILED_OR_EXECUTED",
+  "design": {
+    "path": "../bootstrap-maintenance-observed-wal-crash-design-v2-20261014/manifest.json",
+    "sha256": "a55c1b95cc5a5a6a5083c544a7843262c4caba61e2e930dbbf1211c8739d3f17"
+  },
+  "baselineRepository": "/Users/boris/Dev/blockchain-nano",
+  "baselineCommitReportedByRoot": "9c2dd5153bfa57716a48eae49d6d8999b33ffb89",
+  "files": [
+    {
+      "path": "tests/test_bootstrap_archive_maintenance.cpp",
+      "baseline": {
+        "sha256": "e5f664121c238c1db2e94283fa96d9959ecabcd566028dcdd5deb0df0f9ce1ee",
+        "bytes": 30364
+      },
+      "source": {
+        "path": "source/tests/test_bootstrap_archive_maintenance.cpp",
+        "sha256": "c85d51e1e5060edd5532dcbc55a07946ec258acd907328aed8e1bac9c47c1a13",
+        "bytes": 55971
+      }
+    },
+    {
+      "path": "tests/support/bootstrap_maintenance_retention_fault.cpp",
+      "baseline": {
+        "sha256": "f398a0c14f22521b79ecb56775d3acba1d71a301de2d0745ddd94173cef2595c",
+        "bytes": 1370
+      },
+      "source": {
+        "path": "source/tests/support/bootstrap_maintenance_retention_fault.cpp",
+        "sha256": "d7d74c229b551ded2a7b8a2182aa91266dec8c86de679befca25a8a029ece32a",
+        "bytes": 10377
+      }
+    },
+    {
+      "path": "CMakeLists.txt",
+      "baseline": {
+        "sha256": "3faeb2c1437d7ee91210fa97327dc3100246dbf179727fddbae0f0c880ad11f5",
+        "bytes": 166187
+      },
+      "source": {
+        "path": "source/CMakeLists.txt",
+        "sha256": "c832425a30b6b53cd2b6d81599573cabf6b8e0096b5d9bb6b26aa1ae5bd2ef42",
+        "bytes": 166815
+      }
+    }
+  ],
+  "productionCli": {
+    "path": "tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+    "sha256": "4a53f54dc7784d2c64e218647291bd00932d1347bdd019fa1c0f24718e8bf359",
+    "bytes": 26689,
+    "unchanged": true,
+    "usesSealedIndependentReadonlyReplicas": true
+  },
+  "contract": {
+    "path": "CONTRACT.json",
+    "sha256": "8d8a0a6d6bff5c2eee06338d6d30c9e5c5425ed379e59398ce3c5736f8001512",
+    "bytes": 15574
+  },
+  "selectors": [
+    {
+      "selector": "--crash-test",
+      "ctest": "storage_capella_bootstrap_archive_owned_copies_crash",
+      "rows": 7,
+      "scenarios": 6,
+      "cliInvocations": 30,
+      "actualSigkillJoins": 6,
+      "timeoutSeconds": 130
+    },
+    {
+      "selector": "--retention-tests",
+      "ctest": "storage_capella_bootstrap_archive_retention_fsync",
+      "rows": 4,
+      "scenarios": 3,
+      "cliInvocations": 6,
+      "actualSigkillJoins": 0,
+      "timeoutSeconds": 70
+    }
+  ],
+  "staticPreservation": {
+    "oldWholeTestRecoveredByteExactlyByRemovingOnlyNewIncludesLinuxHelpersAndSelectorBranch": true,
+    "oldSelfTestFunctionsAnd13RowBranchUnchanged": true,
+    "oldThreeEioFaultSemanticsRetained": true,
+    "newDetailedRetentionSelectorJustifiesOnlyTargetedThreeFaultReplay": true,
+    "oldWholeCmakeRecoveredExactlyByRemovingOnlyTwoLinuxRegistrationsAndShimThreadsLink": true,
+    "productionCoreCliAndGlobalSyncShimUnchanged": true
+  },
+  "groupedSourceFindingsClosed": [
+    "RO inspection uses independent sealed physical replicas, never live RW owners",
+    "SDK e30 VectorLogPtr and relative PathName used; no guessed filename or SizeFileBytes offset",
+    "same inode physical append chain required only after SDK WAL classification; non-WAL writes not misqualified",
+    "sync candidates without observed positive append remain observation only",
+    "non-output DB directories pass through, no WAL candidate",
+    "case id parser separate from FD parser",
+    "heterogeneous auto declarations separated and JSON RHS strings extracted",
+    "terminal child reaped by wait_stopped clears owned PID before refusal",
+    "all directory syncs except the exact OUTPUT root pass through, including live CLI pre/post sealed-replica descendants; only the root can emit retention-ready"
+  ],
+  "scope": {
+    "newProductionHooks": false,
+    "newProductionOrPublicCoreHeaderAbi": false,
+    "newRuntimePolicyOrQuotas": false,
+    "queueNonemptyQualified": false,
+    "physicalPowerLossQualified": false,
+    "wholeNodeBackupQualified": false,
+    "currentUtcOrDutiesQualified": false,
+    "productionQualified": false,
+    "actualCompilerInvocationsByAuthor": 0,
+    "actualTestsExecuted": 0,
+    "actualResults": "PENDING_ROOT_COMPILATION_AND_REAL_TARGETED_TESTS"
+  },
+  "payloads": [
+    {
+      "path": "source/tests/test_bootstrap_archive_maintenance.cpp",
+      "sha256": "c85d51e1e5060edd5532dcbc55a07946ec258acd907328aed8e1bac9c47c1a13",
+      "bytes": 55971
+    },
+    {
+      "path": "source/tests/support/bootstrap_maintenance_retention_fault.cpp",
+      "sha256": "d7d74c229b551ded2a7b8a2182aa91266dec8c86de679befca25a8a029ece32a",
+      "bytes": 10377
+    },
+    {
+      "path": "source/CMakeLists.txt",
+      "sha256": "c832425a30b6b53cd2b6d81599573cabf6b8e0096b5d9bb6b26aa1ae5bd2ef42",
+      "bytes": 166815
+    },
+    {
+      "path": "CONTRACT.json",
+      "sha256": "8d8a0a6d6bff5c2eee06338d6d30c9e5c5425ed379e59398ce3c5736f8001512",
+      "bytes": 15574
+    },
+    {
+      "path": "README.md",
+      "sha256": "795f3fce10da7c1fdf58e6298da9a1f9c34f5f8642f342ba856aa2f2447a599b",
+      "bytes": 4014
+    },
+    {
+      "path": "source.patch",
+      "sha256": "8b8506d5a62a4b8ca449dee377c7dae2edc4e9ea8825bd1ec17289de8520e165",
+      "bytes": 41816
+    },
+    {
+      "path": "delta-from-v1.patch",
+      "sha256": "89c79c47b619ad76778f7d21b66293ee92260806842ac4f8b3fabc80c1d95f0c",
+      "bytes": 2235
+    }
+  ],
+  "payloadCount": 7,
+  "payloadBytes": 296802,
+  "authorActions": {
+    "publicSourceAndGenericByteHashChecksOnly": true,
+    "proposedOrRootProgramsImportedOrExecuted": false,
+    "compilerTestHelperDockerSshGitOrDatabaseUsed": false,
+    "privateOrVmBytesRead": false,
+    "repositoryModified": false
+  },
+  "proposalVersion": 2,
+  "preservedStaticStopV1": {
+    "path": "../bootstrap-maintenance-observed-wal-crash-source-proposal-20261015/manifest.json",
+    "sha256": "3bb3e2b5b107c8264c95d025855bab45b42e1184a8ca347a5b88febf1aee2c93",
+    "bytes": 5583,
+    "executed": false,
+    "sourceFinding": "OUTPUT descendant directories used by existing pre-publication sealed replicas must pass through; only exact OUTPUT root is retention-eligible"
+  }
+}

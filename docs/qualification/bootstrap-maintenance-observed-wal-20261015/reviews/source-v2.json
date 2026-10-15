@@ -1,0 +1,115 @@
+{
+  "format": "nano-bootstrap-maintenance-observed-wal-independent-static-review-v2",
+  "verdict": "STATIC_GO_SOURCE_ONLY_TARGETED_ROOT_BUILD_AND_TESTS",
+  "materialBlockersFound": false,
+  "manifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-observed-wal-crash-source-proposal-v2-20261015/manifest.json",
+    "sha256": "9c36f942a740193f763d569d5c8e2bf2e27d1d72e6ad3a917e6fa5926f66777c",
+    "bytes": 6348
+  },
+  "reviewScope": "Full public source review of harness, preload, CMake and output contract; exact V2 closure of the preserved frozen V1 directory refusal. No implementation execution.",
+  "sourceFiles": [
+    {
+      "path": "tests/test_bootstrap_archive_maintenance.cpp",
+      "sha256": "c85d51e1e5060edd5532dcbc55a07946ec258acd907328aed8e1bac9c47c1a13",
+      "bytes": 55971
+    },
+    {
+      "path": "tests/support/bootstrap_maintenance_retention_fault.cpp",
+      "sha256": "d7d74c229b551ded2a7b8a2182aa91266dec8c86de679befca25a8a029ece32a",
+      "bytes": 10377
+    },
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "c832425a30b6b53cd2b6d81599573cabf6b8e0096b5d9bb6b26aa1ae5bd2ef42",
+      "bytes": 166815
+    }
+  ],
+  "payloadsVerified": 7,
+  "payloadBytesVerified": 296802,
+  "baselinesAndProductionCli": {
+    "allThreeCurrentPublicBaselineBytesAndShaMatch": true,
+    "productionCli": {
+      "path": "tools/storage-maintenance/bootstrap-archive-owned-copies.cpp",
+      "sha256": "4a53f54dc7784d2c64e218647291bd00932d1347bdd019fa1c0f24718e8bf359",
+      "bytes": 26689,
+      "unchanged": true,
+      "usesSealedIndependentReadonlyReplicas": true
+    },
+    "reportedGitCommitNotIndependentlyQueried": "9c2dd5153bfa57716a48eae49d6d8999b33ffb89"
+  },
+  "preservedStaticStop": {
+    "manifest": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bootstrap-maintenance-observed-wal-crash-source-proposal-20261015/manifest.json",
+      "sha256": "3bb3e2b5b107c8264c95d025855bab45b42e1184a8ca347a5b88febf1aee2c93",
+      "bytes": 5583
+    },
+    "executed": false,
+    "finding": "V1 observed() refused OUTPUT descendant directories. Current CLI creates and fsyncs sealed replicas under OUTPUT before NEXT retention, so this refused before the first barrier.",
+    "closure": "V2 changes exactly one predicate/comment: pass every directory except exact OUTPUT root. All live pre/post/final sealed-replica directories remain noneligible. Test, CMake and CONTRACT are byte-identical to V1."
+  },
+  "byteChecks": {
+    "allSevenPayloadShaSizeAnd0400ModesExact": true,
+    "v2ShimReconstructedBySinglePredicateAndCommentReplacement": true,
+    "wholeOldTestReconstructedExactlyRemovingOnlyAddedIncludesLinuxHelpersAndNewSelectorBranch": true,
+    "wholeOldCmakeReconstructedExactlyRemovingOnlyTwoLinuxRegistrationsAndShimThreadsLink": true,
+    "oldSelfTest13NotSelected": true
+  },
+  "substantiveChecks": [
+    "Fresh CLI exec, only PATH and explicit test preload variables, bounded atomic event/control packets tied to case/index/PID and same FD device/inode metadata.",
+    "Actual WIFSTOPPED SIGSTOP before inspections; actual SIGKILL and waitpid join before suffix modification or original-copy reopen. Terminal child reaped at wait_stopped clears owned PID before refusal.",
+    "Barrier database readers use fresh SealedReadonlyReplica trees only. RocksDB readers and replica capabilities close before every SIGCONT. No live RW owner is opened RO.",
+    "Both original planned NEXT files retain their roles/request/current bindings; the apply and both typed recover children fsync both exact new NEXT files and output directory before operational Pair.",
+    "Independent WITNESS NEXT canonical intent and full cold/fragment blob closures must authenticate before PRIMARY observation is armed.",
+    "SDK VectorLogPtr/GetSortedWalFiles, live type, normalized relative PathName and LogNumber classify only a positive observed append candidate. File transfer bytes and live FD/path device/inode are tied. No guessed filename, largest-log selection or SizeFileBytes truncation offset.",
+    "Append before/return pairs are recorded; only SDK-classified WAL must have a positive contiguous append-at-physical-EOF chain. Recycled, overwrite, rotation or unobserved WAL refuses. Non-WAL writes and empty candidates do not qualify a barrier.",
+    "A retains bytes and accepts measured previous or NEXT PRIMARY; B truncates only the observed suffix after joined kill and requires previous PRIMARY; C requires real backend sync return zero and NEXT PRIMARY. All require exact WITNESS NEXT.",
+    "Generic and wrong-NEXT recovery refuse without protocol-row changes; two genuine typed CLI recoveries use the original two NEXT files; final archive/index, raw snapshot, unrelated rows, cold closure, execution coupling and repeat idempotence are checked.",
+    "CMake adds only the two Linux test selectors and Threads::Threads for the test-only shim; it adds no production hook, installable shim, core/header ABI, policy or quota change."
+  ],
+  "plannedCountsNotActualResults": {
+    "crashSelector": "--crash-test",
+    "crashRows": 7,
+    "crashScenarios": 6,
+    "crashCliInvocations": 30,
+    "crashSigkillJoins": 6,
+    "crashTypedRecoverInvocations": 12,
+    "retentionSelector": "--retention-tests",
+    "retentionRows": 4,
+    "retentionCases": 3,
+    "retentionCliInvocations": 6,
+    "newSignatures": 0
+  },
+  "bounds": {
+    "parentWallMs": 120000,
+    "parentRssKiB": 131072,
+    "childWallMs": 20000,
+    "eventsPerChild": 64,
+    "atomicEventBytes": 512,
+    "observedFileCandidates": 16,
+    "witnessCandidates": 32,
+    "replicaFiles": 4096,
+    "replicaBytes": 67108864,
+    "crashCtestSeconds": 130,
+    "retentionCtestSeconds": 70
+  },
+  "qualificationLimits": {
+    "actualCompilationAndSdkInterpositionStillRequired": true,
+    "actualTestResult": "PENDING_ROOT",
+    "volatileSuffixLossIsExplicitSimulation": true,
+    "physicalPowerLossQualified": false,
+    "nonemptyQueueQualified": false,
+    "wholeNodeBackupQualified": false,
+    "privateJournalFloorsQualified": false,
+    "currentUtcQualified": false,
+    "runtimeOrDutiesQualified": false,
+    "productionQualified": false
+  },
+  "reviewerActions": {
+    "publicSourceAndGenericByteHashChecksOnly": true,
+    "proposalOrRootProgramImportedOrExecuted": false,
+    "compilerTestDockerSshGitDatabaseUsed": false,
+    "privateOrVmPayloadRead": false,
+    "repositoryModified": false
+  }
+}

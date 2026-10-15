@@ -1,0 +1,139 @@
+{
+  "actualCampaignAccounting": {
+    "actualCtestsExecuted": 6,
+    "amd64TestsReplayedByPosttestFinalizer": 0,
+    "campaigns": 3,
+    "historicalMacBindFailedCtests": 2,
+    "linuxController62891DispatchedTests": 0,
+    "qualifiedCliInvocationsAcrossTwoArchitectures": 72,
+    "qualifiedSemanticRowsAcrossTwoArchitectures": 22,
+    "qualifiedSigkillJoinsAcrossTwoArchitectures": 12,
+    "qualifyingCtests": 4
+  },
+  "actualIndependentReadback": {
+    "amd64": "ROOT filtered posttest admission only; no raw VM read",
+    "arm64": "reviews/actual-arm-linux-volume-review.json",
+    "arm64SavedOldMapsComparedStructurallyByIndependentReviewer": true,
+    "arm64SemanticOutputsReadByIndependentReviewer": true,
+    "independentReviewerRescannedAllPhysicalInputs": false,
+    "physicalConservationAndCleanup": "actual ROOT observations under reviewed guards"
+  },
+  "actualResultsAreNotInferredFromContract": true,
+  "architectures": {
+    "amd64": {
+      "build": {
+        "actualCppCommands": 2,
+        "actualLinks": 2,
+        "archiveCommands": 0,
+        "coreCppCompiles": 0,
+        "elapsedSeconds": 117.87006932380609,
+        "evidence": "evidence/amd64-build-root-filtered.json",
+        "productionCliCompilesOrLinks": 0,
+        "rootExitCode": 0
+      },
+      "ctest": {
+        "actualCliInvocations": 36,
+        "actualCppElapsedMs": null,
+        "actualCtestElapsedSeconds": null,
+        "actualExitCode": 0,
+        "actualSigkillJoins": 6,
+        "actualTests": 2,
+        "distinctPosttestFinalizerExitCode": 0,
+        "evidence": "evidence/amd64-distinct-posttest-admission-root-filtered.json",
+        "measuredPeakRssKiB": 25372,
+        "newTestsByFinalizer": 0,
+        "originalControllerExitCode": 1,
+        "profile": "existing Linux filesystem on VPS",
+        "semanticRows": 11,
+        "timingUnknownFromPublicFilteredReceipt": true
+      }
+    },
+    "arm64": {
+      "build": {
+        "archiveCommands": 0,
+        "compilerWorkerExitCode": 0,
+        "coreCppCompiles": 0,
+        "distinctRootCurrentAdmissionExitCode": 0,
+        "originalControllerExitCode": 1,
+        "productionCliCompilesOrLinks": 0,
+        "rootReportedActualCppCommands": 2,
+        "rootReportedActualLinks": 2,
+        "workerElapsedSecondsReportedByRoot": 7.0184
+      },
+      "ctest": {
+        "actualCliInvocations": 36,
+        "actualCtestCaseElapsedSeconds": [
+          5.35182,
+          0.470548
+        ],
+        "actualCtestWorkerElapsedSeconds": 6.519976624986157,
+        "actualExitCode": 0,
+        "actualSigkillJoins": 6,
+        "actualTests": 2,
+        "allOldAdmittedInputsUnchanged": true,
+        "cppSummaryElapsedMs": [
+          5340,
+          466
+        ],
+        "evidence": "evidence/arm64-linux-volume-root-filtered.json",
+        "maximumObservedVolumeUsedKiB": 6924,
+        "measuredPeakRssKiB": 23804,
+        "newCompiles": 0,
+        "newLinks": 0,
+        "newOutputBytesRecheckedAfterOldFence": true,
+        "observedDiskUseIsNeitherPeakNorHardQuota": true,
+        "oldAdmittedRowsReportedByRoot": 68001,
+        "ownedContainersObservedAbsent": true,
+        "ownedVolumeObservedAbsent": true,
+        "profile": "one new owned native Linux Docker local volume",
+        "semanticRows": 11,
+        "volumeUsageSamples": 13,
+        "wholeControllerElapsedSeconds": 32.70345737505704
+      },
+      "priorMacBindActualCtestExitCode": 8,
+      "priorMacBindCause": "UNKNOWN"
+    }
+  },
+  "contract": {
+    "crashCliInvocations": 30,
+    "crashRowsIncludingSummary": 7,
+    "newSignaturesCreated": 0,
+    "oldSelfTest13Selected": false,
+    "perProcessMaximumElapsedMs": 119999,
+    "perProcessMaximumRssKiB": 131072,
+    "retentionCliInvocations": 6,
+    "retentionRowsIncludingSummary": 4,
+    "selectedCtests": 2,
+    "sigkillJoins": 6
+  },
+  "format": "nano-bootstrap-wal-qualified-public-results-v1",
+  "gitDeliveryVerifiedByThisReport": false,
+  "nonemptyQueueQualified": false,
+  "physicalPowerLossQualified": false,
+  "privateChainOrKeysRead": false,
+  "privateDutyReadinessOrFinalityQualified": false,
+  "productionCoreAndCliSourceChanged": false,
+  "productionQualified": false,
+  "qualifiedSourceOrElfProvenance": {
+    "amd64DistinctPosttestFinalizer": "27ab7a7b201c40788449c70cbc6dc0371f96dd362459f3a552a880a1b2b040db",
+    "arm64TestRunner": "126849655834df2eff3f6ee002ce640d039dc19d99714f8ff848b4115077ded8",
+    "compilerBuilders": {
+      "amd64": "884daa42816d2af5e4129a1315aeb1a2f7c3f21d5c2b084e389300ef4b487aea",
+      "arm64": "4e585224f5c72f063731fefe51c6b962c9367619a82cdac2de9e4839db0045b0"
+    },
+    "contractSha256": "8d8a0a6d6bff5c2eee06338d6d30c9e5c5425ed379e59398ce3c5736f8001512",
+    "genuineMmdAndQualifiedParentLinkInputsCheckedByRootBuilds": true,
+    "immutableDependenciesImages": {
+      "amd64": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+      "arm64": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb"
+    },
+    "productionCliCppHashIsNotElfHash": true,
+    "productionCliCppSha256": "4a53f54dc7784d2c64e218647291bd00932d1347bdd019fa1c0f24718e8bf359",
+    "rawElfAndSdkBindingsRetainedLocallyOrInVmNotPublished": true,
+    "sameExistingNodeWasRestarted": false,
+    "sourceProposalSha256": "9c36f942a740193f763d569d5c8e2bf2e27d1d72e6ad3a917e6fa5926f66777c"
+  },
+  "runtimeStarted": false,
+  "status": "SCOPED_PUBLIC_INTERRUPTED_WAL_AND_FSYNC_PASS_LINUX_TWO_ARCHES",
+  "wholeOriginalNodeBackupOrRestoreQualified": false
+}
