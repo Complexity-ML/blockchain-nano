@@ -1,0 +1,186 @@
+{
+  "format": "nano-fresh-capella-rotation-audit-contract-v1",
+  "sourceOnly": true,
+  "target": "nano-capella-rotation-audit",
+  "coreChanged": false,
+  "legacyModeAndEmptyAggregateSelectorUnchanged": true,
+  "freshCli": [
+    "--fresh",
+    "MANIFEST",
+    "NODE_CONFIG",
+    "STOP_RECEIPT",
+    "ROTATION_PROOF",
+    "DATA_OWNER_ROOT",
+    "WITNESS_OWNER_ROOT",
+    "OWNER"
+  ],
+  "argumentCountIncludingExecutable": 9,
+  "proof": {
+    "format": "nano-fresh-capella-rotation-proof-v1",
+    "exactFields": [
+      "format",
+      "campaignId",
+      "inputManifestSha256",
+      "boundarySlot",
+      "minimumInclusionSlot",
+      "finalized",
+      "ownership",
+      "blocks"
+    ],
+    "campaignId": "equals fresh manifest.campaignId",
+    "inputManifestSha256": "lowercase SHA256 without 0x of externally pinned public manifest",
+    "boundarySlot": "canonical uint64 quantity; exactly 2 * profile epochs_per_sync_committee_period * slots_per_epoch",
+    "minimumInclusionSlot": "canonical uint64 quantity >= boundarySlot; maximum observed isolated head slot before reconnect, retained by launcher",
+    "finalized": {
+      "epoch": "canonical uint64 quantity >= 2*period",
+      "root": "canonical 32-byte 0x hex; common checkpoint observed independently before stop"
+    },
+    "ownership": "65 rows in manifest.publicKeys order, each EXACT {publicKey,keyEnv,owner}; authority derived from reviewed fresh bootstrap plan, all three owner groups nonempty",
+    "blocks": "root -> EXACT {ssz,observedBy}; observedBy contains each of mac-native/mac-docker/vps-docker once. Local canonical bytes must equal the capture for every credited block. VM observation can be an in-situ SHA/byte comparison; raw VM SSZ need not leave VM.",
+    "maximumCapturedBlocks": 256,
+    "maximumCapturedSignedWireBytes": 25165824
+  },
+  "inputs": {
+    "publicManifest": "existing nano-isolated-capella-fixture-domain-v1; synthetic true, productionQualified false; profile/genesis/initial bound by exact manifest file SHA+bytes",
+    "nodeConfig": "actual capella config; profile SHA exact; local keys matched by externally authorized keyEnv->publicKey->owner; pending key64 index:null allowed",
+    "stopReceipt": "actual independently retained capella-runtime-stopped receipt; restart pins primary and witnessCommitments.core pins independent witness; healthy clock/validator, finalized/justified exact",
+    "physicalRoots": "two stopped physically independent copies. Only DATA_OWNER_ROOT/chain and WITNESS_OWNER_ROOT/chain-witness opened READ_ONLY. Other signing journal captures are separate.",
+    "firstObservationIsNotIndependentAuthority": "witnessCommitments must already be independently retained before these copies/audits; the helper never derives the expected W token from the DB",
+    "inputReadFence": "stable FD/path material9 and known bytes; repeated at end; no input rewriting",
+    "physicalFileFence": "existing checkpoint_blob_gc_copy_inventory full9+SHA before DB open and after every DB handle is destroyed; symlink/special/hardlink refusal unchanged"
+  },
+  "verification": {
+    "noReactorConstructed": true,
+    "completeDurableDecoder": "authenticate_capella_checkpoint_blob_closure separately on primary and witness actual blobs, same identity/execution/observation; hot/cold/fragmented and pending v5 use existing core decoder",
+    "headRace": "walk local immutable signed archive from sealed stopped HEAD to public original anchor; complete canonical replay binds exact head root/state root/execution. Pre-stop HTTP capture need not race the future stopped HEAD.",
+    "rotation": "derive state at boundary-1 and boundary from authenticated canonical parent; require current(after)==next(before), current(after)!=current(before) and !=initial current; before-boundary active/effective weights read from that projected state",
+    "finality": "external requested common finalized checkpoint must be exact epoch-boundary ancestor of durable authenticated finalized checkpoint via existing require_finalized_ancestor. No equality of off-chain-vote/tick Store FFG is claimed.",
+    "remoteAggregateCredit": "at least 3 canonical finalized ancestor blocks strictly after minimumInclusionSlot and in requested finalized period; each capture has three independent owner observations, exact local archive bytes, independently valid BLS aggregate, and >=1 participant position owned by another owner than proposer. Duplicate committee positions retain multiplicity.",
+    "quorumWeight": "active iff activation_epoch <= epoch < exit_epoch; exact effective balances grouped mac-native+mac-docker vs vps-docker. Existing consensus_ffg.cpp85-86 uses >=2/3. neitherIslandHasSupermajority is true only if BOTH 3*islandBalance < 2*total, including exact two-thirds as quorum; counts never substitute for balances. Launcher separately requires the observation.",
+    "archiveSlotBinding": "Every local archive entry slot equals signed wire slot at offset100 before it can select a tick or boundary projection.",
+    "boundaryAlreadyAtTarget": "Authenticated parent at boundary-1 is copied directly; strict prepare_capella_slots is invoked only for a positive gap."
+  },
+  "bounds": {
+    "auditDeadlineSeconds": 600,
+    "maximumCanonicalArchiveBlocksAfterAnchor": 256,
+    "maximumCanonicalSignedArchiveBytes": 25165824,
+    "maximumJsonBytes": 67108864,
+    "maximumPublicManifestBytes": 16777216,
+    "physicalInventoryPerRootMaximumFiles": 20000,
+    "physicalInventoryPerRootMaximumBytes": 536870912,
+    "snapshotLimits": "unchanged supplied runtime limits, validated against existing stopped-capture ceilings",
+    "runtimeRetainedBlocks": "closure enforces the actual runtime limit; separate working replay can exceed retained count but stays <=256 blocks and supplied totalStateBytes with one-maximum-state reserve before each transition",
+    "externalRootResourceDeadlineStillRequired": true
+  },
+  "stdout": {
+    "exactFields": [
+      "format",
+      "status",
+      "passed",
+      "owner",
+      "campaignId",
+      "boundarySlot",
+      "minimumInclusionSlot",
+      "finalized",
+      "headRoot",
+      "headStateRoot",
+      "headSlot",
+      "registryCount",
+      "beforeBoundaryActiveValidators",
+      "beforeBoundaryTotalEffectiveBalance",
+      "macIslandEffectiveBalance",
+      "vpsIslandEffectiveBalance",
+      "neitherIslandHasSupermajority",
+      "replayedBlocks",
+      "canonicalArchiveBytes",
+      "threeOwnerObservedBlocks",
+      "remoteBlocks",
+      "remotePositions",
+      "initialCommitteeHash",
+      "beforeBoundaryCommitteeHash",
+      "rotatedCommitteeHash",
+      "finalizedCommitteeHash",
+      "completePrimaryWitnessClosureVerified",
+      "externalCoreTokensMatched",
+      "physicalCopiesUnchanged",
+      "canonicalSignedStateReplayVerified",
+      "historicalForkChoiceVerified",
+      "newSignaturesCreated",
+      "databaseOpenMode",
+      "runtimeStarted",
+      "productionQualified"
+    ],
+    "format": "nano-fresh-capella-rotation-audit-v1",
+    "status": "PASS_SCOPED_FRESH_ROTATION_AUDIT",
+    "quantities": [
+      "boundarySlot",
+      "minimumInclusionSlot",
+      "headSlot",
+      "beforeBoundaryTotalEffectiveBalance",
+      "macIslandEffectiveBalance",
+      "vpsIslandEffectiveBalance"
+    ],
+    "hashes": "root and committee commitments canonical 0x hex",
+    "fixed": {
+      "passed": true,
+      "completePrimaryWitnessClosureVerified": true,
+      "externalCoreTokensMatched": true,
+      "physicalCopiesUnchanged": true,
+      "canonicalSignedStateReplayVerified": true,
+      "historicalForkChoiceVerified": false,
+      "newSignaturesCreated": 0,
+      "databaseOpenMode": "READ_ONLY",
+      "runtimeStarted": false,
+      "productionQualified": false
+    },
+    "refusal": "exit1, constant stderr only; no partial success stdout",
+    "privateDataIncluded": false
+  },
+  "selfTest": {
+    "selector": "--fresh-self-test",
+    "ctest": "consensus_fresh_rotation_audit_guards",
+    "timeoutSeconds": 15,
+    "rows": 1,
+    "scenario": "fresh-rotation-audit-self-test",
+    "equals": {
+      "passed": true,
+      "positiveOwnershipChecks": 2,
+      "positiveCryptographicChecks": 1,
+      "expectedRefusals": 14,
+      "fixtureBlsSignatures": 2,
+      "auditSignatures": 0,
+      "databaseAccessed": false,
+      "runtimeStarted": false,
+      "productionQualified": false,
+      "positiveWeightChecks": 3,
+      "positiveBoundaryChecks": 2
+    },
+    "coverage": "fresh 65-key public authority, valid pending-null mapping, duplicate/foreign/missing/wrong-index refusals, actual two-key BLS multiowner aggregate; corrupt signature, foreign signing root, foreign committee key, unused bits and short signature rejected. Keys derive from fixed test IKM domain, never legacy index+1. FFG half/equality-at-two-thirds/three-quarters threshold checks follow consensus_ffg.cpp, so equality is never mislabeled quorum loss. The symbolic boundary-prestate branch fixture proves an already-target parent is copied with zero strict-advance calls and no alias, while an earlier source invokes advance exactly once; zero/past boundary inputs refuse. This is control flow only, not a canonical SSZ fixture.",
+    "scope": "This small test does not prove DB reopen/full replay/partition transport. The new fresh campaign must actually run this helper against all three stopped core P/W pairs.",
+    "requiredLegacyDispatchCheck": {
+      "selector": "--self-test",
+      "ctest": "consensus_rotation_audit_empty_aggregate",
+      "stdout": "6 empty-aggregate checks passed; no network qualification",
+      "newSignaturesCreated": 0,
+      "reason": "former main renamed to normal function now has explicit successful return0; verify legacy dispatch, not full legacy campaign replay"
+    }
+  },
+  "qualification": {
+    "partitionAndActualFaultWindowProvedByLauncherNotThisOfflineTool": true,
+    "historicalStandaloneVotesReplayed": false,
+    "historicalForkChoiceVerified": false,
+    "actualBuildOrTestByAuthor": false,
+    "productionQualified": false
+  },
+  "historicalV1": {
+    "manifestSha256": "0b4ec92012bfd5bf14b6581c65a8ffe897837e56d21ac26fafeee2967075114a",
+    "status": "ROOT_NATIVE_COMPILATION_FAILED_BEFORE_TEST_OR_RUNTIME",
+    "materialFindings": [
+      "four std::string==Json comparisons",
+      "former main missing explicit return0",
+      "boundary127-to127 strict API call",
+      "archive metadata slot not bound before use"
+    ],
+    "oldIndependentSourceReviewRetained": true
+  }
+}

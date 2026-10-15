@@ -1,0 +1,408 @@
+{
+  "campaign08": {
+    "absence": {
+      "nativeProcessAbsent": true,
+      "partitionNetworkAbsent": true,
+      "runningFreshContainersMac": 0,
+      "runningFreshContainersVps": 0,
+      "tunnelProcessAbsent": true
+    },
+    "exactRefusalReasonKnown": true,
+    "failureComponent": "native stopped read-only rotation audit",
+    "failureStage": "terminal-capture-and-recovery-audit",
+    "firstImmediateNativeRefusal": {
+      "originalRunRemainsFailed": true,
+      "reason": "native inventory directory mode0755 violates required0700 precondition",
+      "source": "ROOT explicit diagnosis using V3; no actual private file read by this author"
+    },
+    "partialNetworkObservations": {
+      "capturedPublicBlocks": 141,
+      "firstSharedCheckpointMayBeInflight": true,
+      "firstSharedCheckpointObservedWithinMs": 10911.031457999954,
+      "fixedBoundarySlot": 128,
+      "initialDistinctAdvances": 2,
+      "initialStableSamples": 3,
+      "isolationMs": 102000,
+      "minimumInclusionSlot": 142,
+      "observedDisconnectedSlots": [
+        125,
+        125,
+        125
+      ],
+      "observedEndIsolationSlots": [
+        142,
+        142,
+        141
+      ],
+      "observedFinalityConflict": false,
+      "postReconnectionDistinctAdvances": 3,
+      "postReconnectionObservedEpochs": [
+        "18",
+        "19",
+        "20"
+      ],
+      "postReconnectionStableSamples": 3,
+      "proofBytes": 848092
+    },
+    "passed": false,
+    "physicalMetadataFailureCauseKnown": false,
+    "publicSummary": {
+      "bytes": 1766,
+      "path": "evidence/campaign-08-failed-root-public-summary.json",
+      "sha256": "f939b1c18d047decca62ce04e6ce7138fc0adfa270ece5c75069279caabec5c3"
+    },
+    "quorumWeightsAuditPassed": false,
+    "rawCampaignFilesReadByAuthor": false,
+    "rawCaptureOrProofReadByAuthor": false,
+    "rootReportedColdPrimaryWitnessPairs": [
+      16,
+      16,
+      33
+    ],
+    "signedStateRotationAuditPassed": false,
+    "status": "FAILED",
+    "subsequentReadOnlyDiagnostic": "c016 V2 candidate cold audits PASS for mac-native and mac-docker, with matching 35 fields except owner; no VPS candidate audit yet. Supplementary V3 native diagnostic remains separate. Campaign08 remains FAILED.",
+    "terminalAvailable": true,
+    "terminalExit": {
+      "elapsedMs": 1188201,
+      "exitCode": 1,
+      "format": "nano-root-fresh-partition-rotation-campaign-exit-v1",
+      "interrupted": false,
+      "productionQualified": false,
+      "seedBytesReadOrExported": false,
+      "timedOut": false
+    },
+    "wholePartitionRotationCampaignQualified": false
+  },
+  "candidatePosthocAudit": {
+    "candidateSourceSha256": "c01681a2bc22de1451f4e91b785c7e9d42fac5e853411d9e5aac1a1496b253d8",
+    "diagnosticV3DoesNotReplaceCandidateQualification": true,
+    "independentPublicComparison": {
+      "bytes": 2104,
+      "comparedFieldCount": 35,
+      "identicalFieldsExcludingOwner": 34,
+      "kind": "pure JSON comparison, not new test execution",
+      "path": "evidence/two-owner-candidate-cold-comparison-root-public.json",
+      "sha256": "416dc93a7dc59e7c690510f4c9a471843ad7c5f2dba5814c6e53640c88eb28d2"
+    },
+    "macDocker": {
+      "copiedDatabaseFiles": 22,
+      "copiedPayloadBytes": 58840614,
+      "cppAuditElapsedMs": 3683,
+      "fullRetainedStoppedCapsuleAndAllInventoryDigestsMatchedBeforeAndAfter": true,
+      "newSignaturesCreated": 0,
+      "ownedContainersAbsent": true,
+      "ownedPublicInputCopiesByteExactAndNineFieldsUnchanged": true,
+      "productionQualified": false,
+      "publicReceipt": {
+        "bytes": 3578,
+        "path": "evidence/arm-candidate-v2-posthoc-03-root-public.json",
+        "sha256": "29b341fa4c1439c2949baae25b04daf48eeea2083c86b523c93f4caf5a4c1061"
+      },
+      "runtimeStarted": false,
+      "sourceAndCopiesNineFieldsAndBytesUnchanged": true,
+      "status": "PASS_SCOPED_COLD_AUDIT_ONLY",
+      "wholeWrapperElapsedMs": 13866,
+      "wrapperReceipt": {
+        "bytes": 3952,
+        "path": "evidence/arm-candidate-v2-posthoc-wrapper-03-root-public.json",
+        "sha256": "62b2dc300179c3a2ab80363ed742501130b1269544ffc6d10c60abd53d0e3f7d"
+      }
+    },
+    "native": {
+      "auditElapsedMs": 2843,
+      "candidateAndSourcesNineFieldsAndShaUnchanged": true,
+      "candidateBinarySha256": "ed350ead8fd8f58d7d44f517919fb57a6229e6aeaf92d57a75c8b0a0d19f5021",
+      "newSignaturesCreated": 0,
+      "priorUniqueCopyAdmissionUnchanged": true,
+      "productionQualified": false,
+      "publicReceipt": {
+        "bytes": 2325,
+        "path": "evidence/native-candidate-v2-posthoc-copy4-root-public.json",
+        "sha256": "766c1d3a5c5da15d67cd631b35fab2c8f0ec0080c10fa896dcd5a3dedf25a3a8"
+      },
+      "runtimeStarted": false,
+      "sameComputedAuditAsDiagnosticV3": true,
+      "status": "PASS_SCOPED_COLD_AUDIT_ONLY"
+    },
+    "passedOwners": [
+      "mac-native",
+      "mac-docker"
+    ],
+    "pendingOwners": [
+      "vps-docker"
+    ],
+    "requiredOwners": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "same35FieldsExceptOwnerNativeAndArm": true,
+    "status": "PARTIAL_PASS_2_OF_3",
+    "vps": {
+      "actualPassClaimed": false,
+      "automaticApprovalReviewRejectedTransfer": true,
+      "humanTransferAuthorizationPending": true,
+      "privateConfigBytesApproximate": 3800,
+      "privateConfigPublished": false,
+      "retryOrBypassAuthorizedByPacket": false,
+      "status": "NOT_AUDITED_PENDING_ROOT_DECISION"
+    }
+  },
+  "candidateRuntimeSource": {
+    "coreOrImagesChanged": false,
+    "currentRun": {
+      "bytes": 137116,
+      "sha256": "8e979cf22e72c12a54f9a68afbe21356a654c41c45896f64ba4b35b29a87e1b1"
+    },
+    "newTargetedStagingTest": "PASS_SCOPED_FILESYSTEM_COMPONENT_ONLY; 13349ms ROOT wrapper,13252ms consumer; not whole caller/Docker bind qualification",
+    "status": "SOURCE_REVIEWED_ONLY",
+    "wholeCampaignWithV7Executed": false
+  },
+  "format": "nano-fresh-partition-rotation-scoped-results-v1",
+  "goalStatus": "ACTIVE",
+  "linuxCopyHelperFailure": {
+    "causeReproduction": {
+      "bytes": 338,
+      "path": "evidence/linux-json-numeric-context-root-reproduction.json",
+      "sha256": "42e59a7d79d1fca46327e46c44d0db028e69b1fb47304b3e4079e4772579b40d"
+    },
+    "copyExitCode": 255,
+    "correctionAndNewSyntheticTests": "V6 scalar-copy correction; new tiny regressions PASS on existing ARM and AMD images, with separate public receipts",
+    "cxxAuditStarted": false,
+    "databaseAccessedByReproduction": false,
+    "failureNotCoreDatabaseAudit": true,
+    "numericContextChangedJsonStringTypes": true,
+    "owner": "mac-docker",
+    "publicReceipt": {
+      "bytes": 540,
+      "path": "evidence/arm-posthoc-copy-01-failure-root-public.json",
+      "sha256": "cb26aecaffb329914bd6efc3bd18f05ae46e34b2c4a270918e7a48eed4ee3112"
+    },
+    "status": "FAILED_COPY_HELPER_BEFORE_CXX_AUDIT",
+    "usesActualCampaignDataInReproduction": false
+  },
+  "linuxPerlRegression": {
+    "amd": {
+      "databaseAccessed": false,
+      "elapsedMs": 3595,
+      "expectedRefusals": 1,
+      "helperInvocations": 3,
+      "isActualColdCapsuleAudit": false,
+      "materialRowsRetainNineStrings": 22,
+      "networkUsed": false,
+      "newSignaturesCreated": 0,
+      "positiveInvocations": 2,
+      "provenance": "transcription of already returned fixed actual ROOT SSH result; no new execution or remote read by author",
+      "publicReceipt": {
+        "bytes": 936,
+        "path": "evidence/amd-linux-perl-regression-root-received-public.json",
+        "sha256": "23c677df9b9f55808de86b67d01ffc5e4ee726dd272b2ca88e1c6917f7778f1b"
+      },
+      "scenarioRows": 3,
+      "totalRows": 4
+    },
+    "armPass": {
+      "databaseAccessed": false,
+      "elapsedMs": 2665,
+      "expectedRefusals": 1,
+      "fixturePayloadBytes": 214,
+      "helperInvocations": 3,
+      "materialRowsRetainNineStrings": 22,
+      "networkUsed": false,
+      "newSignaturesCreated": 0,
+      "positiveInvocations": 2,
+      "publicReceipt": {
+        "bytes": 782,
+        "path": "evidence/linux-perl-regression-arm-02-root-public.json",
+        "sha256": "24cc9bd62b5096a4b7aca53478024b0a0531b1d75175f0ba23bdc8a2ea631e23"
+      },
+      "scenarioRows": 3,
+      "totalRows": 4
+    },
+    "armPriorFailure": {
+      "elapsedMs": 3773,
+      "exactFinalGuardRefusalCauseKnown": false,
+      "exitCode": 1,
+      "publicReceipt": {
+        "bytes": 632,
+        "path": "evidence/linux-perl-regression-arm-01-refusal-root-public.json",
+        "sha256": "79801a1786beb576eaa805c4c284a0f941cfcffcd6b4f122186fd531514166c9"
+      },
+      "scenarioRows": 3
+    }
+  },
+  "macDockerPosthoc02": {
+    "candidateDiagnosticReason": "UNKNOWN generic refusal",
+    "copyAndOriginalGuardsPassed": true,
+    "cxxElapsedMs": 128,
+    "cxxExitCode": 1,
+    "ownerPreconditionFailureInferredNotDecodedByV2": true,
+    "publicReceipt": {
+      "bytes": 1055,
+      "path": "evidence/arm-posthoc-copy-02-refusal-root-public.json",
+      "sha256": "9568a71774bede2bf2989f157d707d37eadaf5a698e3c8df19ba2eee6ab43263"
+    },
+    "separateOwnerObservation": {
+      "bytes": 719,
+      "path": "evidence/arm-selected-input-owner-observation-root-public.json",
+      "sha256": "387183604fb9555d3787f7778edff8c5ede124fa5fa5c189c7f2b292324410fb"
+    },
+    "status": "FAILED",
+    "wholeElapsedMs": 6810
+  },
+  "measuredBeforeCampaign": {
+    "pureModel": {
+      "durationMs": 77.146625,
+      "failed": 0,
+      "passed": 7,
+      "signedStateOrNetworkQualified": false,
+      "skipped": 0,
+      "tests": 7
+    },
+    "selfTestsEach": {
+      "auditSignatures": 0,
+      "databaseAccessed": false,
+      "expectedRefusals": 14,
+      "legacyEmptyAggregateChecks": 6,
+      "positiveBoundaryChecks": 2,
+      "positiveCryptographicChecks": 1,
+      "positiveOwnershipChecks": 2,
+      "positiveWeightChecks": 3,
+      "runtimeStarted": false,
+      "testFixtureBlsSignatures": 2
+    },
+    "threeArchitectureBuilds": {
+      "actualMEqualsMdEach": true,
+      "archiveInputsPerOwner": 5,
+      "configureCommands": 0,
+      "consumerCompilationsPerOwner": 1,
+      "consumerLinksPerOwner": 1,
+      "coreArchivesUnchangedEach": true,
+      "existingAsmObjectsPerOwner": 2,
+      "newCoreCompilations": 0,
+      "newHelperSourceSha256": "c01681a2bc22de1451f4e91b785c7e9d42fac5e853411d9e5aac1a1496b253d8",
+      "newImageBuildsOrPulls": 0,
+      "owners": [
+        "mac-native",
+        "mac-docker",
+        "vps-docker"
+      ]
+    }
+  },
+  "ownedCopyNativeFilesystemTests": {
+    "databaseAccessed": false,
+    "elapsedMs": 6332,
+    "executedModuleWasV4SixD009": true,
+    "exitCode": 0,
+    "fixtures": 6,
+    "helperCreateCalls": 6,
+    "helperModuleSha256": "6d009384c41f9e8128c6d2b7f7a143de3dd648568561a04ca089e571c771e8cf",
+    "helperVerifyCalls": 5,
+    "networkUsed": false,
+    "newSignaturesCreated": 0,
+    "payloadBytesPerValidFixture": 214,
+    "physicalRefusals": 7,
+    "productionQualified": false,
+    "publicReceipt": {
+      "bytes": 953,
+      "path": "evidence/owned-copy-native-filesystem-tests.json",
+      "sha256": "72c78fe1626ea3e77bfb4d2a712acf5762fd448834ea7914586528c8ba674dce"
+    },
+    "publicationProvenance": "owned-copy-native-test-publication.json",
+    "publicationV6PinDerivativeNotReexecuted": true,
+    "runtimeStarted": false,
+    "scenarioRows": 8,
+    "sourceNineFieldsAndBytesUnchanged": true,
+    "status": "PASS_SCOPED_NATIVE_FILESYSTEM_ONLY",
+    "summaryRefusals": 15,
+    "testSha256": "0b04a316d30a54e1b7760c187f7f969bdad1f56c66d4635ec28d539739345e39"
+  },
+  "previousQualification": {
+    "freshSyntheticRecovery07Qualified": true,
+    "networkProductionQualified": false,
+    "originalOperationalRecoveryQualified": false,
+    "originalV37Status": "FAILED"
+  },
+  "productionQualified": false,
+  "separateNativePosthocDiagnostic": {
+    "allThreeOwnersAudited": false,
+    "auditElapsedMs": 2749,
+    "candidateThreeArchitectureAuditQualified": false,
+    "canonicalArchiveBytes": 507300,
+    "destinationOutsideDocuments": true,
+    "diagnosticVersion": "V3 supplemental; not the c016 V2 release-candidate helper",
+    "kernelFileWritesDeniedOnCopiesAndOriginals": true,
+    "networkAccessDenied": true,
+    "newSignaturesCreated": 0,
+    "originalAndCopiesNineFieldsAndBytesUnchanged": true,
+    "originalRun08RemainsFailed": true,
+    "owner": "mac-native",
+    "physicalCauseKnown": false,
+    "productionQualified": false,
+    "publicReceipt": {
+      "bytes": 2430,
+      "path": "evidence/native-posthoc-diagnostic-copy4-root-public.json",
+      "sha256": "7b78b95563a1a6d03bee0149e31e91203a3e0fa41d782ee8197de50f4cae3115"
+    },
+    "replayedBlocks": 178,
+    "runtimeStarted": false,
+    "status": "PASS_SCOPED_COLD_AUDIT_ONLY"
+  },
+  "status": "PARTIAL_TWO_OWNER_COLD_AUDITS_QUALIFIED_WITH_V7_FILESYSTEM_COMPONENT",
+  "v7TargetedStagingFixture": {
+    "actualExpectedRefusals": 4,
+    "actualGroups": 5,
+    "actualOpaqueBytes": 225,
+    "actualOpaqueFiles": 10,
+    "actualPassClaimed": true,
+    "actualRows": 6,
+    "actualStageCalls": 5,
+    "campaign08RemainsFailed": true,
+    "consumerElapsedMs": 13252,
+    "contract": {
+      "bytes": 4506,
+      "path": "contracts/mac-docker-audit-input-staging-fixture.json",
+      "sha256": "443dc6fff9b488af443a7c0f2d8eaa3b7a736f69a3d73186e97748aa1372bd21"
+    },
+    "databaseAccessed": false,
+    "dockerBindOwnershipQualified": false,
+    "exactExtractedFunction": {
+      "bytes": 6133,
+      "sha256": "ea6f64eeee1fcbccaac86663999285a8b755e5bf9ea2240360349c74a02a343a"
+    },
+    "expectedGroups": 5,
+    "expectedOpaquePayloadBytes": 225,
+    "expectedRefusals": 4,
+    "expectedRows": 6,
+    "expectedStageCalls": 5,
+    "networkUsed": false,
+    "newSignaturesCreated": 0,
+    "notDockerBindQualification": true,
+    "notFullCallerQualification": true,
+    "oldSourceTestAndInputsNineFieldsShaUnchanged": true,
+    "publicReceipt": {
+      "bytes": 1009,
+      "path": "evidence/v7-input-stage-component-root-public.json",
+      "sha256": "dc602bac7d2b778048376fac19c36f03498fa78ee2c287ba4118be77ad0f3fc1"
+    },
+    "review": {
+      "bytes": 2439,
+      "path": "reviews/v7-exact-function-staging-fixture.json",
+      "sha256": "a040080d52606d184dc444907e5ebf5176670acee8665f262276d93f6b625f7c"
+    },
+    "rootWholeElapsedMs": 13349,
+    "source": {
+      "bytes": 13488,
+      "repositoryPath": "tests/multihost/rotation-audit-input-stage-fixture-check.mjs",
+      "sha256": "30df88e2d43d1e58167574e0d5956903f0cd919d77e667d94fb919d2d14bfc3a"
+    },
+    "status": "PASS_SCOPED_FILESYSTEM_COMPONENT_ONLY",
+    "terminalReceipt": {
+      "bytes": 174,
+      "path": "evidence/v7-input-stage-component-terminal.json",
+      "sha256": "27f6595ff7a1a41077ad6ecddafb4527670ba606b92ed61624ab31f203398407"
+    },
+    "wholeCallerExecuted": false
+  }
+}

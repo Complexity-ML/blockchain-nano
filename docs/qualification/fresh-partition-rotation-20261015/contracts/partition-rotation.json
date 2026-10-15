@@ -1,0 +1,98 @@
+{
+  "format": "nano-fresh-capella-partition-rotation-contract-v1",
+  "sourceOnly": true,
+  "mode": {
+    "format": "nano-fresh-partition-rotation-v1",
+    "owner": "vps-docker",
+    "recoveryMs": 180000,
+    "windowTimeoutMs": 720000
+  },
+  "backupRestore": false,
+  "runtimes": 3,
+  "physicalHosts": 2,
+  "coreChanged": false,
+  "changedExistingJs": 3,
+  "newPureTestFiles": 1,
+  "parameters": {
+    "source": "manifest-pinned newly exported public profile",
+    "boundarySlot": "2*slotsPerEpoch*epochsPerPeriod, fixed before waiting",
+    "leadSlots": "slotsPerEpoch",
+    "cutMs": "(2*leadSlots+1)*slotMs",
+    "profileObservedExampleOnly": {
+      "slotsPerEpoch": 8,
+      "epochsPerPeriod": 8,
+      "slotMs": 6000,
+      "boundarySlot": 128,
+      "leadSlots": 8,
+      "cutMs": 102000
+    },
+    "missedBoundaryIsFailure": true
+  },
+  "requiredActualScenario": [
+    "Completed initial common finality2actual advances plus stable samples, used as authenticated monitor baseline.",
+    "Dedicated labelled VPS-only network disconnect, reciprocal direct Mac peer identities maintained, zero VPS peers observed.",
+    "All three head slots below fixed boundary immediately after disconnect and at/above it BEFORE reconnect; cutoff maxisolatedhead frozen at that point.",
+    "No conflicting finalized root/regression; precut finality may advance, no instant-freeze claim.",
+    "Exact-IP reconnect in finally; common advanced checkpoint within180s, then3actual distinct common advances plus3stable samples.",
+    "Full anchor-to-finalized HTTP ancestry from bothMacs and matching VPS in-situ digest only; no VM SSZ egress.",
+    "Stop/join all runtimes and retain second captures with external independent W pins before3read-only rotation audits.",
+    "All3audits bound to same domain/profile/cutoff/finalized root, actual changed committee and authenticated weight commitments.",
+    "At least3postcutoff finalized canonical blocks with real independently verified remote-owner sync positions.",
+    "Both islands strictly below FFG threshold: 3*weight<2*total; total>0 and mac+vps==total.",
+    "Old material9+SHA/software/NEW-byte fences and owned network/container/native/tunnel cleanup all pass."
+  ],
+  "vpsEgress": {
+    "httpDigestExactFields": [
+      "format",
+      "blockRoot",
+      "sha256",
+      "bytes",
+      "status",
+      "rawSszExported"
+    ],
+    "httpFormat": "nano-fresh-rotation-http-digest-v1",
+    "status": 200,
+    "rawSszExported": false,
+    "auditFormat": "nano-fresh-capella-rotation-audit-v1",
+    "auditStatus": "PASS_SCOPED_FRESH_ROTATION_AUDIT",
+    "rawCapsuleExported": false,
+    "logsWitnessPinsDbSeedsEnvRemainVm": true
+  },
+  "bounds": {
+    "profileBytes": 1048576,
+    "capturedBlocks": 256,
+    "capturedRawWireBytes": 25165824,
+    "replayedBlocksIncludingAnchor": 257,
+    "registryCountMinimum": 64,
+    "registryCountMaximum": 65,
+    "faultSampleRetryMs": 30000,
+    "windowMs": 720000,
+    "recoveryMs": 180000,
+    "finalityPhaseMs": 500000,
+    "operatorAuditMs": 180000,
+    "cppOwnCeilingSeconds": 600,
+    "outerWrapperRecommendedSeconds": 2700,
+    "outerCleanupTermSeconds": 90,
+    "outerCleanupKillSeconds": 10
+  },
+  "testOnly": {
+    "path": "tests/multihost/fresh-partition-rotation.test.mjs",
+    "command": [
+      "node",
+      "--test",
+      "tests/multihost/fresh-partition-rotation.test.mjs"
+    ],
+    "tests": 7,
+    "programsDbNetworkCryptoSignatures": 0,
+    "modelsAreSymbolicNotSignedConsensusEvidence": true,
+    "executedByAuthor": false
+  },
+  "qualification": {
+    "actualCampaignExecutedByAuthor": false,
+    "historicalForkChoiceVerified": false,
+    "majorityIslandQualified": false,
+    "exitWithdrawalQualified": false,
+    "originalOperationalRecoveryQualified": false,
+    "productionQualified": false
+  }
+}

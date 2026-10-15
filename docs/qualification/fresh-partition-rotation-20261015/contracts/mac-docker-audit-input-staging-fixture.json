@@ -1,0 +1,135 @@
+{
+  "format": "nano-fresh-rotation-audit-input-staging-fixture-contract-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "runtime": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-capella-partition-rotation-proposal-v7-20261015/source/tests/multihost/run.mjs",
+    "sha256": "8e979cf22e72c12a54f9a68afbe21356a654c41c45896f64ba4b35b29a87e1b1",
+    "bytes": 137116
+  },
+  "extraction": {
+    "startMarker": " async function stageMacDockerRotationInputs(",
+    "endMarker": " async function auditFreshRotation(terminal){",
+    "trimmedUtf8Bytes": 6133,
+    "sha256": "ea6f64eeee1fcbccaac86663999285a8b755e5bf9ea2240360349c74a02a343a",
+    "entireLauncherImported": false,
+    "functionBodyModified": false
+  },
+  "cliArguments": [
+    "FROZEN_RUN_ABSOLUTE_PATH",
+    "FROZEN_RUN_SHA256",
+    "FROZEN_RUN_BYTES",
+    "ROOT_NEW_PRIVATE_SOURCE_PARENT_ABSOLUTE_PATH"
+  ],
+  "fixtureParent": {
+    "ownerMode": "0700",
+    "canonical": true,
+    "outsideCanonicalOsTmpdir": true,
+    "sourceFilesMode": "0600",
+    "newPrivateCaseRoots": 5,
+    "opaqueSourceFiles": 10,
+    "opaquePayloadBytes": 225,
+    "productionInputsRead": false
+  },
+  "authority": {
+    "minimalObserveAndSavePreserveNineStringStatFieldsAndSha256": true,
+    "newSaveHasKnownByteAuthorityWithoutEarlyHeldMaterial": true,
+    "oneSourceAuthorityAfterNewSourceStability": true,
+    "mutatedAuthoritiesNeverRebased": true,
+    "separateFixtureForEveryNegativeCase": true,
+    "positiveOracleUsesIndependentFdReads": true,
+    "runtimeAllNineFieldsAndShaBeforeAfter": true
+  },
+  "groups": [
+    "fresh_rotation_inputs_positive",
+    "fresh_rotation_inputs_source_bytes_refused",
+    "fresh_rotation_inputs_source_metadata_refused",
+    "fresh_rotation_inputs_destination_bytes_refused",
+    "fresh_rotation_inputs_namespace_refused"
+  ],
+  "stdout": {
+    "rows": 6,
+    "groups": 5,
+    "successfulStageCalls": 5,
+    "expectedRefusals": 4,
+    "summaryScenario": "fresh_rotation_inputs_summary",
+    "rowExactFields": [
+      "scenario",
+      "passed",
+      "successfulStageCalls",
+      "expectedRefusals",
+      "newSignaturesCreated",
+      "databaseOpened",
+      "networkStarted"
+    ],
+    "summaryExactFields": [
+      "scenario",
+      "passed",
+      "groups",
+      "successfulStageCalls",
+      "expectedRefusals",
+      "opaqueSourceFiles",
+      "payloadBytes",
+      "newSignaturesCreated",
+      "databaseOpened",
+      "networkStarted",
+      "runtimeSourceUnchanged",
+      "elapsedMs",
+      "productionQualified"
+    ],
+    "allRowsPassed": true,
+    "newSignaturesCreated": 0,
+    "databaseOpened": false,
+    "networkStarted": false,
+    "pathsOrInputBytesExported": false
+  },
+  "cases": [
+    {
+      "scenario": "fresh_rotation_inputs_positive",
+      "assertions": [
+        "exact two destination names/bytes/hashes",
+        "owner0700 directory and0600 single-link files",
+        "independent source/destination file inodes",
+        "fixed summary and first-admission stability",
+        "final verify success"
+      ]
+    },
+    {
+      "scenario": "fresh_rotation_inputs_source_bytes_refused",
+      "mutation": "one source byte after first material authority",
+      "expectedRefusals": 1
+    },
+    {
+      "scenario": "fresh_rotation_inputs_source_metadata_refused",
+      "mutation": "one source mode0600 to0640 after first material authority",
+      "expectedRefusals": 1
+    },
+    {
+      "scenario": "fresh_rotation_inputs_destination_bytes_refused",
+      "mutation": "one destination byte after first material authority",
+      "expectedRefusals": 1,
+      "originalSourceNineFieldsAndShaStillExact": true
+    },
+    {
+      "scenario": "fresh_rotation_inputs_namespace_refused",
+      "mutation": "one extra destination namespace entry after first material authority",
+      "expectedRefusals": 1,
+      "originalSourceNineFieldsAndShaStillExact": true
+    }
+  ],
+  "bounds": {
+    "cooperativeTotalDeadlineMs": 28000,
+    "rootMandatoryExternalTimeoutMs": 35000,
+    "newSourceStabilityWaitMs": 6000,
+    "productionFunctionFirstAdmissionDeadlineMsUnchanged": 30000,
+    "noNewProductionClockOrNetworkBudget": true
+  },
+  "qualification": {
+    "rootOnlyExecution": true,
+    "authorNodeSyntaxCheckOnly": true,
+    "notDatabaseAudit": true,
+    "notDockerBindOwnershipQualification": true,
+    "notRuntimeCampaignQualification": true,
+    "campaign08PermanentFailed": true,
+    "productionQualified": false
+  }
+}

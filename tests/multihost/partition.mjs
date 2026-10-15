@@ -8,12 +8,13 @@ export class PartitionRecoveryDeadline extends Error {
 // Docker commands operate only on the fresh, labelled test container. No host
 // firewall changes; loopback RPC remains reachable via docker exec while cut.
 export async function partitionRemote({docker, container, network, revision, sample, record,
- clock=()=>performance.now(), wait=delay, cutMs=96000, recoveryMs=180000, duringCut, policy}) {
- if(!/^nano-qualification-vps-[a-z0-9]+$/.test(container)||network!==container+'-net')
+ clock=()=>performance.now(), wait=delay, cutMs=96000, recoveryMs=180000, duringCut, afterCut, policy, freshCampaign}) {
+ const fresh=freshCampaign!==undefined;
+ if((fresh?(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(freshCampaign)||container!=='nano-qualification-vps-'+freshCampaign):!/^nano-qualification-vps-[a-z0-9]+$/.test(container))||network!==container+'-net')
   throw Error('Unexpected partition target');
  const inspect=async()=>JSON.parse(await docker(['inspect','--format','{{json .}}',container]));
  const initial=await inspect(), labels=initial.Config?.Labels;
- if(!initial.State?.Running||labels?.['nano.qualification']!=='multihost'||labels?.['org.opencontainers.image.revision']!==revision)
+ if(!initial.State?.Running||labels?.['nano.qualification']!=='multihost'||labels?.['org.opencontainers.image.revision']!==revision||(fresh&&labels?.['nano.fresh.campaign']!==freshCampaign))
   throw Error('Partition provenance mismatch');
  const entries=Object.entries(initial.NetworkSettings.Networks);
  if(entries.length!==1||entries[0][0]!==network||!entries[0][1].IPAddress)throw Error('Expected dedicated test network');
@@ -71,6 +72,7 @@ export async function partitionRemote({docker, container, network, revision, sam
   if(failures.length)await record({event:'partition-task-failed',errors:failures.map(error=>({name:error.name,message:error.message,stack:error.stack}))});
   if(failures.length===1)throw failures[0];
   if(failures.length>1)throw new AggregateError(failures,'Partition observation and workload failed');
+  if(afterCut)await afterCut(); // Still isolated; cutoff cannot credit reconnected work.
  }finally{
   if(disconnected){
    const state=await inspect();
