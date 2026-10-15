@@ -11,10 +11,10 @@ import {spawnSync} from 'node:child_process';
 import {performance} from 'node:perf_hooks';
 const message='Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required';
 const sourcePins={
- "run.mjs": "99b6d6696497f0a2a64d13f9fbe62faf2ca52f0ef227d93319a51bd70bb5ec1e",
+ "run.mjs": "affc979957caa84e66f37e746226fdfa5581796cead607b1362b4cbfcd95cd43",
  "prepare.mjs": "9fe5403f52806925ccbecd13f4a5a56cfcd1b2b58d83c2f026b831e206a67b3d",
  "program-locators.mjs": "afb6fd53db3930389e2c5adfd6a1c9cb0d59369f5926bc33476c9c7de2829c33",
- "linux-owned-files.mjs": "d86be73f14b258c0678b84e1dfc5e7a28429e676fb1110c6102aacb289615bd6",
+ "linux-owned-files.mjs": "266d2d53e48aedef8e6b75204fb8ce13f5119f5f02da7202836235d1d08c2f4b",
  "harness-manifest.mjs": "b01e069ade274ac38e612f9f8eefa7ce17e204b4764593d0371891047374c09d",
  "lifecycle.mjs": "2d8f3c9c2123bf55ffdb7f9ea412f83321e8bc3a67db39a0e6d1c2545a37cac9",
  "lifecycle-runtime.mjs": "0ffcbe6bb7f4ececafa694e6fdccd982ec6d81297687a9a7c131bb30b4c7248c",

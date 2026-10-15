@@ -5480,3 +5480,14 @@ Prototype préflight local du6 octobre : ARM6429991 terminal0, quatre scénarios
 
 
 2026-10-07 — [Startup reference memo intégré](qualification/capella-startup-reference-memo-20261007/README.md) : décodage/authentification complet initial, réutilisation process-local bornée des métadonnées identiques avec chaque blob PRIMARY/WITNESS relu et hashé. Nouveau scénario2 records et contre-exemple parent ; trois parcours Docker ARM64/AMD64, startup natif passent, annulation sans mutation/signataire préservé. Échecs initiaux compilation conservés, images/parents inchangés, builds incrémentaux. Aucun nœud démarré ni gain grand état/WAN démontré ; V33 FAILED, finalité commune, release propre, autres critères production et revue indépendante restent ouverts. Aucun statut EIP, bridge ou Doppler promu.
+
+
+---
+
+**16 octobre 2026 — Bootstrap natif/Linux partagé réellement qualifié à froid ; production non qualifiée.**
+
+Le [lot partagé](qualification/shared-bootstrap-mac-linux-20261015/README.md) livre quatre overlays du launcher existant et un préparateur natif explicite, sans modifier le V7 historique. Le [reçu réel](qualification/shared-bootstrap-mac-linux-20261015/evidence/real-local-bootstrap.json) passe en172742ms : un export/domaine synthétique consommé, import natif65 paires/65 réouvertures,4 signatures BLS de bootstrap vérifiées, import Linux65, copie des indices16–31/16 paires et32 réouvertures C++ à froid. Les imports/copie/audit créent0 nouvelle signature ;51/51 conteneurs absents et6/6 volumes conservés vérifiés. Les anciennes autorités et16 aliases restent stricts, sans rebaser d’inodes natifs en Linux. Les deux imports sont indépendants à partir du même export/plan ; la copie physique reste Linux→Linux, sans transfert de SST native ni qualification cross-OS/AMD. Aucun journal historique manquant du Mac/NAS n’est restauré.
+
+Six syntaxes et les nouveaux cas ciblés passent séparément :2 purs réutilisés sans replay,1 guard/3 refus et2 refus du préparateur. Le premier collecteur reste FAILED sur l’attente de7 SKIP ; les2 cas réellement sélectionnés avaient réussi. V2 du contrôleur est resté HOLD/non exécuté avant la correction de l’ordre des clés. Tous les échecs historiques et la limite du digest brut privé07 non enregistré restent conservés.
+
+**Aucun runtime Nano/P2P, configuration runtime, reprise des duties, coordinateur complet, finalité commune ou cycle complet n’est qualifié par ce PASS.** Reprise/finalité des trois propriétaires, cycle long/inclusion/sanction/retraits, WAN/ressources, autorisation dédiée AMD/VPS encore en attente, release/CI/revue indépendante et Base–Nano/bridge/Doppler restent ouverts. Aucun accès VPS privé, build/pull d’image, fonds ou vente ; goal actif. Aucun EIP/fork/profil ni production promu. Corps historique intégral conservé en préfixe, CSV/RPC inchangés.

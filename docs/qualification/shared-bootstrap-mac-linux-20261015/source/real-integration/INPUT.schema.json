@@ -1,0 +1,459 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "copierPath": {
+      "maxLength": 4095,
+      "minLength": 2,
+      "pattern": "^/",
+      "type": "string"
+    },
+    "dockerEndpoint": {
+      "const": "unix:///Users/boris/.docker/run/docker.sock"
+    },
+    "dockerPath": {
+      "maxLength": 4095,
+      "minLength": 2,
+      "pattern": "^/",
+      "type": "string"
+    },
+    "format": {
+      "const": "nano-root-real-shared-bootstrap-input-v1"
+    },
+    "helperPath": {
+      "maxLength": 4095,
+      "minLength": 2,
+      "pattern": "^/",
+      "type": "string"
+    },
+    "legacy": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "path": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "linuxAuditor": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "hostPath": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^/outputs/[A-Za-z0-9_.-]+$",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "hostPath",
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "linuxImporter": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "hostPath": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^/outputs/[A-Za-z0-9_.-]+$",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "hostPath",
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "linuxSupport": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "bytes": {
+              "maximum": 1073741824,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "hostPath": {
+              "maxLength": 4095,
+              "minLength": 2,
+              "pattern": "^/",
+              "type": "string"
+            },
+            "path": {
+              "pattern": "^/outputs/[A-Za-z0-9_.-]+$",
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "hostPath",
+            "path",
+            "sha256",
+            "bytes"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "moduleRoot": {
+      "maxLength": 4095,
+      "minLength": 2,
+      "pattern": "^/",
+      "type": "string"
+    },
+    "nativeAuditor": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "path": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "nativeImporter": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "path": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "nativeRuntimeAliases": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "material": {
+            "items": {
+              "pattern": "^-?[0-9]+$",
+              "type": "string"
+            },
+            "maxItems": 9,
+            "minItems": 9,
+            "type": "array"
+          },
+          "path": {
+            "maxLength": 4095,
+            "minLength": 2,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "resolvedTarget": {
+            "maxLength": 4095,
+            "minLength": 2,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "target",
+          "resolvedTarget",
+          "material"
+        ],
+        "type": "object"
+      },
+      "maxItems": 16,
+      "minItems": 16,
+      "type": "array"
+    },
+    "nativeRuntimeFiles": {
+      "items": {
+        "maxLength": 4095,
+        "minLength": 2,
+        "pattern": "^/",
+        "type": "string"
+      },
+      "maxItems": 11,
+      "minItems": 11,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "nativeSupportLibrary": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "path": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "outputDirectory": {
+      "maxLength": 4095,
+      "minLength": 2,
+      "pattern": "^/",
+      "type": "string"
+    },
+    "prefix": {
+      "pattern": "^nano-real-bootstrap-[0-9a-f-]{36}$",
+      "type": "string"
+    },
+    "preparer": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "path": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "preparerInput": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "path": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "preparerWorkspace": {
+      "maxLength": 4095,
+      "minLength": 2,
+      "pattern": "^/",
+      "type": "string"
+    },
+    "qualification": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 1073741824,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "path": {
+          "maxLength": 4095,
+          "minLength": 2,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "sourcePins": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "maximum": 1073741824,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "material": {
+            "items": {
+              "pattern": "^[0-9]+$",
+              "type": "string"
+            },
+            "maxItems": 9,
+            "minItems": 9,
+            "type": "array"
+          },
+          "path": {
+            "maxLength": 4095,
+            "minLength": 2,
+            "pattern": "^/",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "sha256",
+          "bytes",
+          "material"
+        ],
+        "type": "object"
+      },
+      "maxItems": 256,
+      "minItems": 66,
+      "type": "array"
+    },
+    "uuid": {
+      "format": "uuid",
+      "type": "string"
+    }
+  },
+  "required": [
+    "format",
+    "moduleRoot",
+    "helperPath",
+    "copierPath",
+    "preparer",
+    "preparerInput",
+    "preparerWorkspace",
+    "qualification",
+    "legacy",
+    "nativeImporter",
+    "nativeAuditor",
+    "linuxImporter",
+    "linuxAuditor",
+    "linuxSupport",
+    "nativeRuntimeFiles",
+    "nativeSupportLibrary",
+    "nativeRuntimeAliases",
+    "dockerPath",
+    "dockerEndpoint",
+    "sourcePins",
+    "outputDirectory",
+    "uuid",
+    "prefix"
+  ],
+  "title": "ROOT one real shared local bootstrap input",
+  "type": "object"
+}
