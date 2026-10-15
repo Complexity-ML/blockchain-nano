@@ -1,3 +1,13 @@
+> **15 octobre 2026 — Deux composants supplémentaires qualifiés sur Docker ARM64 uniquement.**
+>
+> Le shim lifecycleSubmit inchangé est exercé par un vrai serveur HTTP loopback et un vrai enfant : 5 groupes, 11 requêtes HTTP, 6 enfants, un passage exec vers un daemon contrôlé et 5 refus ou arrêts attendus. Même binaire de test au second essai, sans recompilation ni link ; 10495 ms, pics RSS distincts parent/enfant de 14372/17480 KiB. Le premier essai reste FAILED ; une sonde séparée constate /tmp noexec et un refus exec126, sans prouver son point de throw exact. Le second essai utilise un tmpfs exécutable privé. Le parent est synthétique et le daemon contrôlé : ni vrai superviseur Nano, ni vrai nano-p2p, ni admission cryptographique de l'opération ne sont qualifiés. Ce HTTP concerne le protocole du shim, pas le transport de l'API de lecture validateur.
+>
+> Le nouveau test d'observation HEAD authentifié passe 3 groupes, 4 cas positifs et 9 refus ; 4 signatures de fixture et 5 lectures d'archive, 239 ms. Un seul TU et link sont produits ; les anciens tests de politique et de replay long ne sont pas rejoués. La découverte HEAD null reste limitée à l'observation RO non signante après les closures indépendantes P/W ; les requêtes d'action et terminales gardent leur HEAD exact. Aucun audit privé ni runtime n'est exécuté par ce test.
+>
+> Ces preuves ARM64 ne qualifient pas les composants natifs Mac ou AMD. Les contrôles réels M/MD, SDK avant/après, matériaux déjà admis et absence du conteneur sont conservés. Le guard JavaScript d'indisponibilité du runtime lifecycle reste inchangé ; le vrai passage superviseur→shim→P2P, la campagne privée et le cycle complet restent ouverts. Le profil réel reste inchangé : minimum 325 epochs après activation, environ 4 h 20 plus files et délais ; aucune tenure n'est raccourcie.
+>
+> Autorisation humaine de transfert privé VPS toujours en attente, audits à froid PARTIELS 2/3 ; V37 et campagne08 restent FAILED, aucune restauration des originaux revendiquée, NAS refusé/hors périmètre. Le blocage CI billing/spending demeure OPEN et n'est pas un PASS CI. Aucun statut de fork/EIP, profil EVM activé ou niveau de production n'est promu ; CSV EIP et documentation RPC inchangés. Les corps historiques ci-dessous sont conservés intégralement.
+
 > **15 octobre 2026 — Objectif actif, preuves fonctionnelles ARM limitées.**
 >
 > Docker ARM64 : la fonction C++ de lecture validateur passe 5 groupes, 21 lectures et 16 refus attendus ; 2 signatures de fixture, aucune signature créée par l’API. Archive core de 143 objets, un recompilé et 142 inchangés ; le test causal utilise le même objet de test. Le transport HTTP n’est pas testé.

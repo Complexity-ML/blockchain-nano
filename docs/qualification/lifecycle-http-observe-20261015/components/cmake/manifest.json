@@ -1,0 +1,90 @@
+{
+  "format": "nano-lifecycle-integration-component-cmake-source-proposal-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_CONFIGURED",
+  "baseCommit": "b5a48e0f2a05bc392f7604edb6214ee6b0078d67",
+  "files": [
+    {
+      "path": "CMakeLists.txt",
+      "baseline": {
+        "sha256": "03f1aeeb2b2f25b6c7f683e2552aec9226470522c71c1f4d8fbb6039aed785db",
+        "bytes": 172929
+      },
+      "source": {
+        "path": "source/CMakeLists.txt",
+        "sha256": "751c5e55d5517b7ca0bc9ce540c041bd2f5c1a6d3c21033cd8b1f5415317de40",
+        "bytes": 173919
+      }
+    }
+  ],
+  "payloads": [
+    {
+      "path": "source/CMakeLists.txt",
+      "sha256": "751c5e55d5517b7ca0bc9ce540c041bd2f5c1a6d3c21033cd8b1f5415317de40",
+      "bytes": 173919
+    },
+    {
+      "path": "source.patch",
+      "sha256": "ff43ddb1cb7c7a332771f1d207246b8cae7a170363ed54227c305127fca1fc21",
+      "bytes": 2354
+    },
+    {
+      "path": "README.md",
+      "sha256": "c7ae8b0b56d37f948c6f85425893cea70010e4b78f935fcba418318c7d662c6b",
+      "bytes": 1092
+    }
+  ],
+  "payloadCount": 3,
+  "payloadBytes": 177365,
+  "origins": [
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/CMakeLists.txt",
+      "sha256": "03f1aeeb2b2f25b6c7f683e2552aec9226470522c71c1f4d8fbb6039aed785db",
+      "bytes": 172929
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-http-exec-20261015/manifest.json",
+      "sha256": "f0d5bf3a15ff48480b8d5b8971ed0115d3615a6ce122f661416f79173bf4f155",
+      "bytes": 4402
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-http-exec-20261015/source/CMakeLists.txt",
+      "sha256": "610dea82bea7af752b5ce407c5c7148fcacc625e40cd4b6f49cbadd8eb09057a",
+      "bytes": 173666
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-observe-v3-20261015/manifest.json",
+      "sha256": "811f4ff16cc04e3205761bb7a90500f3f8858d32bac462613b51da48b51295cd",
+      "bytes": 5243
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-observe-v3-20261015/CMake.registration.patch",
+      "sha256": "8e0aa1c317738e1e9b26852b5792650e6e646bb6951afdf1db3d02f0a1a5d20c",
+      "bytes": 1000
+    }
+  ],
+  "composition": {
+    "httpLinuxBlockLines": 8,
+    "observeRegistrationLines": 2,
+    "reverseRemovesOnlyTwoInsertions": true,
+    "reversedSha256": "03f1aeeb2b2f25b6c7f683e2552aec9226470522c71c1f4d8fbb6039aed785db",
+    "newTargets": [
+      "nano-fresh-lifecycle-managed-http-exec-tests"
+    ],
+    "newCtests": [
+      "consensus_fresh_lifecycle_sealed_observe",
+      "consensus_fresh_lifecycle_managed_http_exec"
+    ],
+    "allNewCtestNamesUnique": true,
+    "existingTargetsAndTestsUnchanged": true,
+    "coreOrLegacyFlagsChanged": false
+  },
+  "scope": {
+    "authorProgramExecutions": 0,
+    "authorCmakeOrCompilerExecutions": 0,
+    "rOrLWritten": false,
+    "actualCmakeIntegrationQualified": false,
+    "fullNanoSupervisorQualified": false,
+    "actualLifecycleCampaignQualified": false,
+    "productionQualified": false
+  }
+}

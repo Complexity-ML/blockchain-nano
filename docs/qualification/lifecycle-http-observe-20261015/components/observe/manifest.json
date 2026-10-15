@@ -1,0 +1,149 @@
+{
+  "format": "nano-fresh-lifecycle-observe-null-source-proposal-v3",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "baseCommit": "b5a48e0f2a05bc392f7604edb6214ee6b0078d67",
+  "files": [
+    {
+      "path": "tests/capella/deposit_audit.cpp",
+      "baseline": {
+        "sha256": "610412c124ebb3e631499e3b63ffac01b7db5400512f82592a72c3aadb6de8c3",
+        "bytes": 16370
+      },
+      "source": {
+        "path": "source/tests/capella/deposit_audit.cpp",
+        "sha256": "00d6b280ffde5c5fa9f10ee25b0cb87399f111adae7a5d5a8a274787bcf4d33e",
+        "bytes": 16560
+      }
+    },
+    {
+      "path": "tests/support/fresh_lifecycle.hpp",
+      "baseline": {
+        "sha256": "2f86a9dbf52b84c6b35b11cf59d6ad570df84e5317328e8123edfacc0c53b3c6",
+        "bytes": 34465
+      },
+      "source": {
+        "path": "source/tests/support/fresh_lifecycle.hpp",
+        "sha256": "310d47b0cce4513b13bc627dc0a80b98214ba5d1f902561421e901e176ba938e",
+        "bytes": 35754
+      }
+    },
+    {
+      "path": "tests/support/fresh_lifecycle_observe_self_test.hpp",
+      "baseline": null,
+      "source": {
+        "path": "source/tests/support/fresh_lifecycle_observe_self_test.hpp",
+        "sha256": "f3ebca95b0659f0caa2a29387913e8aac5274bb269c7a6004b9be9d320ee5e9f",
+        "bytes": 7771
+      }
+    }
+  ],
+  "cmakeRegistrationPatch": {
+    "path": "CMake.registration.patch",
+    "sha256": "8e0aa1c317738e1e9b26852b5792650e6e646bb6951afdf1db3d02f0a1a5d20c",
+    "bytes": 1000
+  },
+  "cmakeFullOverlayProvided": false,
+  "target": "nano-capella-deposit-audit",
+  "newSelector": "--fresh-lifecycle-observe-self-test",
+  "payloads": [
+    {
+      "path": "source/tests/capella/deposit_audit.cpp",
+      "sha256": "00d6b280ffde5c5fa9f10ee25b0cb87399f111adae7a5d5a8a274787bcf4d33e",
+      "bytes": 16560
+    },
+    {
+      "path": "source/tests/support/fresh_lifecycle.hpp",
+      "sha256": "310d47b0cce4513b13bc627dc0a80b98214ba5d1f902561421e901e176ba938e",
+      "bytes": 35754
+    },
+    {
+      "path": "source/tests/support/fresh_lifecycle_observe_self_test.hpp",
+      "sha256": "f3ebca95b0659f0caa2a29387913e8aac5274bb269c7a6004b9be9d320ee5e9f",
+      "bytes": 7771
+    },
+    {
+      "path": "README.md",
+      "sha256": "a196309dadac5aec3f984fc3b7589a694c2ac67554367408e8bff5dba268b7a0",
+      "bytes": 3201
+    },
+    {
+      "path": "CONTRACT.json",
+      "sha256": "0142d46a267f7116c46fa93111697e85abf5cd2f360eb2e5d5a318988e03dea9",
+      "bytes": 3247
+    },
+    {
+      "path": "source.patch",
+      "sha256": "6478c70306015df17567e90ca2fb2800cddf157656b01f9703e0ac282b707dd7",
+      "bytes": 16290
+    },
+    {
+      "path": "CMake.registration.patch",
+      "sha256": "8e0aa1c317738e1e9b26852b5792650e6e646bb6951afdf1db3d02f0a1a5d20c",
+      "bytes": 1000
+    }
+  ],
+  "payloadCount": 7,
+  "payloadBytes": 83823,
+  "origins": [
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/capella/deposit_audit.cpp",
+      "sha256": "610412c124ebb3e631499e3b63ffac01b7db5400512f82592a72c3aadb6de8c3",
+      "bytes": 16370
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/support/fresh_lifecycle.hpp",
+      "sha256": "2f86a9dbf52b84c6b35b11cf59d6ad570df84e5317328e8123edfacc0c53b3c6",
+      "bytes": 34465
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/support/fresh_lifecycle_terminal.hpp",
+      "sha256": "07993c65ce97b3e2db1bd640abaabd7abce393e1dea57135bb08c0ad8f2729b8",
+      "bytes": 24334
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/support/fresh_lifecycle_self_test.hpp",
+      "sha256": "8589f8b6cc61dd3ce08f60314114aa5f45538b75bf3f05689a86ee37137e0a9f",
+      "bytes": 8323
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/support/capella_stream_signed_fixture.hpp",
+      "sha256": "5d751a71a00d0ecb4344c9292eeb72ff4e24a6fc3785e517d00da7516675c08d",
+      "bytes": 27220
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/include/nano/checkpoint_blob_gc.hpp",
+      "sha256": "e6bd7f428a3d222691743eb998a1dcd960d3302d126c2082a60389c1f000efc0",
+      "bytes": 4558
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/src/consensus_capella_reactor.cpp",
+      "sha256": "4fb82abc42b0c69c6810d39fa82625a142750bcc8844cc02dcdc847ea42e3c6e",
+      "bytes": 126071
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/src/consensus_capella_store_snapshot.cpp",
+      "sha256": "a2de75d049eb959930f394ff2906fdb35dd038e7af172f823ab00374f0cf3369",
+      "bytes": 27271
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/CMakeLists.txt",
+      "sha256": "03f1aeeb2b2f25b6c7f683e2552aec9226470522c71c1f4d8fbb6039aed785db",
+      "bytes": 172929
+    }
+  ],
+  "scope": {
+    "newCoreImplementation": false,
+    "profileClockStorageOrWireChanged": false,
+    "outputSchemaChanged": false,
+    "externalPwCommitmentGuardsChanged": false,
+    "legacyAndOldSelectorsBodyByteExact": true,
+    "oldPolicyOrLongStreamReplayed": false,
+    "nullAllowedOnlyNonSigningObserve": true,
+    "exactActionAndTerminalHeadRequired": true,
+    "authorProjectCompilerTestDockerSshExecutions": 0,
+    "actualPrivateInputsRead": false,
+    "rOrLWritten": false,
+    "actualFullLifecycleQualified": false,
+    "productionQualified": false
+  }
+}

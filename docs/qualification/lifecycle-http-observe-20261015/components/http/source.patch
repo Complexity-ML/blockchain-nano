@@ -1,0 +1,175 @@
+--- /dev/null
++++ b/tests/test_fresh_lifecycle_managed_http_exec.cpp
+@@ -0,0 +1,155 @@
++// ROOT-run Linux-only component test. Real shim, HTTP sockets and execv;
++// synthetic supervisor/daemon and opaque operations, never a live Nano network.
++#include "nano/core.hpp"
++#include <openssl/evp.h>
++#include <algorithm>
++#include <array>
++#include <atomic>
++#include <cerrno>
++#include <chrono>
++#include <csignal>
++#include <cstring>
++#include <cstdlib>
++#include <filesystem>
++#include <fcntl.h>
++#include <iostream>
++#include <memory>
++#include <poll.h>
++#include <spawn.h>
++#include <sys/resource.h>
++#include <sys/socket.h>
++#include <sys/stat.h>
++#include <sys/wait.h>
++#include <netinet/in.h>
++#include <thread>
++#include <unistd.h>
++using namespace nano;
++namespace {
++namespace fs=std::filesystem;
++using Clock=std::chrono::steady_clock;
++const auto began=Clock::now();
++const char* current_stage="setup";
++void need(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
++uint64_t rss(int who){rusage r{};need(::getrusage(who,&r)==0,"resource read");return uint64_t(r.ru_maxrss);}
++void check(){need(Clock::now()-began<std::chrono::seconds(45),"test wall bound");need(rss(RUSAGE_SELF)<=131072&&rss(RUSAGE_CHILDREN)<=131072,"test RSS bound");}
++struct Fd{int n=-1;explicit Fd(int f=-1):n(f){}Fd(const Fd&)=delete;Fd(Fd&& f):n(f.n){f.n=-1;}~Fd(){if(n>=0)::close(n);}};
++void flags(int fd,bool nonblock=false){need(fd>=0&&::fcntl(fd,F_SETFD,FD_CLOEXEC)==0,"FD flags");if(nonblock)need(::fcntl(fd,F_SETFL,O_NONBLOCK)==0,"nonblocking FD");}
++std::array<std::string,9> material(const struct stat& s){return {std::to_string(s.st_dev),std::to_string(s.st_ino),std::to_string(s.st_mode),std::to_string(s.st_uid),std::to_string(s.st_gid),std::to_string(s.st_nlink),std::to_string(s.st_size),std::to_string(s.st_mtim.tv_sec)+":"+std::to_string(s.st_mtim.tv_nsec),std::to_string(s.st_ctim.tv_sec)+":"+std::to_string(s.st_ctim.tv_nsec)};}
++struct Pin{std::array<std::string,9> stat;std::string sha;uint64_t bytes;};
++bool operator==(const Pin& a,const Pin& b){return a.stat==b.stat&&a.sha==b.sha&&a.bytes==b.bytes;}
++Pin pin(const fs::path& path,size_t maximum=64*1024*1024){
++ need(path.is_absolute()&&path==path.lexically_normal()&&fs::canonical(path)==path,"fixture canonical input");Fd f(::open(path.c_str(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));need(f.n>=0,"fixture open");struct stat a{},b{},c{};need(::fstat(f.n,&a)==0&&S_ISREG(a.st_mode)&&a.st_uid==::geteuid()&&a.st_nlink==1&&a.st_size>=0&&uint64_t(a.st_size)<=maximum,"fixture material");
++ EVP_MD_CTX* raw=EVP_MD_CTX_new();need(raw!=nullptr,"fixture hash context");std::unique_ptr<EVP_MD_CTX,decltype(&EVP_MD_CTX_free)> context(raw,EVP_MD_CTX_free);need(EVP_DigestInit_ex(context.get(),EVP_sha256(),nullptr)==1,"fixture hash init");std::array<char,16384> buffer{};uint64_t size=0;
++ for(;;){check();const auto n=::read(f.n,buffer.data(),buffer.size());if(n<0&&errno==EINTR)continue;need(n>=0,"fixture read");if(!n)break;need(uint64_t(n)<=uint64_t(a.st_size)-size,"fixture grew");size+=uint64_t(n);need(EVP_DigestUpdate(context.get(),buffer.data(),size_t(n))==1,"fixture hash update");}
++ std::array<uint8_t,32> hash{};unsigned length=0;need(size==uint64_t(a.st_size)&&EVP_DigestFinal_ex(context.get(),hash.data(),&length)==1&&length==32&&::fstat(f.n,&b)==0&&::lstat(path.c_str(),&c)==0&&material(a)==material(b)&&material(a)==material(c),"fixture changed during read");return {material(a),hex(Bytes(hash.begin(),hash.end())).substr(2),size};
++}
++std::string text(const fs::path& path,size_t maximum=65536){const auto before=pin(path,maximum);Fd f(::open(path.c_str(),O_RDONLY|O_CLOEXEC|O_NOFOLLOW));need(f.n>=0,"text open");std::string s(size_t(before.bytes),'\0');size_t at=0;while(at<s.size()){check();const auto n=::read(f.n,s.data()+at,s.size()-at);if(n<0&&errno==EINTR)continue;need(n>0,"text truncated");at+=size_t(n);}need(pin(path,maximum)==before,"text changed");return s;}
++std::string sha(std::string_view s){return hex(sha256(Bytes(s.begin(),s.end()))).substr(2);}
++void write_new(const fs::path& p,std::string_view s,mode_t mode=0600){Fd f(::open(p.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC|O_NOFOLLOW,mode));need(f.n>=0,"new fixture file");size_t at=0;while(at<s.size()){check();const auto n=::write(f.n,s.data()+at,s.size()-at);if(n<0&&errno==EINTR)continue;need(n>0,"fixture write");at+=size_t(n);}need(::fsync(f.n)==0,"fixture fsync");}
++void mkdir_private(const fs::path& p){need(::mkdir(p.c_str(),0700)==0,"new fixture directory");struct stat s{};need(::lstat(p.c_str(),&s)==0&&S_ISDIR(s.st_mode)&&s.st_uid==::geteuid()&&(s.st_mode&07777)==0700,"fixture private directory");}
++void copy_program(const fs::path& source,const fs::path& target,const Pin& before){
++ Fd in(::open(source.c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC)),out(::open(target.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0500));need(in.n>=0&&out.n>=0,"controlled executable copy");std::array<char,16384> buffer{};for(;;){check();const auto n=::read(in.n,buffer.data(),buffer.size());if(n<0&&errno==EINTR)continue;need(n>=0,"executable read");if(!n)break;size_t at=0;while(at<size_t(n)){const auto w=::write(out.n,buffer.data()+at,size_t(n)-at);if(w<0&&errno==EINTR)continue;need(w>0,"executable write");at+=size_t(w);}}need(::fsync(out.n)==0&&pin(source)==before,"public executable source changed");const auto copied=pin(target);need(copied.sha==before.sha&&copied.bytes==before.bytes&&(copied.stat[0]!=before.stat[0]||copied.stat[1]!=before.stat[1]),"controlled executable bytes/independent inode");
++}
++Json artifact(const fs::path& p){const auto q=pin(p);return {{"path",p.string()},{"sha256",q.sha},{"bytes",q.bytes}};}
++const std::string token="0x"+std::string(64,'b'),session="0x"+std::string(64,'c'),sentinel="PRIVATE_HTTP_TEST_SENTINEL";
++const std::string refusal_line="{\"event\":\"fresh-lifecycle-child-submission-refused\",\"accepted\":false,\"detailsExported\":false,\"productionQualified\":false}\n";
++struct Fixture{
++ fs::path root,manifest,action,contract,report,plan,result,out,err,daemon;Json envelope,operation;std::vector<std::string> args;std::vector<std::pair<fs::path,Pin>> original;std::string plan_sha;
++ Fixture(const fs::path& top,const std::string& name,const fs::path& executable,uint16_t port):root(top/name),daemon(executable){
++  mkdir_private(root);manifest=root/"manifest.json";action=root/"action.private.json";contract=root/"daemon-contract.private.json";report=root/"daemon-report.private.json";plan=root/"plan.private.json";result=root/"accepted.private.json";out=root/"stdout.private.log";err=root/"stderr.private.log";
++  const std::string campaign=sha("new-http-exec-fixture/"+name),pub="0x"+std::string(96,'d'),genesis="0x"+std::string(64,'e'),identity="0x"+std::string(64,'f');
++  const Json m{{"format","nano-isolated-capella-fixture-domain-v1"},{"synthetic",true},{"productionQualified",false},{"fork","Capella/Shanghai"},{"campaignId",campaign},{"chainId","0x539"},{"executionGenesisHash",genesis},{"publicKeys",Json::array({Json{{"index",uint64_t(0)},{"publicKey",pub}}})}};
++  envelope={{"chainId","0x539"},{"genesisHash",genesis},{"consensusIdentity",identity},{"forkDigest","0xffffffff"},{"kind","voluntary_exit"},{"ssz",hex(Bytes(112,0))}};auto payload=Bytes(113,0);payload[0]=3;
++  operation={{"format","nano-fresh-lifecycle-action-v1"},{"campaignId",campaign},{"requestSha256",std::string(64,'a')},{"owner","mac-docker"},{"kind","voluntary_exit"},{"publicKey",pub},{"resolvedIndex","0x0"},{"preparedHead",{{"root",genesis},{"stateRoot",identity},{"slot","0x8"}}},{"payloadDigest",hex(sha256(payload))},{"envelope",envelope}};
++  args={std::to_string(port),contract.string(),"/ip4/127.0.0.1/tcp/30306","/ip4/127.0.0.1/tcp/30305/p2p/synthetic-peer-one","/ip4/127.0.0.1/tcp/30307/p2p/synthetic-peer-two"};
++  write_new(manifest,m.dump());write_new(action,operation.dump());const Json daemon_contract{{"format","nano-http-exec-daemon-test-v1"},{"arguments",args},{"token",token},{"parentPid",uint64_t(::getpid())},{"report",report.string()}};write_new(contract,daemon_contract.dump());
++  const Json p{{"format","nano-fresh-lifecycle-submission-plan-v1"},{"campaignId",campaign},{"owner","mac-docker"},{"manifest",artifact(manifest)},{"action",artifact(action)},{"realP2p",artifact(daemon)},{"resultFile",result.string()},{"maximumWallSeconds",uint64_t(10)}};const auto raw=p.dump();write_new(plan,raw);plan_sha=sha(raw);for(const auto& path:{manifest,action,contract,plan,daemon})original.emplace_back(path,pin(path));
++ }
++ void fence()const{for(const auto& [p,q]:original)need(pin(p)==q,"original test input changed");}
++ void empty_reserved()const{const auto p=pin(result);need(p.bytes==0&&p.stat[2]==std::to_string(S_IFREG|0600),"refused result must stay empty private reservation");need(!fs::exists(report),"refused child must not exec daemon");}
++ void no_egress()const{for(const auto& p:{out,err}){const auto s=text(p);need(s.find(token)==std::string::npos&&s.find(session)==std::string::npos&&s.find(sentinel)==std::string::npos&&s.find(root.string())==std::string::npos,"private context leaked to child output");}}
++};
++struct Attributes{posix_spawnattr_t value;Attributes(){need(::posix_spawnattr_init(&value)==0,"spawn attributes");sigset_t mask,defaults;::sigemptyset(&mask);::sigemptyset(&defaults);::sigaddset(&defaults,SIGINT);::sigaddset(&defaults,SIGTERM);need(::posix_spawnattr_setsigmask(&value,&mask)==0&&::posix_spawnattr_setsigdefault(&value,&defaults)==0&&::posix_spawnattr_setflags(&value,POSIX_SPAWN_SETSIGMASK|POSIX_SPAWN_SETSIGDEF)==0,"spawn signal policy");}~Attributes(){::posix_spawnattr_destroy(&value);}};
++struct Actions{posix_spawn_file_actions_t value;Actions(){need(::posix_spawn_file_actions_init(&value)==0,"spawn file actions");}~Actions(){::posix_spawn_file_actions_destroy(&value);}};
++class Child{
++ pid_t pid_=-1;bool joined_=false;int status_=0;
++ bool collect(){const auto n=::waitpid(pid_,&status_,WNOHANG);if(n==pid_){joined_=true;return true;}need(n==0||(n<0&&errno==EINTR),"child waitpid");return false;}
++public:
++ Child(const fs::path& shim,const Fixture& f,const std::string& suffix=""){
++  std::vector<std::string> arguments{shim.string()};arguments.insert(arguments.end(),f.args.begin(),f.args.end());std::vector<char*> argv;for(auto& a:arguments)argv.push_back(a.data());argv.push_back(nullptr);
++  std::vector<std::string> env{"PATH=/usr/bin:/bin","LANG=C","TZ=UTC","NANO_NETWORK_TOKEN="+token,"NANO_SUPERVISOR_PID="+std::to_string(::getpid()),"NANO_TEST_FRESH_SUBMISSION_PLAN="+f.plan.string(),"NANO_TEST_FRESH_SUBMISSION_PLAN_SHA256="+f.plan_sha};std::vector<char*> environment;for(auto& e:env)environment.push_back(e.data());environment.push_back(nullptr);
++  Actions files;need(::posix_spawn_file_actions_addopen(&files.value,STDIN_FILENO,"/dev/null",O_RDONLY,0)==0&&::posix_spawn_file_actions_addopen(&files.value,STDOUT_FILENO,(f.out.string()+suffix).c_str(),O_WRONLY|O_CREAT|O_EXCL,0600)==0&&::posix_spawn_file_actions_addopen(&files.value,STDERR_FILENO,(f.err.string()+suffix).c_str(),O_WRONLY|O_CREAT|O_EXCL,0600)==0,"child standard descriptors");Attributes attr;need(::posix_spawn(&pid_,shim.c_str(),&files.value,&attr.value,argv.data(),environment.data())==0,"spawn real shim");
++ }
++ ~Child(){if(pid_>0&&!joined_){::kill(pid_,SIGKILL);for(unsigned i=0;i<100;++i){const auto n=::waitpid(pid_,&status_,WNOHANG);if(n==pid_){joined_=true;break;}std::this_thread::sleep_for(std::chrono::milliseconds(10));}}}
++ pid_t pid()const{return pid_;}
++ void signal(int s){need(!joined_&&::kill(pid_,s)==0,"signal owned child");}
++ int wait(unsigned milliseconds){const auto end=Clock::now()+std::chrono::milliseconds(milliseconds);while(Clock::now()<end){check();if(collect())return WIFEXITED(status_)?WEXITSTATUS(status_):WIFSIGNALED(status_)?-WTERMSIG(status_):-999;std::this_thread::sleep_for(std::chrono::milliseconds(10));}throw std::runtime_error("owned child deadline; no pass on forced cleanup");}
++};
++enum class Mode{positive,lost_submit,malformed,deadline,cancel};
++class Server{
++ Fd listener_;uint16_t port_=0;std::atomic<bool> stop_{false};std::thread thread_;std::exception_ptr failure_;const Fixture* fixture_=nullptr;Mode mode_;std::vector<std::string> methods_;
++ bool ready(int fd,short events,Clock::time_point end){while(!stop_&&Clock::now()<end){check();pollfd p{fd,events,0};const auto n=::poll(&p,1,50);if(n<0&&errno==EINTR)continue;need(n>=0,"server poll");if(n&&p.revents&events)return true;if(n&&p.revents&(POLLERR|POLLNVAL|POLLHUP))return false;}return false;}
++ Json request(int fd){std::string bytes;std::optional<size_t> length;size_t body=0;const auto end=Clock::now()+std::chrono::seconds(2);std::array<char,4096> buffer{};for(;;){need(ready(fd,POLLIN,end),"server request deadline");const auto n=::recv(fd,buffer.data(),buffer.size(),0);if(n<0&&(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR))continue;need(n>0&&size_t(n)<=73728-bytes.size(),"server request bound");bytes.append(buffer.data(),size_t(n));if(!length){const auto at=bytes.find("\r\n\r\n");if(at!=std::string::npos){need(at<=8192&&bytes.starts_with("POST / HTTP/1.1\r\n"),"client HTTP request");const auto key=bytes.find("\r\nContent-Length: ");need(key!=std::string::npos&&key<at,"client content length");const auto first=key+18,last=bytes.find("\r\n",first);need(last!=std::string::npos&&last<=at,"client length line");const auto raw=bytes.substr(first,last-first);need(!raw.empty()&&raw.size()<=5&&std::all_of(raw.begin(),raw.end(),[](char c){return c>='0'&&c<='9';}),"client length encoding");length=std::stoull(raw);need(*length<=65536,"client body bound");body=at+4;}else need(bytes.size()<=8192,"client header bound");}if(length&&bytes.size()>=body+*length){need(bytes.size()==body+*length,"client extra bytes");return Json::parse(std::string_view(bytes).substr(body));}}}
++ void send_all(int fd,const std::string& bytes,bool fragmented){size_t at=0;const auto end=Clock::now()+std::chrono::seconds(2);while(at<bytes.size()){need(ready(fd,POLLOUT,end),"server send deadline");const auto n=::send(fd,bytes.data()+at,std::min(bytes.size()-at,fragmented?size_t(13):bytes.size()),MSG_NOSIGNAL);if(n<0&&(errno==EINTR||errno==EAGAIN||errno==EWOULDBLOCK))continue;need(n>0,"server send");at+=size_t(n);if(fragmented)std::this_thread::sleep_for(std::chrono::milliseconds(1));}}
++ void connection(int fd){
++  const auto j=request(fd);need(j.is_object()&&j.size()==4&&j.at("jsonrpc")=="2.0"&&j.at("id").is_number_unsigned()&&j.at("params").is_array(),"client JSON RPC envelope");const auto method=j.at("method").get<std::string>();const auto& params=j.at("params");need(!params.empty()&&params[0]==token,"real HTTP received exact private token");methods_.push_back(method);++requests;if(method=="nano_capellaSubmit")++submits;
++  if(mode_==Mode::deadline||mode_==Mode::cancel){need(method=="nano_capellaStatus","hang only first request");while(!stop_){check();std::this_thread::sleep_for(std::chrono::milliseconds(10));}return;}
++  if(mode_==Mode::malformed){need(method=="nano_capellaStatus","malformed only first response");const auto body=sentinel+token;send_all(fd,"HTTP/1.1 200 OK\r\nContent-Length: "+std::to_string(body.size())+"\r\ncontent-length: "+std::to_string(body.size())+"\r\n\r\n"+body,false);return;}
++  need(fixture_!=nullptr,"server fixture binding");Json result;
++  if(method=="nano_capellaStatus"){need(params.size()==1,"status arity");result=fixture_->envelope;result.erase("kind");result.erase("ssz");result.update(Json{{"executionBound",true},{"clockHealthy",true},{"validatorHealthy",true},{"networkAdmissionEnabled",true},{"admissionSession",session}});}
++  else if(method=="nano_capellaJobs"){need(params.size()==1,"jobs arity");result={{"session",session},{"highWater","0x7"},{"jobs",Json::array()}};}
++  else{need(params.size()>=3&&params[1]==session&&params[2]=="0x8","RPC session/sequence");const Json complete{{"sequence","0x8"},{"payloadDigest",fixture_->operation.at("payloadDigest")},{"cancelRequested",false},{"state","completed"},{"decision","accepted"}};
++   if(method=="nano_capellaSubmit"){need(params.size()==4&&params[3].is_string()&&params[3].get<std::string>()==fixture_->envelope.dump(),"exact envelope submitted over real HTTP");if(mode_==Mode::lost_submit)return;result=complete;result.erase("decision");result["state"]="pending";}
++   else{need(params.size()==3&&(method=="nano_capellaJob"||method=="nano_capellaForget"),"expected Job/Forget");result=complete;}
++  }
++  const auto body=Json{{"jsonrpc","2.0"},{"id",j.at("id")},{"result",result}}.dump();send_all(fd,"HTTP/1.1 200 OK\r\nContent-Length: "+std::to_string(body.size())+"\r\nConnection: close\r\n\r\n"+body,mode_==Mode::positive);
++ }
++public:
++ std::atomic<uint64_t> requests{0},submits{0};
++ explicit Server(Mode mode):listener_(::socket(AF_INET,SOCK_STREAM,0)),mode_(mode){flags(listener_.n,true);sockaddr_in address{};address.sin_family=AF_INET;address.sin_addr.s_addr=htonl(INADDR_LOOPBACK);address.sin_port=0;need(::bind(listener_.n,reinterpret_cast<sockaddr*>(&address),sizeof(address))==0&&::listen(listener_.n,8)==0,"loopback listener");socklen_t bytes=sizeof(address);need(::getsockname(listener_.n,reinterpret_cast<sockaddr*>(&address),&bytes)==0&&address.sin_addr.s_addr==htonl(INADDR_LOOPBACK),"loopback listener identity");port_=ntohs(address.sin_port);need(port_>0,"ephemeral TCP port");}
++ uint16_t port()const{return port_;}
++ void start(const Fixture& f){fixture_=&f;thread_=std::thread([&]{try{while(!stop_){if(!ready(listener_.n,POLLIN,Clock::now()+std::chrono::milliseconds(200)))continue;if(stop_)break;Fd accepted(::accept(listener_.n,nullptr,nullptr));if(accepted.n<0&&(errno==EAGAIN||errno==EWOULDBLOCK||errno==EINTR))continue;flags(accepted.n,true);connection(accepted.n);}}catch(...){if(!stop_)failure_=std::current_exception();}});}
++ void stop(){stop_=true;if(thread_.joinable())thread_.join();}
++ void verify(){stop();if(failure_)std::rethrow_exception(failure_);}
++ const std::vector<std::string>& methods()const{return methods_;}
++ ~Server(){stop();}
++};
++struct ServerJoin {Server& server;~ServerJoin(){server.stop();}};
++int daemon(int argc,char** argv){
++ need(argc==6,"controlled daemon exact argv count");const fs::path source(argv[2]);const auto contract=Json::parse(text(source));need(contract.at("format")=="nano-http-exec-daemon-test-v1","controlled daemon contract");std::vector<std::string> args;for(int i=1;i<argc;++i)args.emplace_back(argv[i]);need(contract.at("arguments")==args,"argv preserved through exec");const auto* auth=::getenv("NANO_NETWORK_TOKEN"),*parent=::getenv("NANO_SUPERVISOR_PID");need(auth&&parent&&std::string_view(auth)==contract.at("token").get<std::string>()&&std::string_view(parent)==std::to_string(contract.at("parentPid").get<uint64_t>())&&uint64_t(::getppid())==contract.at("parentPid").get<uint64_t>(),"token and parent preserved privately");need(!::getenv("NANO_TEST_FRESH_SUBMISSION_PLAN")&&!::getenv("NANO_TEST_FRESH_SUBMISSION_PLAN_SHA256"),"test control environment removed");
++ const Json report{{"format","nano-http-exec-daemon-result-v1"},{"passed",true},{"pid",uint64_t(::getpid())},{"parentPid",uint64_t(::getppid())},{"argumentsMatched",true},{"tokenMatched",true},{"controlsRemoved",true},{"productionQualified",false}};write_new(contract.at("report").get<std::string>(),report.dump());return 0;
++}
++int test(const fs::path& self){
++ const fs::path shim=fs::canonical(NANO_TEST_SUBMISSION_SHIM);const auto shim_before=pin(shim),self_before=pin(self);auto pattern=(fs::temp_directory_path()/"nano-managed-http-exec-XXXXXX").string();need(::mkdtemp(pattern.data())!=nullptr,"owned test root");const auto root=fs::canonical(pattern);const auto daemon_path=root/"nano-p2p";copy_program(self,daemon_path,self_before);const auto daemon_before=pin(daemon_path);uint64_t groups=0,starts=0,total_requests=0;
++ auto original_fence=[&]{need(pin(shim)==shim_before&&pin(self)==self_before&&pin(daemon_path)==daemon_before,"public software input full9/SHA changed");};
++ auto refused=[&](Fixture& f,Child& c,unsigned deadline=4000){need(c.wait(deadline)==1,"real shim refusal exit");f.empty_reserved();f.fence();f.no_egress();need(text(f.err)==refusal_line&&text(f.out).empty(),"fixed real shim refusal output");};
++ current_stage="positive";
++ {
++  Server server(Mode::positive);Fixture f(root,"positive",daemon_path,server.port());server.start(f);ServerJoin joined_before_fixture_dies{server};Child child(shim,f);++starts;need(child.wait(5000)==0,"real HTTP+exec success exit");server.verify();need(server.methods()==std::vector<std::string>{"nano_capellaStatus","nano_capellaJobs","nano_capellaSubmit","nano_capellaJob","nano_capellaForget"}&&server.requests==5&&server.submits==1,"real HTTP sequence");const auto receipt_raw=text(f.result);const auto receipt=Json::parse(receipt_raw);need(receipt.is_object()&&receipt.size()==8&&receipt.at("format")=="nano-fresh-lifecycle-accepted-job-v1"&&receipt.at("owner")=="mac-docker"&&receipt.at("kind")=="voluntary_exit"&&receipt.at("actionSha256")==pin(f.action).sha&&receipt.at("session")==session&&receipt.at("sequence")=="0x8"&&receipt.at("job").is_object()&&receipt.at("job").size()==5&&receipt.at("job").at("decision")=="accepted"&&receipt.at("job").at("payloadDigest")==f.operation.at("payloadDigest")&&receipt.at("job").at("sequence")=="0x8"&&receipt.at("job").at("cancelRequested")==false&&receipt.at("job").at("state")=="completed"&&receipt_raw.find(token)==std::string::npos,"private accepted receipt8/job5");
++  need(receipt.at("campaignId")==f.operation.at("campaignId"),"accepted receipt campaign");const auto report=Json::parse(text(f.report));need(report.is_object()&&report.size()==8&&report.at("format")=="nano-http-exec-daemon-result-v1"&&report.at("passed")==true&&report.at("pid")==uint64_t(child.pid())&&report.at("parentPid")==uint64_t(::getpid())&&report.at("argumentsMatched")==true&&report.at("tokenMatched")==true&&report.at("controlsRemoved")==true&&report.at("productionQualified")==false,"same PID executed controlled daemon with private token/argv");const auto event=Json::parse(text(f.out));need(event.is_object()&&event.size()==8&&event.at("event")=="fresh-lifecycle-child-submission-accepted"&&event.at("accepted")==true&&event.at("receiptSha256")==sha(receipt_raw)&&event.at("receiptBytes")==receipt_raw.size()&&event.at("authExported")==false&&event.at("newSignaturesCreated")==0&&event.at("execPending")==true&&event.at("productionQualified")==false&&text(f.err).empty(),"accepted event binds actual private receipt");f.fence();f.no_egress();original_fence();total_requests+=server.requests;++groups;std::cout<<Json{{"scenario","fresh-lifecycle-real-http-exec"},{"passed",true},{"httpRequests",5},{"actualExecHandoff",true},{"sameChildPid",true},{"privateTokenAndArgumentsMatched",true},{"controlEnvironmentRemoved",true},{"fullNanoSupervisorVerified",false},{"productionQualified",false}}.dump()<<'\n';
++ }
++ current_stage="lost";
++ {
++  Server server(Mode::lost_submit);Fixture f(root,"lost-submit",daemon_path,server.port());server.start(f);ServerJoin joined_before_fixture_dies{server};Child first(shim,f);++starts;refused(f,first);need(server.requests==3&&server.submits==1,"Submit response lost exactly once");const auto reserved=pin(f.result);Child replay(shim,f,".replay");++starts;need(replay.wait(3000)==1,"same plan replay refused");server.verify();need(server.requests==3&&server.submits==1&&pin(f.result)==reserved&&!fs::exists(f.report),"O_EXCL replay emitted no new RPC and preserved reservation");need(text(fs::path(f.out.string()+".replay")).empty()&&text(fs::path(f.err.string()+".replay"))==refusal_line,"fixed replay refusal");f.fence();original_fence();total_requests+=server.requests;++groups;std::cout<<Json{{"scenario","fresh-lifecycle-lost-submit-replay-refusal"},{"passed",true},{"shimChildren",2},{"httpRequests",3},{"submitCalls",1},{"submissionOutcome","UNKNOWN"},{"replaySentRpc",false},{"productionQualified",false}}.dump()<<'\n';
++ }
++ current_stage="malformed";
++ {
++  Server server(Mode::malformed);Fixture f(root,"malformed-http",daemon_path,server.port());server.start(f);ServerJoin joined_before_fixture_dies{server};Child child(shim,f);++starts;refused(f,child);server.verify();need(server.requests==1&&server.submits==0,"malformed HTTP before Submit");original_fence();total_requests+=server.requests;++groups;std::cout<<Json{{"scenario","fresh-lifecycle-malformed-http-redaction"},{"passed",true},{"httpRequests",1},{"duplicateLengthHeaderRefused",true},{"privateSentinelExported",false},{"productionQualified",false}}.dump()<<'\n';
++ }
++ current_stage="deadline";
++ {
++  Server server(Mode::deadline);Fixture f(root,"deadline",daemon_path,server.port());server.start(f);ServerJoin joined_before_fixture_dies{server};const auto start=Clock::now();Child child(shim,f);++starts;refused(f,child,14000);const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-start).count();server.verify();need(elapsed>=9000&&elapsed<14000&&server.requests==1&&server.submits==0,"actual10second RPC deadline without external kill");original_fence();total_requests+=server.requests;++groups;std::cout<<Json{{"scenario","fresh-lifecycle-http-deadline"},{"passed",true},{"configuredChildSeconds",10},{"actualElapsedMs",elapsed},{"externalKillNeeded",false},{"productionQualified",false}}.dump()<<'\n';
++ }
++ current_stage="cancel";
++ {
++  Server server(Mode::cancel);Fixture f(root,"cancellation",daemon_path,server.port());server.start(f);ServerJoin joined_before_fixture_dies{server};Child child(shim,f);++starts;const auto until=Clock::now()+std::chrono::seconds(2);while(server.requests==0&&Clock::now()<until){check();std::this_thread::sleep_for(std::chrono::milliseconds(5));}need(server.requests==1,"cancellation reaches actual blocked HTTP");child.signal(SIGTERM);need(child.wait(2000)==-SIGTERM,"SIGTERM child closed and joined");server.verify();f.empty_reserved();f.fence();f.no_egress();need(server.requests==1&&server.submits==0,"no Submit after termination");original_fence();total_requests+=server.requests;++groups;std::cout<<Json{{"scenario","fresh-lifecycle-http-sigterm-join"},{"passed",true},{"childJoined",true},{"signal","SIGTERM"},{"submitCalls",0},{"productionQualified",false}}.dump()<<'\n';
++ }
++ current_stage="summary";original_fence();need(groups==5&&starts==6&&total_requests==11,"all targeted real HTTP/exec cases completed");std::cout<<Json{{"scenario","fresh-lifecycle-http-exec-summary"},{"passed",true},{"groups",groups},{"shimChildren",starts},{"httpRequests",total_requests},{"actualExecHandoffs",1},{"refusedOrTerminatedChildren",5},{"testedShimSha256",shim_before.sha},{"testedShimBytes",shim_before.bytes},{"actualPeakSelfRssKiB",rss(RUSAGE_SELF)},{"actualPeakChildRssKiB",rss(RUSAGE_CHILDREN)},{"fullNanoSupervisorVerified",false},{"coreCryptographicAdmissionVerified",false},{"newSignaturesCreated",0},{"databaseAccessed",false},{"productionQualified",false}}.dump()<<'\n';return 0;
++}
++} // namespace
++int main(int argc,char** argv){try{
++#ifndef __linux__
++ throw std::runtime_error("Linux-only Docker component test");
++#endif
++ const auto self=fs::canonical(argv[0]);if(self.filename()=="nano-p2p")return daemon(argc,argv);need(argc==1,"test argc");return test(self);
++}catch(...){std::cerr<<Json{{"scenario","fresh-lifecycle-http-exec-refused"},{"passed",false},{"stage",current_stage},{"detailsExported",false},{"productionQualified",false}}.dump()<<'\n';return 1;}}
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -122,6 +122,14 @@
+ target_link_libraries(nano-capella-lifecycle-submit PRIVATE nano_core)
+ add_test(NAME consensus_fresh_lifecycle_managed_submission COMMAND nano-capella-lifecycle-submit --self-test)
+ set_tests_properties(consensus_fresh_lifecycle_managed_submission PROPERTIES TIMEOUT 30 LABELS qualification_consensus_lifecycle)
++if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
++ add_executable(nano-fresh-lifecycle-managed-http-exec-tests tests/test_fresh_lifecycle_managed_http_exec.cpp)
++ target_link_libraries(nano-fresh-lifecycle-managed-http-exec-tests PRIVATE nano_core)
++ target_compile_definitions(nano-fresh-lifecycle-managed-http-exec-tests PRIVATE NANO_TEST_SUBMISSION_SHIM="$<TARGET_FILE:nano-capella-lifecycle-submit>")
++ add_dependencies(nano-fresh-lifecycle-managed-http-exec-tests nano-capella-lifecycle-submit)
++ add_test(NAME consensus_fresh_lifecycle_managed_http_exec COMMAND nano-fresh-lifecycle-managed-http-exec-tests)
++ set_tests_properties(consensus_fresh_lifecycle_managed_http_exec PROPERTIES TIMEOUT 60 LABELS qualification_consensus_lifecycle)
++endif()
+ add_executable(nano-capella-slashing-audit tests/capella/slashing_audit.cpp)
+ target_link_libraries(nano-capella-slashing-audit PRIVATE nano_core)
+ target_include_directories(nano-capella-slashing-audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")

@@ -106,6 +106,30 @@ inline void private_directory(const fs::path& p){path_guard(p.parent_path());req
 inline Json write_private(Inputs& in,const fs::path& p,std::string_view raw){Fd f(::open(p.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_CLOEXEC,0600));size_t at=0;while(at<raw.size()){in.check();const auto n=::write(f.fd,raw.data()+at,raw.size()-at);if(n<0&&errno==EINTR)continue;require(n>0,"output write");at+=size_t(n);}require(::fsync(f.fd)==0,"output fsync");Fd parent(::open(p.parent_path().c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));require(::fsync(parent.fd)==0,"output parent fsync");struct stat a{},b{};require(::fstat(f.fd,&a)==0&&::lstat(p.c_str(),&b)==0&&same(a,b)&&S_ISREG(a.st_mode)&&a.st_nlink==1&&a.st_uid==::geteuid()&&(a.st_mode&07777)==0600,"new output identity");in.output(p,a,raw);return {{"sha256",sha(raw)},{"bytes",raw.size()}};}
 inline std::optional<CheckpointArchiveEntry> archive(ChainStore& disk,const ConsensusRoot& id,size_t maximum,const std::function<void()>& check){check();require(maximum<=(SIZE_MAX-512)/2,"archive envelope bound");auto entry=disk.checkpoint_archive(Bytes(id.begin(),id.end()),2*maximum+512);require(!entry||entry->payload.size()<=maximum,"archive payload bound");return entry;}
 
+// Discovery is restricted to the RO observe stage. The caller has already
+// completed both independently pinned P/W closures before entering this seam.
+// Action and terminal requests continue to require the exact three-field HEAD.
+template<class ReadArchive>
+inline ConsensusBeaconHeader sealed_head(std::string_view mode,const Json& request,
+ const Phase0ForkSlashingContext& context,const Json& observation,
+ const ConsensusRoot& anchor,const ConsensusBeaconHeader& seed_header,
+ const CapellaForkBlockRules& rules,ReadArchive&& read_archive,
+ const std::function<void()>& check){
+ const auto& expected=request.at("expectedHead");const bool discover=expected.is_null();
+ if(discover)require(mode=="--fresh-audit"&&request.at("stage")=="observe"&&
+  request.at("action").is_null()&&request.at("evidence").is_null()&&
+  request.at("syntheticActionAuthorized")==false&&
+  request.at("intentionallyAuthorConflictingHeaders")==false&&
+  request.at("crossOwnerEvidenceTransferAuthorized")==false,"HEAD discovery is observe-only");
+ else{shape(expected,{"root","stateRoot","slot"});require(root(expected.at("root"))==context.block_root&&expected.at("slot")==observation.at("headSlot"),"sealed HEAD root/slot");}
+ ConsensusBeaconHeader head{};
+ if(context.block_root==anchor)head=seed_header;
+ else{const auto entry=read_archive(context.block_root);require(bool(entry),"head archive");head=signed_header(entry->payload,rules,check);require(entry->root==Bytes(context.block_root.begin(),context.block_root.end())&&entry->slot==head.slot,"head archive commitment");}
+ require(consensus_beacon_header_root(head)==context.block_root&&q(head.slot)==observation.at("headSlot").get<std::string>(),"authenticated HEAD header commitment");
+ if(!discover)require(root(expected.at("stateRoot"))==head.state_root,"sealed HEAD state root");
+ return head;
+}
+
 // Shared stopped-copy validation owns handles only for the callback's lifetime.
 // Inventories and admitted inputs are fenced after every handle has closed,
 // including callback refusal. Same-user writer races are not authorized.
@@ -133,7 +157,7 @@ Json stopped(int argc,char** argv,Callback&& callback){
   current_stage="read_only_closures";ChainStore primary(p,ChainStore::OpenMode::ReadOnly),independent(w,ChainStore::OpenMode::ReadOnly);primary.require_existing_chain_binding(chain,execution,"beacon");independent.require_existing_chain_binding(chain,execution,"nano-capella-recovery-v1");const auto pr=primary.fork_checkpoint(chain,execution,limits.envelope_bytes,primary_token),wr=independent.fork_checkpoint(chain,execution,2048+8*limits.envelope_bytes,witness_token);require(pr&&wr,"external checkpoints absent");const auto intent=parse(wr->snapshot);shape(intent,{"format","previous","next","snapshot","archive"});require(intent.dump()==wr->snapshot&&intent.at("format")=="nano-capella-recovery-v1"&&token(intent.at("next"))==primary_token&&intent.at("snapshot").get<std::string>()==pr->snapshot,"witness intent mismatch");if(intent.at("previous").is_null())require(primary_token.sequence==1,"initial witness sequence");else{const auto previous=token(intent.at("previous"));require(previous.sequence<UINT64_MAX&&previous.sequence+1==primary_token.sequence,"witness sequence continuity");}
   std::vector<CheckpointArchiveEntry> wa;require(intent.at("archive").is_array()&&intent.at("archive").size()<=1,"witness archive bound");for(const auto& a:intent.at("archive")){require(a.is_array()&&a.size()==3,"witness archive shape");wa.push_back({bytes(a.at(0),32),number(a.at(1)),unhex(a.at(2).get<std::string>())});}
   const auto pc=authenticate_capella_checkpoint_blob_closure(pr->snapshot,primary_token.digest,rules,limits,[&](const Bytes& id,size_t max){return primary.checkpoint_blob(chain,execution,id,max);},{},check);const auto wc=authenticate_capella_checkpoint_blob_closure(pr->snapshot,primary_token.digest,rules,limits,[&](const Bytes& id,size_t max){return independent.checkpoint_blob(chain,execution,id,max);},wa,check);require(pc.description()==wc.description()&&pc.observation()==wc.observation(),"independent complete closures");const auto context=pc.head_context();const auto observation=pc.observation();require(text(context.genesis_root)==manifest.at("genesisValidatorsRoot").get<std::string>()&&pc.description().at("identity").at("networkAnchor")==text(anchor)&&observation.at("finalized")==stop.at("finalized")&&observation.at("justified").at("epoch")==stop.at("justifiedEpoch"),"sealed domain/finality");
-  current_stage="sealed_head";const auto& expected=request.at("expectedHead");shape(expected,{"root","stateRoot","slot"});require(root(expected.at("root"))==context.block_root&&expected.at("slot")==observation.at("headSlot"),"sealed HEAD root/slot");ConsensusBeaconHeader head{};if(context.block_root==anchor)head=seed->header;else{const auto entry=archive(primary,context.block_root,rules.transition.consensus.maximum_block_bytes,check);require(bool(entry),"head archive");head=signed_header(entry->payload,rules,check);require(entry->root==Bytes(context.block_root.begin(),context.block_root.end())&&entry->slot==head.slot&&consensus_beacon_header_root(head)==context.block_root,"head archive commitment");}require(root(expected.at("stateRoot"))==head.state_root,"sealed HEAD state root");
+  current_stage="sealed_head";const auto head=sealed_head(argv[1],request,context,observation,anchor,seed->header,rules,[&](const ConsensusRoot& id){return archive(primary,id,rules.transition.consensus.maximum_block_bytes,check);},check);
   for(const auto& id:ids)local_configuration(c,id,owner,resolve(context.registry,id));in.fence();
   private_directory(out);result=callback(in,manifest,c,request,ids,context,head,pc,initial,primary,rules,limits,out,check);
   const auto pp=primary.fork_checkpoint(chain,execution,limits.envelope_bytes,primary_token),ww=independent.fork_checkpoint(chain,execution,2048+8*limits.envelope_bytes,witness_token);require(pp&&ww&&pp->snapshot==pr->snapshot&&ww->snapshot==wr->snapshot,"checkpoint changed");

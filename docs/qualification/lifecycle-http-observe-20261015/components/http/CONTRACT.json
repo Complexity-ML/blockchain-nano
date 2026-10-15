@@ -1,0 +1,126 @@
+{
+  "format": "nano-fresh-lifecycle-real-http-exec-test-contract-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "target": "nano-fresh-lifecycle-managed-http-exec-tests",
+  "translationUnits": 1,
+  "platform": "Linux Docker with existing image and loopback only",
+  "ctest": "consensus_fresh_lifecycle_managed_http_exec",
+  "normalCliArguments": 0,
+  "compileTimeMacro": "NANO_TEST_SUBMISSION_SHIM",
+  "macroValue": "absolute path of the unchanged separately qualified real lifecycleSubmit executable",
+  "productionHelperIncludedInTestTu": false,
+  "old26CallbacksReplayed": false,
+  "currentCoreAndPhase1SourceChanges": false,
+  "limits": {
+    "cooperativeWholeRunSeconds": 45,
+    "externalTimeoutSeconds": 60,
+    "selfPeakRssKiB": 131072,
+    "waitedChildPeakRssKiB": 131072,
+    "childPlanSeconds": 10,
+    "deadlineCaseJoinMs": 14000,
+    "ordinaryChildJoinMs": 5000,
+    "sigtermJoinMs": 2000,
+    "fixtureFileBytesMaximum": 67108864,
+    "capturedChildLogBytesMaximum": 65536
+  },
+  "transport": {
+    "address": "127.0.0.1",
+    "port": "OS-assigned ephemeral TCP",
+    "externalNetworkAllowed": false,
+    "realTcpAndHttp": true,
+    "positiveServerWriteChunkMaximumBytes": 13,
+    "positiveMethods": [
+      "nano_capellaStatus",
+      "nano_capellaJobs",
+      "nano_capellaSubmit",
+      "nano_capellaJob",
+      "nano_capellaForget"
+    ],
+    "nextSequence": "0x8 from observed highWater0x7",
+    "acceptedPrivateResultExactFields": 8,
+    "acceptedNestedJobExactFields": 5
+  },
+  "fixtures": {
+    "syntheticOpaqueOperation": true,
+    "newSignaturesCreated": 0,
+    "actualCampaignInputs": false,
+    "newPrivateOsTemporaryRoot": true,
+    "directoriesMode": "0700",
+    "controlFilesMode": "0600",
+    "copiedControlledDaemonMode": "0500",
+    "copiedDaemonLeaf": "nano-p2p",
+    "copiedDaemonSource": "this test executable with independent inode and equal SHA/bytes",
+    "allOriginalMaterialNineFieldsShaSizeFenced": true,
+    "partialFixturesRetained": true,
+    "oldRootsMutatedOrRemoved": false
+  },
+  "handoffProof": {
+    "actualExecvOfControlledDaemon": true,
+    "samePosixSpawnChildPid": true,
+    "everyOriginalArgumentMatched": true,
+    "syntheticSupervisorTokenMatchedPrivately": true,
+    "bothPlanControlVariablesAbsentAfterExec": true,
+    "authenticationValuesInPublicOutput": false
+  },
+  "negativeCases": [
+    "Submit read then response dropped: UNKNOWN with one Submit",
+    "same-plan replay refused by existing result reservation with no new RPC",
+    "duplicate Content-Length header rejected and sentinel redacted",
+    "real10second child HTTP deadline without external termination",
+    "SIGTERM while blocked on HTTP followed by exact-child join"
+  ],
+  "expected": {
+    "groups": 5,
+    "rows": 6,
+    "shimChildren": 6,
+    "httpRequests": 11,
+    "actualExecHandoffs": 1,
+    "refusedOrTerminatedChildren": 5
+  },
+  "scenarios": [
+    "fresh-lifecycle-real-http-exec",
+    "fresh-lifecycle-lost-submit-replay-refusal",
+    "fresh-lifecycle-malformed-http-redaction",
+    "fresh-lifecycle-http-deadline",
+    "fresh-lifecycle-http-sigterm-join",
+    "fresh-lifecycle-http-exec-summary"
+  ],
+  "summaryActualResourceFields": [
+    "actualPeakSelfRssKiB",
+    "actualPeakChildRssKiB"
+  ],
+  "scope": {
+    "syntheticParent": true,
+    "syntheticDaemon": true,
+    "fullNanoSupervisorVerified": false,
+    "coreCryptographicAdmissionVerified": false,
+    "parentDeathTested": false,
+    "actualNetworkDaemonExecuted": false,
+    "databaseAccessed": false,
+    "originalRecoveryQualified": false,
+    "campaignAuthorized": false,
+    "productionQualified": false
+  },
+  "executionByAuthor": {
+    "compiler": 0,
+    "projectPrograms": 0,
+    "tests": 0,
+    "docker": 0,
+    "sshOrVm": 0,
+    "git": 0,
+    "rOrLWrites": 0
+  },
+  "refusalDiagnostic": {
+    "fixedStageLabels": [
+      "setup",
+      "positive",
+      "lost",
+      "malformed",
+      "deadline",
+      "cancel",
+      "summary"
+    ],
+    "exceptionContentsExported": false
+  },
+  "serverJoinedBeforeReferencedFixtureDestruction": true
+}

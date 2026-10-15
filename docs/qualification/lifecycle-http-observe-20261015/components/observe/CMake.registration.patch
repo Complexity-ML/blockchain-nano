@@ -1,0 +1,11 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -109,6 +109,8 @@
+ set_tests_properties(consensus_fresh_lifecycle_action_policy PROPERTIES TIMEOUT 30 LABELS qualification_consensus_lifecycle)
+ add_test(NAME consensus_fresh_lifecycle_canonical_stream COMMAND nano-capella-deposit-audit --fresh-stream-self-test)
+ set_tests_properties(consensus_fresh_lifecycle_canonical_stream PROPERTIES TIMEOUT 300 LABELS qualification_consensus_lifecycle)
++add_test(NAME consensus_fresh_lifecycle_sealed_observe COMMAND nano-capella-deposit-audit --fresh-lifecycle-observe-self-test)
++set_tests_properties(consensus_fresh_lifecycle_sealed_observe PROPERTIES TIMEOUT 60 LABELS qualification_consensus_lifecycle)
+ target_include_directories(nano-capella-deposit-audit PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
+ # CMake integration fragment against dff9df7f; ROOT merges with lifecycle-tool registration.
+ add_executable(nano-capella-validator-read-tests tests/test_capella_validator_read.cpp)

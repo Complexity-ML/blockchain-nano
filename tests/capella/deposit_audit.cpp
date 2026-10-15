@@ -13,6 +13,7 @@
 #include "../support/fresh_lifecycle.hpp"
 #include "../support/fresh_lifecycle_self_test.hpp"
 #include "../support/capella_canonical_stream_self_test.hpp"
+#include "../support/fresh_lifecycle_observe_self_test.hpp"
 using namespace nano;
 namespace {
 void require(bool b,const char* message){if(!b)throw std::runtime_error(message);}
@@ -25,6 +26,7 @@ std::string text(const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));}
 int main(int argc,char** argv){
  if(argc==2&&std::string(argv[1])=="--fresh-stream-self-test")return nano::test::lifecycle::fresh_stream_self_test();
  if(argc==2&&std::string(argv[1])=="--fresh-lifecycle-self-test")return nano::test::fresh_lifecycle::self_test();
+ if(argc==2&&std::string(argv[1])=="--fresh-lifecycle-observe-self-test")return nano::test::fresh_lifecycle::observe_self_test();
  if(argc>1&&(std::string(argv[1])=="--fresh-action"||std::string(argv[1])=="--fresh-audit"))return nano::test::fresh_lifecycle::main(argc,argv);
  try{
  require(argc==7&&std::string(argv[1])=="--audit","usage: --audit synthetic-genesis node-config stopped-db external-audit-request deposit-metadata");

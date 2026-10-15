@@ -1,0 +1,96 @@
+{
+  "format": "nano-fresh-lifecycle-observe-null-contract-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "baseCommit": "b5a48e0f2a05bc392f7604edb6214ee6b0078d67",
+  "target": "nano-capella-deposit-audit",
+  "changedProductionCoreFiles": 0,
+  "profileOrClockChanged": false,
+  "requestFormatUnchanged": "nano-fresh-lifecycle-request-v1",
+  "headAuthority": {
+    "nullableOnlyWhen": {
+      "mode": "--fresh-audit",
+      "stage": "observe",
+      "action": null,
+      "evidence": null,
+      "syntheticActionAuthorized": false,
+      "intentionallyAuthorConflictingHeaders": false,
+      "crossOwnerEvidenceTransferAuthorized": false
+    },
+    "nonNullExactKeys": [
+      "root",
+      "stateRoot",
+      "slot"
+    ],
+    "actionNullRefused": true,
+    "terminalNullRefused": true,
+    "completedIndependentPrimaryWitnessClosuresBeforeHeadDiscovery": true,
+    "externalStopPrimaryAndIndependentWitnessTokensUnchanged": true,
+    "initialOrArchivedHeaderRootMatchesAuthenticatedContext": true,
+    "headerSlotMatchesAuthenticatedObservation": true,
+    "exactActionAndTerminalHeadBindingRetained": true,
+    "headDiscoveryOutputs": [
+      "headRoot",
+      "headStateRoot",
+      "headSlot"
+    ],
+    "outputSchemaChanged": false,
+    "outputCannotAuthorizeSigningOrTransfer": true,
+    "callerMustConstructAndIndependentlyPinNewExactActionRequest": true
+  },
+  "newTest": {
+    "selector": "--fresh-lifecycle-observe-self-test",
+    "ctest": "consensus_fresh_lifecycle_sealed_observe",
+    "timeoutSeconds": 60,
+    "rootOuterTimeoutRequired": true,
+    "rootSuggestedOuterSeconds": 75,
+    "rssGuardKiB": 131072,
+    "groups": 3,
+    "rows": 4,
+    "expectedRefusals": 9,
+    "positiveHeadChecks": 4,
+    "completeClosuresDecoded": 2,
+    "genuineSignedAnchorBlocks": 1,
+    "genuineSignedChildBlocks": 1,
+    "fixtureBlsSignatures": 4,
+    "archiveReads": 5,
+    "refusals": [
+      "null action HEAD",
+      "null terminal HEAD",
+      "null observe with evidence-transfer authorization",
+      "exact HEAD root mismatch",
+      "exact HEAD stateRoot mismatch",
+      "exact HEAD slot mismatch",
+      "corrupt authenticated-anchor header",
+      "corrupt archived HEAD header",
+      "corrupt HEAD snapshot row with recomputed envelope digest"
+    ],
+    "scenarios": [
+      "fresh-lifecycle-observe-authenticated-head",
+      "fresh-lifecycle-observe-only-null-scope",
+      "fresh-lifecycle-observe-corrupt-head-refusal",
+      "fresh-lifecycle-observe-summary"
+    ],
+    "oldActionPolicyOrLongStreamExecuted": false,
+    "databasesOpened": 0,
+    "envRead": false,
+    "operationalSignatures": 0,
+    "networkUsed": false,
+    "runtimeStarted": false,
+    "inputPhysicalPairPolicyExercisedByThisTest": false,
+    "sharedOperationalHeadBindingAndRealCompleteDecoderExercised": true,
+    "publicFixtureSupportUnchanged": true
+  },
+  "scope": {
+    "sourceOnly": true,
+    "agentProgramExecutions": 0,
+    "agentRorLWrites": 0,
+    "actualStoppedPrivateAuditExecuted": false,
+    "realSupervisorQualified": false,
+    "campaignAuthorized": false,
+    "runtimeDriverQualified": false,
+    "privateVpsApproval": "PENDING",
+    "NAS": "DECLINED",
+    "ci": "38767115033 billing before jobs",
+    "productionQualified": false
+  }
+}

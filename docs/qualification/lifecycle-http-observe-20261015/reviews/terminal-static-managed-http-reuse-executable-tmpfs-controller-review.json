@@ -1,0 +1,44 @@
+{
+  "reviewer": "evm_activation_review",
+  "verdict": "GO_SOURCE_ONLY",
+  "materialBlockers": [],
+  "reviewActions": [
+    "public source read",
+    "exact byte/SHA256 checks",
+    "static comparison"
+  ],
+  "agentProjectCompilerTestCMakeDockerSshGitExecutions": 0,
+  "actualPrivateInputsRead": false,
+  "rOrLWritten": false,
+  "actualExecutionQualifiedByThisReview": false,
+  "productionQualified": false,
+  "format": "nano-static-managed-http-reuse-executable-tmpfs-controller-review-v1",
+  "controller": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-http-build-root-20261015/reuse-arm-root-v2.py",
+    "sha256": "426701a0e5a4e83f22e0fb8639d7d34e761d1a7b2487e191c474400235906b20",
+    "bytes": 8331
+  },
+  "frozenTestManifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-managed-http-exec-20261015/manifest.json",
+    "sha256": "f0d5bf3a15ff48480b8d5b8971ed0115d3615a6ce122f661416f79173bf4f155",
+    "bytes": 4402
+  },
+  "pythonAstParsedOnly": true,
+  "findings": [
+    "The frozen test source and compiled test are reused. The unchanged qualified shim is independently pinned; no compiler or link is invoked.",
+    "ROOT-bound prior config equality, complete old HELD material and aliases, prior genuine M==MD==admitted dependencies and successful compilation/link events are required.",
+    "Actual image SDK hashes must equal the original compilation authority before testing and remain exact afterwards; all old full material fences remain.",
+    "A dedicated /fixture-exec tmpfs has exec,nosuid,nodev and TMPDIR selects it. The separate /tmp mount is unchanged.",
+    "New output namespace and owned container are distinct; six passed rows, exact ROOT-pinned summary and separate self/child RSS guards are required.",
+    "Cleanup binds container nonce/name/label/image and requires absence. Test evidence remains synthetic-parent real-HTTP plus controlled-daemon exec; real Nano supervisor and real P2P handoff are false."
+  ],
+  "scope": {
+    "consumerCompilations": 0,
+    "consumerLinks": 0,
+    "testSourceModified": false,
+    "firstAttemptFailurePreserved": true,
+    "noexecProbeIsRootReportedSeparateEvidence": true,
+    "fullNanoSupervisorQualified": false,
+    "realP2pExecQualified": false
+  }
+}

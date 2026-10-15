@@ -1,0 +1,74 @@
+{
+  "reviewer": "evm_activation_review",
+  "verdict": "GO_SOURCE_ONLY",
+  "materialBlockers": [],
+  "reviewActions": [
+    "public source read",
+    "exact byte/SHA256 checks",
+    "static comparison"
+  ],
+  "agentProjectCompilerTestCMakeDockerSshGitExecutions": 0,
+  "actualPrivateInputsRead": false,
+  "rOrLWritten": false,
+  "actualExecutionQualifiedByThisReview": false,
+  "productionQualified": false,
+  "format": "nano-static-v3-lifecycle-observe-head-review-v1",
+  "manifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-actions-observe-v3-20261015/manifest.json",
+    "sha256": "811f4ff16cc04e3205761bb7a90500f3f8858d32bac462613b51da48b51295cd",
+    "bytes": 5243
+  },
+  "payloadCount": 7,
+  "payloadBytes": 83823,
+  "payloads": [
+    {
+      "path": "source/tests/capella/deposit_audit.cpp",
+      "sha256": "00d6b280ffde5c5fa9f10ee25b0cb87399f111adae7a5d5a8a274787bcf4d33e",
+      "bytes": 16560
+    },
+    {
+      "path": "source/tests/support/fresh_lifecycle.hpp",
+      "sha256": "310d47b0cce4513b13bc627dc0a80b98214ba5d1f902561421e901e176ba938e",
+      "bytes": 35754
+    },
+    {
+      "path": "source/tests/support/fresh_lifecycle_observe_self_test.hpp",
+      "sha256": "f3ebca95b0659f0caa2a29387913e8aac5274bb269c7a6004b9be9d320ee5e9f",
+      "bytes": 7771
+    },
+    {
+      "path": "README.md",
+      "sha256": "a196309dadac5aec3f984fc3b7589a694c2ac67554367408e8bff5dba268b7a0",
+      "bytes": 3201
+    },
+    {
+      "path": "CONTRACT.json",
+      "sha256": "0142d46a267f7116c46fa93111697e85abf5cd2f360eb2e5d5a318988e03dea9",
+      "bytes": 3247
+    },
+    {
+      "path": "source.patch",
+      "sha256": "6478c70306015df17567e90ca2fb2800cddf157656b01f9703e0ac282b707dd7",
+      "bytes": 16290
+    },
+    {
+      "path": "CMake.registration.patch",
+      "sha256": "8e0aa1c317738e1e9b26852b5792650e6e646bb6951afdf1db3d02f0a1a5d20c",
+      "bytes": 1000
+    }
+  ],
+  "findings": [
+    "HEAD discovery is reachable only after complete independent P/W closures and external STOP/domain/finality binding.",
+    "Null HEAD is limited to --fresh-audit observe with null action/evidence and all signing/conflict/transfer permissions false.",
+    "Actions and terminal audit retain exact root/stateRoot/slot authority. Initial or bounded archived header HTR and slot bind to the authenticated context.",
+    "Legacy selector bodies are unchanged. New selector is --fresh-lifecycle-observe-self-test; only its focused genuine one-child fixture is added.",
+    "Three groups/four rows exercise four positive HEAD bindings and nine refusals with four fixture BLS signatures and five bounded archive reads; these are source contract counts, not reviewer measurements."
+  ],
+  "scope": {
+    "newCoreFiles": 0,
+    "newSelectorOnly": true,
+    "oldPolicyOrLongStreamReplayedByReviewer": false,
+    "actualStoppedPhysicalPairPolicyTestedByNewSelfTest": false,
+    "realSupervisorQualified": false
+  }
+}
