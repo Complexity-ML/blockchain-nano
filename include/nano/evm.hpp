@@ -2,6 +2,8 @@
 #include "core.hpp"
 #include "opcodes.hpp"
 #include <set>
+#include <map>
+#include <cstddef>
 #include <functional>
 #include <coroutine>
 #include <exception>
@@ -14,6 +16,28 @@ Int blob_base_fee(const Int& excess,EvmRevision revision=EvmRevision::Cancun);
 Int transaction_floor_gas(const Transaction& tx,EvmRevision revision);
 Int transaction_intrinsic_gas(const Transaction& tx,EvmRevision revision);
 struct ExecutionCancelled : std::runtime_error {using std::runtime_error::runtime_error;};
+// Host-only observer quota: never turn an incomplete access list into a VM result.
+struct EvmAccessListLimitExceeded : ExecutionCancelled {using ExecutionCancelled::ExecutionCancelled;};
+// One caller-owned monotone trace. Warm-set/state rollback never removes entries.
+// Seed and exclusions are normalized and owned before execution can call the host.
+class EvmAccessListTrace {
+ friend class EVM;
+ std::map<std::string,std::set<Bytes>> entries_;
+ std::set<std::string> excluded_;
+ size_t maximum_addresses_,maximum_storage_keys_,storage_keys_=0;
+ bool limited_=false;
+ [[noreturn]] void limit();
+ void record_address(const std::string&);
+ void record_storage(const std::string&,const Bytes&);
+public:
+ EvmAccessListTrace(const std::vector<Access>& seed,const std::set<std::string>& excluded,
+  size_t maximum_addresses,size_t maximum_storage_keys);
+ EvmAccessListTrace(const EvmAccessListTrace&)=delete;
+ EvmAccessListTrace& operator=(const EvmAccessListTrace&)=delete;
+ std::vector<Access> access_list() const;
+ size_t address_count() const noexcept{return entries_.size();}
+ size_t storage_key_count() const noexcept{return storage_keys_;}
+};
 struct ExecutionContext {
  EvmRevision revision=EvmRevision::NanoExperimental;
  std::string origin="0x0000000000000000000000000000000000000000",caller=origin,address=origin,coinbase=origin;
@@ -83,11 +107,14 @@ class EVM {
  std::set<std::string> warm_addresses_;
  std::set<std::pair<std::string,Int>> warm_slots_;
  std::map<std::pair<std::string,Int>,Int> original_storage_;
- EvmTask run(const ExecutionContext& ctx, unsigned depth=0);
+ EvmTask run(const ExecutionContext& ctx,unsigned depth,EvmAccessListTrace* trace);
+ ExecutionResult execute_impl(const ExecutionContext&,EvmAccessListTrace*);
 public:
  explicit EVM(State& state):state_(state),writable_state_(&state){}
  // A const state accepts only static execution and cannot be written.
  explicit EVM(const State& state):state_(state){}
  ExecutionResult execute(const ExecutionContext& ctx);
+ // Synchronous borrowed observer, propagated explicitly to every nested frame.
+ ExecutionResult execute(const ExecutionContext& ctx,EvmAccessListTrace& trace);
 };
 }

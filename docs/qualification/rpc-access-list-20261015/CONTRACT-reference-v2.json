@@ -1,0 +1,18 @@
+{
+  "format":"nano-public-shanghai-access-list-reference-oracle-contract-v2",
+  "status":"SOURCE_ONLY_UNEXECUTED",
+  "script":"tests/hardhat/scripts/compare-rpc-access-list-geth.mjs",
+  "requiredEnvironment":["NANO_BINARY","GETH_BINARY","ANVIL_BINARY","UNISWAP_V2_PAIR_ARTIFACT","NANO_DIAGNOSTIC_REPORT_DIR"],
+  "optionalEnvironment":["ANVIL_EXPECTED_VERSION"],
+  "primaryReference":{"client":"Geth","version":"1.16.7","genesis":"Owned public custom genesis","fork":"Shanghai","postShanghaiForksConfigured":false,"devMode":false,"rpcGasCap":30000000,"peers":0},
+  "strictCore":{"expectedCases":16,"sameOriginalCasesPreserved":true,"canonicalAddressAndKeySetsEqual":true,"finalNetGasUsedEqual":true,"vmErrorCategoryEqual":true,"errorWordingCompared":false,"eachPrimaryOwnListReplayEqual":true,"successAndRevertDispositionRequired":true},
+  "strictStateOverrides":{"expectedCases":5,"names":["state-replacement","state-diff","code","balance","nonce-create"],"sameCanonicalStateUsedForEachRequest":true},
+  "context":{"fields":["number","timestamp","baseFee","gasLimit","gasPrice"],"methods":["eth_call","eth_createAccessList"],"strictLatestValues":{"number":"0","timestamp":"100","baseFee":"1000000000","gasLimit":"30000000","gasPrice":"2000000000"},"individualAccessListProbes":5,"pendingCallObservationsAreDiagnostic":true},
+  "additionalChecks":{"identicalAmmTimeBranchOverride":1,"zeroFeeDiagnostics":2,"snapshotsUnchangedOnAllThreeNodes":true,"snapshotIncludesIndexedStorageCodeAndUnfundedOverrideBalance":true},
+  "anvilDiagnostic":{"expectedCases":16,"versionExpectedByRoot":"1.5.1","sameOriginalTransactionsPreserved":true,"rawResponsesRetained":true,"ownListReplayWhenResponseHasAList":true,"qualificationPassClaimed":false,"contextMeasuredRatherThanAssumed":true},
+  "historicalV1":{"sha256":"bf75a4b3d592e476a60af0f5116094ee9bcd99e823617d6ddc3c65b60510f1be","bytes":42750,"referencedStatus":"FAILED","matched":11,"expectedCases":16,"reExecuted":false,"immutabilityFenceAuthority":"ROOT external input envelope"},
+  "uniswapArtifact":{"package":"@uniswap/v2-core","version":"1.0.1","sha256":"bb00cb1d64deea4159731b5957eeb8354531a110fb9120b9ef14edbc950e0736","bytes":223322,"syntheticTokenResponses":true},
+  "innerBounds":{"versionCommandTimeoutMs":10000,"gethInitTimeoutMs":30000,"gethReadyTimeoutMs":15000,"otherReadyTimeoutMs":10000,"rpcRequestTimeoutMs":10000,"childLogMaximumBytes":8388608,"childTermToKillMs":3000,"childCloseTimeoutMs":5000},
+  "report":{"path":"results.json","format":"nano-public-shanghai-access-list-geth-primary-anvil-diagnostic-v2","requiredSuccess":{"actualComparisons":16,"matched":16,"actualStateOverrideComparisons":5,"matchedStateOverrides":5,"failure":null},"actualProcessExitCodeRequired":0},
+  "scope":{"compilerOrProjectProgramsExecutedByAuthor":0,"cppOrProductionChanges":0,"oldCppTestGroupsSelected":0,"newSignatures":0,"transactionsBroadcast":0,"privateInputsRead":false,"operationalKeysUsed":false,"network":"Loopback-only public synthetic chains in ROOT-owned test environment","privateRecoveryOrDutiesQualified":false,"productionQualified":false,"ciOrExternalAuditQualified":false}
+}

@@ -43,8 +43,45 @@ struct Frame {
 Bytes slice(const Bytes& input,const Int& start,size_t size){Bytes out(size);if(start>=Int(input.size()))return out;size_t off=start.get_ui();std::copy_n(input.begin()+off,std::min(size,input.size()-off),out.begin());return out;}
 std::string evm_address(const Int& value){return hex(bytes(Int(value&((Int(1)<<160)-1)),20));}
 }
-ExecutionResult EVM::execute(const ExecutionContext& ctx){if(!writable_state_&&!ctx.is_static)throw std::invalid_argument("read-only EVM requires static context");warm_addresses_={address(ctx.origin),address(ctx.caller),address(ctx.address)};for(unsigned i=1;i<=(ctx.revision>=EvmRevision::Prague?17u:ctx.revision>=EvmRevision::Cancun?10u:9u);++i)warm_addresses_.insert(evm_address(Int(i)));if(ctx.revision>=EvmRevision::Osaka)warm_addresses_.insert(evm_address(Int(256)));if(ctx.revision>=EvmRevision::Shanghai)warm_addresses_.insert(address(ctx.coinbase));for(const auto& account:ctx.authorization_warm_addresses)warm_addresses_.insert(address(account));warm_slots_.clear();original_storage_.clear();pending_deletions_.clear();created_accounts_.clear();transient_storage_.clear();if(ctx.contract_creation)created_accounts_.insert(address(ctx.address));for(const auto& access:ctx.access_list){auto account=address(access.address);warm_addresses_.insert(account);for(const auto& key:access.keys){if(key.size()!=32)throw std::invalid_argument("access-list storage key must be 32 bytes");warm_slots_.insert({account,integer(key)});}}auto task=run(ctx);auto result=task.execute();if(result.success){result.deleted_accounts=pending_deletions_;for(const auto& account:pending_deletions_)mutable_state().erase(account);}return result;}
-EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
+[[noreturn]] void EvmAccessListTrace::limit(){limited_=true;throw EvmAccessListLimitExceeded("EVM access-list trace limit exceeded");}
+EvmAccessListTrace::EvmAccessListTrace(const std::vector<Access>& seed,const std::set<std::string>& excluded,
+ size_t maximum_addresses,size_t maximum_storage_keys)
+ :maximum_addresses_(maximum_addresses),maximum_storage_keys_(maximum_storage_keys){
+ if(!maximum_addresses_||!maximum_storage_keys_)throw std::invalid_argument("access-list trace limits must be positive");
+ for(const auto& account:excluded)excluded_.insert(address(account));
+ for(const auto& access:seed){
+  // Geth v1.16.7 excludes redundant address-only rows, not their storage keys.
+  const auto account=address(access.address);record_address(account);
+  for(const auto& key:access.keys)record_storage(account,key);
+ }
+}
+void EvmAccessListTrace::record_address(const std::string& input){
+ if(limited_)limit();const auto account=address(input);
+ if(excluded_.contains(account)||entries_.contains(account))return;
+ if(entries_.size()>=maximum_addresses_)limit();
+ entries_.try_emplace(account);
+}
+void EvmAccessListTrace::record_storage(const std::string& input,const Bytes& key){
+ if(limited_)limit();if(key.size()!=32)throw std::invalid_argument("access-list storage key must be 32 bytes");
+ const auto account=address(input);auto found=entries_.find(account);
+ if(found!=entries_.end()&&found->second.contains(key))return;
+ if(storage_keys_>=maximum_storage_keys_)limit();
+ if(found==entries_.end()){
+  if(entries_.size()>=maximum_addresses_)limit();
+  found=entries_.try_emplace(account).first;
+ }
+ found->second.insert(key);++storage_keys_;
+}
+std::vector<Access> EvmAccessListTrace::access_list() const{
+ if(limited_)throw EvmAccessListLimitExceeded("EVM access-list trace limit exceeded");
+ std::vector<Access> out;out.reserve(entries_.size());
+ for(const auto& [account,keys]:entries_)out.push_back({account,std::vector<Bytes>(keys.begin(),keys.end())});
+ return out;
+}
+ExecutionResult EVM::execute(const ExecutionContext& ctx){return execute_impl(ctx,nullptr);}
+ExecutionResult EVM::execute(const ExecutionContext& ctx,EvmAccessListTrace& trace){return execute_impl(ctx,&trace);}
+ExecutionResult EVM::execute_impl(const ExecutionContext& ctx,EvmAccessListTrace* trace){if(!writable_state_&&!ctx.is_static)throw std::invalid_argument("read-only EVM requires static context");warm_addresses_={address(ctx.origin),address(ctx.caller),address(ctx.address)};for(unsigned i=1;i<=(ctx.revision>=EvmRevision::Prague?17u:ctx.revision>=EvmRevision::Cancun?10u:9u);++i)warm_addresses_.insert(evm_address(Int(i)));if(ctx.revision>=EvmRevision::Osaka)warm_addresses_.insert(evm_address(Int(256)));if(ctx.revision>=EvmRevision::Shanghai)warm_addresses_.insert(address(ctx.coinbase));for(const auto& account:ctx.authorization_warm_addresses)warm_addresses_.insert(address(account));warm_slots_.clear();original_storage_.clear();pending_deletions_.clear();created_accounts_.clear();transient_storage_.clear();if(ctx.contract_creation)created_accounts_.insert(address(ctx.address));for(const auto& access:ctx.access_list){auto account=address(access.address);warm_addresses_.insert(account);for(const auto& key:access.keys){if(key.size()!=32)throw std::invalid_argument("access-list storage key must be 32 bytes");warm_slots_.insert({account,integer(key)});}}if(trace&&trace->limited_)trace->limit();auto task=run(ctx,0,trace);auto result=task.execute();if(result.success){result.deleted_accounts=pending_deletions_;for(const auto& account:pending_deletions_)mutable_state().erase(account);}return result;}
+EvmTask EVM::run(const ExecutionContext& ctx,unsigned depth,EvmAccessListTrace* trace){
  if(ctx.checkpoint)ctx.checkpoint();
  Int target=integer(unhex(ctx.code_address.value_or(ctx.address)));if(target==10&&ctx.revision==EvmRevision::NanoExperimental){ExecutionResult unavailable;unavailable.gas_used=ctx.gas;unavailable.error="Precompile not implemented: 10";co_return unavailable;}
  if(is_precompile(target,ctx.revision)){auto result=precompile(unsigned(target.get_ui()),ctx.data,ctx.gas,ctx.revision);if(ctx.checkpoint)ctx.checkpoint();co_return result;}
@@ -57,6 +94,16 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
  if(((ctx.revision==EvmRevision::Berlin||ctx.revision==EvmRevision::Paris)&&op==0x5f)||(ctx.revision==EvmRevision::Berlin&&op==0x48))throw std::runtime_error("Opcode unavailable in selected EVM revision");
  if(ctx.revision<EvmRevision::Osaka&&op==0x1e)throw std::runtime_error("Opcode unavailable in selected EVM revision");
  if(ctx.revision<EvmRevision::Cancun&&((op>=0x5c&&op<=0x5e)||op==0x49||op==0x4a))throw std::runtime_error("Opcode unavailable in selected EVM revision");
+ // Observe the opcode operands before gas/stack faults, like the Geth tracer.
+ // Account/slot observations outlive reverted frames; they do not warm anything.
+ if(trace){
+  try{
+   if((op==0x54||op==0x55)&&f.used>=1)trace->record_storage(ctx.address,bytes(f.peek(),32));
+   if((op==0x31||op==0x3b||op==0x3c||op==0x3f||op==0xff)&&f.used>=1)trace->record_address(evm_address(f.peek()));
+   if((op==0xf1||op==0xf2||op==0xf4||op==0xfa)&&f.used>=5)trace->record_address(evm_address(f.peek(1)));
+  }catch(const ExecutionCancelled&){throw;}
+  catch(...){throw ExecutionCancelled("EVM access-list collection failed");}
+ }
  f.charge(opcode_gas(op));
  if(op>=0x60&&op<=0x7f){
   const size_t n=op-0x5f,available=std::min(n,ctx.code.size()-pc-1);
@@ -190,7 +237,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
   child.value=delegate?ctx.value:value;child.data=std::move(input);child.code=std::move(execution_code);child.code_address=target;child.gas=budget+stipend;child.is_static=ctx.is_static||static_call;
   std::optional<size_t> transfer_snap;if(!child.is_static)transfer_snap=mutable_state().snapshot();auto previous_addresses=warm_addresses_;auto previous_slots=warm_slots_;auto previous_deletions=pending_deletions_;auto previous_created=created_accounts_;auto previous_transient=transient_storage_;
   if(!delegate&&!callcode&&!static_call&&value!=0)mutable_state().transfer(ctx.address,target,value);
-  f.charge(budget);warm_addresses_.insert(child.address);auto output=co_await run(child,depth+1);
+  f.charge(budget);warm_addresses_.insert(child.address);auto output=co_await run(child,depth+1,trace);
   result.max_call_depth=std::max(result.max_call_depth,1+output.max_call_depth);
   f.gas+=child.gas-output.gas_used;last_return=output.return_data;
   if(output.success){if(transfer_snap)mutable_state().commit(*transfer_snap);result.logs.insert(result.logs.end(),output.logs.begin(),output.logs.end());result.gas_refund+=output.gas_refund;}
@@ -213,7 +260,7 @@ EvmTask EVM::run(const ExecutionContext& ctx, unsigned depth){
   size_t create_snap=mutable_state().snapshot();auto previous_addresses=warm_addresses_;auto previous_slots=warm_slots_;auto previous_deletions=pending_deletions_;auto previous_created=created_accounts_;auto previous_transient=transient_storage_;
   created_accounts_.insert(address(target));mutable_state().get(target).nonce=1;mutable_state().transfer(ctx.address,target,value);
   ExecutionContext child=ctx;child.address=target;child.caller=ctx.address;child.value=value;child.data.clear();child.code=init;child.code_address=target;child.gas=f.gas-f.gas/64;
-  warm_addresses_.insert(target);auto output=co_await run(child,depth+1);f.charge(output.gas_used);last_return=output.return_data;
+  warm_addresses_.insert(target);auto output=co_await run(child,depth+1,trace);f.charge(output.gas_used);last_return=output.return_data;
   result.max_call_depth=std::max(result.max_call_depth,1+output.max_call_depth);
   uint64_t deposit=output.return_data.size()*200;
   if(output.success&&(output.return_data.size()>24576||deposit>child.gas-output.gas_used||((ctx.revision==EvmRevision::Paris||ctx.revision>=EvmRevision::Shanghai)&&!output.return_data.empty()&&output.return_data[0]==0xef))){

@@ -85,6 +85,60 @@ ExecutionResult simulate(const State& state,const Header& header,const Int& chai
  if(result.success&&!tx.to){uint64_t deposit=result.return_data.size()*200;if(result.return_data.size()>24576||deposit>ctx.gas-result.gas_used||((revision>=EvmRevision::Paris)&&!result.return_data.empty()&&result.return_data[0]==0xef)){result.success=false;result.error="contract code deposit out of gas";}else result.gas_used+=deposit;}
  result.gas_used+=u64(intrinsic);result.gas_used=std::max(result.gas_used,u64(floor));return result;
 }
+
+Int access_quantity(const Json& value,unsigned width,const char* name){
+ if(!value.is_string())throw RpcError(-32602,std::string("Expected quantity: ")+name);
+ const auto n=quantity(value);if(n<0||n>=(Int(1)<<width)||quantity(n)!=value.get<std::string>())throw RpcError(-32602,std::string("Invalid quantity: ")+name);return n;
+}
+bool access_prefix(const std::string& s){return s.size()>=2&&s[0]=='0'&&(s[1]=='x'||s[1]=='X');}
+std::string access_address(const Json& value){if(!value.is_string())throw RpcError(-32602,"Expected 20-byte address");const auto& text=value.get_ref<const std::string&>();if(text.size()!=42||!access_prefix(text))throw RpcError(-32602,"Expected 20-byte address");return address(text);}
+void access_data(const Json& value){if(!value.is_string())throw RpcError(-32602,"Expected hex data");const auto& text=value.get_ref<const std::string&>();if(!access_prefix(text)||text.size()%2)throw RpcError(-32602,"Invalid hex data");(void)unhex(text);}
+Json access_json(const std::vector<Access>& list,const std::function<void()>& check){
+ Json out=Json::array();for(const auto& row:list){check();Json keys=Json::array();for(const auto& key:row.keys){check();keys.push_back(hex(key));}out.push_back({{"address",row.address},{"storageKeys",std::move(keys)}});}return out;
+}
+bool same_access(const std::vector<Access>& a,const std::vector<Access>& b){
+ if(a.size()!=b.size())return false;for(size_t i=0;i<a.size();++i)if(a[i].address!=b[i].address||a[i].keys!=b[i].keys)return false;return true;
+}
+void access_seed_bound(const Json& call,const RpcSimulationLimits& limits,const std::function<void()>& check){
+ if(!call.contains("accessList")||call["accessList"].is_null())return;const auto& list=call["accessList"];
+ if(!list.is_array())throw RpcError(-32602,"Expected accessList array");if(list.size()>limits.maximum_access_list_addresses)throw RpcError(-32005,"Access list input limit exceeded");size_t keys=0;
+ for(const auto& row:list){check();if(!row.is_object()||!row.contains("address")||!row["address"].is_string()||row["address"].get_ref<const std::string&>().size()>42||!row.contains("storageKeys")||!row["storageKeys"].is_array())throw RpcError(-32602,"Invalid access list entry");(void)access_address(row["address"]);
+  if(row["storageKeys"].size()>limits.maximum_access_list_storage_keys-keys)throw RpcError(-32005,"Access list input limit exceeded");keys+=row["storageKeys"].size();
+  for(const auto& key:row["storageKeys"]){check();if(!key.is_string()||key.get_ref<const std::string&>().size()!=66||!access_prefix(key.get_ref<const std::string&>())||unhex(key.get<std::string>()).size()!=32)throw RpcError(-32602,"Expected 32-byte access list storage key");}
+ }
+}
+void access_overrides(State& state,const Json& overrides,const RpcSimulationLimits& limits,const std::function<void()>& check){
+ if(overrides.is_null())return;if(!overrides.is_object())throw RpcError(-32602,"Expected state override object");if(overrides.size()>limits.maximum_access_list_addresses)throw RpcError(-32005,"State override account limit exceeded");size_t slots=0,code_bytes=0;std::set<std::string> accounts;
+ for(const auto& [text,row]:overrides.items()){check();const auto account=access_address(Json(text));if(!accounts.insert(account).second||!row.is_object())throw RpcError(-32602,"Invalid or duplicate state override account");
+  for(auto it=row.begin();it!=row.end();++it)if(it.key()!="nonce"&&it.key()!="balance"&&it.key()!="code"&&it.key()!="state"&&it.key()!="stateDiff")throw RpcError(-32602,"Unsupported state override field");
+  const auto supplied=[&](const char* key){return row.contains(key)&&!row[key].is_null();};if(supplied("state")&&supplied("stateDiff"))throw RpcError(-32602,"state and stateDiff are mutually exclusive");
+  if(supplied("nonce"))state.get(account).nonce=access_quantity(row["nonce"],64,"override nonce");if(supplied("balance"))state.get(account).balance=access_quantity(row["balance"],256,"override balance");
+  if(supplied("code")){if(!row["code"].is_string())throw RpcError(-32602,"Expected override code bytes");const auto& raw=row["code"].get_ref<const std::string&>();if(!access_prefix(raw)||raw.size()%2)throw RpcError(-32602,"Invalid override code bytes");const auto n=(raw.size()-2)/2;if(code_bytes>limits.maximum_access_list_override_code_bytes||n>limits.maximum_access_list_override_code_bytes-code_bytes)throw RpcError(-32005,"State override code limit exceeded");auto code=unhex(raw);if(code.size()!=n)throw RpcError(-32602,"Invalid override code bytes");code_bytes+=n;state.get(account).code=std::move(code);}
+  for(const auto* kind:{"state","stateDiff"})if(supplied(kind)){const auto& fields=row[kind];if(!fields.is_object())throw RpcError(-32602,"Expected state override storage object");if(fields.size()>limits.maximum_access_list_storage_keys-slots)throw RpcError(-32005,"State override storage limit exceeded");slots+=fields.size();if(std::string_view(kind)=="state")state.get(account).storage.clear();std::set<Bytes> seen;
+   for(const auto& [key,value]:fields.items()){check();if(key.size()!=66||!access_prefix(key)||!value.is_string()||value.get_ref<const std::string&>().size()!=66||!access_prefix(value.get_ref<const std::string&>()))throw RpcError(-32602,"Expected 32-byte override storage key/value");auto k=unhex(key),v=unhex(value.get<std::string>());if(k.size()!=32||v.size()!=32||!seen.insert(k).second)throw RpcError(-32602,"Invalid or duplicate override storage key");state.set_storage(account,integer(k),integer(v));}
+  }
+ }
+}
+ExecutionResult simulate_access(const State& state,const Header& header,const Int& chain_id,const Json& call,uint64_t gas,const std::map<Int,Bytes>& ancestors,EvmRevision revision,const std::function<void()>& checkpoint,EvmAccessListTrace& trace){
+ checkpoint();State copy=state;const auto tx=simulation_transaction(call);const auto sender=address(call.value("from",std::string("0x0000000000000000000000000000000000000000")));const auto& account=state.get(sender);
+ const Int intrinsic=transaction_intrinsic_gas(tx,revision),floor=transaction_floor_gas(tx,revision),gas_int(std::to_string(gas));if(gas_int<intrinsic||gas_int<floor)throw RpcError(-32000,"Intrinsic gas exceeds access list simulation limit");
+ const Int base=revision>=EvmRevision::Paris?header.base_fee.value_or(Int(0)):Int(0),cap=tx.type>=2?tx.max_fee:tx.gas_price,price=tx.effective_gas_price(base);
+ if(cap<base&&(cap!=0||tx.priority_fee!=0))throw RpcError(-32000,"Fee cap below selected block base fee");if(account.balance<tx.value+gas_int*cap)throw RpcError(-32000,"Insufficient funds for gas and value");
+ if(account.nonce>=Int("18446744073709551615"))throw RpcError(-32000,"Sender nonce exceeds simulation limit");const auto destination=tx.to?address(*tx.to):create_address(sender,account.nonce);
+ if(!tx.to&&(state.get(destination).nonce!=0||!state.get(destination).code.empty()||(revision!=EvmRevision::NanoExperimental&&!state.get(destination).storage.empty()))){ExecutionResult out;out.error="contract address collision";out.gas_used=gas;return out;}
+ copy.get(sender).balance-=gas_int*price;copy.get(sender).nonce=account.nonce+1;if(!copy.transfer(sender,destination,tx.value))throw RpcError(-32000,"Insufficient funds for call value");
+ ExecutionContext ctx;ctx.checkpoint=checkpoint;ctx.revision=revision;ctx.access_list=tx.access_list;ctx.origin=sender;ctx.caller=sender;ctx.address=destination;ctx.value=tx.value;ctx.gas=gas-u64(intrinsic);ctx.chain_id=chain_id;ctx.gas_price=price;ctx.coinbase=header.coinbase;ctx.timestamp=header.timestamp;ctx.number=header.number;ctx.prevrandao=block_randomness(header,revision);ctx.gas_limit=header.gas_limit;ctx.base_fee=price==0?Int(0):base;if(revision>=EvmRevision::Cancun)ctx.blob_base_fee=blob_base_fee(header.excess_blob_gas.value_or(Int(0)),revision);ctx.block_hash=[&ancestors](const Int& n){auto it=ancestors.find(n);if(it==ancestors.end())throw std::runtime_error("missing ancestor block");return it->second;};
+ if(tx.to){ctx.data=tx.data;ctx.code=copy.get(destination).code;}else{ctx.code=tx.data;ctx.contract_creation=true;copy.get(destination).nonce=1;}
+ if(revision>=EvmRevision::Prague&&tx.to)if(auto target=delegation_target(ctx.code)){ctx.authorization_warm_addresses.insert(*target);ctx.code=is_precompile(integer(unhex(*target)),revision)?Bytes{}:static_cast<const State&>(copy).get(*target).code;}
+ EVM evm(copy);auto result=evm.execute(ctx,trace);
+ if(result.success&&!tx.to){const uint64_t deposit=result.return_data.size()*200;if(result.return_data.size()>24576||deposit>ctx.gas-result.gas_used||((revision>=EvmRevision::Paris)&&!result.return_data.empty()&&result.return_data[0]==0xef)){result.success=false;result.error="contract code deposit out of gas";result.gas_used=ctx.gas;result.gas_refund=0;}else result.gas_used+=deposit;}
+ Int consumed=intrinsic+Int(std::to_string(result.gas_used));if(result.success)consumed-=std::max(Int(0),std::min(result.gas_refund,Int(consumed/(revision==EvmRevision::Berlin?2:5))));result.gas_used=u64(std::max(consumed,floor));checkpoint();return result;
+}
+}
+RpcSimulationLimits RpcSimulationLimits::from_json(const Json& config){
+ if(!config.is_object())throw std::invalid_argument("rpcSimulation must be an object");for(auto it=config.begin();it!=config.end();++it)if(it.key()!="timeout_ms"&&it.key()!="maximum_access_list_iterations"&&it.key()!="maximum_access_list_addresses"&&it.key()!="maximum_access_list_storage_keys"&&it.key()!="maximum_access_list_override_code_bytes")throw std::invalid_argument("Unknown rpcSimulation setting: "+it.key());
+ auto bounded=[&](const char* key,uint64_t fallback,uint64_t maximum){if(!config.contains(key))return fallback;if(!config[key].is_number_integer())throw std::invalid_argument(std::string("rpcSimulation ")+key+" must be an integer");const Int n(config[key].dump());if(n<1||n>Int(std::to_string(maximum)))throw std::invalid_argument(std::string("rpcSimulation ")+key+" out of range");return u64(n);};
+ RpcSimulationLimits out;out.timeout=std::chrono::milliseconds(bounded("timeout_ms",out.timeout.count(),60000));out.maximum_access_list_iterations=size_t(bounded("maximum_access_list_iterations",out.maximum_access_list_iterations,1024));out.maximum_access_list_addresses=size_t(bounded("maximum_access_list_addresses",out.maximum_access_list_addresses,65536));out.maximum_access_list_storage_keys=size_t(bounded("maximum_access_list_storage_keys",out.maximum_access_list_storage_keys,1048576));out.maximum_access_list_override_code_bytes=size_t(bounded("maximum_access_list_override_code_bytes",out.maximum_access_list_override_code_bytes,16777216));return out;
 }
 Json Rpc::network_block(const Block& block,bool full)const{
  auto result=full?block.to_transport_json():block.to_json(false);if(!full)result["transactionEncoding"]="signed-rlp-hashes-v1";result["uncleHeaders"]=Json::array();
@@ -268,7 +322,7 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
  }
  if(method=="nno_getStake"){arity(p,1,1);auto addr=address(p[0].get<std::string>());try{return quantity(chain_.stake(addr));}catch(const std::exception&){throw RpcError(-32000,"Staking query failed");}}
  if(method=="nno_getValidators"){arity(p,0,0);return chain_.validators();}
- if(method=="eth_call"||method=="eth_estimateGas")return prepare_simulation(method,p)();
+ if(method=="eth_call"||method=="eth_estimateGas"||method=="eth_createAccessList")return prepare_simulation(method,p)();
  if(method=="eth_getLogs"){arity(p,1,1);return logs(p[0]);}
  if(method=="eth_newFilter"||method=="eth_newBlockFilter"||method=="eth_newPendingTransactionFilter"){
   bool is_logs=method=="eth_newFilter";arity(p,is_logs?1:0,is_logs?1:0);if(filters_.size()>=1024)throw RpcError(-32005,"Too many filters");
@@ -460,7 +514,71 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
  }
  throw RpcError(-32601,"Method not found");
 }
+std::function<Json()> Rpc::prepare_access_list(const Json& p,const std::function<void()>& cancelled){
+ arity(p,1,3);if(!p[0].is_object())throw RpcError(-32602,"Expected call object");const auto limits=simulation_limits_;
+ if(limits.timeout.count()<=0||!limits.now||!limits.maximum_access_list_iterations||!limits.maximum_access_list_addresses||!limits.maximum_access_list_storage_keys||!limits.maximum_access_list_override_code_bytes)throw RpcError(-32602,"Invalid access list simulation limits");
+ const auto deadline=limits.now()+limits.timeout;auto check=[deadline,now=limits.now,cancelled]{if(cancelled)cancelled();if(now()>=deadline)throw ExecutionCancelled("RPC access list execution timeout");};check();
+ Json args=p[0];for(auto it=args.begin();it!=args.end();)if(it.value().is_null())it=args.erase(it);else ++it;
+ for(const auto* field:{"blobVersionedHashes","maxFeePerBlobGas","blobs","commitments","proofs","authorizationList"})if(args.contains(field))throw RpcError(-32602,"Transaction extension unavailable on Nano network");
+ for(const auto* field:{"chainId","type","value","gasPrice","maxFeePerGas","maxPriorityFeePerGas"})if(args.contains(field))(void)access_quantity(args[field],256,field);
+ for(const auto* field:{"gas","nonce"})if(args.contains(field))(void)access_quantity(args[field],64,field);
+ if(args.contains("chainId")&&quantity(args["chainId"])!=chain_.genesis().chain_id)throw RpcError(-32602,"chainId does not match node");
+ if(args.contains("type")&&quantity(args["type"])>2)throw RpcError(-32602,"Transaction type unavailable on Nano network");
+ if(args.contains("gasPrice")&&(args.contains("maxFeePerGas")||args.contains("maxPriorityFeePerGas")))throw RpcError(-32602,"Both legacy and dynamic fees specified");
+ if(args.contains("from"))args["from"]=access_address(args["from"]);else args["from"]="0x0000000000000000000000000000000000000000";
+ if(args.contains("to"))args["to"]=access_address(args["to"]);for(const auto* field:{"input","data"})if(args.contains(field))access_data(args[field]);access_seed_bound(args,limits,check);
+ const auto revision=chain_.genesis().evm_revision;const auto chain_id=chain_.genesis().chain_id;
+ Json tag=p.size()>1&&!p[1].is_null()?p[1]:Json("latest");std::optional<Block> selected;std::optional<State> state;std::map<Int,Bytes> ancestors;std::function<std::pair<Header,State>()> pending;
+ bool hash_selected=false,canonical_required=false;Bytes requested_hash;
+ if(tag.is_object()){
+  for(auto it=tag.begin();it!=tag.end();++it)if(it.key()!="blockNumber"&&it.key()!="blockHash"&&it.key()!="requireCanonical")throw RpcError(-32602,"Invalid block selector field");
+  const bool number=tag.contains("blockNumber"),hash=tag.contains("blockHash");if(number==hash)throw RpcError(-32602,"Specify one block number or block hash");
+  if(tag.contains("requireCanonical")){if(!hash||!tag["requireCanonical"].is_boolean())throw RpcError(-32602,"requireCanonical requires blockHash and boolean");canonical_required=tag["requireCanonical"].get<bool>();}
+  if(hash){if(!tag["blockHash"].is_string()||tag["blockHash"].get_ref<const std::string&>().size()!=66||!access_prefix(tag["blockHash"].get_ref<const std::string&>()))throw RpcError(-32602,"Expected 32-byte block hash");requested_hash=hash_arg(tag["blockHash"]);hash_selected=true;}
+  else{(void)access_quantity(tag["blockNumber"],64,"blockNumber");tag=Json(tag["blockNumber"]);}
+ }else if(tag.is_string()&&tag.get_ref<const std::string&>().size()==66){requested_hash=hash_arg(tag);hash_selected=true;}
+ if(hash_selected)selected=chain_.store().block_by_hash(requested_hash);
+ else if(tag=="pending"){
+  Int now(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));if(dev_mode_)now=development_timestamp();auto snapshot=chain_.pending_snapshot(coinbase_,now,check);selected=Block{};selected->header=std::move(snapshot.header);ancestors=std::move(snapshot.ancestors);pending=std::move(snapshot.execute);
+ }else{
+  if(!tag.is_string())throw RpcError(-32602,"Expected block tag or selector");const auto& text=tag.get_ref<const std::string&>();if(text!="latest"&&text!="earliest"&&text!="finalized"&&text!="safe")(void)access_quantity(tag,64,"blockNumber");selected=block(tag);
+ }
+ if(!selected)throw RpcError(-32000,"Unknown block");check();
+ if(!pending){
+  const auto canonical=chain_.store().block_by_number(selected->header.number);const bool is_canonical=canonical&&canonical->header.hash()==selected->header.hash();
+  if(hash_selected&&canonical_required&&!is_canonical)throw RpcError(-32000,"Selected block is not canonical");
+  // This store retains historical states by canonical height, never invent a
+  // side-branch state by pairing it with a header for the same height.
+  if(!is_canonical)throw RpcError(-32000,"Selected block state is unavailable");state=chain_.store().state_at(selected->header.number);if(!state)throw RpcError(-32000,"State unavailable");
+  check();
+  Header cursor=selected->header;for(size_t i=0;i<256&&cursor.number>0;++i){check();auto parent=chain_.store().block_by_hash(cursor.parent_hash);if(!parent||parent->header.number+1!=cursor.number||parent->header.hash()!=cursor.parent_hash)throw RpcError(-32000,"Missing simulation ancestor");ancestors.emplace(parent->header.number,parent->header.hash());cursor=parent->header;}
+ }
+ const bool legacy=args.contains("gasPrice"),has_cap=args.contains("maxFeePerGas"),has_tip=args.contains("maxPriorityFeePerGas");
+ const bool needs_tip=!legacy&&(!has_tip||revision<EvmRevision::Paris);const Int default_tip=needs_tip?suggested_tip(chain_.tip_header()):Int(0);check();
+ Json overrides=p.size()==3?p[2]:Json(nullptr);
+ return [args=std::move(args),header=std::move(selected->header),state=std::move(state),ancestors=std::move(ancestors),pending=std::move(pending),overrides=std::move(overrides),limits,check,revision,chain_id,default_tip,legacy,has_cap,has_tip]() mutable -> Json {
+  check();if(pending){auto candidate=pending();header=std::move(candidate.first);state=std::move(candidate.second);}
+  check();if(state->root()!=header.state_root)throw RpcError(-32000,"Selected block and state do not match");check();
+  access_overrides(*state,overrides,limits,check);check();
+  const auto sender=args["from"].get<std::string>();if(!args.contains("nonce"))args["nonce"]=quantity(static_cast<const State&>(*state).get(sender).nonce);
+  const Int base=revision>=EvmRevision::Paris?header.base_fee.value_or(Int(0)):Int(0);
+  if(legacy){if(revision>=EvmRevision::Paris&&quantity(args["gasPrice"])==0)throw RpcError(-32602,"gasPrice must be nonzero after London");args["type"]=args.contains("accessList")?"0x1":"0x0";}
+  else if(revision>=EvmRevision::Paris){
+   if(has_cap&&has_tip&&quantity(args["maxFeePerGas"])==0)throw RpcError(-32602,"maxFeePerGas must be nonzero");const Int tip=has_tip?quantity(args["maxPriorityFeePerGas"]):default_tip,cap=has_cap?quantity(args["maxFeePerGas"]):Int(tip+2*base);
+   if(tip<0||cap<tip||cap>=(Int(1)<<256))throw RpcError(-32602,"Invalid dynamic fee caps");args["maxPriorityFeePerGas"]=quantity(tip);args["maxFeePerGas"]=quantity(cap);args["type"]="0x2";
+  }else{if(has_cap||has_tip)throw RpcError(-32602,"Dynamic fees unavailable before London");args["gasPrice"]=quantity(default_tip);args["type"]=args.contains("accessList")?"0x1":"0x0";}
+  const Int limit=std::min(header.gas_limit,args.contains("gas")?quantity(args["gas"]):header.gas_limit);const uint64_t gas=u64(limit);args["gas"]=quantity(limit);args["chainId"]=quantity(chain_id);
+  const auto tx=simulation_transaction(args);const auto excluded_to=tx.to?address(*tx.to):create_address(sender,quantity(args["nonce"]));std::set<std::string> excluded{sender,excluded_to};for(unsigned i=1;i<=256;++i)if(is_precompile(Int(i),revision))excluded.insert(address(hex(bytes(Int(i),20))));
+  EvmAccessListTrace initial(tx.access_list,excluded,limits.maximum_access_list_addresses,limits.maximum_access_list_storage_keys);auto current=initial.access_list();
+  for(size_t iteration=0;iteration<limits.maximum_access_list_iterations;++iteration){
+   check();args["accessList"]=access_json(current,check);EvmAccessListTrace trace(current,excluded,limits.maximum_access_list_addresses,limits.maximum_access_list_storage_keys);ExecutionResult result;{rpc_timing::Span timing("access_list_round");result=simulate_access(*state,header,chain_id,args,gas,ancestors,revision,check,trace);}check();auto next=trace.access_list();
+   if(same_access(current,next)){Json out={{"accessList",access_json(next,check)},{"gasUsed",quantity(Int(std::to_string(result.gas_used)))}};if(!result.success)out["error"]=result.error;check();return out;}current=std::move(next);
+  }
+  throw RpcError(-32005,"Access list convergence limit exceeded");
+ };
+}
 std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Json& p,const std::function<void()>& cancelled){
+  if(method=="eth_createAccessList")return prepare_access_list(p,cancelled);
   arity(p,1,2);if(!p[0].is_object())throw RpcError(-32602,"Expected call object");
   const auto& args=p[0];auto supplied=[&](const char* name){return args.contains(name)&&!args[name].is_null();};
   if(supplied("chainId")&&quantity(args["chainId"])!=chain_.genesis().chain_id)throw RpcError(-32602,"chainId does not match node");
@@ -638,9 +756,9 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
     else result=runtime->admission->receipt(params[1].get<std::string>(),positive(params[2]),method=="nano_capellaCancel",method=="nano_capellaForget");
    }
   }
-  else if(method=="eth_call"||method=="eth_estimateGas"){
+  else if(method=="eth_call"||method=="eth_estimateGas"||method=="eth_createAccessList"){
    std::function<Json()> simulation;{rpc_timing::Span preparation("prepare");simulation=prepare_simulation(method,params,cancelled);}
-   lock.unlock();rpc_timing::Span execution(method=="eth_call"?"call_execute":"estimate_execute");result=simulation();
+   lock.unlock();rpc_timing::Span execution(method=="eth_createAccessList"?"access_list_execute":method=="eth_call"?"call_execute":"estimate_execute");result=simulation();
   }
   else {
    Estimate estimate=[&](const Json& transaction){
@@ -653,6 +771,7 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
   }
   response={{"jsonrpc","2.0"},{"id",id},{"result",std::move(result)}};
  }
+ catch(const EvmAccessListLimitExceeded& e){response=error_response(id,-32005,e.what());}
  catch(const ExecutionCancelled& e){response=error_response(id,-32002,e.what());}
  catch(const RpcError& e){response=error_response(id,e.code,e.what(),e.data);}
  catch(const CapellaInventoryCaptureBusy&){response=error_response(id,-32005,"Capella inventory capture busy");}

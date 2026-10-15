@@ -1,0 +1,48 @@
+{
+  "format": "nano-public-rpc-access-list-anvil-diagnostic-history-v1",
+  "version": "1.5.1",
+  "historicalV1Status": "FAILED",
+  "historicalMatches": 11,
+  "historicalCases": 16,
+  "historicalFailedScenarios": [
+    "revert",
+    "monotone-gas-branch",
+    "seed-dedup",
+    "amm-swap-revert",
+    "amm-swap-success"
+  ],
+  "singleCollectionThenGasReplayWithoutFixedPoint": true,
+  "revertIsJsonRpcErrorInObservedReference": true,
+  "duplicateSeedsLastAddressWinsInsteadOfUnion": true,
+  "excludedAddressOnlySeedsRetainedByObservedReference": true,
+  "headerTimestamp": 100,
+  "nanoAndGethCallAndAccessListContext": {
+    "number": "0",
+    "timestamp": "100",
+    "baseFee": "1000000000",
+    "gasLimit": "30000000",
+    "gasPrice": "2000000000"
+  },
+  "anvilEthCallContext": {
+    "number": "0",
+    "timestamp": "1",
+    "baseFee": "1000000000",
+    "gasLimit": "30000000",
+    "gasPrice": "2000000000"
+  },
+  "anvilCreateAccessListContext": {
+    "number": "0",
+    "timestamp": "1",
+    "baseFee": "1000000000",
+    "gasLimit": "30000000",
+    "gasPrice": "0"
+  },
+  "contextsScopedToObservedLaunch": true,
+  "thirdStateOverrideParameterSupportedByThisAnvil": false,
+  "explicitZeroFeeBehaviorDiffersFromGethDefaults": true,
+  "alignedAmmAdditionalMatchObserved": true,
+  "anvilPassOrGlobalEquivalenceClaimed": false,
+  "nanoCppChangedToObtainReferenceParity": false,
+  "privateInputsRead": false,
+  "productionQualified": false
+}

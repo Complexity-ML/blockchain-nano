@@ -47,14 +47,14 @@ int main(int argc,char** argv){try{
  Blockchain chain(argv[3],std::move(genesis),existing_archive_recovery?ChainStore::OpenMode::ReadWriteExisting:ChainStore::OpenMode::ReadWrite);
  if(command=="run")return run_node(chain,argv[3],argv[0],startup_config);
  if(command=="serve"){
-  auto port=argc>=5?u64(quantity(Json(argv[4]))):8545;if(port>65535)throw std::invalid_argument("invalid port");const std::string bind=argc>=6?argv[5]:"127.0.0.1";const auto& config=startup_config;
+  auto port=argc>=5?u64(quantity(Json(argv[4]))):8545;if(port>65535)throw std::invalid_argument("invalid port");const std::string bind=argc>=6?argv[5]:"127.0.0.1";const auto& config=startup_config;const auto rpc_limits=RpcSimulationLimits::from_json(config.value("rpcSimulation",Json::object()));
   std::shared_ptr<CapellaRuntime> capella;std::string token;
   if(config.contains("capella")){
    if(bind!="127.0.0.1"||config.contains("bellatrix")||config.contains("altair")||config.contains("bft")||config.value("dev_mode",false))throw std::invalid_argument("Capella serve requires loopback and exclusive consensus configuration");
    const auto* secret=std::getenv("NANO_NETWORK_TOKEN");if(!secret)throw std::invalid_argument("Capella serve requires NANO_NETWORK_TOKEN");token=secret;const auto decoded=unhex(token);if(decoded.size()!=32||hex(decoded)!=token)throw std::invalid_argument("Capella private token must be canonical 32-byte hex");
    capella=std::make_shared<CapellaRuntime>(start_capella_runtime(chain,config.at("capella")));
   }
-  Rpc rpc(chain,token,AdmissionBudget::Clock::now,{}, {}, {},capella);if(capella)rpc.set_beacon_sync_tracker(capella->sync_tracker);rpc.load_wallets(config,bind);
+  Rpc rpc(chain,token,AdmissionBudget::Clock::now,rpc_limits, {}, {},capella);if(capella)rpc.set_beacon_sync_tracker(capella->sync_tracker);rpc.load_wallets(config,bind);
   {HttpServer server(rpc,bind,uint16_t(port),std::chrono::seconds(4),capella?capella->beacon_read:BeaconReadHandler{});std::cout<<"Nano JSON-RPC listening on "<<bind<<":"<<server.port()<<std::endl;server.run();}
   if(capella){auto receipt=stop_capella_runtime(*capella);receipt["event"]="capella-runtime-stopped";std::cout<<receipt.dump()<<std::endl;}
 

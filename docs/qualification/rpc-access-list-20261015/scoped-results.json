@@ -1,0 +1,62 @@
+{
+  "format": "nano-public-rpc-access-list-scoped-results-v1",
+  "status": "BOTH_ARCHITECTURES_TARGETED_PUBLIC_CTESTS_PASS_GETH_REFERENCE_ARM64_ONLY",
+  "arm64": {
+    "evidenceKind": "raw public local logs/JUnit plus independent readback",
+    "ctests": 2,
+    "newConsumerRows": 8,
+    "semanticGroups": 7,
+    "syntheticSignatures": 4,
+    "maxNewConsumerRssKiB": 23108,
+    "newConsumerSeconds": 0.0543129,
+    "controllerSeconds": 1.2102261250838637,
+    "gethCoreMatches": 16,
+    "gethOverrideMatches": 5
+  },
+  "amd64": {
+    "evidenceKind": "fixed typed ROOT filtered output only; raw evidence retained on VPS",
+    "configureInvocations": 1,
+    "buildInvocations": 1,
+    "buildElapsedMs": 423262,
+    "genuineSelectedMmdPairs": 6,
+    "totalCppCompiles": null,
+    "totalCoreCompiles": null,
+    "ctests": 2,
+    "newConsumerRows": 8,
+    "semanticGroups": 7,
+    "syntheticSignatures": 4,
+    "maxNewConsumerRssKiB": 23680,
+    "unitControllerElapsedMs": 29636,
+    "newConsumerElapsedMs": null,
+    "observedFinalVolumeKiB": 208,
+    "volumePeakMeasured": false,
+    "parentFilesUnchanged": true,
+    "ownedContainersAbsent": true,
+    "ownedVolumeAbsent": true,
+    "gethReferenceExecuted": false
+  },
+  "oldAnvilV1": {
+    "status": "FAILED",
+    "matched": 11,
+    "cases": 16,
+    "preserved": true
+  },
+  "scope": {
+    "profile": "Shanghai",
+    "separateHistoricalStackFixture": "Cancun only as regression fixture; no profile activation",
+    "oldWholeRpcOrAmmSuitesReplayed": false,
+    "newImageBuilds": 0,
+    "operationalRuntimeStarted": false,
+    "privateInputsRead": false,
+    "liveFundsOrTransactionsBroadcast": false,
+    "readinessOrDutiesQualified": false,
+    "fullEvmOrCompleteEipConformanceQualified": false,
+    "productionQualified": false,
+    "completeRpcErrorParityQualified": false
+  },
+  "feeDiagnosticOutsideStrict21": {
+    "nano": -32602,
+    "geth": -32000,
+    "bothReject": true
+  }
+}

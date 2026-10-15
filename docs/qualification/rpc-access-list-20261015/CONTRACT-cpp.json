@@ -1,0 +1,59 @@
+{
+  "format": "nano-public-rpc-create-access-list-test-contract-v1",
+  "status": "SOURCE_ONLY_UNCOMPILED_UNEXECUTED",
+  "target": "nano-rpc-access-list-tests",
+  "selector": "--self-test",
+  "ctest": "rpc_create_access_list_shanghai",
+  "timeoutSeconds": 120,
+  "maximumRssKiB": 131072,
+  "maximumNewSyntheticSignatures": 32,
+  "expectedNewSyntheticSignatures": 4,
+  "expectedScenarioRows": 8,
+  "expectedSemanticGroups": 7,
+  "rows": [
+    {"scenario":"access-list-discovery-and-gas","equals":{"cases":4,"executionReceiptComparisons":2,"statePoolHeadEventsUnchanged":true,"gasIncludesFinalListAndRefund":true,"existingCallAndEstimateUnchanged":true}},
+    {"scenario":"access-list-normalized-monotone-fixed-point","equals":{"seedRows":5,"deduplicatedUnusedSeedPreserved":true,"gasDependentBothBranchesRetained":true,"repeatedResultByteExact":true,"statePoolHeadEventsUnchanged":true}},
+    {"scenario":"access-list-revert-and-create","equals":{"cases":5,"vmErrorInsideResult":true,"nestedRevertTouchesRetained":true,"creationStorageAddressExact":true,"statePoolHeadEventsUnchanged":true}},
+    {"scenario":"access-list-contexts-and-fees","equals":{"omittedSelectorLatest":true,"pendingExecutedOnCopy":true,"historicStableAfterImport":true,"dynamicFeesValidated":true,"supportedStateOverrideFields":5,"invalidRequestsTopLevel":7}},
+    {"scenario":"access-list-budgets-and-cancellation","equals":{"quotaRefusals":5,"startupConfigRefusals":6,"cancellationTopLevel":true,"deadlineTopLevel":true,"malformedListsRefused":2,"malformedOverridesRefused":4,"statePoolHeadEventsUnchanged":true}},
+    {"scenario":"access-list-native-preopcode-and-seeds","equals":{"cases":7,"oogAndUnderflowTouchesRetained":true,"excludedSeedStorageRetained":true,"warmCoinbaseObserved":true,"nativeQuotaRefused":true,"partialListAfterLimitRefused":true}},
+    {"scenario":"access-list-server-queue-and-unlock","equals":{"simulationClassification":true,"notificationBatchReservations":9,"oversizedBatchHttpStatus":503,"identityWhileExecutionPaused":true,"statePoolHeadEventsUnchanged":true}},
+    {"scenario":"access-list-summary","equals":{"semanticGroups":7,"newSyntheticSignatures":4,"oldScenarioGroupsExecuted":0,"privateInputsRead":false,"runtimeDutiesAuthorized":false,"productionQualified":false}}
+  ],
+  "commonGroupFields": {"fork":"Shanghai","privateInputsRead":false,"productionQualified":false,"actualPeakRssKiB":{"minimum":1,"maximum":131072}},
+  "baselineCausal": {
+    "script": "tests/hardhat/scripts/verify-rpc-access-list-missing.mjs",
+    "inputs": ["NANO_BINARY absolute old unmodified binary", "NANO_DIAGNOSTIC_REPORT_DIR fresh directory"],
+    "expectedStatus": "EXPECTED_BASELINE_METHOD_MISSING",
+    "expectedRpcErrorCode": -32601,
+    "expectedActualRequests": 1,
+    "newSignatures": 0,
+    "reasonSeparateFromCpp": "The new consumer references the new trace and limits APIs; an old library cannot link it. No identical-consumer-object causal claim."
+  },
+  "referenceComparison": {
+    "script": "tests/hardhat/scripts/compare-rpc-access-list.mjs",
+    "reference": "Official Anvil binary, Shanghai, actual version and SHA256 recorded by ROOT execution",
+    "requiredEnvironment": ["NANO_BINARY", "ANVIL_BINARY", "UNISWAP_V2_PAIR_ARTIFACT", "NANO_DIAGNOSTIC_REPORT_DIR"],
+    "optionalEnvironment": ["ANVIL_EXPECTED_VERSION"],
+    "expectedCases": 16,
+    "eachCase": ["Canonical address/key set equals reference", "Final net gasUsed equals reference exactly", "VM error presence/category equals reference without requiring wording", "Both repeated stabilized-list requests return the same result"],
+    "preconditions": ["Both loopback children at timestamp 100 with equal coinbase and block gas limit", "No automining; reference creates zero wallet accounts", "Public pinned Uniswap V2 Pair 1.0.1 runtime with explicit storage and two synthetic token-response contracts"],
+    "uniswapArtifact": {"sha256":"bb00cb1d64deea4159731b5957eeb8354531a110fb9120b9ef14edbc950e0736","bytes":223322},
+    "stateOverridesComparedWithAnvil": false,
+    "stateOverrideReason": "ROOT observed official Anvil 1.5.1 rejects the third parameter. These cases use the Geth 1.16.7 source contract in C++ instead.",
+    "transactionsBroadcast": 0,
+    "newSignatures": 0,
+    "privateInputsRead": false,
+    "productionQualified": false
+  },
+  "scope": {
+    "newSelectorOnly": true,
+    "oldRpcOrAmmSuitesExecuted": 0,
+    "network": "Loopback only inside the ROOT-owned isolated public test environment",
+    "nativeConsensusProfile": "Existing Shanghai profile; no activation or rules change",
+    "operationalKeysOrPrivateChainsUsed": false,
+    "originalRecoveryOrDutiesQualified": false,
+    "externalSecurityAuditClaimed": false,
+    "productionQualified": false
+  }
+}

@@ -18,6 +18,10 @@ public:
 struct RpcSimulationLimits {
  std::chrono::milliseconds timeout{5000};
  std::function<std::chrono::steady_clock::time_point()> now=std::chrono::steady_clock::now;
+ // Operator policy, never consensus limits. Every fixed-point round shares timeout.
+ size_t maximum_access_list_iterations=64,maximum_access_list_addresses=4096,maximum_access_list_storage_keys=65536;
+ size_t maximum_access_list_override_code_bytes=1048576;
+ static RpcSimulationLimits from_json(const Json&);
 };
 struct RpcStream { std::string id,type;Json criteria;uint64_t cursor; };
 struct RpcFeePolicy {
@@ -72,6 +76,7 @@ class Rpc {
  std::map<std::string,RpcStream> filters_;
  Json logs(const Json& criteria,const std::optional<Int>& only=std::nullopt) const;
  std::optional<Block> block(const Json& tag) const;
+ std::function<Json()> prepare_access_list(const Json&,const std::function<void()>& cancelled={});
  std::function<Json()> prepare_simulation(const std::string& method,const Json& params,const std::function<void()>& cancelled={});
  Json dispatch(const std::string& method,const Json& params,const Estimate& estimate={});
  Json one(const Json& request,const std::function<void()>& cancelled);
