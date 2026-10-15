@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ROOT-only native current validator API thin build",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format","controller","sourceBaseRevision","buildRoot","sourceRoot","currentSourceRoot","controlRoot","oldConfig","oldAdmission","nativeSdkAuthority","oldCoreQualification","sourceManifest","currentConsumerSources","runtimePublicFixtures","linkRecipes","archiveRecipe","tools"],
+  "properties": {
+    "format": {"const":"nano-cross-arch-validator-native-build-input-v1"},
+    "controller": {"$ref":"#/$defs/artifact"},
+    "sourceBaseRevision": {"type":"string","pattern":"^[0-9a-f]{40}$"},
+    "buildRoot": {"$ref":"#/$defs/path"},
+    "sourceRoot": {"$ref":"#/$defs/path"},
+    "currentSourceRoot": {"$ref":"#/$defs/path"},
+    "controlRoot": {"$ref":"#/$defs/path"},
+    "oldConfig": {"$ref":"#/$defs/artifact"},
+    "oldAdmission": {"$ref":"#/$defs/artifact"},
+    "nativeSdkAuthority": {"$ref":"#/$defs/artifact"},
+    "oldCoreQualification": {"$ref":"#/$defs/artifact"},
+    "sourceManifest": {"$ref":"#/$defs/artifact"},
+    "archiveRecipe": {"$ref":"#/$defs/artifact"},
+    "currentConsumerSources": {
+      "type":"object","additionalProperties":false,
+      "required":["nano","nano-capella-isolated-bootstrap-audit","nano-capella-isolated-stopped-capture"],
+      "properties": {
+        "nano":{"$ref":"#/$defs/artifact"},
+        "nano-capella-isolated-bootstrap-audit":{"$ref":"#/$defs/artifact"},
+        "nano-capella-isolated-stopped-capture":{"$ref":"#/$defs/artifact"}
+      }
+    },
+    "runtimePublicFixtures": {
+      "type":"array","minItems":5,"maxItems":5,"uniqueItems":true,
+      "items": {
+        "type":"object","additionalProperties":false,"required":["relative","sha256","bytes"],
+        "properties": {
+          "relative": {"enum":["tests/fixtures/capella-bootstrap-anchor-cb532/manifest.json","tests/fixtures/capella-bootstrap-anchor-cb532/profile.json","tests/fixtures/capella-bootstrap-anchor-cb532/genesis-state.ssz","tests/fixtures/capella-bootstrap-anchor-cb532/genesis.json","tests/fixtures/consensus-capella-slots-official/slots_1/pre.ssz"]},
+          "sha256":{"$ref":"#/$defs/sha"},"bytes":{"$ref":"#/$defs/bytes"}
+        }
+      }
+    },
+    "linkRecipes": {
+      "type":"object","additionalProperties":false,
+      "required":["nano-capella-validator-read-tests","nano","nano-capella-isolated-bootstrap-audit","nano-capella-isolated-stopped-capture"],
+      "properties": {
+        "nano-capella-validator-read-tests":{"$ref":"#/$defs/artifact"},
+        "nano":{"$ref":"#/$defs/artifact"},
+        "nano-capella-isolated-bootstrap-audit":{"$ref":"#/$defs/artifact"},
+        "nano-capella-isolated-stopped-capture":{"$ref":"#/$defs/artifact"}
+      }
+    },
+    "tools": {
+      "type":"object","additionalProperties":false,"required":["compiler","archiver","ranlib","linker"],
+      "properties": {
+        "compiler":{"$ref":"#/$defs/path"},"archiver":{"$ref":"#/$defs/path"},
+        "ranlib":{"$ref":"#/$defs/path"},"linker":{"$ref":"#/$defs/path"}
+      }
+    }
+  },
+  "$defs": {
+    "path":{"type":"string","minLength":2,"maxLength":4095,"pattern":"^/[^\\u0000\\r\\n\\\\]+$"},
+    "sha":{"type":"string","pattern":"^[0-9a-f]{64}$"},
+    "bytes":{"type":"integer","minimum":0,"maximum":268435456},
+    "artifact":{
+      "type":"object","additionalProperties":false,"required":["path","sha256","bytes"],
+      "properties":{"path":{"$ref":"#/$defs/path"},"sha256":{"$ref":"#/$defs/sha"},"bytes":{"$ref":"#/$defs/bytes"}}
+    }
+  }
+}
