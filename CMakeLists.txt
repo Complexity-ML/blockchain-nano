@@ -332,6 +332,8 @@ if(NANO_NETWORK_EXECUTABLE)
  target_link_libraries(nano-install-tests PRIVATE nano_core)
  add_test(NAME installed_node COMMAND nano-install-tests ${CMAKE_COMMAND} ${CMAKE_BINARY_DIR})
  set_tests_properties(installed_node PROPERTIES TIMEOUT 60)
+ add_test(NAME installed_runtime_package_loadability COMMAND nano-install-tests ${CMAKE_COMMAND} ${CMAKE_BINARY_DIR} --runtime-install-smoke)
+ set_tests_properties(installed_runtime_package_loadability PROPERTIES TIMEOUT 60 LABELS qualification_install_public)
 endif()
 
 add_executable(nano-staking-tests tests/test_staking.cpp)

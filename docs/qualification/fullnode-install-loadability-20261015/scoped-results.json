@@ -1,0 +1,199 @@
+{
+  "format": "nano-fullnode-ops-scoped-public-results-v1",
+  "status": "SCOPED_CMAKE_INSTALL_LOADABILITY_PASS_PINNED_SOURCES_DOCKER_LINUX_TWO_ARCHES",
+  "draftNotFrozen": false,
+  "architectureScope": "Docker Linux ARM64 and AMD64 fresh CMake selected consumer builds and installed argument-only entrypoint smoke; no Docker frontend or runtime image qualification",
+  "sourceProposalManifestSha256": "98205612f6329966abddf4e252441709bb202d70c78bd1fff803d288b2e26f48",
+  "sourceIndependentReviewSha256": "d127680386cd1d93404a21626026c3a0c6e7a0253519fb3127731db8ec3105dc",
+  "availableActualPhases": {
+    "configure": {
+      "evidence": {
+        "path": "evidence/arm64-configure-root.json",
+        "sha256": "512263f5f012c45fc6e363b0f28cadb2fd88e68c7624ce40752096838d05b933",
+        "bytes": 254
+      },
+      "status": "FRESH_CMAKE_CONFIGURE_PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 4.864452249836177,
+      "ownedContainerObservedAbsent": true,
+      "imageBuilds": 0,
+      "privateInputsRead": false,
+      "nodeRuntimeStarted": false
+    },
+    "sdkAndTransport": {
+      "evidence": {
+        "path": "evidence/arm64-sdk-transport-root.json",
+        "sha256": "46354965bddc9165333c42f69365af30575bce3cd91682f514f19e6701fc16a6",
+        "bytes": 309
+      },
+      "status": "SDK_AND_TRANSPORT_BUILD_PASS",
+      "exitCode": 0,
+      "elapsedSeconds": 22.479461583076045,
+      "ownedContainerObservedAbsent": true,
+      "imageBuilds": 0,
+      "coreCompilesRequested": 0,
+      "testsExecuted": 0,
+      "privateInputsRead": false,
+      "nodeRuntimeStarted": false
+    }
+  },
+  "nativeBuildAndInstall": {
+    "arch": "arm64",
+    "status": "CANONICAL_CMAKE_BUILD_PASS",
+    "actualExitCode": 0,
+    "elapsedSeconds": 20.15013787499629,
+    "coreMembers": 143,
+    "eachCoreMemberEqualsQualifiedBytes": true,
+    "newArchiveOrderEqualsActualCurrentCmakeRecipe": true,
+    "unchangedCoreCompiles": 0,
+    "actualConsumerCompiles": 5,
+    "actualConsumerLinks": 5,
+    "installedExecutableElfs": 5,
+    "installTestElf": 1,
+    "rawBinaryBindingsRetainedLocally": true,
+    "buildEvidence": {
+      "path": "evidence/arm64-build-root.json",
+      "sha256": "124f09d1b18eaf617fcd92719b7bdb8e70a01cfd0c56a4cc89d2a955d180ed99",
+      "bytes": 376
+    },
+    "proofEvidence": {
+      "path": "evidence/arm64-canonical-build-proof-root.json",
+      "sha256": "21cb5be951bb4b6a4fe09d64c148c1b31bf0dcc63155309eb4def936bf8cad2e",
+      "bytes": 477
+    }
+  },
+  "newInstallTest": {
+    "arch": "arm64",
+    "status": "FRESH_INSTALLED_ENTRYPOINTS_CTEST_PASS",
+    "actualExitCode": 0,
+    "actualMode": "install-test-exec-tmpfs",
+    "elapsedSeconds": 3.665703000035137,
+    "rootReportedCTestPassed": 1,
+    "rootReportedCTestTotal": 1,
+    "rootReportedCTestSeconds": 3.36,
+    "evidence": {
+      "path": "evidence/arm64-corrected-install-test-root.json",
+      "sha256": "9394ee34e266d2c078c21804eb0b83098d7502700731a2d2767756b7109d8f52",
+      "bytes": 406
+    },
+    "name": "installed_runtime_package_loadability",
+    "selector": "--runtime-install-smoke",
+    "timeoutSeconds": 60,
+    "installedEntrypointsExpected": 5,
+    "oldInstalledNodeDatabaseAndNetworkBranchSelected": false,
+    "firstHarnessFailureRetained": {
+      "rootAttempt": "8314",
+      "mode": "install-test",
+      "exitCode": 8,
+      "elapsedSeconds": 3.88094549998641,
+      "rootReportedCause": "temporary installed executable on noexec tmpfs",
+      "notConvertedToPass": true,
+      "evidence": {
+        "path": "evidence/arm64-first-install-test-refusal-root.json",
+        "sha256": "25109325298624955a80e6a4f95be70f20a3a5d030440d1692e52a94979ba4fc",
+        "bytes": 406
+      }
+    }
+  },
+  "amd64": {
+    "status": "CANONICAL_BUILD_AND_CORRECTED_INSTALL_TEST_PASS",
+    "initializationExitCode": 0,
+    "initializationSeconds": 140.33765376498923,
+    "rootTransportSeconds": 141.49742345814593,
+    "sourceFiles": 20868,
+    "sourceBytes": 511205890,
+    "rawVmFilesExported": false,
+    "nativeBuildAndInstallTestStatus": "PASS",
+    "initializationEvidenceSha256": "0509662cfe9907eba16bc28c28ba243b01b6b17ace4d2277169cbae988527a2a",
+    "cacheEvidenceSha256": "1cd8cda7c9c17d5712a82b41d5ca39334771fdb8fc88ac4c74290da243ca88f5",
+    "actualCacheExitCode": 0,
+    "cacheElapsedSeconds": 17.251585660967976,
+    "objectsCopied": 143,
+    "physicalObjectCopies": 38,
+    "archiveMemberCopies": 105,
+    "dependencyFilesCopied": 143,
+    "explicitCoreRebuilds": 0,
+    "cacheCompilerInvocations": 0,
+    "actualBuildExitCode": 0,
+    "buildElapsedSeconds": 69.72541547496803,
+    "actualCorrectedInstallTestExitCode": 0,
+    "correctedInstallTestElapsedSeconds": 2.261805438902229,
+    "coreMembers": 143,
+    "eachCoreMemberEqualsQualifiedBytes": true,
+    "newArchiveOrderEqualsActualCurrentCmakeRecipe": true,
+    "unchangedCoreCompiles": 0,
+    "actualConsumerCompiles": 5,
+    "actualConsumerLinks": 5,
+    "builtInstallableExecutableElfs": 5,
+    "installTestElf": 1,
+    "rawBinaryBindingsRetainedOnVm": true,
+    "buildEvidence": {
+      "path": "evidence/amd64-build-root-filtered.json",
+      "sha256": "13dba9c054ab62db456f9d5cf37509ae86336d9c582c83d901436c40e102afc5",
+      "bytes": 470
+    },
+    "correctedInstallTestEvidence": {
+      "path": "evidence/amd64-corrected-install-test-root-filtered.json",
+      "sha256": "7cf41482ae221f4835e095c605efdd164d26e7afee08717a770027aaf710d159",
+      "bytes": 500
+    },
+    "canonicalBuildEvidence": {
+      "path": "evidence/amd64-canonical-build-root-filtered.json",
+      "sha256": "3973e580f02b74681644be99a7afeb6968655b2fdb1334b3f8176d5dee9a0a38",
+      "bytes": 538
+    }
+  },
+  "arm64CurrentCacheAuthority": {
+    "status": "ROOT_CURRENT_CACHE143_ADMITTED_AFTER_CONTROLLER_REFUSAL",
+    "rootReportedIndependentAdmissionSession": 8971,
+    "rootReportedIndependentAdmissionExitCode": 0,
+    "elapsedSeconds": 6.08348433393985,
+    "historicalV2ControllerSession": 76076,
+    "historicalV2ControllerExitCode": 1,
+    "historicalV2IndividualFailedFieldUnknown": true,
+    "historicalInputsRevalidatedNineFieldsAndSha256": 21419,
+    "currentObjectRows": 143,
+    "currentActualDependencyRows": 143,
+    "currentRowsRecheckedAfterReadback": 21707,
+    "objectCopiesDuringIndependentAdmission": 0,
+    "doesNotConvertControllerRefusalToPass": true,
+    "rawTablePathsHashesAndDescriptorsOmitted": true
+  },
+  "scope": {
+    "dockerFrontendOrNewRuntimeImageQualified": false,
+    "filteredPublicDocumentationSnapshotIsFullDockerContext": false,
+    "fullNodeOrOtherTestCampaignsQualified": false,
+    "candidateTwoBinaryPackagePromotedToFive": false,
+    "runtimeDutiesAuthorized": false,
+    "productionQualified": false,
+    "privateDiagnosticOrMetadataExported": false,
+    "newPrivateProbeOrSignatureAuthorized": false,
+    "gitDeliveryVerifiedByThisReport": false,
+    "forkOrEipActivationPromoted": false
+  },
+  "history": {
+    "fourEntireCurrentHistoricalBodiesRetained": true,
+    "soleCsvUnchanged": true,
+    "sealer72046AndPrivate85895And82701RefusalsRetained": true,
+    "metadata28722RefusalBeforeCppAndUnknownCauseRetained": true,
+    "cache83262RefusalAndPartialObjectRetained": {
+      "actualExitCode": 1,
+      "actualPartialExtractedObjectsCreated": 1,
+      "reportedCompletedCopies": 0,
+      "compilerInvocations": 0,
+      "cppTests": 0,
+      "individualFailedMaterialField": "UNKNOWN",
+      "notConvertedToPass": true
+    },
+    "cache76076FinalRecheckRefusalAfter143ObjectAndMdCopiesRetained": true,
+    "current8971IndependentAdmissionNotCacheV2ControllerPass": true,
+    "noPrivatePerformanceResolutionClaim": true
+  },
+  "authorActions": {
+    "sourceAndPublicSafeEvidenceOnly": true,
+    "rootProgramOrProposalImportedOrExecuted": false,
+    "compilerTestDockerSshGitOrDatabaseUsed": false,
+    "privateOrVmBytesRead": false,
+    "repositoryModified": false
+  }
+}

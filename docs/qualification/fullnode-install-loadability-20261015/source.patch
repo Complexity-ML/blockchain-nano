@@ -1,0 +1,114 @@
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -19,7 +19,8 @@
+  && cmake --build build-network --target nano-p2p --parallel ${JOBS} \
+  && cmake -S . -B build-container -DCMAKE_BUILD_TYPE=Release \
+       -DNANO_NETWORK_EXECUTABLE=/src/build-network/nano-p2p \
+- && cmake --build build-container --target nano nano-storage-maintenance --parallel ${JOBS} \
++ && cmake --build build-container --target nano nano-storage-maintenance \
++      nano-bootstrap-archive-maintenance nano-capella-duty-readiness --parallel ${JOBS} \
+  && cmake --install build-container --prefix /out
+ 
+ FROM ubuntu:24.04 AS runtime
+@@ -34,11 +35,13 @@
+ COPY deploy/docker/node.json /etc/nano/node.json
+ # Fail the build if any installed executable has an unresolved shared library.
+ RUN (cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256) \
+- && ldd /usr/local/bin/nano > /tmp/nano.libs \
+- && ldd /usr/local/bin/nano-p2p > /tmp/p2p.libs \
+- && ldd /usr/local/bin/nano-storage-maintenance > /tmp/maintenance.libs \
+- && ! grep -q 'not found' /tmp/nano.libs /tmp/p2p.libs /tmp/maintenance.libs \
+- && rm /tmp/nano.libs /tmp/p2p.libs /tmp/maintenance.libs \
++ && for name in nano nano-p2p nano-storage-maintenance nano-bootstrap-archive-maintenance nano-capella-duty-readiness; do \
++      test -x "/usr/local/bin/$name" \
++      && ldd "/usr/local/bin/$name" > /tmp/nano-runtime.libs \
++      && ! grep -q 'not found' /tmp/nano-runtime.libs \
++      || exit 1; \
++    done \
++ && rm /tmp/nano-runtime.libs \
+  && nano --help
+ USER 10001:10001
+ WORKDIR /var/lib/nano
+--- a/.dockerignore
++++ b/.dockerignore
+@@ -13,6 +13,12 @@
+ !src/**
+ !include/
+ !include/**
++!tools/
++tools/*
++!tools/storage-maintenance/
++!tools/storage-maintenance/**
++!tools/consensus/
++!tools/consensus/**
+ !network/
+ !network/**
+ !third_party/
+@@ -30,6 +36,7 @@
+ !deploy/docker/
+ deploy/docker/*
+ !deploy/docker/node.json
++!deploy/docker/notices.sha256
+ **/.git
+ **/node_modules
+ **/build
+--- a/tests/test_install.cpp
++++ b/tests/test_install.cpp
+@@ -1,6 +1,45 @@
+ #include "support/process.hpp"
+ using namespace test;
+-int main(int argc,char** argv){try{check(argc==3,"cmake and build required");Temp root;auto prefix=root/"prefix with spaces";auto installed=run({argv[1],"--install",argv[2],"--prefix",prefix.string()});check(installed.code==0,installed.err);check(fs::is_regular_file(prefix/"bin/nano")&&fs::is_regular_file(prefix/"bin/nano-p2p")&&fs::is_regular_file(prefix/"share/nano/genesis/testnet.json"),"installed files missing");
++
++namespace {
++// Exercise the installed entry points. No genesis/database/request argument is
++// supplied, so the four refusing programs must stop before opening state.
++void runtime_install_smoke(const fs::path& prefix,const fs::path& working){
++ for(const char* name:{"nano","nano-p2p","nano-storage-maintenance","nano-bootstrap-archive-maintenance","nano-capella-duty-readiness"}){
++  const auto binary=prefix/"bin"/name;
++  check(fs::is_regular_file(binary)&&!fs::is_symlink(binary),std::string("installed executable missing: ")+name);
++ }
++ check(fs::is_regular_file(prefix/"share/nano/licenses/notices.sha256"),"installed notice manifest missing");
++ fs::create_directory(working);
++ const Env clean{{"NANO_SUPERVISOR_PID",std::nullopt}};
++ const auto invoke=[&](const std::vector<std::string>& args){Process child(args,clean,working);return child.wait(5);};
++ const auto call=[&](const char* name){return invoke({(prefix/"bin"/name).string()});};
++ const auto help=invoke({(prefix/"bin/nano").string(),"--help"});
++ check(help.code==0&&help.out.find("Usage: nano <")!=std::string::npos,"installed nano help failed");
++ const auto p2p=call("nano-p2p");
++ check(p2p.code==1&&p2p.err.find("Usage: nano-p2p ")!=std::string::npos,"installed transport did not refuse before startup");
++ const auto compact=call("nano-storage-maintenance");
++ check(compact.code==1&&compact.err.find("Usage: compact-owned-copy ")!=std::string::npos,"installed storage tool did not refuse before opening a copy");
++ const auto bootstrap=call("nano-bootstrap-archive-maintenance");
++ check(bootstrap.code==1,"installed bootstrap tool did not refuse empty arguments");
++ const auto b=Json::parse(bootstrap.out);
++ check(b.at("completed")==false&&b.at("refusedStage")=="arguments"&&b.at("runtimeStarted")==false&&b.at("productionQualified")==false,"installed bootstrap refusal stage differs");
++ const auto duty=call("nano-capella-duty-readiness");
++ check(duty.code==1,"installed duty tool did not refuse empty arguments");
++ const auto d=Json::parse(duty.out);
++ check(d.at("status")=="REFUSED_NO_AUTOMATIC_RETRY"&&d.at("refusedStage")=="request"&&d.at("reason")=="validation_or_io_refused"&&d.at("probeCompleted")==false&&d.at("keysLoaded")==false&&d.at("runtimeStarted")==false,"installed duty refusal stage differs");
++ check(fs::is_empty(working),"argument-only installed probes wrote state");
++}
++}
++
++int main(int argc,char** argv){try{
++ check(argc==3||(argc==4&&std::string(argv[3])=="--runtime-install-smoke"),"cmake and build required; optional --runtime-install-smoke");
++ const bool smoke_only=argc==4;
++ Temp root;auto prefix=root/"prefix with spaces";
++ auto installed=run({argv[1],"--install",argv[2],"--prefix",prefix.string()});
++ check(installed.code==0,installed.err);
++ check(fs::is_regular_file(prefix/"bin/nano")&&fs::is_regular_file(prefix/"bin/nano-p2p")&&fs::is_regular_file(prefix/"share/nano/genesis/testnet.json"),"installed files missing");
++ if(smoke_only){runtime_install_smoke(prefix,root/"argument-only entrypoints");std::cout<<"Installed five-executable argument-only smoke passed; no database or network started\n";return 0;}
+  for(std::string name:{"mainnet","testnet"}){auto signed_file=prefix/("share/nano/genesis/"+name+".json"),legacy=prefix/("share/nano/genesis/legacy/"+name+"-unsigned.json");check(load(signed_file)["config"]["posSignatureVersion"]==1,"signed genesis absent");auto binary=(prefix/"bin/nano").string();auto old=success(run({binary,"init",legacy.string(),(root/(name+"-old")).string()})),fresh=success(run({binary,"init",signed_file.string(),(root/(name+"-new")).string()}));check(old["blockHash"]!=fresh["blockHash"],"genesis identities collide");auto refused=run({binary,"status",signed_file.string(),(root/(name+"-old")).string()});check(refused.code!=0&&refused.err.find("database belongs to another chain")!=std::string::npos,"genesis mismatch accepted");success(run({binary,"status",legacy.string(),(root/(name+"-old")).string()}));}
+  auto docs=prefix/"share/nano/docs";for(auto name:{"README.md","GENESIS-VERSIONS.md","FINALITY.md","NETWORK-ROBUSTNESS.md"})check(fs::is_regular_file(docs/name),"missing installed documentation");
+  auto moved=root/"relocated installation";fs::rename(prefix,moved);auto aliases=root/"aliases";fs::create_directory(aliases);fs::create_symlink(moved/"bin/nano",aliases/"nano");auto working=root/"unrelated";fs::create_directory(working);auto genesis=root/"genesis.json",config=root/"config.json";save(genesis,{{"config",{{"chainId",1337},{"consensus","pos"}}}});save(config,{{"rpc_port",0},{"p2p_port",0},{"p2p_host","127.0.0.1"}});
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -332,6 +332,8 @@
+  target_link_libraries(nano-install-tests PRIVATE nano_core)
+  add_test(NAME installed_node COMMAND nano-install-tests ${CMAKE_COMMAND} ${CMAKE_BINARY_DIR})
+  set_tests_properties(installed_node PROPERTIES TIMEOUT 60)
++ add_test(NAME installed_runtime_package_loadability COMMAND nano-install-tests ${CMAKE_COMMAND} ${CMAKE_BINARY_DIR} --runtime-install-smoke)
++ set_tests_properties(installed_runtime_package_loadability PROPERTIES TIMEOUT 60 LABELS qualification_install_public)
+ endif()
+ 
+ add_executable(nano-staking-tests tests/test_staking.cpp)

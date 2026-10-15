@@ -1,0 +1,85 @@
+{
+  "format": "nano-fullnode-ops-source-proposal-v1",
+  "status": "SOURCE_ONLY_NOT_COMPILED_OR_TESTED",
+  "sourceOnly": true,
+  "sourceBaselineRepository": "/Users/boris/Dev/blockchain-nano",
+  "sourceRevisionVerification": "ROOT-reported current 0367 generation; reviewer compared exact public file bytes without Git",
+  "files": [
+    {
+      "path": "Dockerfile",
+      "baseline": {"sha256": "660f4a9470bf8714f6cccad425d534992a6ba630b6aa59af152c37e3faa86a5a", "bytes": 2184},
+      "source": {"path": "source/Dockerfile", "sha256": "1b435d6b2a2467a628fad24922ce96b3ed28acdd3b4a4698f55d7392742dd08b", "bytes": 2289}
+    },
+    {
+      "path": ".dockerignore",
+      "baseline": {"sha256": "0ff2c7be12c1d2b9485867c80b128fee40330f0e9d9367fbac78ab376f52d267", "bytes": 801},
+      "source": {"path": "source/.dockerignore", "sha256": "c4e00df7b24797f27cf15e6ab4f7a08748f19838cf345b5405ad574ea2cf9953", "bytes": 943}
+    },
+    {
+      "path": "tests/test_install.cpp",
+      "baseline": {"sha256": "d545547e05ecad7b5acc608aad5a0d69fd7b6118cb782935dcdb9c1dd4454b78", "bytes": 2784},
+      "source": {"path": "source/tests/test_install.cpp", "sha256": "54c9fb168dd9fc5e1a694760740ba8fed590fa44d0b9a1c888eb26d6d2f846cd", "bytes": 5468}
+    },
+    {
+      "path": "CMakeLists.txt",
+      "baseline": {"sha256": "96df5ff3ebabfdf7487d720a8ecdf6ef2db849bd40f06eb6066393f884051540", "bytes": 165926},
+      "source": {"path": "source/CMakeLists.txt", "sha256": "3faeb2c1437d7ee91210fa97327dc3100246dbf179727fddbae0f0c880ad11f5", "bytes": 166187}
+    }
+  ],
+  "payloads": [
+    {"path": "source/Dockerfile", "sha256": "1b435d6b2a2467a628fad24922ce96b3ed28acdd3b4a4698f55d7392742dd08b", "bytes": 2289},
+    {"path": "source/.dockerignore", "sha256": "c4e00df7b24797f27cf15e6ab4f7a08748f19838cf345b5405ad574ea2cf9953", "bytes": 943},
+    {"path": "source/tests/test_install.cpp", "sha256": "54c9fb168dd9fc5e1a694760740ba8fed590fa44d0b9a1c888eb26d6d2f846cd", "bytes": 5468},
+    {"path": "source/CMakeLists.txt", "sha256": "3faeb2c1437d7ee91210fa97327dc3100246dbf179727fddbae0f0c880ad11f5", "bytes": 166187},
+    {"path": "source.patch", "sha256": "15d1dd3d00f08885614487726b2a76e4f476a5275ff5b39e1e4fd62dc38242b5", "bytes": 7718},
+    {"path": "README.md", "sha256": "d5e9c9ab405026a5d5681029469e61cb1bc7282b4b0d5f15b2c875a236e4ea14", "bytes": 5456},
+    {"path": "TEST-PLAN.json", "sha256": "6d110e1022bfe27efd922d544a8929cf6d84da933c02ea8426c237b06892afec", "bytes": 2035}
+  ],
+  "payloadCount": 7,
+  "payloadBytes": 190096,
+  "concreteFindings": [
+    {
+      "priority": 1,
+      "problem": "Clean Docker source context and install cannot satisfy current CMake targets and install inputs",
+      "evidence": [".dockerignore:1-32 excludes all tools and notices.sha256", "CMakeLists.txt:34-40,2116,2132 reference omitted tools sources", "Dockerfile:22 builds only two native targets before install", "CMakeLists.txt:319 installs four native targets", "CMakeLists.txt:329 installs omitted notices.sha256"],
+      "fix": "Allow only the required C++ tool subtrees and notice manifest; build every native install target before cmake --install"
+    },
+    {
+      "priority": 2,
+      "problem": "Runtime loadability checks omit two newly installed executables",
+      "evidence": ["Dockerfile:37-40 checks only nano, nano-p2p and nano-storage-maintenance", "CMakeLists.txt:319 also installs bootstrap-archive-maintenance and duty-readiness"],
+      "fix": "Require all five executables and successful ldd results, plus a real fresh-prefix install and bounded argument-only entrypoint smoke"
+    }
+  ],
+  "testContract": {
+    "testName": "installed_runtime_package_loadability",
+    "label": "qualification_install_public",
+    "timeoutSeconds": 60,
+    "argv": ["nano-install-tests", "<absolute-cmake>", "<build-directory>", "--runtime-install-smoke"],
+    "entrypointChildTimeoutSeconds": 5,
+    "installChildTimeoutSeconds": 20,
+    "oldInstalledNodeRegistrationAndThreeArgumentBehaviorPreserved": true,
+    "selectorDoesNotReachOldDatabaseAndNetworkCases": true,
+    "noDatabaseGenesisIdentityOrRequestPathSuppliedToEntrypoints": true,
+    "noNetworkingRequestedBySelector": true,
+    "sourceProofOfEarlyRefusal": ["network/main.cpp:473 before identity and Host construction at 476-477", "compact-owned-copy.cpp:87 before path/database handling at 88-90", "bootstrap-archive-owned-copies.cpp:156 before Input at 157", "duty-readiness.cpp:250 before Input at 253"]
+  },
+  "preservedBoundaries": {
+    "candidateTwoBinaryPackageContractUnchanged": true,
+    "composeRpcLivenessNotPromotedToReadiness": true,
+    "capellaStartupRecoveryGuardsUnchanged": true,
+    "rollbackLatestJournalAndWitnessRequirementsUnchanged": true,
+    "private28722CauseNotInvestigatedOrBypassed": true,
+    "publicHeadersConsensusRulesRuntimePackagesOrDataFormatsChanged": false,
+    "productionQualified": false,
+    "runtimeDutiesAuthorized": false
+  },
+  "authorActions": {
+    "sourceAndPublicTextHashDiffOnly": true,
+    "repositoryModified": false,
+    "proposalOrRootProgramImportedOrExecuted": false,
+    "cmakeCompilerTestDockerSshGitOrDatabaseExecuted": false,
+    "privateOrVmBytesRead": false,
+    "actualTestsExecuted": 0
+  }
+}
