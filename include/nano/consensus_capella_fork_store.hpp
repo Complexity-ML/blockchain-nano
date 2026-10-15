@@ -57,6 +57,7 @@ struct CapellaForkBlockRules {
 // Ephemeral target-epoch continuation bound to a real admitted block and the
 // complete local profile. Contexts never come from gossip or serialized weights.
 class CapellaTargetPreparation {
+ friend class CapellaDutyPreparation;
  CapellaForkBlockRules rules_;
  ConsensusCheckpoint target_;
  CapellaSlotPreparation slots_;
@@ -67,6 +68,9 @@ public:
  CapellaTargetPreparation(const CapellaForkStore&,const CapellaForkBlockRules&,
   const ConsensusCheckpoint&,const std::function<void()>& checkpoint={});
  const ConsensusCheckpoint& target()const{return target_;}
+ // Ephemeral projected bytes, never a signed/admitted block state.
+ const CapellaSlotState& prepared_state()const{return slots_.state();}
+ uint64_t prepared_slot()const{return slots_.slot();}
  bool matches(const CapellaForkStore&,const CapellaForkBlockRules&,
   const ConsensusCheckpoint&,const std::function<void()>& checkpoint={})const;
  bool retarget(const CapellaForkStore&,const CapellaForkBlockRules&,const ConsensusCheckpoint&,const std::function<void()>& checkpoint={});

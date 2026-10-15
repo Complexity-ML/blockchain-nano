@@ -45,6 +45,7 @@ std::optional<CapellaUnsignedBlockCandidate> prepare_capella_unsigned_block(
 // Caller must bind parent() to the current admitted record and authenticate the
 // paired execution parent/state/history. Recreate on branch/profile changes.
 class CapellaBlockPreparation {
+ friend class CapellaDutyPreparation;
  CapellaTransitionRules rules_;
  CapellaSlotPreparation slots_;
  void require_next_slot(uint64_t)const;

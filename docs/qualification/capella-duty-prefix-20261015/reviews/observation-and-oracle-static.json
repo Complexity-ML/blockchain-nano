@@ -1,0 +1,63 @@
+{
+  "format": "nano-duty-readiness-observation-independent-source-review-v1",
+  "verdict": "STATIC_GO_SOURCE_ONLY_COMBINED_PREFIX_AND_OBSERVATION_BUILD_WITH_ORACLE",
+  "manifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-observation-proposal-20261015/manifest.json",
+    "sha256": "341d3ae1de0d89837f662d43e0fd13e17634bf40ac7683f25167e64b53030182",
+    "bytes": 5306
+  },
+  "sources": [
+    {"path":"include/nano/maintenance/duty_readiness.hpp","sha256":"ca5cae20ef6ea70770d988bec4b7804676fdb1cd708623d113154521d68554b9","bytes":15829},
+    {"path":"tools/storage-maintenance/duty-readiness.cpp","sha256":"945e6761c4cb7aa11da965e3ccb2579496d187139c7e37732a46e6abfed76d41","bytes":45594},
+    {"path":"tests/test_capella_duty_readiness.cpp","sha256":"35736fa0055efee8d328a8df8f9bab53ba7b0a30d94fcaa8d30a2f94e7afd0d7","bytes":84257}
+  ],
+  "coreManifestSha256": "061aab2627f87ceccb3848a68f2b9482fc19adc6ffac852c6aacc9272a32a428",
+  "oracleReview": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/duty-readiness-prefix-oracle-independent-review-20261015.json",
+    "sha256": "b5a91c43902b48da2d76c27d140c4ce411e51f364119e24e2368842e9de66d20",
+    "bytes": 3496
+  },
+  "findings": [],
+  "verified": {
+    "sixPayloadHashesAndSizesAndManifestExact": true,
+    "threeCurrentPublicBaselinesMatch": true,
+    "coreWorkAndTerminalUnavailableInterfacesMatchFrozenProposal": true,
+    "oracleFragmentUnchangedFromIndependentlyReviewedSource": true,
+    "allPriorProtectionAndEligibilityAssertionsRemain": true,
+    "terminalUnavailableStopsRetriesWithoutFakeAssignment": true,
+    "chunkLimitReasonAndNullBeforeFirstAdvanceRemainDistinct": true,
+    "callbackEmptySyncExceptionStillPropagatesWithoutBlockingFrame": true,
+    "typedCancellationAndRssDeadlineGuardsPreserved": true,
+    "callerOwnedWorkSurvivesExceptionWithNonthrowingSaturationAndUnknownFlag": true,
+    "counterScopeOnlyCompletedDutyAdvanceChunksAndReusedProgressExplicit": true,
+    "phaseNamesFixedAndUnreachedDurationsNull": true,
+    "steadyTimingsDifferentiateBeforeEvaluatorAndEvaluatorDuration": true,
+    "dutyTimingDestructorPreservesOriginalException": true,
+    "noPrivateUtcRootsSlotsEpochsPathsOrExceptionStringsAddedToTypedOutput": true,
+    "finalPublicationAndObservationFencesPreserved": true,
+    "expectedEightGroupsNineRowsElevenCliChildrenUnchanged": true,
+    "sameRssDurationSignaturesAndFixtureMemoryPolicyCaps": true,
+    "actual85895PerformanceCauseNotAssumed": true
+  },
+  "limitations": [
+    "This is source review, not a compiler, ABI/ODR, runtime, measured speedup or private readiness result.",
+    "ROOT must freeze the combined eight source overlays and use actual M/MD closure to rebuild every affected object and consumer coherently.",
+    "Counter fields exclude other SSZ validation, contextual tick, post-ready proposer and sync work; partial failed chunks remain unknown.",
+    "A completed unavailable readonly observation remains legitimate and never authorizes keys, signatures, duties, ancestry, delivery, nonces or production."
+  ],
+  "authorActions": {
+    "publicSourceAndMetadataReadOnly": true,
+    "astParsingPerformed": false,
+    "proposalImported": false,
+    "proposalExecuted": false,
+    "compilerOrTestsExecuted": false,
+    "privateInputsRead": false,
+    "repositoryMutated": false
+  },
+  "sourceOnly": true,
+  "actualNewRuntimeResultKnown": false,
+  "privateReadinessQualified": false,
+  "runtimeDutiesAuthorized": false,
+  "resumeAuthorized": false,
+  "productionQualified": false
+}

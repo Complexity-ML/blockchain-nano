@@ -1,0 +1,35 @@
+{
+  "format": "nano-duty-readiness-owned-prefix-independent-static-review-v1",
+  "verdict": "STATIC_GO_SOURCE_ONLY_PENDING_COMBINED_ORACLE_AND_ACTUAL_BUILD_TEST",
+  "manifest": {"path": "duty-readiness-prefix-reuse-proposal-20261015/manifest.json", "sha256": "061aab2627f87ceccb3848a68f2b9482fc19adc6ffac852c6aacc9272a32a428", "bytes": 5363},
+  "controller": {"path": "source/src/consensus_capella_duty.cpp", "sha256": "33244932c3e38eb8509651f10e406e43809ddccdda969b9a399e227d0ec124b8", "bytes": 16549},
+  "scope": {
+    "independentOfCoreAuthor": true,
+    "oracleAuthoredSeparatelyByThisReviewerAndNotSelfQualified": true,
+    "fiveSourceOverlaysAndFullDeltaRead": true,
+    "eightPayloadPinsMatched": true,
+    "classFieldListsUnchanged": true,
+    "oldThreeArgumentAdvanceRetained": true,
+    "sameAuthenticatedParentAndFullProfileRequired": true,
+    "privateOwnedContinuationCopyOnly": true,
+    "exactEpochAndPrecedingBlockSnapshotsPreserved": true,
+    "differentTargetAncestorRemainsIndependent": true,
+    "perLaneMaximumProgressFixedBeforeCopies": true,
+    "completedTransitionsSeparatedFromCopiedProgress": true,
+    "partialInFlightWorkUnknownOnFailure": true,
+    "callbackFailuresCannotBecomeEmptySyncUnavailable": true,
+    "existingDeadlineRssAndConservativeQuotaUnchanged": true,
+    "noGlobalSszCacheOrDurableFormatChange": true
+  },
+  "materialBlockersFound": [],
+  "limitations": [
+    "No compile, test, proposal import or execution was performed.",
+    "The actual source85895 deadline cause and speedup are not established by this static review.",
+    "Header ODR dependencies require actual M/MD-derived coherent rebuild and relinks.",
+    "The separate oracle and caller observation changes require independent review and actual qualification.",
+    "No projected state is installed as a signed head, persisted or authorized for runtime duties."
+  ],
+  "actions": {"publicSourceAndPublicMetadataOnly": true, "cppExecuted": false, "compilerOrTestsExecuted": false, "proposalFunctionsExecuted": false, "privateInputsRead": false, "sshDockerGitOrDbUsed": false, "repositoryModified": false},
+  "runtimeAuthorized": false,
+  "productionQualified": false
+}

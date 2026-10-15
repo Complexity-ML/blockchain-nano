@@ -8,6 +8,15 @@ struct CapellaAttestationDuty {
  ConsensusBytes4 fork_version;
  Phase0SignedAttestation attestation; // one membership bit, signature absent
 };
+// Caller-owned observations for ONE advance call, reset at entry. Slot counts
+// cover completed ordinary slot chunks; reused counts are state copies, not
+// executed transitions. A failing in-flight chunk has unknown partial work.
+// Nothing is stored in an existing continuation's object layout.
+struct CapellaDutyPreparationWork {
+ uint64_t head_slots=0,target_slots=0,block_slots=0;
+ uint64_t target_reused_slots=0,block_reused_slots=0;
+ bool incomplete_work_unknown=false;
+};
 // A local continuation owns its complete immutable profile and the actual
 // admitted head/boundary. Advanced states never impersonate signed blocks.
 class CapellaDutyPreparation {
@@ -29,6 +38,9 @@ public:
  bool retarget(const CapellaForkStore&,const CapellaForkBlockRules&,uint64_t,const std::function<void()>& checkpoint={});
  void seed_target(const CapellaTargetPreparation&,const CapellaForkStore&,const std::function<void()>& checkpoint={});
  bool advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint={});
+ bool advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint,
+  CapellaDutyPreparationWork* actual_work);
+ bool projection_unavailable()const noexcept{return projection_blocked_;}
  bool ready()const;
  const CapellaSlotState& head_state()const;
  CapellaSlotState sync_state(uint64_t trials,const std::function<void()>& checkpoint={})const;

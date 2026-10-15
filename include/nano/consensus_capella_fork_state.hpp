@@ -1,6 +1,8 @@
 #pragma once
 #include "nano/consensus_capella_slots.hpp"
 #include "nano/consensus_fork_state.hpp"
+#include <stdexcept>
+#include <utility>
 namespace nano {
 struct CapellaForkStateContexts {Phase0ForkSlashingContext block;Phase0ForkVoteContext target;CapellaSlotState target_state;};
 Phase0ForkSlashingContext capella_fork_block_context(const CapellaSlotState&,const ConsensusBeaconHeader&,
@@ -25,10 +27,23 @@ struct CapellaProposerIdentity {
 // changes. One complete bounded chunk commits locally; cancellation discards
 // only the unfinished chunk. Caller serializes access and rebinds on head change.
 class CapellaSlotPreparation {
+ friend class CapellaDutyPreparation;
  ConsensusBeaconHeader parent_;
  CapellaEpochRules rules_;
  AltairStateLimits limits_;
  CapellaSlotState state_;
+ // Only the owning duty continuation may adopt another owned continuation,
+ // after comparing their complete profiles. No caller-supplied state/header
+ // constructor or mutable view is exposed. The source has reached this exact
+ // slot by ordinary authenticated slot processing, including epoch metadata.
+ void adopt_same_profile_prefix(const CapellaSlotPreparation& source,
+  uint64_t maximum_forward_slots,const std::function<void()>& check){
+  const auto before=slot(),after=source.slot();
+  if(parent_!=source.parent_||after<before||after-before>maximum_forward_slots)
+   throw std::invalid_argument("Invalid shared Capella slot prefix");
+  if(check)check();auto owned=source.state_;if(check)check();
+  state_=std::move(owned);
+ }
 public:
  CapellaSlotPreparation(const CapellaSlotState&,const ConsensusBeaconHeader&,
   const CapellaEpochRules&,const AltairStateLimits&,

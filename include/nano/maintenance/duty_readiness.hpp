@@ -28,12 +28,33 @@ struct DutyReadinessBounds {
 class DutyReadinessRefused:public std::runtime_error {
 public:explicit DutyReadinessRefused(const char* reason):std::runtime_error(reason){}
 };
+// Caller-owned observations survive a refused calculation. These are counts
+// of completed preparation transitions, never absolute slots or authorization.
+// The core marks work unknown when a partially calculated chunk is discarded.
+struct DutyReadinessObservation {
+ bool advance_reached=false;
+ CapellaDutyPreparationWork projection{};
+};
+inline Json duty_readiness_projection_work(const DutyReadinessObservation& observation){
+ if(!observation.advance_reached)return nullptr;
+ const auto& p=observation.projection;
+ return {{"headSlotsComputed",p.head_slots},{"targetSlotsComputed",p.target_slots},{"blockSlotsComputed",p.block_slots},{"targetSlotsReused",p.target_reused_slots},{"blockSlotsReused",p.block_reused_slots},{"incompleteWorkUnknown",p.incomplete_work_unknown}};
+}
 // PURE, owned inputs precede every callback. Cold records are deliberately
 // rejected: the I/O caller must materialize them on authenticated RO replicas.
 // This observes potential assignments, never a permission or signature.
 inline Json evaluate_duty_readiness(CapellaForkStore store,CapellaForkBlockRules rules,
  CapellaStoreSnapshotLimits limits,std::vector<DutyReadinessKey> keys,DutyReadinessBounds bounds,
- std::function<uint64_t()> now_ms,std::function<void()> checkpoint,std::function<uint64_t()> rss_kib){
+ std::function<uint64_t()> now_ms,std::function<void()> checkpoint,std::function<uint64_t()> rss_kib,
+ DutyReadinessObservation* observation=nullptr){
+ DutyReadinessObservation local_observation;
+ auto& observed_work=observation?*observation:local_observation;observed_work={};
+ const auto merge_work=[&](const CapellaDutyPreparationWork& step)noexcept{
+  auto& total=observed_work.projection;
+  const auto add=[&](uint64_t& held,uint64_t added){if(added>UINT64_MAX-held){held=UINT64_MAX;total.incomplete_work_unknown=true;}else held+=added;};
+  add(total.head_slots,step.head_slots);add(total.target_slots,step.target_slots);add(total.block_slots,step.block_slots);add(total.target_reused_slots,step.target_reused_slots);add(total.block_reused_slots,step.block_reused_slots);
+  total.incomplete_work_unknown=total.incomplete_work_unknown||step.incomplete_work_unknown;
+ };
  using Clock=std::chrono::steady_clock;const auto began=Clock::now();
  auto require=[](bool ok,const char* why){if(!ok)throw DutyReadinessRefused(why);};
  require(bool(now_ms)&&bool(rss_kib),"missing_observation_callbacks");
@@ -75,8 +96,13 @@ inline Json evaluate_duty_readiness(CapellaForkStore store,CapellaForkBlockRules
  bool done=false;
  for(;;){
   check();if(bounds.maximum_chunks-chunks<3)break;
-  work(3);done=prepared.advance(bounds.maximum_chunk_slots,limits.sync_trials,check);
-  if(!done)continue;
+  work(3);CapellaDutyPreparationWork step;observed_work.advance_reached=true;
+  try{done=prepared.advance(bounds.maximum_chunk_slots,limits.sync_trials,check,&step);}
+  catch(...){merge_work(step);throw;}
+  merge_work(step);
+  // An empty future active set is terminal for this immutable head/profile.
+  // Retrying the same blocked frame consumes callbacks and budget without work.
+  if(!done){if(prepared.projection_unavailable())break;continue;}
   const auto fresh=now_ms();require(fresh>=last_wall,"utc_regressed");last_wall=fresh;require(fresh>=genesis,"utc_before_genesis");const auto fresh_slot=(fresh-genesis)/rules.slot_duration_ms;
   require(fresh_slot<UINT64_MAX-1&&fresh_slot>=slot,"invalid_observation_slot");
   if(fresh_slot==slot&&fresh-observed<=bounds.maximum_observation_age_ms)break;
@@ -85,7 +111,8 @@ inline Json evaluate_duty_readiness(CapellaForkStore store,CapellaForkBlockRules
   tick_to(fresh);require(prepared.retarget(store,rules,fresh_slot,check),"retarget_refused");slot=fresh_slot;target_start=slot/slots*slots;observed=fresh;done=false;
  }
  Json result={{"format","nano-capella-duty-readiness-evaluation-v1"},{"result",done?"PREPARED_READONLY_ONLY":"UNAVAILABLE_READONLY_ONLY"},{"probeCompleted",true},{"configuredKeys",keys.size()},{"headProjectionReady",done},{"targetEpochReady",false},{"blockStateReady",false},{"syncCommitteeReady",false},{"completeDutyContexts",false},{"normalNonassignmentPossible",true},{"asOfUtcMs",observed},{"slot",slot},{"chargedSlotWork",charged},{"chunks",chunks},{"retargets",retargets},{"maximumRssKiB",bounds.maximum_rss_kib},{"actualPeakRssKiB",peak},{"sourceHeadRoot",hex(Bytes(head_root.begin(),head_root.end()))},{"profile",original_profile},{"keys",Json::array()},{"resumeAuthorized",false},{"headProjectionPersisted",false},{"unsignedBodyConstructionQualified",false},{"newSignatures",0},{"runtimeStarted",false},{"productionQualified",false}};
- if(!done){result["reason"]="preparation_unavailable_or_chunk_limit";check();return result;}
+ result["projectionWork"]=duty_readiness_projection_work(observed_work);
+ if(!done){result["reason"]=prepared.projection_unavailable()?"empty_sync_active_set":"preparation_unavailable_or_chunk_limit";check();return result;}
  const auto* target=prepared.target_preparation();const auto* block=prepared.block();
  result["targetEpochReady"]=target&&target->ready();result["blockStateReady"]=bool(block);
  const auto& state=prepared.head_state();const auto root=capella_beacon_state_root(state.ssz,t.consensus.state,t.execution,t.maximum_state_bytes,check);

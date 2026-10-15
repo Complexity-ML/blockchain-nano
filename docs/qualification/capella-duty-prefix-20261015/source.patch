@@ -1,0 +1,472 @@
+--- a/include/nano/consensus_capella_fork_state.hpp
++++ b/include/nano/consensus_capella_fork_state.hpp
+@@ -1,6 +1,8 @@
+ #pragma once
+ #include "nano/consensus_capella_slots.hpp"
+ #include "nano/consensus_fork_state.hpp"
++#include <stdexcept>
++#include <utility>
+ namespace nano {
+ struct CapellaForkStateContexts {Phase0ForkSlashingContext block;Phase0ForkVoteContext target;CapellaSlotState target_state;};
+ Phase0ForkSlashingContext capella_fork_block_context(const CapellaSlotState&,const ConsensusBeaconHeader&,
+@@ -25,10 +27,23 @@
+ // changes. One complete bounded chunk commits locally; cancellation discards
+ // only the unfinished chunk. Caller serializes access and rebinds on head change.
+ class CapellaSlotPreparation {
++ friend class CapellaDutyPreparation;
+  ConsensusBeaconHeader parent_;
+  CapellaEpochRules rules_;
+  AltairStateLimits limits_;
+  CapellaSlotState state_;
++ // Only the owning duty continuation may adopt another owned continuation,
++ // after comparing their complete profiles. No caller-supplied state/header
++ // constructor or mutable view is exposed. The source has reached this exact
++ // slot by ordinary authenticated slot processing, including epoch metadata.
++ void adopt_same_profile_prefix(const CapellaSlotPreparation& source,
++  uint64_t maximum_forward_slots,const std::function<void()>& check){
++  const auto before=slot(),after=source.slot();
++  if(parent_!=source.parent_||after<before||after-before>maximum_forward_slots)
++   throw std::invalid_argument("Invalid shared Capella slot prefix");
++  if(check)check();auto owned=source.state_;if(check)check();
++  state_=std::move(owned);
++ }
+ public:
+  CapellaSlotPreparation(const CapellaSlotState&,const ConsensusBeaconHeader&,
+   const CapellaEpochRules&,const AltairStateLimits&,
+--- a/include/nano/consensus_capella_transition.hpp
++++ b/include/nano/consensus_capella_transition.hpp
+@@ -45,6 +45,7 @@
+ // Caller must bind parent() to the current admitted record and authenticate the
+ // paired execution parent/state/history. Recreate on branch/profile changes.
+ class CapellaBlockPreparation {
++ friend class CapellaDutyPreparation;
+  CapellaTransitionRules rules_;
+  CapellaSlotPreparation slots_;
+  void require_next_slot(uint64_t)const;
+--- a/include/nano/consensus_capella_fork_store.hpp
++++ b/include/nano/consensus_capella_fork_store.hpp
+@@ -57,6 +57,7 @@
+ // Ephemeral target-epoch continuation bound to a real admitted block and the
+ // complete local profile. Contexts never come from gossip or serialized weights.
+ class CapellaTargetPreparation {
++ friend class CapellaDutyPreparation;
+  CapellaForkBlockRules rules_;
+  ConsensusCheckpoint target_;
+  CapellaSlotPreparation slots_;
+@@ -67,6 +68,9 @@
+  CapellaTargetPreparation(const CapellaForkStore&,const CapellaForkBlockRules&,
+   const ConsensusCheckpoint&,const std::function<void()>& checkpoint={});
+  const ConsensusCheckpoint& target()const{return target_;}
++ // Ephemeral projected bytes, never a signed/admitted block state.
++ const CapellaSlotState& prepared_state()const{return slots_.state();}
++ uint64_t prepared_slot()const{return slots_.slot();}
+  bool matches(const CapellaForkStore&,const CapellaForkBlockRules&,
+   const ConsensusCheckpoint&,const std::function<void()>& checkpoint={})const;
+  bool retarget(const CapellaForkStore&,const CapellaForkBlockRules&,const ConsensusCheckpoint&,const std::function<void()>& checkpoint={});
+--- a/include/nano/consensus_capella_duty.hpp
++++ b/include/nano/consensus_capella_duty.hpp
+@@ -7,6 +7,15 @@
+  ConsensusRoot genesis_root;
+  ConsensusBytes4 fork_version;
+  Phase0SignedAttestation attestation; // one membership bit, signature absent
++};
++// Caller-owned observations for ONE advance call, reset at entry. Slot counts
++// cover completed ordinary slot chunks; reused counts are state copies, not
++// executed transitions. A failing in-flight chunk has unknown partial work.
++// Nothing is stored in an existing continuation's object layout.
++struct CapellaDutyPreparationWork {
++ uint64_t head_slots=0,target_slots=0,block_slots=0;
++ uint64_t target_reused_slots=0,block_reused_slots=0;
++ bool incomplete_work_unknown=false;
+ };
+ // A local continuation owns its complete immutable profile and the actual
+ // admitted head/boundary. Advanced states never impersonate signed blocks.
+@@ -29,6 +38,9 @@
+  bool retarget(const CapellaForkStore&,const CapellaForkBlockRules&,uint64_t,const std::function<void()>& checkpoint={});
+  void seed_target(const CapellaTargetPreparation&,const CapellaForkStore&,const std::function<void()>& checkpoint={});
+  bool advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint={});
++ bool advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& checkpoint,
++  CapellaDutyPreparationWork* actual_work);
++ bool projection_unavailable()const noexcept{return projection_blocked_;}
+  bool ready()const;
+  const CapellaSlotState& head_state()const;
+  CapellaSlotState sync_state(uint64_t trials,const std::function<void()>& checkpoint={})const;
+--- a/src/consensus_capella_duty.cpp
++++ b/src/consensus_capella_duty.cpp
+@@ -119,21 +119,90 @@
+  if(target_&&ready.ready()&&ready.matches(store,rules_,target_->target(),check))target_=ready;
+ }
+ bool CapellaDutyPreparation::advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
++ return advance(maximum_slots,trials,check,nullptr);
++}
++bool CapellaDutyPreparation::advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check,
++ CapellaDutyPreparationWork* actual_work){
++ CapellaDutyPreparationWork local;auto& actual=actual_work?*actual_work:local;actual={};
+  if(!maximum_slots||!trials)throw std::invalid_argument("invalid Capella duty continuation bounds");
+  // A caller's cancellation/error must never masquerade as a missing future
+  // committee, even if its callback throws the same exception type.
+  bool callback_failed=false;
+  auto checkpoint=[&]{if(check)try{check();}catch(...){callback_failed=true;throw;}};
+  checkpoint();if(projection_blocked_)return false;
++ bool in_slot_work=false;
+  try{
+-  const bool head_ready=head_.advance(slot_,maximum_slots,trials,checkpoint);
+-  bool target_ready=true,block_ready=true;
+-  if(target_)target_ready=target_->advance(maximum_slots,trials,checkpoint);
+-  if(block_)block_ready=block_->advance_for_block(slot_,maximum_slots,trials,checkpoint);
+-  return head_ready&&target_ready&&block_ready;
++  const auto profile=capella_fork_profile(rules_);
++  const auto same_slot_profile=[&](const CapellaSlotPreparation& frame){
++   auto candidate=rules_;
++   candidate.transition.consensus.epoch=frame.rules_.operations;
++   candidate.transition.consensus.state=frame.limits_;
++   candidate.transition.execution=frame.rules_.execution;
++   candidate.transition.maximum_state_bytes=frame.rules_.maximum_state_bytes;
++   return capella_fork_profile(candidate)==profile;
++  };
++  if(!same_slot_profile(head_))throw std::invalid_argument("Capella duty head profile mismatch");
++  // Each frame still has its original per-call maximum_slots allowance,
++  // including progress adopted rather than recalculated during this call.
++  const auto bounded_end=[&](const CapellaSlotPreparation& frame,uint64_t goal){
++   const auto start=frame.slot();if(start>goal)throw std::invalid_argument("Backwards Capella duty prefix");
++   return start+std::min(maximum_slots,goal-start);
++  };
++  const auto head_end=bounded_end(head_,slot_);
++  uint64_t target_end=0,block_end=0;
++  bool share_target=false,share_block=false;
++  if(target_){
++   const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
++   if(!slots||target_->target_.epoch>UINT64_MAX/slots)throw std::invalid_argument("Invalid Capella duty target slot");
++   target_end=bounded_end(target_->slots_,target_->target_.epoch*slots);
++   share_target=target_->slots_.parent()==head_.parent()&&same_slot_profile(target_->slots_)
++    &&capella_fork_profile(target_->rules_)==profile;
++  }
++  if(block_){
++   if(!slot_)throw std::invalid_argument("Invalid Capella duty block slot");
++   block_end=bounded_end(block_->slots_,slot_-1);
++   auto candidate=rules_;candidate.transition=block_->rules_;
++   share_block=block_->slots_.parent()==head_.parent()&&same_slot_profile(block_->slots_)
++    &&capella_fork_profile(candidate)==profile;
++  }
++  const auto reuse=[&](CapellaSlotPreparation& destination,bool compatible,uint64_t end,uint64_t& count){
++   const auto before=destination.slot(),after=head_.slot();
++   if(!compatible||after<=before||after>end)return;
++   destination.adopt_same_profile_prefix(head_,end-before,checkpoint);
++   count+=after-before;
++  };
++  const auto share=[&]{
++   if(target_)reuse(target_->slots_,share_target,target_end,actual.target_reused_slots);
++   if(block_)reuse(block_->slots_,share_block,block_end,actual.block_reused_slots);
++  };
++  const auto run=[&](CapellaSlotPreparation& frame,uint64_t goal,uint64_t& count){
++   const auto before=frame.slot();if(before==goal)return;
++   in_slot_work=true;
++   const bool reached=frame.advance(goal,goal-before,trials,checkpoint);
++   in_slot_work=false;count+=frame.slot()-before;
++   if(!reached)throw std::logic_error("Incomplete bounded Capella duty segment");
++  };
++  // Reuse only actual owned forward states on the identical authenticated
++  // parent/profile trajectory. Split at a sibling's boundary before HEAD can
++  // pass it: no rewind, invented epoch snapshot or post-state/header constructor.
++  share();
++  while(head_.slot()<head_end){
++   auto end=head_end;const auto start=head_.slot();
++   if(target_&&share_target&&target_->slots_.slot()==start&&target_end>start)end=std::min(end,target_end);
++   if(block_&&share_block&&block_->slots_.slot()==start&&block_end>start)end=std::min(end,block_end);
++   run(head_,end,actual.head_slots);share();
++  }
++  // Another target ancestor, a seeded frame ahead of HEAD, or progress left
++  // behind by an earlier cancellation keeps its independent ordinary path.
++  if(target_)run(target_->slots_,target_end,actual.target_slots);
++  if(block_)run(block_->slots_,block_end,actual.block_slots);
++  return ready();
+  }catch(const EmptyAltairSyncActiveSet&){
++  actual.incomplete_work_unknown=in_slot_work;
+   if(callback_failed)throw;
+   projection_blocked_=true;return false;
++ }catch(...){
++  actual.incomplete_work_unknown=in_slot_work;throw;
+  }
+ }
+ bool CapellaDutyPreparation::ready()const{
+--- a/include/nano/maintenance/duty_readiness.hpp
++++ b/include/nano/maintenance/duty_readiness.hpp
+@@ -28,12 +28,33 @@
+ class DutyReadinessRefused:public std::runtime_error {
+ public:explicit DutyReadinessRefused(const char* reason):std::runtime_error(reason){}
+ };
++// Caller-owned observations survive a refused calculation. These are counts
++// of completed preparation transitions, never absolute slots or authorization.
++// The core marks work unknown when a partially calculated chunk is discarded.
++struct DutyReadinessObservation {
++ bool advance_reached=false;
++ CapellaDutyPreparationWork projection{};
++};
++inline Json duty_readiness_projection_work(const DutyReadinessObservation& observation){
++ if(!observation.advance_reached)return nullptr;
++ const auto& p=observation.projection;
++ return {{"headSlotsComputed",p.head_slots},{"targetSlotsComputed",p.target_slots},{"blockSlotsComputed",p.block_slots},{"targetSlotsReused",p.target_reused_slots},{"blockSlotsReused",p.block_reused_slots},{"incompleteWorkUnknown",p.incomplete_work_unknown}};
++}
+ // PURE, owned inputs precede every callback. Cold records are deliberately
+ // rejected: the I/O caller must materialize them on authenticated RO replicas.
+ // This observes potential assignments, never a permission or signature.
+ inline Json evaluate_duty_readiness(CapellaForkStore store,CapellaForkBlockRules rules,
+  CapellaStoreSnapshotLimits limits,std::vector<DutyReadinessKey> keys,DutyReadinessBounds bounds,
+- std::function<uint64_t()> now_ms,std::function<void()> checkpoint,std::function<uint64_t()> rss_kib){
++ std::function<uint64_t()> now_ms,std::function<void()> checkpoint,std::function<uint64_t()> rss_kib,
++ DutyReadinessObservation* observation=nullptr){
++ DutyReadinessObservation local_observation;
++ auto& observed_work=observation?*observation:local_observation;observed_work={};
++ const auto merge_work=[&](const CapellaDutyPreparationWork& step)noexcept{
++  auto& total=observed_work.projection;
++  const auto add=[&](uint64_t& held,uint64_t added){if(added>UINT64_MAX-held){held=UINT64_MAX;total.incomplete_work_unknown=true;}else held+=added;};
++  add(total.head_slots,step.head_slots);add(total.target_slots,step.target_slots);add(total.block_slots,step.block_slots);add(total.target_reused_slots,step.target_reused_slots);add(total.block_reused_slots,step.block_reused_slots);
++  total.incomplete_work_unknown=total.incomplete_work_unknown||step.incomplete_work_unknown;
++ };
+  using Clock=std::chrono::steady_clock;const auto began=Clock::now();
+  auto require=[](bool ok,const char* why){if(!ok)throw DutyReadinessRefused(why);};
+  require(bool(now_ms)&&bool(rss_kib),"missing_observation_callbacks");
+@@ -75,8 +96,13 @@
+  bool done=false;
+  for(;;){
+   check();if(bounds.maximum_chunks-chunks<3)break;
+-  work(3);done=prepared.advance(bounds.maximum_chunk_slots,limits.sync_trials,check);
+-  if(!done)continue;
++  work(3);CapellaDutyPreparationWork step;observed_work.advance_reached=true;
++  try{done=prepared.advance(bounds.maximum_chunk_slots,limits.sync_trials,check,&step);}
++  catch(...){merge_work(step);throw;}
++  merge_work(step);
++  // An empty future active set is terminal for this immutable head/profile.
++  // Retrying the same blocked frame consumes callbacks and budget without work.
++  if(!done){if(prepared.projection_unavailable())break;continue;}
+   const auto fresh=now_ms();require(fresh>=last_wall,"utc_regressed");last_wall=fresh;require(fresh>=genesis,"utc_before_genesis");const auto fresh_slot=(fresh-genesis)/rules.slot_duration_ms;
+   require(fresh_slot<UINT64_MAX-1&&fresh_slot>=slot,"invalid_observation_slot");
+   if(fresh_slot==slot&&fresh-observed<=bounds.maximum_observation_age_ms)break;
+@@ -85,7 +111,8 @@
+   tick_to(fresh);require(prepared.retarget(store,rules,fresh_slot,check),"retarget_refused");slot=fresh_slot;target_start=slot/slots*slots;observed=fresh;done=false;
+  }
+  Json result={{"format","nano-capella-duty-readiness-evaluation-v1"},{"result",done?"PREPARED_READONLY_ONLY":"UNAVAILABLE_READONLY_ONLY"},{"probeCompleted",true},{"configuredKeys",keys.size()},{"headProjectionReady",done},{"targetEpochReady",false},{"blockStateReady",false},{"syncCommitteeReady",false},{"completeDutyContexts",false},{"normalNonassignmentPossible",true},{"asOfUtcMs",observed},{"slot",slot},{"chargedSlotWork",charged},{"chunks",chunks},{"retargets",retargets},{"maximumRssKiB",bounds.maximum_rss_kib},{"actualPeakRssKiB",peak},{"sourceHeadRoot",hex(Bytes(head_root.begin(),head_root.end()))},{"profile",original_profile},{"keys",Json::array()},{"resumeAuthorized",false},{"headProjectionPersisted",false},{"unsignedBodyConstructionQualified",false},{"newSignatures",0},{"runtimeStarted",false},{"productionQualified",false}};
+- if(!done){result["reason"]="preparation_unavailable_or_chunk_limit";check();return result;}
++ result["projectionWork"]=duty_readiness_projection_work(observed_work);
++ if(!done){result["reason"]=prepared.projection_unavailable()?"empty_sync_active_set":"preparation_unavailable_or_chunk_limit";check();return result;}
+  const auto* target=prepared.target_preparation();const auto* block=prepared.block();
+  result["targetEpochReady"]=target&&target->ready();result["blockStateReady"]=bool(block);
+  const auto& state=prepared.head_state();const auto root=capella_beacon_state_root(state.ssz,t.consensus.state,t.execution,t.maximum_state_bytes,check);
+--- a/tools/storage-maintenance/duty-readiness.cpp
++++ b/tools/storage-maintenance/duty-readiness.cpp
+@@ -175,6 +175,28 @@
+  nano::maintenance::DutyReadinessBounds out{positive(j.at("maximumGapSlots")),positive(j.at("maximumChunkSlots")),positive(j.at("maximumChunks")),natural(j.at("maximumRetargets")),positive(j.at("maximumElapsedMs")),positive(j.at("maximumRssKiB")),positive(j.at("maximumObservationAgeMs")),positive(j.at("maximumRegistryEntries"))};require(out.maximum_elapsed_ms<=b.duration&&out.maximum_rss_kib<=b.rss);return out;
+ }
+ uint64_t utc_now(){const auto value=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();require(value>=0);return uint64_t(value);}
++// Steady durations contain no UTC, slot, root, path or input value. A phase
++// which was not entered remains null. Recording must not mask an exception.
++struct PhaseTimings {
++ using Clock=std::chrono::steady_clock;
++ enum Phase:size_t{request,journal_evidence,source_inventories,current_primary,current_witness,canonical_restoration,duty_preparation,closed_input_readback,publication,count};
++ inline static constexpr std::array<const char*,count> names{"request","journal-evidence","source-inventories","current-primary","current-witness","canonical-restoration","duty-preparation","closed-input-readback","publication"};
++ Clock::time_point began,last;Phase active=request;std::array<uint64_t,count> elapsed{};std::array<bool,count> reached{};
++ std::optional<uint64_t> elapsed_before_duties,duty_elapsed;
++ explicit PhaseTimings(Clock::time_point start):began(start),last(start){reached[request]=true;}
++ static uint64_t milliseconds(Clock::time_point from,Clock::time_point to)noexcept{const auto n=std::chrono::duration_cast<std::chrono::milliseconds>(to-from).count();return n>0?uint64_t(n):0;}
++ void enter(Phase next)noexcept{const auto now=Clock::now();elapsed[active]+=milliseconds(last,now);active=next;reached[next]=true;last=now;}
++ void append(Json& result)const{
++  auto measured=elapsed;measured[active]+=milliseconds(last,Clock::now());Json phases=Json::object();
++  for(size_t n=0;n<count;++n)phases[names[n]]=reached[n]?Json(measured[n]):Json(nullptr);
++  result["elapsedBeforeDutiesMs"]=elapsed_before_duties?Json(*elapsed_before_duties):Json(nullptr);result["dutyElapsedMs"]=duty_elapsed?Json(*duty_elapsed):Json(nullptr);result["phaseElapsedMs"]=std::move(phases);
++ }
++ struct DutyMeasurement {
++  PhaseTimings& timing;Clock::time_point began;
++  explicit DutyMeasurement(PhaseTimings& value)noexcept:timing(value),began(Clock::now()){timing.elapsed_before_duties=milliseconds(timing.began,began);}
++  ~DutyMeasurement()noexcept{timing.duty_elapsed=milliseconds(began,Clock::now());}
++ };
++};
+ // The parent is held and physically fenced before source inspection. A report
+ // is first written to an owned private temporary file. No preexisting path is
+ // overwritten or deleted; a failed final fence removes only our held inode.
+@@ -220,7 +242,8 @@
+ };
+ }
+ int main(int argc,char** argv){
+- using namespace nano;using namespace nano::maintenance;const auto started=std::chrono::steady_clock::now();std::string stage="request",failure="validation_refused";uint64_t configured=0;bool completed=false,contexts=false;Json evaluation;
++ using namespace nano;using namespace nano::maintenance;const auto started=std::chrono::steady_clock::now();std::string stage="request",failure="validation_refused";uint64_t configured=0;bool completed=false,contexts=false;Json evaluation;PhaseTimings timings(started);DutyReadinessObservation observation;
++ const auto enter=[&](PhaseTimings::Phase phase){stage=PhaseTimings::names[phase];timings.enter(phase);};
+  try{
+   require(std::signal(SIGTERM,interrupt)!=SIG_ERR&&std::signal(SIGINT,interrupt)!=SIG_ERR);
+   const Check precheck=[&]{if(interrupted)throw DutyReadinessRefused("cancelled");if(std::chrono::steady_clock::now()-started>=std::chrono::seconds(30))throw DutyReadinessRefused("steady_deadline_exceeded");if(rss()>131072)throw DutyReadinessRefused("rss_limit_exceeded");};precheck();
+@@ -242,7 +265,7 @@
+   const ChainStoreMemoryPolicy policy{size_t(write),uint32_t(buffers),size_t(memtable),size_t(cache)};ScopedChainStoreMemoryPolicy memory(policy);check();
+   const auto& core=j.at("core");shape(core,{"primary","witness","expected"});const auto cp=selection(core.at("primary"),false),cw=selection(core.at("witness"),false);const auto& expected=core.at("expected");shape(expected,{"headRoot","headStateRoot","storageAnchor","identity","executionHead"});root_value(expected.at("headRoot"));root_value(expected.at("headStateRoot"));root_value(expected.at("storageAnchor"));
+   shape(expected.at("identity"),{"profile","networkAnchor","genesisValidatorsRoot","genesisTimeMs"});require(expected.at("identity").at("profile")==capella_fork_profile(rules));encoded(expected.at("identity").at("networkAnchor"),32);encoded(expected.at("identity").at("genesisValidatorsRoot"),32);natural(expected.at("identity").at("genesisTimeMs"));shape(expected.at("executionHead"),{"number","hash","stateRoot"});natural(expected.at("executionHead").at("number"));encoded(expected.at("executionHead").at("hash"),32);encoded(expected.at("executionHead").at("stateRoot"),32);
+-  stage="journal-evidence";const auto& evidence=j.at("journalEvidence");shape(evidence,{"request","report","binding"});Input& qi=load(evidence.at("request"),1024*1024,true);Input& ri=load(evidence.at("report"),1024*1024,true);Input& bi=load(evidence.at("binding"),16384,true);
++  enter(PhaseTimings::journal_evidence);const auto& evidence=j.at("journalEvidence");shape(evidence,{"request","report","binding"});Input& qi=load(evidence.at("request"),1024*1024,true);Input& ri=load(evidence.at("report"),1024*1024,true);Input& bi=load(evidence.at("binding"),16384,true);
+   const auto q=parse(qi.bytes,true,check),report=parse(ri.bytes,true,check),binding=parse(bi.bytes,true,check),projection=parse(ci.bytes,true,check);shape(binding,{"format","request","report","originalBefore","hostOnly","fullResumeAuthorized"});require(binding.at("format")=="nano-root-configured-journal-complete-report-binding-v1"&&binding.at("request")==evidence.at("request")&&binding.at("report")==evidence.at("report"));boolean(binding.at("hostOnly"),true);boolean(binding.at("fullResumeAuthorized"),false);
+   shape(q,{"format","genesis","profile","configurationProjection","limits","budget","maximumRegistryEntries","core","roles"});require(q.at("format")=="nano-configured-journal-readonly-observer-v1"&&q.at("configurationProjection")==j.at("configurationProjection"));shape(projection,{"format","originalConfigurationSha256","core","roles"});require(projection.at("format")=="nano-root-configured-journal-path-key-projection-v1"&&projection.at("core")==q.at("core")&&projection.at("roles")==q.at("roles"));sha_text(projection.at("originalConfigurationSha256"));
+   for(const char* name:{"genesis","profile"}){const auto old=artifact(q.at(name),record_bound),now=artifact(j.at(name),record_bound);require(old.sha==now.sha&&old.bytes==now.bytes);if(old.p!=now.p)(void)load(q.at(name),record_bound,false);}
+@@ -260,31 +283,34 @@
+     require(row.at("disposition")=="completed"||row.at("disposition")=="pending");auto primary=reservations(row.at("reservations")),candidate=reservations(row.at("candidateReservations"));const bool pending=row.at("disposition")=="pending";if(!pending)require(row.at("reservations")==row.at("candidateReservations"));keys.push_back({pub,index,primary.retired||candidate.retired,pending,std::move(primary),std::move(candidate)});sources.push_back(jp);sources.push_back(jw);check();
+    }
+   }require(row_number==report.at("rows").size()&&!keys.empty());configured=keys.size();
+-  stage="source-inventories";std::vector<std::unique_ptr<rd::Directory>> owners;
++  enter(PhaseTimings::source_inventories);std::vector<std::unique_ptr<rd::Directory>> owners;
+   for(size_t a=0;a<sources.size();++a){check();owners.push_back(std::make_unique<rd::Directory>(sources[a].p));const auto& owner=*owners.back();separate(owner,scratch_owner);separate(owner,output_parent);require(!physical_ancestor(owner,request.parent));for(const auto& input:inputs){check();require(!physical_ancestor(owner,input->parent));}for(size_t z=0;z<a;++z)separate(owner,*owners[z]);}
+   const auto source_fence=[&]{for(size_t n=0;n<sources.size();++n){check();owners[n]->recheck();require(checkpoint_blob_gc_copy_inventory(sources[n].p,b.files,b.bytes,check)==sources[n].inventory);owners[n]->recheck();}check();};source_fence();
+-  stage="current-primary";Json identity={{"chainId",quantity(g.chain_id)},{"genesisHash",hex(g.block.header.hash())},{"consensus","beacon"}};if(!g.staking_contract.empty())identity["stakingContract"]=address(g.staking_contract);Json witnessed_identity={{"chainId",quantity(g.chain_id)},{"genesisHash",hex(g.block.header.hash())},{"consensus","nano-capella-recovery-v1"}};
++  enter(PhaseTimings::current_primary);Json identity={{"chainId",quantity(g.chain_id)},{"genesisHash",hex(g.block.header.hash())},{"consensus","beacon"}};if(!g.staking_contract.empty())identity["stakingContract"]=address(g.staking_contract);Json witnessed_identity={{"chainId",quantity(g.chain_id)},{"genesisHash",hex(g.block.header.hash())},{"consensus","nano-capella-recovery-v1"}};
+   std::optional<CapellaForkStore> store;
+   {
+    Reader primary(cp,scratch,b,check,identity),witness(cw,scratch,b,check,witnessed_identity);const auto p=primary.record(limits.envelope_bytes,false),w=witness.record(2048+8*limits.envelope_bytes,true);const auto fetch_primary=[&](const Bytes& id,size_t n){return primary.blob(id,n);};const auto pclosure=authenticate_capella_checkpoint_blob_closure(p.snapshot,p.token.digest,rules,limits,fetch_primary,{},check);const auto description=pclosure.description();check();const auto context=pclosure.head_context();check();require(context.registry.validators.size()<=bounds.maximum_registry_entries&&hex(Bytes(context.block_root.begin(),context.block_root.end()))==expected.at("headRoot").get<std::string>()&&description.at("identity")==expected.at("identity")&&description.at("executionHead")==expected.at("executionHead"));
+    // The report's indices must also match this genuinely authenticated current
+    // head registry; a projection or path suffix is not registry authority.
+    for(size_t n=0;n<keys.size();++n){check();const auto& row=report.at("rows").at(n);std::optional<uint64_t> index;if(!row.at("registeredIndex").is_null())index=natural(row.at("registeredIndex"));const auto found=std::find_if(context.registry.validators.begin(),context.registry.validators.end(),[&](const auto& entry){check();return Bytes(entry.second.public_key.begin(),entry.second.public_key.end())==keys[n].public_key;});require((found==context.registry.validators.end()&&!index)||(found!=context.registry.validators.end()&&index&&found->first==*index));require(!keys[n].configured_index||(index&&*index==*keys[n].configured_index));}
+-   stage="current-witness";const auto intent=parse(w.snapshot,true,check);shape(intent,{"format","previous","next","snapshot","archive"});require(intent.at("format")=="nano-capella-recovery-v1"||intent.at("format")=="nano-capella-bootstrap-archive-recovery-v1");const auto next=token(intent.at("next"));require(next==p.token&&intent.at("snapshot").is_string()&&intent.at("snapshot").get_ref<const std::string&>()==p.snapshot);if(intent.at("previous").is_null())require(next.sequence==1);else{const auto previous=token(intent.at("previous"));require(previous.sequence<UINT64_MAX&&previous.sequence+1==next.sequence);}
++   enter(PhaseTimings::current_witness);const auto intent=parse(w.snapshot,true,check);shape(intent,{"format","previous","next","snapshot","archive"});require(intent.at("format")=="nano-capella-recovery-v1"||intent.at("format")=="nano-capella-bootstrap-archive-recovery-v1");const auto next=token(intent.at("next"));require(next==p.token&&intent.at("snapshot").is_string()&&intent.at("snapshot").get_ref<const std::string&>()==p.snapshot);if(intent.at("previous").is_null())require(next.sequence==1);else{const auto previous=token(intent.at("previous"));require(previous.sequence<UINT64_MAX&&previous.sequence+1==next.sequence);}
+    require(intent.at("archive").is_array()&&intent.at("archive").size()<=1);std::vector<CheckpointArchiveEntry> archive;
+    for(const auto& row:intent.at("archive")){check();require(row.is_array()&&row.size()==3&&row.at(2).is_string());const auto& wire=row.at(2).get_ref<const std::string&>();require(limits.envelope_bytes<=(SIZE_MAX-2)/2&&wire.size()>2&&wire.size()<=2+2*limits.envelope_bytes&&wire.size()%2==0);auto bytes=unhex(wire);require(!bytes.empty()&&bytes.size()<=limits.envelope_bytes&&hex(bytes)==wire);archive.push_back({encoded(row.at(0),32),natural(row.at(1)),std::move(bytes)});}
+    const auto fetch_witness=[&](const Bytes& id,size_t n){return witness.blob(id,n);};const auto wclosure=authenticate_capella_checkpoint_blob_closure(intent.at("snapshot").get_ref<const std::string&>(),next.digest,rules,limits,fetch_witness,archive,check);const auto wdescription=wclosure.description();check();require(wdescription.at("identity")==description.at("identity")&&wdescription.at("executionHead")==description.at("executionHead")&&same_context(wclosure.head_context(),context));
+-   stage="canonical-restoration";store.emplace(primary.canonical_store(p,description.at("executionHead"),g,rules,limits));const auto head=capella_fork_head(*store,rules,check);require(head->header.state_root==root_value(expected.at("headStateRoot"))&&store->timed.view.anchor==root_value(expected.at("storageAnchor"))&&head->header==store->blocks.at(context.block_root).header()&&consensus_beacon_header_root(head->header)==context.block_root&&store->timed.clock.time_ms>=natural(before.at("publishedClockMs")));primary.close();witness.close();scratch_empty();check();
++   enter(PhaseTimings::canonical_restoration);store.emplace(primary.canonical_store(p,description.at("executionHead"),g,rules,limits));const auto head=capella_fork_head(*store,rules,check);require(head->header.state_root==root_value(expected.at("headStateRoot"))&&store->timed.view.anchor==root_value(expected.at("storageAnchor"))&&head->header==store->blocks.at(context.block_root).header()&&consensus_beacon_header_root(head->header)==context.block_root&&store->timed.clock.time_ms>=natural(before.at("publishedClockMs")));primary.close();witness.close();scratch_empty();check();
+   }
+-  stage="duty-preparation";const auto current_genesis_ms=store->timed.clock.genesis_time_ms;const auto observation_started=utc_now();require(observation_started>=current_genesis_ms&&observation_started>=store->timed.clock.time_ms);
+-  try{evaluation=evaluate_duty_readiness(std::move(*store),rules,limits,keys,bounds,utc_now,check,rss);}
++  enter(PhaseTimings::duty_preparation);const auto current_genesis_ms=store->timed.clock.genesis_time_ms;const auto observation_started=utc_now();require(observation_started>=current_genesis_ms&&observation_started>=store->timed.clock.time_ms);
++  {PhaseTimings::DutyMeasurement duty_measurement(timings);
++  try{evaluation=evaluate_duty_readiness(std::move(*store),rules,limits,keys,bounds,utc_now,check,rss,&observation);}
+   catch(const EmptyAltairSyncActiveSet&){evaluation={{"format","nano-capella-duty-readiness-evaluation-v1"},{"result","UNAVAILABLE_READONLY_ONLY"},{"reason","empty_sync_active_set"},{"asOfUtcMs",observation_started},{"slot",(observation_started-current_genesis_ms)/rules.slot_duration_ms},{"probeCompleted",true},{"configuredKeys",configured},{"headProjectionReady",false},{"targetEpochReady",false},{"blockStateReady",false},{"syncCommitteeReady",false},{"completeDutyContexts",false},{"normalNonassignmentPossible",true},{"keys",Json::array()},{"resumeAuthorized",false},{"headProjectionPersisted",false},{"unsignedBodyConstructionQualified",false},{"newSignatures",0},{"runtimeStarted",false},{"productionQualified",false}};check();}
++  }
++  evaluation["projectionWork"]=duty_readiness_projection_work(observation);
+   completed=true;contexts=evaluation.at("completeDutyContexts").get<bool>();uint64_t attestations=0,proposals=0,sync=0,nonassigned=0;for(const auto& key:evaluation.at("keys")){check();attestations+=key.at("attestationEligible").get<bool>();proposals+=key.at("proposalPotentiallyEligible").get<bool>();sync+=key.at("syncPotentiallyEligible").get<bool>();nonassigned+=key.at("classification")=="nonassigned";}
+   const auto observation_fence=[&]{check();const auto fresh=utc_now(),asof=evaluation.at("asOfUtcMs").get<uint64_t>();if(fresh<asof||fresh-asof>bounds.maximum_observation_age_ms||fresh<current_genesis_ms||(fresh-current_genesis_ms)/rules.slot_duration_ms!=evaluation.at("slot").get<uint64_t>())throw DutyReadinessRefused("observation_expired");};
+-  const auto final_fence=[&]{observation_fence();output_parent.recheck();request.recheck(check);for(const auto& input:inputs){check();input->recheck(check);}source_fence();scratch_empty();observation_fence();};stage="closed-input-readback";final_fence();
++  const auto final_fence=[&]{observation_fence();output_parent.recheck();request.recheck(check);for(const auto& input:inputs){check();input->recheck(check);}source_fence();scratch_empty();observation_fence();};enter(PhaseTimings::closed_input_readback);final_fence();
+   const Json document={{"format","nano-capella-duty-readiness-private-v1"},{"requestSha256",argv[3]},{"currentPrimary",token_json(cp.current)},{"currentWitness",token_json(cw.current)},{"expected",expected},{"evaluation",evaluation},{"primaryAndWitnessAuthenticated",true},{"canonicalExecutionCouplingVerified",true},{"journalReportReused",true},{"journalReportSha256",evidence.at("report").at("sha256")},{"journalLeafInventoriesUnchanged",true},{"journalSemanticReportExternallySupplied",true},{"newJournalDatabaseReads",0},{"historicalDigestAncestryVerified",false},{"deliveredSignatureHistoryVerified",false},{"executionAccountNoncesVerified",false},{"runtimeDutiesAuthorized",false},{"newSignaturesCreated",0},{"productionQualified",false}};
+-  stage="publication";Publication publication(output_parent,output.filename().string(),check);publication.write(document,record_bound,check);final_fence();publication.link(check);final_fence();publication.fence(check);
+-  const auto typed=Json{{"format","nano-capella-duty-readiness-typed-v1"},{"status","READONLY_DUTY_PROBE_COMPLETED"},{"probeCompleted",true},{"completeDutyContexts",contexts},{"configuredKeys",configured},{"keysEvaluated",evaluation.at("keys").size()},{"normalNonassignedKeys",nonassigned},{"eligibleAttestations",attestations},{"potentialProposalAssignments",proposals},{"potentialSyncAssignments",sync},{"maximumRssKiB",rss()},{"newSignaturesCreated",0},{"keysLoaded",false},{"runtimeStarted",false},{"runtimeDutiesAuthorized",false},{"resumeAuthorized",false},{"productionQualified",false}}.dump();check();publication.fence(check);observation_fence();publication.accept();std::cout<<typed<<std::endl;return 0;
++  enter(PhaseTimings::publication);Publication publication(output_parent,output.filename().string(),check);publication.write(document,record_bound,check);final_fence();publication.link(check);final_fence();publication.fence(check);
++  auto typed=Json{{"format","nano-capella-duty-readiness-typed-v1"},{"status","READONLY_DUTY_PROBE_COMPLETED"},{"probeCompleted",true},{"completeDutyContexts",contexts},{"configuredKeys",configured},{"keysEvaluated",evaluation.at("keys").size()},{"normalNonassignedKeys",nonassigned},{"eligibleAttestations",attestations},{"potentialProposalAssignments",proposals},{"potentialSyncAssignments",sync},{"maximumRssKiB",rss()},{"newSignaturesCreated",0},{"keysLoaded",false},{"runtimeStarted",false},{"runtimeDutiesAuthorized",false},{"resumeAuthorized",false},{"productionQualified",false}};check();publication.fence(check);observation_fence();timings.append(typed);typed["projectionWork"]=duty_readiness_projection_work(observation);const auto typed_bytes=typed.dump();check();observation_fence();publication.accept();std::cout<<typed_bytes<<std::endl;return 0;
+  }catch(const DutyReadinessRefused& error){const std::string reason=error.what();const std::set<std::string> fixed={"missing_observation_callbacks","invalid_preparation_bounds","chunk_exceeds_actual_profile","epoch_profile_mismatch","selection_cardinality","cold_record_requires_owned_materialization","owned_state_byte_limit","steady_deadline_exceeded","rss_limit_exceeded","cancelled","total_slot_work_exceeded","total_chunk_work_exceeded","configured_key_invalid_or_duplicate","utc_before_current_or_genesis","invalid_current_slot","tick_target_overflow","tick_target_missing","tick_target_future","ephemeral_tick_changed_head","invalid_target_ancestry","utc_regressed","utc_before_genesis","invalid_observation_slot","observation_expired","retarget_overflow","retarget_refused","projected_registry_cardinality","sync_offset_overflow","sync_committee_bounds","duplicate_registry_key","configured_index_mismatch"};failure=fixed.contains(reason)?reason:"evaluation_refused";}catch(...){failure="validation_or_io_refused";}
+- std::cout<<Json{{"format","nano-capella-duty-readiness-typed-v1"},{"status","REFUSED_NO_AUTOMATIC_RETRY"},{"refusedStage",stage},{"reason",failure},{"probeCompleted",false},{"preparationCompletedBeforeRefusal",completed},{"configuredKeys",configured},{"maximumRssKiB",rss()},{"newSignaturesCreated",0},{"keysLoaded",false},{"runtimeStarted",false},{"runtimeDutiesAuthorized",false},{"resumeAuthorized",false},{"productionQualified",false}}.dump()<<std::endl;return 1;
+-}
++ Json refused{{"format","nano-capella-duty-readiness-typed-v1"},{"status","REFUSED_NO_AUTOMATIC_RETRY"},{"refusedStage",stage},{"reason",failure},{"probeCompleted",false},{"preparationCompletedBeforeRefusal",completed},{"configuredKeys",configured},{"maximumRssKiB",rss()},{"newSignaturesCreated",0},{"keysLoaded",false},{"runtimeStarted",false},{"runtimeDutiesAuthorized",false},{"resumeAuthorized",false},{"productionQualified",false}};timings.append(refused);refused["projectionWork"]=duty_readiness_projection_work(observation);std::cout<<refused.dump()<<std::endl;return 1;
++}
+--- a/tests/test_capella_duty_readiness.cpp
++++ b/tests/test_capella_duty_readiness.cpp
+@@ -128,11 +128,68 @@
+  auto expected_two_roots_only=legacy.block.header;expected_two_roots_only.transactions_root=empty_mpt;expected_two_roots_only.receipts_root=empty_mpt;check(expected_two_roots_only.encode()==canonical.block.header.encode()&&canonical.state.root()==legacy.state.root(),"version2 changes only the two native header roots");
+  for(const auto& value:Json::array({0,3,-1,true,false,"2","0x2",2.0,nullptr,Json::object(),Json::array()})){auto bad=input;bad["config"]["genesisHeaderVersion"]=value;const auto before=bad.dump();throws_exact<std::invalid_argument>([&]{(void)Genesis::from_json(bad);},"invalid Genesis codec version rejected before construction");check(bad.dump()==before,"invalid Genesis parsing cannot mutate caller document");}
+ }
+-void pure_contexts(const Fixture& f){genesis_version_contract();current_phase="pure-contexts-current";const auto store=current(f);current_phase="pure-contexts-source-snapshot";const auto input=capella_store_snapshot(store,f.rules,f.limits,checkpoint);auto full=evaluate(f,store,at_slot(f,8),all_keys(f));safety(full);check(full.at("result")=="PREPARED_READONLY_ONLY"&&full.at("completeDutyContexts")==true&&full.at("headProjectionReady")==true&&full.at("targetEpochReady")==true&&full.at("blockStateReady")==true&&full.at("syncCommitteeReady")==true,"four independent current duty contexts");
++// Independent old-path oracle: these public strict entry points start from the
++// real admitted source each time. They never call the prefix-sharing duty frame.
++struct PrefixOracleWork {uint64_t advanced=0,reused=0,calls=0;};
++void same_slot_state(const CapellaSlotState& actual,const CapellaSlotState& expected,const char* why){check(actual.ssz==expected.ssz&&actual.last_processed_epoch==expected.last_processed_epoch,why);}
++void same_vote_context(const Phase0ForkVoteContext& actual,const Phase0ForkVoteContext& expected){
++ check(actual.checkpoint==expected.checkpoint&&actual.registry==expected.registry&&actual.randao==expected.randao&&actual.fork.previous_version==expected.fork.previous_version&&actual.fork.current_version==expected.fork.current_version&&actual.fork.epoch==expected.fork.epoch&&actual.genesis_root==expected.genesis_root,"prefix target registry/RANDAO/checkpoint/fork/domain equals strict context");
++}
++void same_attestation_duties(const std::map<uint64_t,CapellaAttestationDuty>& actual,const std::map<uint64_t,CapellaAttestationDuty>& expected){
++ check(actual.size()==expected.size(),"prefix and strict current duty cardinality");
++ for(const auto& [index,want]:expected){checkpoint();const auto found=actual.find(index);check(found!=actual.end(),"prefix preserves every strict current attester");const auto& got=found->second;check(got.validator_index==want.validator_index&&got.public_key==want.public_key&&got.genesis_root==want.genesis_root&&got.fork_version==want.fork_version&&got.attestation.data==want.attestation.data&&got.attestation.aggregation_bits==want.attestation.aggregation_bits&&got.attestation.signature==want.attestation.signature&&got.attestation.signature.empty(),"prefix exact unsigned duty slot/head/source/target/domain/committee bits");}
++}
++PrefixOracleWork finish_prefix(CapellaDutyPreparation& frame,const Fixture& f){
++ PrefixOracleWork total;const auto maximum=bounds();
++ for(;;){checkpoint();check(total.calls<maximum.maximum_chunks/3,"bounded prefix oracle continuations");++total.calls;CapellaDutyPreparationWork one;
++  const bool done=frame.advance(maximum.maximum_chunk_slots,f.limits.sync_trials,checkpoint,&one);
++  check(!one.incomplete_work_unknown,"successful prefix chunk has exact completed transition accounting");
++  const auto advanced=one.head_slots+one.target_slots+one.block_slots;const auto reused=one.target_reused_slots+one.block_reused_slots;
++  check(advanced<=3*maximum.maximum_chunk_slots&&advanced<=maximum.maximum_gap_slots-total.advanced,"actual prefix slot transitions remain inside unchanged administrative bound");total.advanced+=advanced;total.reused+=reused;
++  if(done){check(frame.ready()&&!frame.projection_unavailable(),"prefix completed ready is distinct from terminal unavailable");return total;}
++  check(!frame.projection_unavailable(),"active oracle fixture cannot silently become an unavailable future committee");
++ }
++}
++struct StrictPrefixCounts {uint64_t head=0,target=0,block=0;bool target_is_head=false;};
++StrictPrefixCounts assert_prefix_equivalence(const Fixture& f,const CapellaForkStore& store,const CapellaDutyPreparation& frame,uint64_t slot){
++ checkpoint();const auto before=capella_store_snapshot(store,f.rules,f.limits,checkpoint);const auto head=capella_fork_head(store,f.rules,checkpoint);const auto head_root=consensus_beacon_header_root(head->header);const auto& r=f.rules.transition;const auto& l=r.consensus.state;const CapellaEpochRules epochs{r.consensus.epoch,r.execution,r.maximum_state_bytes};const auto count=r.consensus.epoch.ffg.slots_per_epoch;const auto maximum=bounds().maximum_gap_slots;
++ check(slot>=head->header.slot&&slot<UINT64_MAX&&slot-head->header.slot<maximum&&frame.matches(store,f.rules,slot,checkpoint),"oracle compares one exact source/profile/slot");
++ StrictPrefixCounts work;work.head=slot-head->header.slot;
++ const auto strict_head=slot==head->header.slot?head->state:prepare_capella_slots(head->state,epochs,l,slot,maximum,f.limits.sync_trials,checkpoint);
++ same_slot_state(frame.head_state(),strict_head,"prefix HEAD SSZ and processed-epoch marker equal independent strict replay");
++ const auto start=slot/count*count;auto boundary=head_root;bool available=true;
++ while(store.timed.view.nodes.at(boundary).slot>start){checkpoint();if(boundary==store.timed.view.anchor){available=false;break;}const auto& node=store.timed.view.nodes.at(boundary);check(store.timed.view.nodes.contains(node.parent)&&store.timed.view.nodes.at(node.parent).slot<node.slot,"strict oracle target ancestry");boundary=node.parent;}
++ const auto* target=frame.target_preparation();check(bool(target)==available,"prefix target availability matches retained ancestry");
++ if(available){const auto parent=store.blocks.at(boundary).lease(checkpoint);const ConsensusCheckpoint checkpoint_target{slot/count,boundary};const auto strict=prepare_capella_fork_state_contexts(parent->state,parent->header,checkpoint_target,epochs,l,maximum,f.limits.sync_trials,checkpoint);work.target=start-parent->header.slot;work.target_is_head=boundary==head_root;
++  check(target->target()==checkpoint_target&&target->prepared_slot()==start&&target->ready(),"prefix target remains bound to its exact independent boundary parent");same_slot_state(target->prepared_state(),strict.target_state,"prefix target SSZ and processed-epoch marker equal independent strict replay");same_vote_context(target->context(store,f.rules,checkpoint),strict.target);
++ }
++ const auto* block=frame.block();check(bool(block)==(slot>head->header.slot),"prefix cannot invent a block state at or before the admitted HEAD");
++ if(block){work.block=slot-1-head->header.slot;const auto strict_block=slot-1==head->header.slot?head->state:prepare_capella_slots(head->state,epochs,l,slot-1,maximum,f.limits.sync_trials,checkpoint);check(block->parent()==head->header&&block->prepared_slot()==slot-1,"prefix block stays at preceding slot of the original signed parent");same_slot_state(block->prepared_state(),strict_block,"prefix preceding-block SSZ and processed-epoch marker equal strict replay");const auto strict_proposer=prepare_capella_proposer_identity(head->state,head->header,slot,epochs,l,r.consensus.attestation.duties,maximum,f.limits.sync_trials,checkpoint);check(block->proposer_for_block(slot,f.limits.sync_trials,checkpoint)==strict_proposer,"prefix proposer equals strict authenticated current-slot selection");}
++ same_attestation_duties(frame.duties(store,checkpoint),prepare_capella_attestation_duties(store,f.rules,slot,maximum,f.limits.sync_trials,checkpoint));
++ const auto strict_sync=prepare_capella_slots(head->state,epochs,l,slot+1,maximum,f.limits.sync_trials,checkpoint);const auto sync=frame.try_sync_state(f.limits.sync_trials,checkpoint);check(sync.has_value(),"active oracle fixture has a real next-slot sync state");same_slot_state(*sync,strict_sync,"prefix next-slot sync SSZ and processed-epoch marker equal independent strict replay");
++ check(capella_store_snapshot(store,f.rules,f.limits,checkpoint)==before,"oracle comparisons never persist or mutate the admitted source");return work;
++}
++struct PrefixOracleSummary {uint64_t actual_slots=0,old_independent_slots=0;};
++PrefixOracleSummary prefix_frontier_oracle(const Fixture& f){
++ current_phase="pure-prefix-strict-frontier-oracle";const auto count=f.rules.transition.consensus.epoch.ffg.slots_per_epoch;check(count>=2&&count<=64,"bounded oracle epoch profile");const auto admitted=current(f);const auto source=capella_store_snapshot(admitted,f.rules,f.limits,checkpoint);uint64_t actual_total=0,strict_total=0;bool observed_distinct_target=false,observed_reuse=false;
++ for(const auto slot:std::array<uint64_t,6>{0,1,count-1,count,count+1,8*count+1}){checkpoint();const auto& origin=slot?admitted:f.initial;auto store=prepare_capella_store_tick(origin,at_slot(f,slot),f.rules,f.limits.replay_slots,f.limits.sync_trials,checkpoint);CapellaDutyPreparation frame(store,f.rules,slot,checkpoint);const auto used=finish_prefix(frame,f);const auto strict=assert_prefix_equivalence(f,store,frame,slot);const auto old_work=strict.head+strict.target+strict.block;actual_total+=used.advanced;strict_total+=old_work;
++  check(used.advanced<=strict.head+strict.target,"prefix projects the HEAD/block common path only once plus an independent target when needed");
++  if(!strict.target_is_head&&frame.target_preparation())observed_distinct_target=true;
++  if(strict.target_is_head&&strict.block){check(used.advanced<=strict.head&&used.advanced<old_work&&used.reused>0,"same-parent long prefix reduces real slot transitions without changing quotas");observed_reuse=true;}
++ }
++ check(observed_distinct_target&&observed_reuse&&actual_total<strict_total,"oracle exercises distinct target ancestry and actual shared-prefix reduction");
++ current_phase="pure-prefix-strict-retarget-oracle";const std::array<uint64_t,5> sequence{count-1,count,count+1,count+2,2*count+1};auto store=prepare_capella_store_tick(admitted,at_slot(f,sequence.front()),f.rules,f.limits.replay_slots,f.limits.sync_trials,checkpoint);CapellaDutyPreparation frame(store,f.rules,sequence.front(),checkpoint);(void)finish_prefix(frame,f);(void)assert_prefix_equivalence(f,store,frame,sequence.front());
++ for(size_t i=1;i<sequence.size();++i){const auto slot=sequence[i],previous=sequence[i-1];store=prepare_capella_store_tick(store,at_slot(f,slot),f.rules,f.limits.replay_slots,f.limits.sync_trials,checkpoint);check(frame.retarget(store,f.rules,slot,checkpoint),"same authenticated HEAD permits bounded forward retarget across target epochs");const auto used=finish_prefix(frame,f);const auto strict=assert_prefix_equivalence(f,store,frame,slot);check(strict.target_is_head&&used.advanced<=slot-previous&&used.advanced<strict.head+strict.target+strict.block,"same-parent retarget continues the retained prefix even across epoch boundaries");}
++ // Use the genuine genesis source as a different admitted parent. No forged
++ // header or projected state is installed to make this negative case.
++ const auto retained=frame.head_state();const auto other=prepare_capella_store_tick(f.initial,at_slot(f,sequence.back()),f.rules,f.limits.replay_slots,f.limits.sync_trials,checkpoint);check(capella_fork_head(other,f.rules,checkpoint)->header!=capella_fork_head(store,f.rules,checkpoint)->header&&!frame.matches(other,f.rules,sequence.back(),checkpoint)&&!frame.retarget(other,f.rules,sequence.back()+1,checkpoint),"different real source parent cannot reuse the old authenticated prefix");same_slot_state(frame.head_state(),retained,"refused different-parent retarget preserves completed owned continuation");check(frame.matches(store,f.rules,sequence.back(),checkpoint)&&capella_store_snapshot(admitted,f.rules,f.limits,checkpoint)==source,"retarget oracle retains original source and its completed frame");return {actual_total,strict_total};
++}
++
++void pure_contexts(const Fixture& f){genesis_version_contract();const auto prefix=prefix_frontier_oracle(f);current_phase="pure-contexts-current";const auto store=current(f);current_phase="pure-contexts-source-snapshot";const auto input=capella_store_snapshot(store,f.rules,f.limits,checkpoint);auto full=evaluate(f,store,at_slot(f,8),all_keys(f));safety(full);check(full.at("result")=="PREPARED_READONLY_ONLY"&&full.at("completeDutyContexts")==true&&full.at("headProjectionReady")==true&&full.at("targetEpochReady")==true&&full.at("blockStateReady")==true&&full.at("syncCommitteeReady")==true,"four independent current duty contexts");
+  current_phase="pure-contexts-trusted-late-anchor";const auto signed_head=capella_fork_head(store,f.rules,checkpoint);const auto singleton=initialize_capella_fork_store(signed_head->state,std::span<const uint8_t>(f.wire).subspan(100),signed_head->execution_block,signed_head->execution_state,signed_head->receipts,{f.genesis.block.header},f.rules,checkpoint,signed_head->deposit_history);auto anchored=evaluate(f,singleton,at_slot(f,1),all_keys(f));safety(anchored);CapellaDutyPreparation ready_alone(singleton,f.rules,1,checkpoint);check(ready_alone.advance(8,f.limits.sync_trials,checkpoint)&&ready_alone.ready()&&!ready_alone.target_preparation(),"real ready() alone has no epoch boundary");check(anchored.at("headProjectionReady")==true&&anchored.at("targetEpochReady")==false&&anchored.at("completeDutyContexts")==false,"ready alone must not certify all contexts");
+  check(capella_store_snapshot(store,f.rules,f.limits,checkpoint)==input,"projection preserves source and does not assimilate state root/head root");
+  const auto source_state=capella_fork_head(store,f.rules,checkpoint)->header.state_root;check(full.at("projectedStateRoot").get<std::string>()!=hex(Bytes(source_state.begin(),source_state.end())),"advanced local state is not the signed head state root");
+- emit("duty-readiness-independent-head-target-block-sync",{{"legacyDefaultAndExplicitOneHashPreserved",true},{"explicitCanonicalTwoRoundtripAndNativeRoots",true},{"invalidGenesisVersionsRejectedWithoutMutation",true},{"allFourContextsDiscriminated",true},{"readyAloneMissingBoundaryNotComplete",true},{"localProjectionNotSignedHead",true},{"sourceStoreUnchanged",true}});}
++ emit("duty-readiness-independent-head-target-block-sync",{{"legacyDefaultAndExplicitOneHashPreserved",true},{"explicitCanonicalTwoRoundtripAndNativeRoots",true},{"invalidGenesisVersionsRejectedWithoutMutation",true},{"allFourContextsDiscriminated",true},{"readyAloneMissingBoundaryNotComplete",true},{"localProjectionNotSignedHead",true},{"sourceStoreUnchanged",true},{"strictIndependentPrefixOracle",true},{"exactSszEpochDutyProposerSyncAcrossFrontiers",true},{"distinctTargetAndSourceParentsCovered",true},{"retargetContinuesActualPrefixAcrossEpochs",true},{"prefixOracleActualAdvanceSlots",prefix.actual_slots},{"prefixOracleOldIndependentAdvanceSlots",prefix.old_independent_slots}});}
+ CapellaForkStore trusted_variant(const Fixture& f,const std::function<void(CapellaSlotState&)>& edit){
+  auto original=current(f);const auto h=capella_fork_head(original,f.rules,checkpoint);auto state=h->state;edit(state);const auto& r=f.rules.transition;const auto root=capella_beacon_state_root(state.ssz,r.consensus.state,r.execution,r.maximum_state_bytes,checkpoint);auto message=Bytes(f.wire.begin()+100,f.wire.end());std::copy(root.begin(),root.end(),message.begin()+48);
+  // This is a new trusted synthetic unsigned anchor for a PURE test. No altered
+@@ -143,7 +200,14 @@
+ void pure_availability(const Fixture& f,const Fixture& exiting){
+  auto future=evaluate(exiting,current(exiting),at_slot(exiting,63),all_keys(exiting));safety(future);check(future.at("headProjectionReady")==true&&future.at("targetEpochReady")==true&&future.at("blockStateReady")==true&&future.at("syncCommitteeReady")==false&&future.at("completeDutyContexts")==false,"available slot63 contexts cannot invent empty future sync committee");
+  const auto empty=trusted_variant(f,[&](CapellaSlotState& s){const auto start=validator_offset(s,f);for(size_t i=0;i<64;++i)test_put(s.ssz,start+121*i+97,100);});auto none=evaluate(f,empty,at_slot(f,1),all_keys(f));safety(none);check(none.at("probeCompleted")==true&&none.at("activeValidators")==0&&none.at("completeDutyContexts")==false,"no active set is observation, not global duty readiness");for(const auto& row:none.at("keys"))check(row.at("classification")=="inactive"&&!row.at("attestationEligible").get<bool>()&&!row.at("proposalPotentiallyEligible").get<bool>(),"inactive key cannot propose or attest");
+- emit("duty-readiness-empty-future-sync-and-no-active-set",{{"futureSyncAbsentIndependentOfOtherContexts",true},{"noActiveSetObservedWithoutAuthority",true},{"trustedUnsignedVariantNotSignedAdmission",true}});
++ // The next real epoch transition has no active sync set. A large continuation
++ // allowance must not turn this terminal condition into hundreds of no-op calls.
++ const auto terminal_source=current(exiting);const auto terminal_before=capella_store_snapshot(terminal_source,exiting.rules,exiting.limits,checkpoint);auto ample=bounds();ample.maximum_chunks=300;DutyReadinessObservation terminal_work;uint64_t wall_samples=0;
++ const auto terminal=evaluate_duty_readiness(terminal_source,exiting.rules,exiting.limits,all_keys(exiting),ample,[&]{++wall_samples;return at_slot(exiting,64);},checkpoint,rss,&terminal_work);safety(terminal);
++ check(terminal.at("result")=="UNAVAILABLE_READONLY_ONLY"&&terminal.at("reason")=="empty_sync_active_set"&&terminal.at("probeCompleted")==true&&terminal.at("completeDutyContexts")==false&&terminal.at("keys").empty(),"terminal future sync failure is completed unavailable, never a fabricated empty assignment");
++ check(terminal_work.advance_reached&&wall_samples==1&&terminal.at("chunks").get<uint64_t>()<ample.maximum_chunks/2&&terminal.at("projectionWork")==duty_readiness_projection_work(terminal_work),"terminal unavailability stops before the independent chunk ceiling and retains measured work");
++ check(capella_store_snapshot(terminal_source,exiting.rules,exiting.limits,checkpoint)==terminal_before,"terminal projection preserves actual caller state");
++ emit("duty-readiness-empty-future-sync-and-no-active-set",{{"futureSyncAbsentIndependentOfOtherContexts",true},{"noActiveSetObservedWithoutAuthority",true},{"trustedUnsignedVariantNotSignedAdmission",true},{"terminalUnavailableStopsBeforeChunkCeiling",true},{"terminalUnavailableNotEmptyAssignment",true},{"terminalSourceUnchanged",true}});
+ }
+ void pure_key_states(const Fixture& f){
+  auto store=current(f);auto keys=all_keys(f);auto normal=evaluate(f,store,at_slot(f,8),keys);safety(normal);const Json* unassigned=nullptr;for(const auto& row:normal.at("keys"))if(row.at("classification")=="nonassigned"){unassigned=&row;break;}check(unassigned&&unassigned->at("active")==true,"normal registered key may have no current assignment");
+@@ -155,7 +219,13 @@
+ void pure_budgets(const Fixture& f){const auto store=current(f);const auto before=capella_store_snapshot(store,f.rules,f.limits,checkpoint);auto short_bounds=bounds();short_bounds.maximum_chunks=2;auto incomplete=evaluate(f,store,at_slot(f,8),all_keys(f),short_bounds);safety(incomplete);check(incomplete.at("probeCompleted")==true&&incomplete.at("headProjectionReady")==false&&incomplete.at("completeDutyContexts")==false&&incomplete.at("result")=="UNAVAILABLE_READONLY_ONLY","finite unfinished projection is not ready");
+  struct Cancelled{};uint64_t calls=0;throws_exact<Cancelled>([&]{evaluate_duty_readiness(store,f.rules,f.limits,all_keys(f),bounds(),[&]{return at_slot(f,8);},[&]{checkpoint();if(++calls==3)throw Cancelled{};},rss);},"typed early cancellation must propagate");check(calls==3,"exact cancellation boundary observed");uint64_t samples=0;throws_exact<Cancelled>([&]{evaluate_duty_readiness(store,f.rules,f.limits,all_keys(f),bounds(),[&]{if(++samples==3)throw Cancelled{};return at_slot(f,8);},checkpoint,rss);},"late observation callback cannot become success");check(samples==3,"late callback reached completion freshness fence");
+  throws_exact<DutyReadinessRefused>([&]{evaluate_duty_readiness(store,f.rules,f.limits,all_keys(f),bounds(),[&]{return at_slot(f,8);},checkpoint,[]{return uint64_t(131073);});},"injected pure RSS cap refused");auto tiny=bounds();tiny.maximum_elapsed_ms=1;throws_exact<DutyReadinessRefused>([&]{evaluate_duty_readiness(store,f.rules,f.limits,all_keys(f),tiny,[&]{return at_slot(f,8);},[]{std::this_thread::sleep_for(std::chrono::milliseconds(2));},rss);},"real finite steady deadline refused");auto gap=bounds();gap.maximum_gap_slots=1;throws_exact<DutyReadinessRefused>([&]{evaluate(f,store,at_slot(f,8),all_keys(f),gap);},"aggregate slot work bound refused");auto registry=bounds();registry.maximum_registry_entries=63;auto one=all_keys(f);one.resize(1);throws_exact<DutyReadinessRefused>([&]{evaluate(f,store,at_slot(f,8),one,registry);},"actual full registry cannot fit undersized declaration");
+- check(capella_store_snapshot(store,f.rules,f.limits,checkpoint)==before,"budgets and cancellation leave actual input store unchanged");emit("duty-readiness-finite-incomplete-cancellation-deadline-rss",{{"incompleteNotReady",true},{"earlyAndFinalCallbacksPropagate",true},{"fixedRssAndSteadyBounds",true},{"aggregateWorkAndRegistryBounds",true},{"actualSourceUnchanged",true}});
++ // A callback can throw the same type as the real terminal condition. It must
++ // propagate, leave the bound frame reusable, and never latch unavailable.
++ auto ticked=prepare_capella_store_tick(store,at_slot(f,8),f.rules,f.limits.replay_slots,f.limits.sync_trials,checkpoint);CapellaDutyPreparation frame(ticked,f.rules,8,checkpoint);uint64_t frame_callbacks=0;CapellaDutyPreparationWork interrupted_work;
++ throws_exact<EmptyAltairSyncActiveSet>([&]{frame.advance(8,f.limits.sync_trials,[&]{checkpoint();if(++frame_callbacks==2)throw EmptyAltairSyncActiveSet();},&interrupted_work);},"callback EmptyAltairSyncActiveSet is not genuine future unavailability");check(frame_callbacks==2&&!frame.projection_unavailable()&&!frame.ready(),"callback failure cannot permanently block an owned continuation");check(frame.advance(8,f.limits.sync_trials,checkpoint)&&frame.ready(),"same frame continues after external callback failure without invented state");
++ DutyReadinessObservation interrupted_observation;uint64_t in_advance_callbacks=0;throws_exact<Cancelled>([&]{evaluate_duty_readiness(store,f.rules,f.limits,all_keys(f),bounds(),[&]{return at_slot(f,8);},[&]{checkpoint();if(interrupted_observation.advance_reached){++in_advance_callbacks;throw Cancelled{};}},rss,&interrupted_observation);},"typed cancellation after actual advance entry must propagate");check(in_advance_callbacks==1&&interrupted_observation.advance_reached&&!duty_readiness_projection_work(interrupted_observation).is_null(),"caller-owned work survives continuation callback refusal without claiming completion");
++ check(incomplete.at("reason")=="preparation_unavailable_or_chunk_limit"&&incomplete.at("projectionWork").is_null(),"chunk ceiling before first advance is not terminal active-set unavailability or fabricated work");
++ check(capella_store_snapshot(store,f.rules,f.limits,checkpoint)==before,"budgets and cancellation leave actual input store unchanged");emit("duty-readiness-finite-incomplete-cancellation-deadline-rss",{{"incompleteNotReady",true},{"earlyAndFinalCallbacksPropagate",true},{"fixedRssAndSteadyBounds",true},{"aggregateWorkAndRegistryBounds",true},{"actualSourceUnchanged",true},{"callbackEmptySyncExceptionPropagates",true},{"continuationCancellationPropagates",true},{"refusedWorkRetainedWithoutCompletion",true}});
+ }
+ void pure_ownership_and_freshness(const Fixture& f){auto store=current(f);auto keys=all_keys(f);const auto wall=at_slot(f,8);auto expected=evaluate(f,store,wall,keys);auto caller_rules=f.rules;auto caller_limits=f.limits;auto caller_bounds=bounds();const auto root=consensus_beacon_header_root(capella_fork_head(store,f.rules,checkpoint)->header);auto& borrowed_before_call=store.blocks.at(root).writable(checkpoint);bool mutated=false;uint64_t copied_calls=0;std::function<void()> caller_check;caller_check=[&]{checkpoint();++copied_calls;if(!mutated){mutated=true;borrowed_before_call.state.ssz.assign(1,0);caller_rules.slot_duration_ms++;caller_limits.blocks=1;caller_bounds.maximum_chunks=1;keys.clear();caller_check={};}};
+  auto owned=evaluate_duty_readiness(store,caller_rules,caller_limits,keys,caller_bounds,[wall]{return wall;},caller_check,rss);check(mutated&&copied_calls>1&&owned.at("sourceHeadRoot")==expected.at("sourceHeadRoot")&&owned.at("profile")==expected.at("profile")&&owned.at("projectedStateRoot")==expected.at("projectedStateRoot")&&owned.at("keys")==expected.at("keys")&&owned.at("completeDutyContexts")==true,"all inputs and preexisting HOT alias owned before first callback");
+@@ -220,7 +290,16 @@
+  ChildGuard guard{pid};::close(pipes[1]);Fd event{pipes[0]};check(::fcntl(pipes[0],F_SETFL,O_NONBLOCK)==0,"nonblocking event pipe");Outcome result;result.report=out;const auto begin=std::chrono::steady_clock::now();for(;;){char buffer[16];auto n=::read(pipes[0],buffer,sizeof(buffer));if(n>0)result.event.append(buffer,size_t(n));auto waited=::waitpid(pid,&result.status,WNOHANG|WUNTRACED);if(waited==pid){if(WIFSTOPPED(result.status)){check(terminate&&!result.stopped&&WSTOPSIG(result.status)==SIGSTOP,"exact child stopped at observed request pread");result.stopped=true;check(::kill(pid,SIGTERM)==0&&::kill(pid,SIGCONT)==0,"cooperative SIGTERM followed by continuation");continue;}guard.live=false;break;}check(waited==0||(waited<0&&errno==EINTR),"owned child wait");if(std::chrono::steady_clock::now()-begin>std::chrono::seconds(25)){result.timed=true;(void)::kill(pid,SIGKILL);while(::waitpid(pid,&result.status,0)<0)check(errno==EINTR,"killed child joined");guard.live=false;break;}::usleep(1000);}
+  char tail[32];for(;;){auto n=::read(pipes[0],tail,sizeof(tail));if(n<=0)break;result.event.append(tail,size_t(n));}if(!result.event.empty())++io_events;const auto raw=read(log);check(raw.size()<=65536,"bounded public tool log");size_t at=0;unsigned markers=0;while(at<raw.size()){auto end=raw.find('\n',at);if(end==std::string::npos)end=raw.size();try{auto row=Json::parse(raw.substr(at,end-at));if(row.is_object()&&row.value("format",std::string{})=="nano-capella-duty-readiness-typed-v1"){++markers;result.typed=std::move(row);}}catch(const Json::exception&){}at=end+1;}last_tool=result.typed;if(WIFEXITED(result.status))last_exit=WEXITSTATUS(result.status);check(!result.timed&&markers==1&&physical(a.databases)==source_before&&physical(a.inputs)==metadata_before,"actual child typed observation and protected source/input conservation");checkpoint();return result;
+ }
+-void tool_safety(const Json& j){check(j.at("newSignaturesCreated")==0&&j.at("keysLoaded")==false&&j.at("runtimeStarted")==false&&j.at("runtimeDutiesAuthorized")==false&&j.at("resumeAuthorized")==false&&j.at("productionQualified")==false&&j.at("maximumRssKiB").get<uint64_t>()<=131072,"actual CLI cannot authorize runtime/signature and retains process RSS cap");}
++void tool_timings(const Json& j){
++ const std::array<const char*,9> phases{"request","journal-evidence","source-inventories","current-primary","current-witness","canonical-restoration","duty-preparation","closed-input-readback","publication"};const auto& measured=j.at("phaseElapsedMs");check(measured.is_object()&&measured.size()==phases.size(),"fixed phase durations expose no private path, slot, UTC or root");
++ const bool success=j.at("status")=="READONLY_DUTY_PROBE_COMPLETED";size_t reached=phases.size()-1;
++ if(!success){const auto refusal=j.at("refusedStage").get<std::string>();const auto at=std::find(phases.begin(),phases.end(),refusal);check(at!=phases.end(),"typed refusal names a known fixed phase");reached=size_t(at-phases.begin());}
++ for(size_t n=0;n<phases.size();++n){const auto& value=measured.at(phases[n]);check(n<=reached?value.is_number_unsigned():value.is_null(),"unreached phase stays null rather than claiming measured zero");if(!value.is_null())check(value.get<uint64_t>()<=180000,"each measured phase retains the unchanged process duration cap");}
++ for(const auto* name:{"elapsedBeforeDutiesMs","dutyElapsedMs"}){const auto& value=j.at(name);check(reached<6?value.is_null():success?value.is_number_unsigned():(value.is_null()||value.is_number_unsigned()),"preparation durations are absent before preparation entry");if(!value.is_null())check(value.get<uint64_t>()<=180000,"finite preparation duration measurement");}
++ const auto& work=j.at("projectionWork");if(reached<6)check(work.is_null(),"no computed-work counter before actual evaluator advance");
++ if(!work.is_null()){check(work.is_object()&&work.size()==6&&work.at("incompleteWorkUnknown").is_boolean(),"projection work retains bounded counters and explicit partial-work uncertainty");for(const auto* name:{"headSlotsComputed","targetSlotsComputed","blockSlotsComputed","targetSlotsReused","blockSlotsReused"})check(work.at(name).is_number_unsigned(),"work values are counts rather than absolute private slots");}
++}
++void tool_safety(const Json& j){check(j.at("newSignaturesCreated")==0&&j.at("keysLoaded")==false&&j.at("runtimeStarted")==false&&j.at("runtimeDutiesAuthorized")==false&&j.at("resumeAuthorized")==false&&j.at("productionQualified")==false&&j.at("maximumRssKiB").get<uint64_t>()<=131072,"actual CLI cannot authorize runtime/signature and retains process RSS cap");tool_timings(j);}
+ Json accepted(Arrangement& a,const char* name){auto o=child(a,name);check(WIFEXITED(o.status)&&WEXITSTATUS(o.status)==0&&o.typed.at("status")=="READONLY_DUTY_PROBE_COMPLETED"&&o.typed.at("probeCompleted")==true,"actual full protected CLI observation");tool_safety(o.typed);struct stat s{};check(::lstat(o.report.c_str(),&s)==0&&S_ISREG(s.st_mode)&&(s.st_mode&0777)==0600&&s.st_uid==::geteuid()&&s.st_nlink==1,"accepted owned0600 report");auto j=Json::parse(read(o.report));check(j.at("format")=="nano-capella-duty-readiness-private-v1"&&j.at("currentPrimary")==a.request.at("core").at("primary").at("token")&&j.at("currentWitness")==a.request.at("core").at("witness").at("token")&&j.at("expected")==a.request.at("core").at("expected"),"actual current pair/head/domain/execution in report");for(const auto* field:{"primaryAndWitnessAuthenticated","canonicalExecutionCouplingVerified","journalReportReused","journalLeafInventoriesUnchanged","journalSemanticReportExternallySupplied"})check(j.at(field)==true,"actual full protected read-only pipeline");for(const auto* field:{"historicalDigestAncestryVerified","deliveredSignatureHistoryVerified","executionAccountNoncesVerified","runtimeDutiesAuthorized","productionQualified"})check(j.at(field)==false,"observation not external history authority");check(j.at("newJournalDatabaseReads")==0&&j.at("newSignaturesCreated")==0&&fs::is_empty(a.scratch),"no new journal opens or signatures and checked scratch cleanup");safety(j.at("evaluation"));check(j.at("evaluation").at("probeCompleted")==true&&j.at("evaluation").at("completeDutyContexts")==o.typed.at("completeDutyContexts"),"completed observation is separate from full contexts");++tool_accepts;return j;
+ }
+ void denied(Arrangement& a,const char* name,const char* stage,std::optional<fs::path> output={}){auto before=physical(a.reports);auto o=child(a,name,output);check(WIFEXITED(o.status)&&WEXITSTATUS(o.status)==1&&o.typed.at("status")=="REFUSED_NO_AUTOMATIC_RETRY"&&o.typed.at("refusedStage")==stage&&o.typed.at("probeCompleted")==false,"actual exact-stage CLI refusal");tool_safety(o.typed);check(!fs::exists(o.report)&&physical(a.reports)==before&&fs::is_empty(a.scratch),"refusal cannot publish or alter scratch/source");++tool_refusals;}

@@ -119,21 +119,90 @@ void CapellaDutyPreparation::seed_target(const CapellaTargetPreparation& ready,c
  if(target_&&ready.ready()&&ready.matches(store,rules_,target_->target(),check))target_=ready;
 }
 bool CapellaDutyPreparation::advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check){
+ return advance(maximum_slots,trials,check,nullptr);
+}
+bool CapellaDutyPreparation::advance(uint64_t maximum_slots,uint64_t trials,const std::function<void()>& check,
+ CapellaDutyPreparationWork* actual_work){
+ CapellaDutyPreparationWork local;auto& actual=actual_work?*actual_work:local;actual={};
  if(!maximum_slots||!trials)throw std::invalid_argument("invalid Capella duty continuation bounds");
  // A caller's cancellation/error must never masquerade as a missing future
  // committee, even if its callback throws the same exception type.
  bool callback_failed=false;
  auto checkpoint=[&]{if(check)try{check();}catch(...){callback_failed=true;throw;}};
  checkpoint();if(projection_blocked_)return false;
+ bool in_slot_work=false;
  try{
-  const bool head_ready=head_.advance(slot_,maximum_slots,trials,checkpoint);
-  bool target_ready=true,block_ready=true;
-  if(target_)target_ready=target_->advance(maximum_slots,trials,checkpoint);
-  if(block_)block_ready=block_->advance_for_block(slot_,maximum_slots,trials,checkpoint);
-  return head_ready&&target_ready&&block_ready;
+  const auto profile=capella_fork_profile(rules_);
+  const auto same_slot_profile=[&](const CapellaSlotPreparation& frame){
+   auto candidate=rules_;
+   candidate.transition.consensus.epoch=frame.rules_.operations;
+   candidate.transition.consensus.state=frame.limits_;
+   candidate.transition.execution=frame.rules_.execution;
+   candidate.transition.maximum_state_bytes=frame.rules_.maximum_state_bytes;
+   return capella_fork_profile(candidate)==profile;
+  };
+  if(!same_slot_profile(head_))throw std::invalid_argument("Capella duty head profile mismatch");
+  // Each frame still has its original per-call maximum_slots allowance,
+  // including progress adopted rather than recalculated during this call.
+  const auto bounded_end=[&](const CapellaSlotPreparation& frame,uint64_t goal){
+   const auto start=frame.slot();if(start>goal)throw std::invalid_argument("Backwards Capella duty prefix");
+   return start+std::min(maximum_slots,goal-start);
+  };
+  const auto head_end=bounded_end(head_,slot_);
+  uint64_t target_end=0,block_end=0;
+  bool share_target=false,share_block=false;
+  if(target_){
+   const auto slots=rules_.transition.consensus.epoch.ffg.slots_per_epoch;
+   if(!slots||target_->target_.epoch>UINT64_MAX/slots)throw std::invalid_argument("Invalid Capella duty target slot");
+   target_end=bounded_end(target_->slots_,target_->target_.epoch*slots);
+   share_target=target_->slots_.parent()==head_.parent()&&same_slot_profile(target_->slots_)
+    &&capella_fork_profile(target_->rules_)==profile;
+  }
+  if(block_){
+   if(!slot_)throw std::invalid_argument("Invalid Capella duty block slot");
+   block_end=bounded_end(block_->slots_,slot_-1);
+   auto candidate=rules_;candidate.transition=block_->rules_;
+   share_block=block_->slots_.parent()==head_.parent()&&same_slot_profile(block_->slots_)
+    &&capella_fork_profile(candidate)==profile;
+  }
+  const auto reuse=[&](CapellaSlotPreparation& destination,bool compatible,uint64_t end,uint64_t& count){
+   const auto before=destination.slot(),after=head_.slot();
+   if(!compatible||after<=before||after>end)return;
+   destination.adopt_same_profile_prefix(head_,end-before,checkpoint);
+   count+=after-before;
+  };
+  const auto share=[&]{
+   if(target_)reuse(target_->slots_,share_target,target_end,actual.target_reused_slots);
+   if(block_)reuse(block_->slots_,share_block,block_end,actual.block_reused_slots);
+  };
+  const auto run=[&](CapellaSlotPreparation& frame,uint64_t goal,uint64_t& count){
+   const auto before=frame.slot();if(before==goal)return;
+   in_slot_work=true;
+   const bool reached=frame.advance(goal,goal-before,trials,checkpoint);
+   in_slot_work=false;count+=frame.slot()-before;
+   if(!reached)throw std::logic_error("Incomplete bounded Capella duty segment");
+  };
+  // Reuse only actual owned forward states on the identical authenticated
+  // parent/profile trajectory. Split at a sibling's boundary before HEAD can
+  // pass it: no rewind, invented epoch snapshot or post-state/header constructor.
+  share();
+  while(head_.slot()<head_end){
+   auto end=head_end;const auto start=head_.slot();
+   if(target_&&share_target&&target_->slots_.slot()==start&&target_end>start)end=std::min(end,target_end);
+   if(block_&&share_block&&block_->slots_.slot()==start&&block_end>start)end=std::min(end,block_end);
+   run(head_,end,actual.head_slots);share();
+  }
+  // Another target ancestor, a seeded frame ahead of HEAD, or progress left
+  // behind by an earlier cancellation keeps its independent ordinary path.
+  if(target_)run(target_->slots_,target_end,actual.target_slots);
+  if(block_)run(block_->slots_,block_end,actual.block_slots);
+  return ready();
  }catch(const EmptyAltairSyncActiveSet&){
+  actual.incomplete_work_unknown=in_slot_work;
   if(callback_failed)throw;
   projection_blocked_=true;return false;
+ }catch(...){
+  actual.incomplete_work_unknown=in_slot_work;throw;
  }
 }
 bool CapellaDutyPreparation::ready()const{
