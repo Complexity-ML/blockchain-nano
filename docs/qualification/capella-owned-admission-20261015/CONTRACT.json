@@ -1,0 +1,337 @@
+{
+  "format": "nano-capella-durable-owned-admission-public-test-contract-v1",
+  "status": "SOURCE_ONLY_EXPECTATIONS_NOT_ACTUAL_RESULTS",
+  "target": "nano-capella-durable-owned-admission-tests",
+  "ctest": "consensus_capella_durable_owned_admission",
+  "selector": "--self-test",
+  "timeoutSeconds": 180,
+  "expectedRows": 10,
+  "semanticGroups": 9,
+  "rows": [
+    {
+      "scenario": "durable-owned-fixed-operation-wires",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "mutationsAfterDecode": 2,
+        "invalidOriginalRepairRefused": 2,
+        "originalWirePersisted": true,
+        "nonemptyReopens": 2
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-votes-and-slashings",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "typedAndSszPaths": 4,
+        "canonicalArchiveEqualsAuthenticatedInput": true,
+        "coldReopen": true
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-block-archive",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "originalSignedArchive": true,
+        "executionAndWitnessExact": true,
+        "coldReopen": true,
+        "retainedBranchOnly": true,
+        "selectedHeadOrFinalityQualified": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-local-body-recipes",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "recipeVariants": 3,
+        "fixedOperationPrefixesCovered": true,
+        "transactionCandidateOwnershipQualified": false,
+        "noDurablePublication": true
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-sync-message-and-aggregate",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "originalEphemeralWire": true,
+        "aggregateMatchesIncludedBytes": true,
+        "expectedTokenOwned": true,
+        "syncCurrentSigningQualified": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-signing-callables",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "syntheticProviderCalls": 1,
+        "originalBodyAndSigningRoot": true,
+        "normalBlockAdmission": true,
+        "originalOperationalKeysUsed": false,
+        "signerReferenceOwnershipQualified": false,
+        "checkpointCallableOwned": true
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-cancellation-no-publication",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "cancelledEntries": 7,
+        "exactPrimaryWitnessAndFilesystemBytes": true,
+        "exceptionsNotConvertedToPeerReject": true
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-mixed-nonempty-formats",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "realDurableVersions": 3,
+        "realPhysicalFormats": 3,
+        "allFiveQueuesAuthenticatedOnReopen": true,
+        "finalityOrQueueRetirementQualified": false,
+        "retainedBranchOnly": true,
+        "selectedHeadOrFinalityQualified": false,
+        "authenticatedRetainedBranchInclusion": true
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-direct-ssz-codecs",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "originalCanonicalBytesAcrossCallbacks": true,
+        "directCodecCases": 4
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    },
+    {
+      "scenario": "durable-owned-admission-summary",
+      "equals": {
+        "result": "PASS",
+        "maximumSignatures": 1024,
+        "privateInputsRead": false,
+        "runtimeDutiesAuthorized": false,
+        "productionQualified": false,
+        "semanticGroups": 9,
+        "maximumRssKiB": 131072,
+        "maximumElapsedMs": 180000,
+        "blockCacheBytes": 0,
+        "fourMiBStrictCacheResourceQualification": false,
+        "syntheticFixtureOnly": true,
+        "fixtureValidators": 64,
+        "oldScenarioGroupsExecuted": 0,
+        "transactionCandidateOwnershipQualified": false,
+        "operationalDutiesOrProductionQualified": false
+      },
+      "integerFields": {
+        "elapsedMs": {
+          "minimum": 0,
+          "maximum": 179999
+        },
+        "actualPeakRssKiB": {
+          "minimum": 0,
+          "maximum": 131072
+        },
+        "newTestOnlySignaturesCreated": {
+          "minimum": 0,
+          "maximum": 1024
+        }
+      }
+    }
+  ],
+  "fixtureMemoryPolicy": {
+    "writeBufferBytes": 4194304,
+    "maximumWriteBuffers": 2,
+    "sharedMemtableBytes": 16777216,
+    "sharedBlockCacheBytes": 0,
+    "productionPolicyChanged": false,
+    "historicalStrictFourMiBCacheFailureRemainsOpen": true
+  },
+  "causalOldArchiveExpectation": {
+    "sameConsumerObjectRequired": false,
+    "expectedExitCode": 1,
+    "expectedPassedSemanticRows": 0,
+    "expectedDiagnosticStage": "fixed-bls-wire",
+    "expectedReason": "BLS/exit authentication and persisted wire must be the same owned original",
+    "state": "HISTORICAL_V1_ROOT_CAUSAL_OBSERVATION_DISTINCT_FROM_V2_OBJECT",
+    "rootReportedV1Attempt": 78838
+  },
+  "rootExecutionPlan": {
+    "oldCoreArchiveCompiles": 0,
+    "oldArchiveNewConsumerCompiles": 0,
+    "oldArchiveNewConsumerLinks": 0,
+    "sameConsumerObjectRelinkedForCorrectedArchive": false,
+    "correctedCoreSources": 4,
+    "fullConsumerPerArchitecture": 1,
+    "oldProposerWALOrOtherScenariosReplayed": 0,
+    "actualAuthorCompilations": 0,
+    "actualAuthorExecutions": 0,
+    "causalBaselineReplayRequired": false,
+    "v2ConsumerObjectDistinctFromV1CausalObject": true
+  },
+  "scopeExclusions": [
+    "Borrowed SignedTransaction candidate spans and their existing selection algorithm",
+    "sync_current and general signer-reference ownership",
+    "Operational keys, private CORE/journals, deployed runtime and real duties",
+    "Physical crash or power-loss recovery, finality and queue retirement",
+    "Strict four-MiB cache resource qualification and general production qualification"
+  ]
+}

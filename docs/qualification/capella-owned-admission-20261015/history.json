@@ -1,0 +1,144 @@
+{
+  "format": "nano-owned-admission-history-v1",
+  "causalV1": {
+    "actualConsumerInvocations": 1,
+    "arch": "arm64",
+    "causalFailureStage": "fixed-bls-wire",
+    "compilerInvocations": 0,
+    "ctestDispatchAttempted": true,
+    "ctestExitCode": 8,
+    "elapsedSeconds": 16.311165458057076,
+    "format": "nano-durable-owned-public-test-typed-v1",
+    "imagesBuilt": 0,
+    "measuredPeakRssKiB": 23336,
+    "mode": "causal-old",
+    "newTestOnlySignaturesCreated": 3,
+    "ownedContainersAbsent": true,
+    "ownedVolumeAbsent": true,
+    "privateInputsRead": false,
+    "productionQualified": false,
+    "protectedInputsUnchanged": true,
+    "runtimeDutiesAuthorized": false,
+    "scenarioRows": 0,
+    "semanticGroups": 0,
+    "status": "EXPECTED_OLD_ARCHIVE_OWNERSHIP_FAILURE"
+  },
+  "correctedAmdV1": {
+    "sshExitCode": 1
+  },
+  "correctedAmdV1TypedResult": [
+    {
+      "format": "nano-owned-admission-amd-test-actual-typed-v1",
+      "controllerExitCode": 1,
+      "terminal": {
+        "actualConsumerInvocations": 1,
+        "arch": "amd64",
+        "compilerInvocations": 0,
+        "ctestDispatchAttempted": true,
+        "ctestExitCode": 8,
+        "format": "nano-durable-owned-public-test-typed-v1",
+        "imagesBuilt": 0,
+        "measuredPeakRssKiB": 24704,
+        "mode": "corrected",
+        "newTestOnlySignaturesCreated": 3,
+        "ownedContainersAbsent": true,
+        "ownedVolumeAbsent": true,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "protectedInputsUnchanged": false,
+        "runtimeDutiesAuthorized": false,
+        "scenarioRows": 0,
+        "semanticGroups": null,
+        "status": "REFUSED"
+      }
+    }
+  ],
+  "correctedAmdV1PublicDiagnostic": {
+    "actualPeakRssKiB": 24704,
+    "diagnostic": "durable-owned-admission-public-fixture-failure-v1",
+    "newTestOnlySignaturesCreated": 3,
+    "privateInputsRead": false,
+    "productionQualified": false,
+    "reason": "checkpoint GC owned private directory required",
+    "stage": "fixed-bls-wire"
+  },
+  "correctedArmV2": {
+    "actualConsumerInvocations": 1,
+    "arch": "arm64",
+    "compilerInvocations": 0,
+    "ctestDispatchAttempted": true,
+    "ctestExitCode": 8,
+    "format": "nano-durable-owned-public-test-typed-v1",
+    "imagesBuilt": 0,
+    "measuredPeakRssKiB": 25036,
+    "mode": "corrected",
+    "newTestOnlySignaturesCreated": 16,
+    "ownedContainersAbsent": true,
+    "ownedVolumeAbsent": true,
+    "privateInputsRead": false,
+    "productionQualified": false,
+    "protectedInputsUnchanged": false,
+    "runtimeDutiesAuthorized": false,
+    "scenarioRows": 2,
+    "semanticGroups": null,
+    "status": "REFUSED"
+  },
+  "correctedAmdV2": [
+    {
+      "format": "nano-owned-admission-amd-v2-build-typed-v1",
+      "controllerExitCode": 0,
+      "terminal": {
+        "arch": "amd64",
+        "format": "nano-owned-admission-cmake-phase-typed-v1",
+        "imagesBuilt": 0,
+        "mode": "build",
+        "ownedContainersAbsent": true,
+        "protectedInputsUnchanged": true,
+        "runtimeStarted": false,
+        "sdkBeforeAfterExact": true,
+        "selectedGenuineMmdPairs": 1,
+        "status": "CMAKE_PHASE_PASS",
+        "testsExecuted": 0
+      },
+      "progress": {
+        "cxxBuildProgressMarkers": 1,
+        "fullVerboseCommandLogsRetained": true,
+        "linkProgressMarkers": 1
+      }
+    },
+    {
+      "format": "nano-owned-admission-amd-v2-test-typed-v1",
+      "controllerExitCode": 1,
+      "terminal": {
+        "actualConsumerInvocations": 1,
+        "arch": "amd64",
+        "compilerInvocations": 0,
+        "ctestDispatchAttempted": true,
+        "ctestExitCode": 8,
+        "format": "nano-durable-owned-public-test-typed-v1",
+        "imagesBuilt": 0,
+        "measuredPeakRssKiB": 26632,
+        "mode": "corrected",
+        "newTestOnlySignaturesCreated": 16,
+        "ownedContainersAbsent": true,
+        "ownedVolumeAbsent": true,
+        "privateInputsRead": false,
+        "productionQualified": false,
+        "protectedInputsUnchanged": false,
+        "runtimeDutiesAuthorized": false,
+        "scenarioRows": 2,
+        "semanticGroups": null,
+        "status": "REFUSED"
+      }
+    }
+  ],
+  "notes": [
+    "Causal V1 test object is distinct from V3; no identical-consumer-object claim. V2 adds private fixture directories; V3 corrects the retained-child oracle.",
+    "29256 refused volume initialization before CTest: chown parent first removed root traversal. Fixed with children first, without new capability.",
+    "16883, 21150, 31434 and source/configuration/material-envelope refusals remain in the external qualification archive. They are not converted to passes.",
+    "Original parent Finder ctime-only refusal and later owned-source ctime-only changes retained; all SHA bytes remained exact. Underlying metadata-change cause is UNEXPLAINED.",
+    "Candidate source first write denied readonly mode before any write; only owned source copies were made writable.",
+    "92027 refused a fresh input envelope during its first read, before Docker/compiler/test. Stable same bytes were admitted separately for build1567.",
+    "No old proposer, WAL, OPS, EEST or private readiness diagnostic was replayed."
+  ]
+}

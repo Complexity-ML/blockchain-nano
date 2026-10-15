@@ -2170,3 +2170,10 @@ set_tests_properties(consensus_capella_readonly_duty_readiness PROPERTIES TIMEOU
 add_test(NAME consensus_capella_slot_merkle_batch_manual_oracle COMMAND nano-capella-duty-readiness-tests --slot-merkle-self-test)
 set_tests_properties(consensus_capella_slot_merkle_batch_manual_oracle PROPERTIES TIMEOUT 180 LABELS qualification_consensus_duty_observer)
 endif()
+
+# Public synthetic regressions for owned inputs at durable admission boundaries.
+add_executable(nano-capella-durable-owned-admission-tests tests/test_capella_durable_owned_admission.cpp)
+target_link_libraries(nano-capella-durable-owned-admission-tests PRIVATE nano_core)
+target_compile_definitions(nano-capella-durable-owned-admission-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_capella_durable_owned_admission COMMAND nano-capella-durable-owned-admission-tests --self-test)
+set_tests_properties(consensus_capella_durable_owned_admission PROPERTIES TIMEOUT 180 LABELS qualification_consensus_recovery)

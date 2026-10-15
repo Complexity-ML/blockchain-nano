@@ -8,6 +8,10 @@
 #include "nano/consensus_bls.hpp"
 namespace nano {
 namespace {
+std::string owned_recipient(const std::string& input){
+ if(input.size()!=40&&input.size()!=42)throw std::invalid_argument("address must be 20 bytes");
+ return address(input);
+}
 uint64_t number(const Bytes& b,size_t at){uint64_t n=0;for(size_t i=0;i<8;++i)n|=uint64_t(b.at(at+i))<<(8*i);return n;}
 void offset(Bytes& b,size_t at,size_t n){if(n>UINT32_MAX)throw std::length_error("Capella body offset");for(size_t i=0;i<4;++i)b.at(at+i)=uint8_t(n>>(8*i));}
 template<size_t N>void field(std::array<uint8_t,N>& out,const Bytes& in){if(in.size()!=N)throw std::invalid_argument("Capella payload field width");std::copy(in.begin(),in.end(),out.begin());}
@@ -35,8 +39,13 @@ const CapellaDurableReactor::SyncAdmissionContext& CapellaDurableReactor::sync_a
  {std::lock_guard stats_lock(sync_stats_mutex_);if(sync_context_builds_!=UINT64_MAX)++sync_context_builds_;}return *sync_admission_context_;
 }
 bool CapellaDurableReactor::submit_sync_aggregate(uint64_t slot,std::span<const uint8_t> aggregate,
- const ForkCheckpointToken& expected,const std::function<void()>& check){
- std::lock_guard lock(mutex_);return submit_sync_aggregate_locked(slot,aggregate,expected,check);
+ const ForkCheckpointToken& expected_input,const std::function<void()>& callback){
+ std::lock_guard lock(mutex_);require_available();
+ if(expected_input.digest.size()!=32)throw StaleCapellaDuty("Stale sync aggregate submission");
+ const size_t bytes=(uint64_t(rules_.transition.consensus.state.sync_committee_size)+7)/8+96;
+ if(aggregate.size()!=bytes)return false;
+ const Bytes owned(aggregate.begin(),aggregate.end());const auto expected=expected_input;const auto check=callback;
+ return submit_sync_aggregate_locked(slot,owned,expected,check);
 }
 bool CapellaDurableReactor::submit_sync_aggregate_locked(uint64_t slot,std::span<const uint8_t> aggregate,
  const ForkCheckpointToken& expected,const std::function<void()>& check){
@@ -82,11 +91,15 @@ Json CapellaDurableReactor::sync_admission_stats()const{
  for(size_t i=0;i<names.size();++i)result[names[i]]=sync_outcomes_[i];
  result["contextBuilds"]=sync_context_builds_;result["contextHits"]=sync_context_hits_;return result;
 }
-bool CapellaDurableReactor::submit_sync_message(const CapellaSyncMessage& message,
- const ForkCheckpointToken& expected,const std::function<void()>& check){
- std::lock_guard lock(mutex_);return submit_sync_message_locked(message,expected,check);
+bool CapellaDurableReactor::submit_sync_message(const CapellaSyncMessage& input,
+ const ForkCheckpointToken& expected_input,const std::function<void()>& callback){
+ std::lock_guard lock(mutex_);require_available();
+ if(expected_input.digest.size()!=32)throw StaleCapellaDuty("Stale sync message submission");
+ const auto message=input;const auto expected=expected_input;const auto check=callback;
+ return submit_sync_message_locked(message,expected,check);
 }
-bool CapellaDurableReactor::sync_message_ssz(std::span<const uint8_t> bytes,const std::function<void()>& check){
+bool CapellaDurableReactor::sync_message_ssz(std::span<const uint8_t> bytes,const std::function<void()>& callback){
+ const auto check=callback;
  const auto message=decode_capella_sync_message(bytes);if(!message){std::lock_guard lock(mutex_);return record_sync_outcome(SyncOutcome::invalid_width);}
  std::lock_guard lock(mutex_);require_available();return submit_sync_message_locked(*message,*token_,check);
 }
@@ -138,21 +151,40 @@ bool CapellaDurableReactor::submit_sync_message_locked(const CapellaSyncMessage&
  pending_sync_messages_.swap(retained);return record_sync_outcome(SyncOutcome::accepted);
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body(uint64_t index,uint64_t slot,
- const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,
- std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
- std::lock_guard lock(mutex_);const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);const auto exits=pending_exits_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials,exits,maximum_vote_trials);
+ const Bytes& reveal_input,const std::string& recipient_input,const ForkCheckpointToken& expected_input,
+ std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& callback){
+ std::lock_guard lock(mutex_);require_available();
+ if(expected_input.digest.size()!=32)throw StaleCapellaDuty("Stale body preparation");
+ if(reveal_input.size()!=96)throw std::invalid_argument("Capella local body context");
+ const auto reveal=reveal_input;const auto recipient=owned_recipient(recipient_input);const auto expected=expected_input;const auto check=callback;
+ const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);const auto exits=pending_exits_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials,exits,maximum_vote_trials);
 }
-std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_bls_changes(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedCapellaBlsChange> changes,size_t maximum_change_trials,const std::function<void()>& check){
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_bls_changes(uint64_t index,uint64_t slot,const Bytes& reveal_input,const std::string& recipient_input,const ForkCheckpointToken& expected_input,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedCapellaBlsChange> changes_input,size_t maximum_change_trials,const std::function<void()>& callback){
  if(!maximum_change_trials)throw std::invalid_argument("Capella change trial budget required");
- std::lock_guard lock(mutex_);const auto exits=pending_exits_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_change_trials,exits,maximum_vote_trials);
+ std::lock_guard lock(mutex_);require_available();
+ if(expected_input.digest.size()!=32)throw StaleCapellaDuty("Stale body preparation");
+ if(reveal_input.size()!=96)throw std::invalid_argument("Capella local body context");
+ const auto reveal=reveal_input;const auto recipient=owned_recipient(recipient_input);const auto expected=expected_input;const auto check=callback;
+ const std::vector<SignedCapellaBlsChange> changes(changes_input.begin(),changes_input.begin()+std::min(changes_input.size(),maximum_change_trials));
+ const auto exits=pending_exits_locked(maximum_vote_trials,check);return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_change_trials,exits,maximum_vote_trials);
 }
-std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_exits(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedConsensusVoluntaryExit> exits,size_t maximum_exit_trials,const std::function<void()>& check){
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_with_exits(uint64_t index,uint64_t slot,const Bytes& reveal_input,const std::string& recipient_input,const ForkCheckpointToken& expected_input,std::span<const SignedTransaction> transactions,size_t maximum_transaction_trials,size_t maximum_vote_trials,std::span<const SignedConsensusVoluntaryExit> exits_input,size_t maximum_exit_trials,const std::function<void()>& callback){
  if(!maximum_exit_trials)throw std::invalid_argument("Capella exit trial limit");
- std::lock_guard lock(mutex_);const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);
+ std::lock_guard lock(mutex_);require_available();
+ if(expected_input.digest.size()!=32)throw StaleCapellaDuty("Stale body preparation");
+ if(reveal_input.size()!=96)throw std::invalid_argument("Capella local body context");
+ const auto reveal=reveal_input;const auto recipient=owned_recipient(recipient_input);const auto expected=expected_input;const auto check=callback;
+ std::vector<SignedConsensusVoluntaryExit> exits;
+ for(size_t i=0;i<std::min(exits_input.size(),maximum_exit_trials);++i)if(exits_input[i].signature.size()==96)exits.push_back(exits_input[i]);
+ const auto changes=pending_bls_changes_locked(maximum_vote_trials,check);
  return prepare_local_body_locked(index,slot,reveal,recipient,expected,transactions,maximum_transaction_trials,maximum_vote_trials,check,changes,maximum_vote_trials,exits,maximum_exit_trials);
 }
-std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
- std::lock_guard lock(mutex_);return prepare_local_body_from_pool_locked(index,slot,reveal,recipient,expected,maximum_transaction_trials,maximum_vote_trials,check);
+std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool(uint64_t index,uint64_t slot,const Bytes& reveal_input,const std::string& recipient_input,const ForkCheckpointToken& expected_input,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& callback){
+ std::lock_guard lock(mutex_);require_available();
+ if(expected_input.digest.size()!=32)throw StaleCapellaDuty("Stale pool body preparation");
+ if(reveal_input.size()!=96)throw std::invalid_argument("Capella local body context");
+ const auto reveal=reveal_input;const auto recipient=owned_recipient(recipient_input);const auto expected=expected_input;const auto check=callback;
+ return prepare_local_body_from_pool_locked(index,slot,reveal,recipient,expected,maximum_transaction_trials,maximum_vote_trials,check);
 }
 std::optional<Bytes> CapellaDurableReactor::prepare_local_body_from_pool_locked(uint64_t index,uint64_t slot,const Bytes& reveal,const std::string& recipient,const ForkCheckpointToken& expected,size_t maximum_transaction_trials,size_t maximum_vote_trials,const std::function<void()>& check){
  require_available();if(!execution_)throw std::invalid_argument("Capella execution owner required");if(expected!=*token_)throw StaleCapellaDuty("Stale pool body preparation");

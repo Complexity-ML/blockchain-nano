@@ -604,7 +604,9 @@ std::vector<SignedConsensusVoluntaryExit> CapellaDurableReactor::pending_exits_l
  for(const auto& [id,record]:exits_){if(check)check();if(result.size()>=maximum)break;const auto operation=decode_consensus_voluntary_exit_ssz(record.wire,check);if(!operation)throw std::logic_error("Invalid queued Capella exit");const auto member=context.registry.validators.find(operation->validator_index);if(member==context.registry.validators.end()||member->second.public_key!=record.public_key||member->second.exit_epoch!=UINT64_MAX)continue;result.push_back(*operation);}return result;
 }
 std::vector<SignedConsensusVoluntaryExit> CapellaDurableReactor::pending_exits()const{std::lock_guard lock(mutex_);return pending_exits_locked(limits_.messages,{});}
-bool CapellaDurableReactor::voluntary_exit_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){
+bool CapellaDurableReactor::voluntary_exit_ssz(std::span<const uint8_t> input,const std::function<void()>& callback){
+ if(input.size()!=112)return false;
+ const Bytes owned_wire(input.begin(),input.end());const std::span<const uint8_t> wire=owned_wire;const auto check=callback;
  const auto operation=decode_consensus_voluntary_exit_ssz(wire,check);if(!operation)return false;std::lock_guard lock(mutex_);require_available();if(check)check();
  const Bytes bytes(wire.begin(),wire.end());const auto id=sha256(bytes);if(exits_.contains(id))return exits_.at(id).wire==bytes;
  const auto head_pin=capella_fork_head(*state_,rules_,check);const auto& head=*head_pin;const auto root=consensus_beacon_header_root(head.header);const auto key=exit_key(*state_,root,*operation,rules_,check);if(!key)return false;
@@ -620,14 +622,16 @@ std::vector<SignedCapellaBlsChange> CapellaDurableReactor::pending_bls_changes_l
  for(const auto& [index,record]:bls_changes_){if(result.size()>=maximum)break;if(check)check();const auto operation=decode_capella_bls_change(record.wire);if(!operation)throw std::logic_error("Invalid queued BLS change");const auto member=context.registry.validators.find(index);if(member==context.registry.validators.end()||member->second.withdrawal_credentials[0]!=0)continue;const auto key_hash=sha256(Bytes(operation->from_bls_pubkey.begin(),operation->from_bls_pubkey.end()));if(!std::equal(key_hash.begin()+1,key_hash.end(),member->second.withdrawal_credentials.begin()+1))continue;result.push_back(*operation);}return result;
 }
 std::vector<SignedCapellaBlsChange> CapellaDurableReactor::pending_bls_changes()const{std::lock_guard lock(mutex_);return pending_bls_changes_locked(limits_.messages,{});}
-bool CapellaDurableReactor::bls_change_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){
+bool CapellaDurableReactor::bls_change_ssz(std::span<const uint8_t> input,const std::function<void()>& callback){
+ if(input.size()!=172)return false;
+ const Bytes owned_wire(input.begin(),input.end());const std::span<const uint8_t> wire=owned_wire;const auto check=callback;
  const auto operation=decode_capella_bls_change(wire);if(!operation)return false;std::lock_guard lock(mutex_);require_available();if(check)check();
  if(const auto it=bls_changes_.find(operation->validator_index);it!=bls_changes_.end())return it->second.wire==Bytes(wire.begin(),wire.end());
  const auto root=consensus_beacon_header_root(capella_fork_head(*state_,rules_,check)->header);if(!valid_bls_change(*state_,root,*operation,rules_,check))return false;
  if(bls_changes_.size()>=limits_.messages)throw std::length_error("Capella BLS change queue capacity");auto changes=bls_changes_;changes.emplace(operation->validator_index,CapellaPendingBlsChange{root,Bytes(wire.begin(),wire.end())});publish(*state_,check,{},std::nullopt,std::nullopt,std::move(changes));return true;
 }
-bool CapellaDurableReactor::vote_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){const auto decoded=decode_consensus_attestation_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&vote(*decoded,check);}
-bool CapellaDurableReactor::slashing_ssz(std::span<const uint8_t> wire,const std::function<void()>& check){const auto decoded=decode_consensus_attester_slashing_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&slashing(decoded->first,decoded->second,check);}
+bool CapellaDurableReactor::vote_ssz(std::span<const uint8_t> wire,const std::function<void()>& callback){const auto check=callback;const auto decoded=decode_consensus_attestation_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&vote(*decoded,check);}
+bool CapellaDurableReactor::slashing_ssz(std::span<const uint8_t> wire,const std::function<void()>& callback){const auto check=callback;const auto decoded=decode_consensus_attester_slashing_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);return decoded&&slashing(decoded->first,decoded->second,check);}
 Json CapellaDurableReactor::relay_head(const std::function<void()>& check)const{
  if(check)check();const auto published=beacon_snapshot();
  const auto head_pin=capella_fork_head(*published.state,rules_,check);const auto& head=*head_pin;
@@ -677,13 +681,18 @@ void CapellaDurableReactor::tick_locked(uint64_t time,const std::function<void()
 bool CapellaDurableReactor::block(std::span<const uint8_t> wire,const std::function<void()>& check){
  return block_admission(wire,check)==CapellaBlockAdmission::accepted;
 }
-CapellaBlockAdmission CapellaDurableReactor::block_admission(std::span<const uint8_t> wire,const std::function<void()>& check){
+CapellaBlockAdmission CapellaDurableReactor::block_admission(std::span<const uint8_t> wire,const std::function<void()>& callback){
+ const auto check=callback;
  std::lock_guard lock(mutex_);bool deferred=false;
  const bool accepted=block_locked(wire,check,&deferred);
  return accepted?CapellaBlockAdmission::accepted:deferred?CapellaBlockAdmission::deferred:CapellaBlockAdmission::rejected;
 }
-bool CapellaDurableReactor::block_locked(std::span<const uint8_t> wire,const std::function<void()>& check,bool* deferred){
- require_available();if(check)check();
+bool CapellaDurableReactor::block_locked(std::span<const uint8_t> input,const std::function<void()>& callback,bool* deferred){
+ require_available();
+ if(input.size()<404||input.size()>rules_.transition.consensus.maximum_block_bytes)return false;
+ // The authenticated block and its durable archive must use this one owned wire.
+ const Bytes owned_wire(input.begin(),input.end());const std::span<const uint8_t> wire=owned_wire;const auto check=callback;
+ if(check)check();
  // Reconnection may lose the sender's ACK cache. A pruned historical duplicate
  // is acknowledged only from our OWN authenticated finalized archive; it never
  // installs a peer checkpoint or changes the current execution/fork state.
@@ -1015,8 +1024,12 @@ CapellaTargetPreparation* CapellaDurableReactor::prepare_vote_target_locked(cons
  do{if(frame->advance(std::min(limits_.replay_slots,slots),limits_.sync_trials,check))return frame;}while(complete);
  return nullptr;
 }
-bool CapellaDurableReactor::vote(const Phase0SignedAttestation& vote,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();auto wire=encode_consensus_attestation_ssz(vote,rules_.transition.consensus.body.validators_per_committee,check);auto id=sha256(wire);
+bool CapellaDurableReactor::vote(const Phase0SignedAttestation& input,const std::function<void()>& callback){
+ std::lock_guard lock(mutex_);require_available();
+ const auto limit=rules_.transition.consensus.body.validators_per_committee;
+ if(!limit||input.aggregation_bits.size()>limit||input.signature.size()!=96)throw std::invalid_argument("invalid attestation encoding bounds");
+ const auto vote=input;const auto check=callback;
+ auto wire=encode_consensus_attestation_ssz(vote,rules_.transition.consensus.body.validators_per_committee,check);auto id=sha256(wire);
  if(const auto found=votes_.find(id);found!=votes_.end()&&found->second==wire)return true;
  auto* prepared=prepare_vote_target_locked(*state_,vote,false,check);if(!prepared)return false;
  auto next=checked_vote(*state_,vote,rules_,limits_,check,prepared);if(!next)return false;
@@ -1044,8 +1057,13 @@ bool CapellaDurableReactor::proposer_slashing(SignedConsensusBeaconHeader first,
  // No economic mutation or attester fork-choice exclusion occurs at admission.
  publish(*state_,owned_check,{},std::nullopt,std::nullopt,std::nullopt,std::nullopt,std::move(pending));return true;
 }
-bool CapellaDurableReactor::slashing(const IndexedConsensusAttestation& first,const IndexedConsensusAttestation& second,const std::function<void()>& check){
- std::lock_guard lock(mutex_);require_available();auto next=prepare_capella_store_slashing(*state_,first,second,rules_,check);if(!next)return false;
+bool CapellaDurableReactor::slashing(const IndexedConsensusAttestation& first_input,const IndexedConsensusAttestation& second_input,const std::function<void()>& callback){
+ std::lock_guard lock(mutex_);require_available();
+ const auto limit=rules_.transition.consensus.body.validators_per_committee;
+ auto bounded=[&](const auto& a){return limit&&a.indices.size()<=limit&&a.signature.size()==96&&a.indices.size()<=(UINT32_MAX-228)/8;};
+ if(!bounded(first_input)||!bounded(second_input))return false;
+ const auto first=first_input,second=second_input;const auto check=callback;
+ auto next=prepare_capella_store_slashing(*state_,first,second,rules_,check);if(!next)return false;
  auto wire=encode_consensus_attester_slashing_ssz(first,second,rules_.transition.consensus.body.validators_per_committee,check);const auto id=sha256(wire);auto proofs=slashings_;
  if(!proofs.contains(id)){
   std::set<uint64_t> uncovered;std::set_intersection(first.indices.begin(),first.indices.end(),second.indices.begin(),second.indices.end(),std::inserter(uncovered,uncovered.end()));
