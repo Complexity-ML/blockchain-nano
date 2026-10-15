@@ -1,0 +1,71 @@
+{
+  "format": "nano-initial-runtime-clock-public-delivery-v1",
+  "baseCommit": "4699671ae2904d254f5d10c7d8d2e312a071cd07",
+  "proposalOnly": false,
+  "testStatus": "PASS_TARGETED_LOCAL_ONLY",
+  "sourceManifest": {"sha256": "64a55bd75ff4af5345adfbffe9985b080c8f8c306cc472d611e610778097c98e", "bytes": 3465},
+  "sourceCount": 4,
+  "documentCount": 4,
+  "payloadCount": 3,
+  "payloadBytes": 11979,
+  "qualificationPackageDestination": "docs/qualification/initial-runtime-clock-20261016",
+  "expectedGitPathCount": 12,
+  "sourceOverlays": [
+    {"path": "tests/multihost/prepare.mjs", "baseline": {"sha256": "9fe5403f52806925ccbecd13f4a5a56cfcd1b2b58d83c2f026b831e206a67b3d", "bytes": 24774}, "source": {"path": "overlays/tests/multihost/prepare.mjs", "sha256": "9760269ffec82f7784229f08c6e2fe278cb41096f19bfa97928c7197c4ec4341", "bytes": 27397}},
+    {"path": "tests/multihost/run.mjs", "baseline": {"sha256": "affc979957caa84e66f37e746226fdfa5581796cead607b1362b4cbfcd95cd43", "bytes": 183993}, "source": {"path": "overlays/tests/multihost/run.mjs", "sha256": "b38a3e48761dceb9dd8fcf920a99346cac2c343f472ae947822c66baa87ef69b", "bytes": 185784}},
+    {"path": "tests/multihost/lifecycle-driver-guard.test.mjs", "baseline": {"sha256": "dc85912defc0ff5397c9425ed7ed47abddaf393d20fefeaba299e56896da73f4", "bytes": 9102}, "source": {"path": "overlays/tests/multihost/lifecycle-driver-guard.test.mjs", "sha256": "409db8f7ba555c95d449e1f018e5614f11c1afbe4311ec9a5b353808784f64d3", "bytes": 9102}},
+    {"path": "tests/multihost/fresh-initial-runtime-clock.test.mjs", "baseline": null, "source": {"path": "overlays/tests/multihost/fresh-initial-runtime-clock.test.mjs", "sha256": "105018a03dba6dfcae5659640a7aa4bd3dc24e89f4aeec24489680df6da4633e", "bytes": 4358}}
+  ],
+  "documentHistoricalBodies": {
+    "docs/PRODUCTION-GOAL.md": {"sha256": "21b18e80af9cc0ebfc3b362c56010f9cc45bdce3c738f15fa4c4630dbe099c9b", "bytes": 650809},
+    "docs/EIP-IMPLEMENTATION-STATUS.md": {"sha256": "e3bfabc49b4e2a7ad2df6b36bb7fd4d1af12d36c1c3ebee7b28544a194464f6e", "bytes": 874321},
+    "docs/EVM-PRODUCTION-EIP-ROADMAP.md": {"sha256": "97e07906e197c8a6b3e334c242ff17d54661f2b67e0317d515f45942390a53e5", "bytes": 670627},
+    "docs/VALIDATOR-EIP-ROADMAP.md": {"sha256": "2ee94a1973d5147be195394951da5e841e255310522ccf8c55422f5c75330949", "bytes": 870660}
+  },
+  "documentAppend": {"path": "document-appends/initial-runtime-clock.append.md", "encoding": "UTF8", "sha256": "51274b092858f8d7fdb726ce9586d2b172e4a2ce39fcb23f5163ad890390bd3e", "bytes": 1593, "appliesToAllHistoricalDocuments": true, "historicalBodyStartsAtByte": 0},
+  "documentFinalComposition": {
+    "docs/PRODUCTION-GOAL.md": {"sha256": "075f1c5e1adf44359f4e99f2f3e2cefa31aa989d28e3a80be620d71c3b04a284", "bytes": 652402, "historicalBodyStartsAtByte": 0, "appendStartsAtByte": 650809},
+    "docs/EIP-IMPLEMENTATION-STATUS.md": {"sha256": "95b1ddf02fe86632c4e1d1393db15ed9e37990cf7fe2e87d0f0b2976eb3c2331", "bytes": 875914, "historicalBodyStartsAtByte": 0, "appendStartsAtByte": 874321},
+    "docs/EVM-PRODUCTION-EIP-ROADMAP.md": {"sha256": "f32a11c278ca461f8691672f1cbb718bf3042cc68b64fc54c9c7898f3e90ef78", "bytes": 672220, "historicalBodyStartsAtByte": 0, "appendStartsAtByte": 670627},
+    "docs/VALIDATOR-EIP-ROADMAP.md": {"sha256": "0fab05675d7977d9f566e5ffec05ed72473e0919825c5cc8b62d442eea7884ed", "bytes": 872253, "historicalBodyStartsAtByte": 0, "appendStartsAtByte": 870660}
+  },
+  "payloads": [
+    {"path": "package/CONTRACT.md", "sha256": "11d2a19d322f1779f304c0ceda096c5f5cd9c49723c88c89367edb21efec47c9", "bytes": 8141},
+    {"path": "package/README.md", "sha256": "d748ba5423f8074961b5cd61beee9feac27728863bc5fb8c19a4ff665b615299", "bytes": 2673},
+    {"path": "package/TEST-STATUS.json", "sha256": "794b3e2c8e012cd3bc9551271e467d4cad06048b7c5b78b4ad861e78734b95e3", "bytes": 1165}
+  ],
+  "producerTestResult": {"sha256": "794b3e2c8e012cd3bc9551271e467d4cad06048b7c5b78b4ad861e78734b95e3", "bytes": 1165, "copiedByteExactAs": "package/TEST-STATUS.json", "syntaxChecks": 4, "syntaxChecksReusedPriorActualExecution": true, "newClockTests": 4, "newClockTestsReplayed": false, "affectedLifecycleGuardTests": 1, "expectedGuardChildRefusals": 3, "guardElapsedMs": 9540},
+  "supersedesPendingProposal": {"sha256": "f04ee2b89881704d35e7619320a44699b174f9eb8e94ce72cda70aa9e7baea4d", "bytes": 5401, "pendingProposalImported": false},
+  "unchangedFiles": [
+    {"path": "docs/EIP-IMPLEMENTATION-STATUS.csv", "sha256": "618205e9c9932b7804497314b4bcc9271c33100e15e8ed1ce1521d1780de3ed7", "bytes": 11822},
+    {"path": "docs/RPC-BEHAVIOR.md", "sha256": "32d65b23c0b8e9fe4f800f8bedcf64abf49306d41333e25c4b6b9bb903327726", "bytes": 18537}
+  ],
+  "expectedGitPaths": [
+    "docs/EIP-IMPLEMENTATION-STATUS.md",
+    "docs/EVM-PRODUCTION-EIP-ROADMAP.md",
+    "docs/PRODUCTION-GOAL.md",
+    "docs/VALIDATOR-EIP-ROADMAP.md",
+    "docs/qualification/initial-runtime-clock-20261016/CONTRACT.md",
+    "docs/qualification/initial-runtime-clock-20261016/README.md",
+    "docs/qualification/initial-runtime-clock-20261016/TEST-STATUS.json",
+    "docs/qualification/initial-runtime-clock-20261016/manifest.json",
+    "tests/multihost/fresh-initial-runtime-clock.test.mjs",
+    "tests/multihost/lifecycle-driver-guard.test.mjs",
+    "tests/multihost/prepare.mjs",
+    "tests/multihost/run.mjs"
+  ],
+  "scope": {
+    "sourceProposalOnly": false,
+    "testsPendingRootResult": false,
+    "targetedLocalTestsPassed": true,
+    "historicalBodiesEntirelyRetained": true,
+    "oldEvidencePayloadsRecopied": 0,
+    "ciStatusClaimed": false,
+    "runtimeQualified": false,
+    "vpsClockQualified": false,
+    "fullLifecycleQualified": false,
+    "productionQualified": false
+  },
+  "repositoryWrittenByAuthor": false,
+  "projectOrNodeExecutionByAuthor": false
+}

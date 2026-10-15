@@ -108,6 +108,32 @@ export function buildFreshNodePlan(input){
  return {format:'nano-fresh-capella-preparation-model-v1',campaignId:domain.campaignId,campaignNamespace:bootstrapPlan.campaignNamespace,nodes:result};
 }
 
+// Necessary initial-start conditions only. The real C++ startup clock remains
+// authoritative; this does not reserve headroom or apply to restored clocks.
+export function checkFreshInitialRuntimeClock({plan,node,profile,approvedClock,nowMs}){
+ const maximum=(1n<<64n)-1n,q=(value,zero=false)=>{
+  freshNeed(typeof value==='string'&&/^0x(?:0|[1-9a-f][0-9a-f]*)$/.test(value),'Initial clock canonical uint64');const n=BigInt(value);freshNeed(n<=maximum&&(zero||n>0n),'Initial clock positive uint64');return n;
+ };
+ exactKeys(approvedClock,['maximumStartupElapsedMs','maximumDowntimeMs','maximumSteps'],'Approved initial clock');
+ const c=node?.capella?.clock,r=c?.startupCatchup;
+ freshNeed(c&&r&&c.maximumStartupElapsedMs===approvedClock.maximumStartupElapsedMs&&r.maximumDowntimeMs===approvedClock.maximumDowntimeMs&&r.maximumSteps===approvedClock.maximumSteps,'Initial clock differs from approved startup budgets');
+ const g=q(plan?.anchor?.genesisTimeMs,true),a=q(plan?.anchor?.timeMs,true),step=q(c.maximumForwardStepMs),downtime=q(r.maximumDowntimeMs),steps=q(r.maximumSteps),startup=q(c.maximumStartupElapsedMs),slot=q(profile?.common?.[1]),replay=q(node?.capella?.limits?.replaySlots);
+ q(approvedClock.maximumStartupElapsedMs);q(approvedClock.maximumDowntimeMs);q(approvedClock.maximumSteps);
+ freshNeed(typeof nowMs==='bigint'&&nowMs>=0n&&nowMs<=maximum&&nowMs>=a&&a>=g,'Initial clock wall time precedes durable anchor');
+ const sinceGenesis=nowMs-g,age=nowMs-a,required=(age+step-1n)/step;
+ freshNeed(sinceGenesis<=downtime,'Initial fixture exceeded approved age since genesis');
+ freshNeed(age<=downtime&&required<=steps,'Initial clock current age exceeds catch-up capacity');
+ freshNeed((step+slot-1n)/slot<=replay,'Initial clock step exceeds replay-slot capacity');
+ const hex=n=>'0x'+n.toString(16);
+ return {format:'nano-fresh-initial-runtime-clock-preflight-v1',necessaryConditionsPassed:true,ageSinceGenesisMs:hex(sinceGenesis),ageSinceDurableMs:hex(age),requiredCatchupSteps:hex(required),maximumCatchupSteps:hex(steps),maximumDowntimeMs:hex(downtime),maximumForwardStepMs:hex(step),maximumStartupElapsedMs:hex(startup),runtimeStartupVerified:false,genesisOrProfileChanged:false,productionQualified:false};
+}
+// Call the supplied clock at the point of effect, never reuse a preparation
+// receipt across peer waits. A refused condition cannot invoke launch.
+export function launchFreshInitialRuntime(input,now,launch){
+ freshNeed(typeof now==='function'&&typeof launch==='function','Initial clock and launch callbacks required');
+ return launch(checkFreshInitialRuntimeClock({...input,nowMs:now()}));
+}
+
 const requiredFreshPrograms={
  'mac-native':['nano','p2p','exporter','bootstrapImport','bootstrapAudit','stoppedCapture'],
  'mac-docker':['nano','p2p','bootstrapImport','bootstrapAudit','stoppedCapture'],

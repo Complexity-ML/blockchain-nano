@@ -1,0 +1,13 @@
+# Initial runtime clock preflight
+
+**16 October 2026: targeted local tests passed. Runtime, VPS clock and production remain unqualified.**
+
+The existing coordinator now rechecks its unchanged initial-clock budgets after preparation and immediately before each owner's first launch. A preparation pass cannot be reused after peer, tunnel or immutable configuration waits. The check retains the conservative age since genesis and also checks the actual durable age's catch-up step/replay capacity. It changes no budget, profile, genesis, P2P selection, key assignment or later restore.
+
+The [source contract](CONTRACT.md) records the formulas and their limits. Four JavaScript sources are selected from the reviewed proposal manifest `64a55bd75ff4af5345adfbffe9985b080c8f8c306cc472d611e610778097c98e` (3465 bytes), based on main `4699671ae2904d254f5d10c7d8d2e312a071cd07`: `prepare.mjs`, `run.mjs`, the new focused clock test and the existing lifecycle guard with only its two fixture hashes updated.
+
+The [exact Root terminal](TEST-STATUS.json), SHA `794b3e2c8e012cd3bc9551271e467d4cad06048b7c5b78b4ad861e78734b95e3` (1165 bytes), reports four syntax checks and four new focused clock tests already passed in execute02. Those successful checks were reused without replay. Execute03 reran only the affected lifecycle guard: one test with its three expected child refusals, exit0 in9540ms, empty stderr. Original Node/source full-nine/SHA authorities remained unchanged; 135 replica source files received a new stable first admission.
+
+The earlier collectors remain part of the history: execute01 refused metadata stabilization before any Node invocation; execute02 passed the four clock tests and syntax checks but its guard replica lacked public monitor/Assertoor imports. Execute03 added only the four exact public imports and completed the guard. No source defect or weakened guard was used to turn that replica failure into a pass. The published terminal preserves the missing-import failure and the prior successful clock-output hash; raw private logs and Root controllers are not published here.
+
+No C++ program, Docker, seed, ledger, exporter, runtime or private VPS operation ran in this targeted test batch. The wall time sampled by the new check is the Mac orchestrator's clock; the VPS C++ runtime must independently accept its actual local clock. The previous native/Linux cold-bootstrap evidence remains separate and is not replayed or copied into this package. Duties, shared finality, canonical lifecycle operations, sanctions, withdrawals, the long lifecycle, CI/release requirements and production readiness remain open. No EIP or launch status is promoted.

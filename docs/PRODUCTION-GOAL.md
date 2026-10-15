@@ -5107,3 +5107,14 @@ Le [lot partagé](qualification/shared-bootstrap-mac-linux-20261015/README.md) l
 Six syntaxes et les nouveaux cas ciblés passent séparément :2 purs réutilisés sans replay,1 guard/3 refus et2 refus du préparateur. Le premier collecteur reste FAILED sur l’attente de7 SKIP ; les2 cas réellement sélectionnés avaient réussi. V2 du contrôleur est resté HOLD/non exécuté avant la correction de l’ordre des clés. Tous les échecs historiques et la limite du digest brut privé07 non enregistré restent conservés.
 
 **Aucun runtime Nano/P2P, configuration runtime, reprise des duties, coordinateur complet, finalité commune ou cycle complet n’est qualifié par ce PASS.** Reprise/finalité des trois propriétaires, cycle long/inclusion/sanction/retraits, WAN/ressources, autorisation dédiée AMD/VPS encore en attente, release/CI/revue indépendante et Base–Nano/bridge/Doppler restent ouverts. Aucun accès VPS privé, build/pull d’image, fonds ou vente ; goal actif. Aucun EIP/fork/profil ni production promu. Corps historique intégral conservé en préfixe, CSV/RPC inchangés.
+
+
+---
+
+**16 octobre 2026 — Préflight d’horloge avant chaque premier spawn : tests locaux ciblés réussis, runtime toujours ouvert.**
+
+Le [lot clock](qualification/initial-runtime-clock-20261016/README.md) revérifie les budgets déjà approuvés après préparation et au point de chaque premier démarrage, après les attentes des pairs, du tunnel et des configurations. Le garde d’âge depuis le Genesis est conservé ; la capacité réelle de rattrapage depuis l’horloge durable est contrôlée. Aucun budget, profil, Genesis, P2P, propriétaire de clé ou restore ultérieur n’est modifié.
+
+Le [terminal Root exact](qualification/initial-runtime-clock-20261016/TEST-STATUS.json) clôt quatre syntaxes et quatre nouveaux tests clock déjà réussis, réutilisés sans replay ; seul le guard concerné a été rejoué : un test/trois refus attendus, exit0 en9540ms. Les échecs des collecteurs01 (stabilisation avant Node) et02 (imports publics manquants dans la replica du guard) restent conservés ;03 ajoute les quatre imports exacts puis réussit, sans assouplissement des sources ou autorités.
+
+Aucun C++, Docker, seed/export, runtime ou accès VPS privé dans ce lot de tests. Le préflight utilise l’horloge du Mac et ne qualifie pas l’horloge réelle du VPS, le démarrage C++, les duties, la finalité commune ou le cycle long. Les critères production et autorisations encore ouverts restent ouverts ; aucun EIP, CI, bridge, lancement ou production promu. Les quatre corps documentaires historiques sont conservés intégralement en préfixe, CSV/RPC inchangés.
