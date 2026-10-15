@@ -1,0 +1,151 @@
+{
+  "format": "nano-fresh-lifecycle-runtime-delivery-cmake-source-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_CONFIGURED",
+  "baseCommit": "e377a7d1721d85afa8932ddcc57e405014f3b254",
+  "files": [
+    {
+      "path": "CMakeLists.txt",
+      "baseline": {
+        "sha256": "751c5e55d5517b7ca0bc9ce540c041bd2f5c1a6d3c21033cd8b1f5415317de40",
+        "bytes": 173919
+      },
+      "source": {
+        "path": "source/CMakeLists.txt",
+        "sha256": "275b30b7f759bdd15d265db1303365a1069f0614f9eac40edc4b1767c9290946",
+        "bytes": 174261
+      }
+    }
+  ],
+  "originRuntimeManifest": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-runtime-integration-20261015/manifest.json",
+    "sha256": "2fd5c6b4808aeb2de265f7f60abc4b8c733dfa547e862d38d829af2a3e99bc27",
+    "bytes": 6824
+  },
+  "originRegistrationFragment": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-lifecycle-runtime-integration-20261015/CMake.registration.cmake",
+    "sha256": "5d46546c711a89a5aa87abf5becc6418a13c37bb4b4c8b25033b31f122d62798",
+    "bytes": 481
+  },
+  "composition": "Only the frozen registration body, indented inside the existing Node condition, immediately after the existing guarded-driver registration. No other CMake byte changes.",
+  "newCTest": {
+    "name": "consensus_multihost_fresh_lifecycle_runtime_protocol",
+    "command": [
+      "${NANO_RECOVERY_NODEJS_EXECUTABLE}",
+      "--test",
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/lifecycle-runtime.test.mjs"
+    ],
+    "timeoutSeconds": 30,
+    "labels": [
+      "qualification_consensus_lifecycle"
+    ]
+  },
+  "existingHttpObserveAndAllOtherRegistrationsBytePreserved": true,
+  "deletingExactNewBodyRestoresWholeBaseline": true,
+  "sourceBaselinesVerified": [
+    {
+      "path": "tests/multihost/lifecycle-driver-guard.test.mjs",
+      "baseline": {
+        "sha256": "fb1688a552a36e3656350426c1491425fa2e94b0f758245e999940737b2d269e",
+        "bytes": 6205
+      },
+      "currentBaselineVerified": true,
+      "proposedSource": {
+        "path": "source/tests/multihost/lifecycle-driver-guard.test.mjs",
+        "sha256": "5fa5ed8c4124f60eaa6ce1755e4a5d86ba66c76161aa2619c162d6d139e6b198",
+        "bytes": 7175
+      }
+    },
+    {
+      "path": "tests/multihost/lifecycle-owner.mjs",
+      "baseline": null,
+      "currentBaselineVerified": true,
+      "proposedSource": {
+        "path": "source/tests/multihost/lifecycle-owner.mjs",
+        "sha256": "8c3cbb8ee26655b9e76c5e30da308195c9beb48b59f022d3c2094942831e7d65",
+        "bytes": 13822
+      }
+    },
+    {
+      "path": "tests/multihost/lifecycle-runtime.mjs",
+      "baseline": null,
+      "currentBaselineVerified": true,
+      "proposedSource": {
+        "path": "source/tests/multihost/lifecycle-runtime.mjs",
+        "sha256": "0ffcbe6bb7f4ececafa694e6fdccd982ec6d81297687a9a7c131bb30b4c7248c",
+        "bytes": 22457
+      }
+    },
+    {
+      "path": "tests/multihost/lifecycle-runtime.test.mjs",
+      "baseline": null,
+      "currentBaselineVerified": true,
+      "proposedSource": {
+        "path": "source/tests/multihost/lifecycle-runtime.test.mjs",
+        "sha256": "f8092b6858a425c3aed300c642a55668cbc1ab9314ccea172a2dc96948cd92a0",
+        "bytes": 11066
+      }
+    },
+    {
+      "path": "tests/multihost/lifecycle.mjs",
+      "baseline": {
+        "sha256": "3eedb790f38e9dcf3f3c56a53cfb44f6b86d9e54bdfef76597d8136c9d11c214",
+        "bytes": 23995
+      },
+      "currentBaselineVerified": true,
+      "proposedSource": {
+        "path": "source/tests/multihost/lifecycle.mjs",
+        "sha256": "2d8f3c9c2123bf55ffdb7f9ea412f83321e8bc3a67db39a0e6d1c2545a37cac9",
+        "bytes": 24178
+      }
+    },
+    {
+      "path": "tests/multihost/prepare.mjs",
+      "baseline": {
+        "sha256": "3dc631707379fb30160e518cfbded8d638f641c41b0c2451272050a268090ed7",
+        "bytes": 25214
+      },
+      "currentBaselineVerified": true,
+      "proposedSource": {
+        "path": "source/tests/multihost/prepare.mjs",
+        "sha256": "d3de5c16154fc60d68e51bac5f60ec2e8606290a661a14867ce26a7e47e722e5",
+        "bytes": 25337
+      }
+    },
+    {
+      "path": "tests/multihost/run.mjs",
+      "baseline": {
+        "sha256": "220a6cdb741690f9a7c0a7e29f0c7476e922c6df4a6156e86476ad39546e35c6",
+        "bytes": 137252
+      },
+      "currentBaselineVerified": true,
+      "proposedSource": {
+        "path": "source/tests/multihost/run.mjs",
+        "sha256": "ac771e1dc5f83340f608403c7177e981cf028bfe3a0bf2cb26fe8f7b6d072b0e",
+        "bytes": 173091
+      }
+    }
+  ],
+  "payloads": [
+    {
+      "path": "source/CMakeLists.txt",
+      "sha256": "275b30b7f759bdd15d265db1303365a1069f0614f9eac40edc4b1767c9290946",
+      "bytes": 174261
+    },
+    {
+      "path": "source.patch",
+      "sha256": "064857547315eebf605182a4913fc49072d4901c2c8b699bc0e0506574ee7ff9",
+      "bytes": 1037
+    }
+  ],
+  "payloadCount": 2,
+  "payloadBytes": 175298,
+  "scope": {
+    "authorProjectExecutions": 0,
+    "cmakeConfigured": false,
+    "cppRebuilt": false,
+    "projectTestsExecutedByAuthor": false,
+    "runtimeQualified": false,
+    "productionQualified": false,
+    "rWrites": false
+  }
+}

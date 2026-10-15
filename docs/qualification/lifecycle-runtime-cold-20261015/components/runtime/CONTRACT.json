@@ -1,0 +1,46 @@
+{
+  "format": "nano-fresh-lifecycle-runtime-source-contract-v1",
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "requiredCoreProfile": "Capella/Shanghai unchanged",
+  "defaultRuntimeDriverEnabled": false,
+  "defaultPrivateVpsLifecycleTransferAuthorized": false,
+  "defaultCrossOwnerEvidenceTransferAuthorized": false,
+  "privateGatesCheckedBeforeSeedLedgerExportOutputOrTransport": true,
+  "programRoles": {
+    "lifecycleTool": "nano-capella-deposit-audit",
+    "lifecycleSubmit": "nano-capella-lifecycle-submit"
+  },
+  "requiredOwnerProgramAdmissions": 3,
+  "requiredToolObserveContract": "V3 null only for sealed observe; action and terminal exact HEAD3",
+  "newPublicIdentityAuthorityBeforeExporterRequired": true,
+  "newPrivateSeedAuthorityImplementedHere": false,
+  "planAuthority": "Known canonical bytes hashed before exclusive write; authenticated C++ PREPARED action pin; unique stable first admission; no old rebaseline",
+  "newOperationalSubmitRetries": 0,
+  "rollingFinality": "Same authenticated three-owner observer, three advances/stable samples, profile/deadline-derived refresh before existing 1024 ancestry limit; no HEAD baseline and no larger cap",
+  "completeRestoresRequired": 2,
+  "independentStoppedOwnerCapturesRequired": 3,
+  "completeTerminalReplaysRequired": 1,
+  "completeTerminalOwner": "vps-docker",
+  "rawVpsCapsuleActionJobSessionReportEgress": false,
+  "crossOwnerEvidenceRequiresSpecificExternalHumanApproval": true,
+  "minimumEpochHorizon": "derived from pinned profile, current example activation+325 epochs",
+  "wholeRunDeadline": "externally declared maximumRunMs <= 2147483647 with independent cleanup wrapper",
+  "newProtocolTests": {
+    "file": "tests/multihost/lifecycle-runtime.test.mjs",
+    "tests": 7,
+    "expectedRefusalAssertions": 55,
+    "timeoutSeconds": 30,
+    "opaqueFilesOnly": true,
+    "databaseAccessed": false,
+    "signaturesCreated": 0,
+    "networkUsed": false
+  },
+  "oldPureTests": "8 tests unchanged; prior evidence does not qualify the new runtime branch",
+  "unavailableGuardTest": "3 real child cases: default runtime false, private VPS permission false, cross-owner permission false; all before missing seed/output/network",
+  "qualification": {
+    "authorProjectExecutions": 0,
+    "actualRuntimeIntegrationExecuted": false,
+    "actualLifecycleCampaignQualified": false,
+    "productionQualified": false
+  }
+}

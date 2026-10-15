@@ -1,0 +1,85 @@
+{
+  "format": "nano-static-three-owner-historical-cold-public-equality-review-v1",
+  "verdict": "GO_SCOPED_THREE_OF_THREE_HISTORICAL_COLD_AUDITS",
+  "reviewer": "evm_activation_review",
+  "comparison": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-rotation-thin-build-root-20261015/three-owner-candidate-cold-comparison-root-public.json",
+    "sha256": "ed015f79b3d2f5627cfdfcf50f07e7d470eb2fab64cb49c737339a9fd9368e8a",
+    "bytes": 2385
+  },
+  "independentlyReadPublicInputs": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-rotation-thin-build-root-20261015/native-candidate-v2-posthoc-copy4/public-result.json",
+      "sha256": "766c1d3a5c5da15d67cd631b35fab2c8f0ec0080c10fa896dcd5a3dedf25a3a8",
+      "bytes": 2325
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-rotation-thin-build-root-20261015/arm-posthoc-cold-03/public-result.json",
+      "sha256": "29b341fa4c1439c2949baae25b04daf48eeea2083c86b523c93f4caf5a4c1061",
+      "bytes": 3578
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-rotation-thin-build-root-20261015/vps-cold-02-authorized-root/audit-stdout.public.json",
+      "sha256": "10b410c5d73c512a1802a0545476f6fb2eeaecaa1eace7550874b608ab4cfc76",
+      "bytes": 4233
+    }
+  ],
+  "sourceCandidateSha256": "c01681a2bc22de1451f4e91b785c7e9d42fac5e853411d9e5aac1a1496b253d8",
+  "independentComparison": {
+    "owners": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "auditFieldsPerOwner": 35,
+    "equalFieldsWithoutOwner": 34,
+    "onlyDifferingField": "owner",
+    "allCommonResultFieldsMatch": true,
+    "equalFieldsSha256": "7bc149f8db6df88d43e65acae36b9f29f20ca3f844c7ad658003d62ea76a793a",
+    "sameFinalizedHeadAndStateCommitments": true,
+    "initialAndPreBoundaryCommitteeEqual": true,
+    "rotatedAndFinalizedCommitteeEqualAndChanged": true,
+    "equalIslandEffectiveWeightBelowFfgThreshold": true
+  },
+  "typedFacts": {
+    "replayedBlocks": 178,
+    "canonicalArchiveBytes": 507300,
+    "boundarySlot": "0x80",
+    "minimumInclusionSlot": "0x8e",
+    "finalized": {
+      "epoch": "0x14",
+      "root": "0xcb6f77c60ac5c63f180277128e5004df91a87ad23330cc5877601fdb8954ad8c"
+    },
+    "headSlot": "0xc4",
+    "threeOwnerObservedBlocks": 16,
+    "remoteBlocks": 12,
+    "remotePositions": 123,
+    "newSignaturesPerAudit": 0,
+    "runtimeStartedByAudits": false,
+    "physicalCopiesUnchanged": true,
+    "completePrimaryWitnessClosureVerified": true,
+    "externalCoreTokensMatched": true,
+    "canonicalSignedStateReplayVerified": true
+  },
+  "qualificationBoundary": [
+    "The equality is independently recomputed from exactly the three named public typed results; raw private logs, capsules, DBs, configuration, inventories, SDK/maps and original binary files were not opened.",
+    "The envelopes have platform/copy/protection differences. Equality applies only to the35-field rotationAudit objects, with owner removed; it does not claim identical physical DB bytes across platforms.",
+    "The native result additionally reports a kernel-write-denial control; it is not attributed to Docker results or to the JS copy helper.",
+    "Three owners are native Mac, Docker ARM64 on that Mac and VPS AMD64: three runtimes across two physical hosts, not three independent physical hosts.",
+    "Posthoc stopped-copy cold audits3/3 are scoped PASS. Original campaign08 remains FAILED; this does not retroactively qualify the failed network run, resumed duties, V37 recovery, current runtime integration, full lifecycle or production.",
+    "The latest human consent covers only the old VPS cold audit and exact3788-byte configuration transfer. Full lifecycle and cross-owner authorization remain false."
+  ],
+  "materialBlockers": [],
+  "scope": {
+    "typedPublicEvidenceOnly": true,
+    "historicalForkChoiceVerified": false,
+    "originalRun08RemainsFailed": true,
+    "originalV37Recovered": false,
+    "fullLifecycleOrCrossOwnerAuthorized": false,
+    "actualLongLifecycleQualified": false,
+    "productionQualified": false
+  },
+  "agentProjectCompilerTestDockerSshGitExecutions": 0,
+  "actualPrivateInputsRead": false,
+  "rOrLWritten": false
+}

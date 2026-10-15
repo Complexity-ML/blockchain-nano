@@ -14,7 +14,7 @@ const quantity=n=>'0x'+n.toString(16);
 const owned=value=>structuredClone(value);
 
 export function validateLifecycleMode(value){
- const v=owned(value);if(v&&typeof v==='object'&&!Object.hasOwn(v,'privateVpsLifecycleTransferAuthorized'))v.privateVpsLifecycleTransferAuthorized=false;exact(v,['format','identities','deadlines','resources','syntheticActionAuthorized','intentionallyAuthorConflictingHeaders','privateVpsLifecycleTransferAuthorized'],'mode');need(typeof v.privateVpsLifecycleTransferAuthorized==='boolean','explicit private transfer gate');
+ const v=owned(value);if(v&&typeof v==='object')for(const k of ['privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled'])if(!Object.hasOwn(v,k))v[k]=false;exact(v,['format','identities','deadlines','resources','syntheticActionAuthorized','intentionallyAuthorConflictingHeaders','privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled'],'mode');for(const k of ['privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled'])need(typeof v[k]==='boolean','explicit '+k+' gate');
  need(v.format==='nano-fresh-validator-lifecycle-v1'&&v.syntheticActionAuthorized===true&&v.intentionallyAuthorConflictingHeaders===true,'explicit synthetic action authority');
  exact(v.identities,roles,'identities');
  for(const role of roles){const id=v.identities[role];exact(id,['owner','keyEnv','publicKey'],role);need(owners.includes(id.owner)&&typeof id.keyEnv==='string'&&id.keyEnv.length<=128&&/^NANO_TEST_CAPELLA_NETWORK_KEY_[A-Z0-9_]*$/.test(id.keyEnv)&&publicPattern.test(id.publicKey),role+' public owner identity');}
