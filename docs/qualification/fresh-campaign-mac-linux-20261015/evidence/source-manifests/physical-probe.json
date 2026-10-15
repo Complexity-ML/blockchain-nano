@@ -1,0 +1,40 @@
+{
+  "format":"nano-mac-linux-synthetic-physical-probe-source-v1",
+  "status":"SOURCE_ONLY_PEER_READY_NOT_EXECUTED",
+  "sourceCount":1,
+  "payloadCount":2,
+  "payloadBytes":30222,
+  "payloadMode":"0400",
+  "payloads":[
+    {"path":"probe.mjs","sha256":"e86a49f0ef97e788f927fc227505b7c726862fe7025325e105467f7edd30b809","bytes":22091},
+    {"path":"PLAN.md","sha256":"dbe96c37cf91877eceea173eb79aa77c7be9bfe5bd7e522559fa49b3bdc0b07e","bytes":8131}
+  ],
+  "sourceCandidate":{"path":"../fresh-campaign-mac-linux-source-proposal-20261015/manifest.json","sha256":"e27d1fe83db022be0e16726416e2f32c9aa71cf8dd3a31e0918697e421ab2498","bytes":8392},
+  "requiredModule":{"relativePath":"tests/multihost/linux-owned-files.mjs","sha256":"d86be73f14b258c0678b84e1dfc5e7a28429e676fb1110c6102aacb289615bd6","bytes":18094},
+  "requiredHelper":{"sha256":"7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6","bytes":12273},
+  "requiredOriginalCopier":{"sha256":"9fcd47d3bee3530c163e00e8b6a8dd475645336ba48579db45bdc9e20bb3bdf3","bytes":10433},
+  "rootControlFields":["moduleRoot","helperPath","copierPath","dockerPath","dockerEndpoint","outputDirectory","uuid","prefix","softwareMounts","sourcePins"],
+  "sourcePinFields":["path","sha256","bytes","material"],
+  "materialFieldOrder":["dev","ino","mode","nlink","uid","gid","size","mtimeNs","ctimeNs"],
+  "materialType":"nine original decimal strings, never refreshed",
+  "requiredDockerEndpoint":"unix:///Users/boris/.docker/run/docker.sock",
+  "requiredImage":"sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "softwareMounts":[],
+  "plannedPhysicalChecks":{
+    "perlSyntaxChecks":4,
+    "opaqueReaderKinds":3,
+    "specificReaderRefusals":3,
+    "assignedFirstIndex":16,
+    "assignedLastIndex":31,
+    "syntheticPairs":16,
+    "knownSourcePayloadsBeforeProducer":64,
+    "sourceAndCopyPayloadComparisons":128,
+    "independentPhysicalEntries":256,
+    "wholeWorkDeadlineMs":600000,
+    "globalCleanupDeadlineMs":45000,
+    "pruneOrVolumeRemoval":false,
+    "allDockerOperationsOriginalSourceFenced":true
+  },
+  "authorActions":{"publicSourceReads":true,"sourcePublication":true,"privateInputsRead":false,"nodePerlCompilerDockerGitSshExecution":false,"testsRun":0,"repositoryEdits":0},
+  "scope":{"syntheticLinuxTransportOnly":true,"real65TokensQualified":false,"actualImporterStarted":false,"nanoOrP2pStarted":false,"seedOrExporterUsed":false,"fullLifecycleQualified":false,"productionQualified":false}
+}

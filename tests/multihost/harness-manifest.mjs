@@ -3,7 +3,7 @@ import {resolve,relative,dirname,isAbsolute} from 'node:path';
 import {createHash} from 'node:crypto';
 // Static relative ES-module imports used by this repository; external commands
 // are explicit roots. This is a source inventory, not executable attestation.
-export const harnessRoots=['tests/multihost/run.mjs','tests/multihost/observe.mjs','tests/multihost/prepare.mjs','tests/multihost/backup-restore.sh','scripts/operations/finality-monitor.mjs','scripts/operations/monitor-and-deliver.mjs'];
+export const harnessRoots=['tests/multihost/run.mjs','tests/multihost/observe.mjs','tests/multihost/prepare.mjs','tests/multihost/backup-restore.sh','scripts/operations/finality-monitor.mjs','scripts/operations/monitor-and-deliver.mjs','docs/qualification/local-supervisor-linux-20261015/source/known-files.pl','docs/qualification/local-supervisor-linux-20261015/source/copy-bootstrap-pairs.pl'];
 export async function hashHarness(repo,entries=harnessRoots){
  const root=await realpath(repo),base=resolve(root,'tests/multihost'),seen=new Set(),hashes={};
  async function visit(path){

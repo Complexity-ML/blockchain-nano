@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {validateLifecycleMode} from './lifecycle.mjs';
+import {freshSoftwareLocators} from './program-locators.mjs';
 // Repartition PUBLIC exporter fixtures only. Never use a production genesis.
 import {readFile,writeFile,mkdir,copyFile,cp,lstat,realpath} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
@@ -109,7 +110,7 @@ export function buildFreshNodePlan(input){
 
 const requiredFreshPrograms={
  'mac-native':['nano','p2p','exporter','bootstrapImport','bootstrapAudit','stoppedCapture'],
- 'mac-docker':['nano','p2p','bootstrapAudit','stoppedCapture'],
+ 'mac-docker':['nano','p2p','bootstrapImport','bootstrapAudit','stoppedCapture'],
  'vps-docker':['nano','p2p','bootstrapAudit','stoppedCapture']
 };
 function exactKeys(v,keys,label){freshNeed(v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).sort().join('\0')===[...keys].sort().join('\0'),label+' exact fields');}
@@ -132,13 +133,10 @@ export function validateFreshCampaignSpec(value,{target,sourceBaseRevision}){
   freshNeed(a.uid===(name==='vps-docker'?1000:501)&&a.gid===(name==='vps-docker'?1000:20),'Actual current public build owners');
   freshNeed(a.image===(name==='mac-native'?null:name==='mac-docker'?'sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb':'sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14'),'Existing immutable dependency image only');
   freshArtifact(a.coreArchive);freshArtifact(a.admission);exactKeys(a.programs,[...requiredFreshPrograms[name],...(partitionRotation?['rotationAudit']:[]),...(lifecycle?['lifecycleTool']:[]),...(lifecycle&&spec.lifecycle.runtimeDriverEnabled?['lifecycleSubmit']:[])],'Required programs');for(const z of Object.values(a.programs))freshArtifact(z);
-  const expectedCore=name==='mac-native'?a.coreBuildRoot+'/libnano_core.a':'/outputs/libnano_core.a';freshNeed(a.coreArchive.path===expectedCore,'Core archive must be selected root');
-  for(const [role,z] of Object.entries(a.programs)){
-   const leaf={nano:'nano',p2p:'nano-p2p',exporter:'nano-capella-transition-tests',bootstrapImport:'nano-capella-isolated-bootstrap-import',bootstrapAudit:'nano-capella-isolated-bootstrap-audit',stoppedCapture:'nano-capella-isolated-stopped-capture',rotationAudit:'nano-capella-rotation-audit',lifecycleTool:'nano-capella-deposit-audit',lifecycleSubmit:'nano-capella-lifecycle-submit'}[role];
-   freshNeed(z.path===(name==='mac-native'?(role==='p2p'?a.networkBuildRoot:a.coreBuildRoot):role==='p2p'?'/network-build':'/outputs')+'/'+leaf,'Program belongs to admitted current root');
-  }
+  freshSoftwareLocators(name,a);
  }
  exactKeys(spec.fixture,['seedFile','ledgerDirectory','legacyPublicIdentity'],'Fixture');freshAbsolute(spec.fixture.seedFile);freshAbsolute(spec.fixture.ledgerDirectory);freshArtifact(spec.fixture.legacyPublicIdentity);freshNeed(!spec.fixture.seedFile.startsWith(spec.fixture.ledgerDirectory+'/'),'Seed separate from persistent ledger');
+ for(const name of ownerNames)freshSoftwareLocators(name,spec.owners[name],{protectedPaths:[spec.fixture.seedFile,spec.fixture.ledgerDirectory]});
  exactKeys(spec.clock,['maximumStartupElapsedMs','maximumDowntimeMs','maximumSteps'],'Clock');for(const x of Object.values(spec.clock))freshNeed(typeof x==='string'&&/^0x[1-9a-f][0-9a-f]*$/.test(x)&&BigInt(x)<=(1n<<64n)-1n,'Finite explicit canonical fresh startup budget');
  return spec;
 }

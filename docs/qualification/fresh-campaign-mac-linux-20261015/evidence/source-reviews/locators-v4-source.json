@@ -1,0 +1,67 @@
+{
+  "claims": {
+    "physicalMountsQualified": false,
+    "privateRuntimeQualified": false,
+    "productionQualified": false,
+    "testsExecutedByReviewer": 0,
+    "v4GuardRuntimePassed": false
+  },
+  "decision": "GO_SOURCE_ONLY_PENDING_ROOT_AFFECTED_GUARD_EXECUTION",
+  "format": "nano-independent-role-locators-v4-guard-delta-review-v1",
+  "guard": {
+    "bytes": 8526,
+    "childTimeoutMs": 4000,
+    "children": 3,
+    "completeDeltaReadAgainstV3": true,
+    "creation": "EXCL0600 with file and parent fsync",
+    "newOnlyFirstAdmission": {
+      "candidateResetOnlyBeforeFirstAdmission": true,
+      "fullNineEachProbe": true,
+      "knownShaAndSizeEachProbe": true,
+      "maximumMs": 5000,
+      "minimumStableSpanMs": 2000,
+      "samples": 3
+    },
+    "oldAuthoritiesRefreshed": false,
+    "sha256": "653d95db753762c576604e9335da6d379fe3f2f0e0d9139a7bcf11c4a41323e8",
+    "strictOriginalPostChildNineShaFenceUnchanged": true,
+    "wholeTestTimeoutMs": 35000
+  },
+  "nextRootScope": "Rerun only the affected V4 guard with three bounded child refusals; reuse exact unchanged V3 pure test PASS. Root must retain the original Node authority and independently stabilize new staged source copies before first admission. An explicit TAP reporter is required by its result parser.",
+  "preservedActual02": {
+    "bytes": 1020,
+    "defaultFirstChildRefusalObserved": true,
+    "failedBatchReclassified": false,
+    "guardPassed": false,
+    "newFixtureChangedFields": [
+      "ctimeNs"
+    ],
+    "oldSourceNodeNineShaAfterPassed": true,
+    "otherEightFieldsAndKnownBytesEqual": true,
+    "physicalOsCauseKnown": false,
+    "pureLocatorPassed": true,
+    "sha256": "58325b01a5cd0792f5f924b06f7d4eaa201ff152aa8aeecc73cc3d87a6020356",
+    "wholeBatchPassed": false
+  },
+  "proposal": {
+    "allPayloadShaBytesAnd0400Verified": true,
+    "manifestBytes": 6030,
+    "manifestSha256": "946b5085d2c36f46dfdc86e37d845e509911163374a10f5357a4208f96b2039d",
+    "payloadBytes": 236195,
+    "payloads": 7
+  },
+  "reviewerActions": {
+    "dockerCompilerGitSsh": false,
+    "genericTextJsonShaChecksOnly": true,
+    "nodeOrProjectExecution": false,
+    "privateOrSdkOrOperationalFilesRead": false,
+    "publicSourceAndTypedResultOnly": true,
+    "repositoryWrites": false
+  },
+  "unchanged": {
+    "fourOtherMjsPayloadsByteEqualV3": true,
+    "nextLifecycleDocument": true,
+    "runtimeClockResourcesAndPrivatePermissions": true,
+    "sixGuardSourcePins": true
+  }
+}
