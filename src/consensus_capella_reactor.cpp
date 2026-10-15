@@ -651,6 +651,16 @@ std::optional<Bytes> CapellaDurableReactor::beacon_signed_block(const CapellaPub
  const auto record=disk_.checkpoint_archive(Bytes(id.begin(),id.end()),limits_.envelope_bytes);if(!record)return std::nullopt;
  archive_require(record->slot==found->second.header().slot);verify_archived_block(id,record->payload,*published.state,rules_,check);return record->payload;
 }
+std::optional<CapellaDurableReactor::AuthenticatedSignedBlock> CapellaDurableReactor::beacon_authenticated_block(const CapellaPublishedStore& published,const ConsensusRoot& id,const std::function<void()>& check)const{
+ const auto found=published.state->blocks.find(id);
+ if(found!=published.state->blocks.end()){
+  auto wire=beacon_signed_block(published,id,check);if(!wire)return std::nullopt;
+  return AuthenticatedSignedBlock{found->second.header(),std::move(*wire),false};
+ }
+ // Historical proof/cache access keeps its existing mutex, but its anchor,
+ // registry, fork and retained ancestry come from THIS pinned HTTP publication.
+ std::lock_guard lock(mutex_);return signed_block_from_store_locked(*published.state,id,check);
+}
 CapellaPublishedStore CapellaDurableReactor::current()const{std::lock_guard lock(mutex_);require_available();return {state_,*token_};}
 CapellaReferenceSnapshotCacheUsage CapellaDurableReactor::reference_snapshot_cache_usage()const{std::lock_guard lock(mutex_);require_available();return reference_cache_.usage();}
 CapellaSignedVotes CapellaDurableReactor::signed_votes()const{std::lock_guard lock(mutex_);require_available();return votes_;}
@@ -799,15 +809,18 @@ std::optional<Bytes> CapellaDurableReactor::signed_block(const ConsensusRoot& id
  std::lock_guard lock(mutex_);return signed_block_locked(id,check);
 }
 std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusRoot& id,const std::function<void()>& check)const{
+ require_available();auto authenticated=signed_block_from_store_locked(*state_,id,check);if(!authenticated)return std::nullopt;return std::move(authenticated->wire);
+}
+std::optional<CapellaDurableReactor::AuthenticatedSignedBlock> CapellaDurableReactor::signed_block_from_store_locked(const CapellaForkStore& store,const ConsensusRoot& id,const std::function<void()>& check)const{
  require_available();if(check)check();
  const auto record=disk_.checkpoint_archive(Bytes(id.begin(),id.end()),limits_.envelope_bytes);if(!record)return std::nullopt;
- if(state_->blocks.contains(id)){
-  archive_require(record->slot==state_->blocks.at(id).header().slot);verify_archived_block(id,record->payload,*state_,rules_,check);return record->payload;
+ if(store.blocks.contains(id)){
+  archive_require(record->slot==store.blocks.at(id).header().slot);verify_archived_block(id,record->payload,store,rules_,check);return AuthenticatedSignedBlock{store.blocks.at(id).header(),record->payload,false};
  }
  // Historical serving is anchored in the current authenticated FINALIZED
  // ancestry, not in a peer's hint or an arbitrary signed archive key. Registry
  // entries/public keys are append-only; the receiver still replays admission.
- const auto anchor_pin=state_->blocks.at(state_->timed.view.anchor).lease(check);const auto& anchor=*anchor_pin;
+ const auto anchor_pin=store.blocks.at(store.timed.view.anchor).lease(check);const auto& anchor=*anchor_pin;
  const auto header=archived_header(record->payload,rules_,check);
  archive_require(record->slot==header.slot&&consensus_beacon_header_root(header)==id);
  if(header.slot>=anchor.header.slot)return std::nullopt;
@@ -837,7 +850,7 @@ std::optional<Bytes> CapellaDurableReactor::signed_block_locked(const ConsensusR
  const auto proposer=context.registry.validators.find(header.proposer_index);archive_require(proposer!=context.registry.validators.end());
  const auto epoch=header.slot/r.consensus.epoch.ffg.slots_per_epoch;
  const auto version=archive_array<4>(anchor.state.ssz,epoch<archive_number(anchor.state.ssz,56)?48:52);
- archive_require(verify_consensus_beacon_header(header,version,archive_array<32>(anchor.state.ssz,8),proposer->second.public_key,std::span(record->payload).subspan(4,96)));if(check)check();return record->payload;
+ archive_require(verify_consensus_beacon_header(header,version,archive_array<32>(anchor.state.ssz,8),proposer->second.public_key,std::span(record->payload).subspan(4,96)));if(check)check();return AuthenticatedSignedBlock{header,record->payload,true};
 }
 
 std::vector<ConsensusRoot> CapellaDurableReactor::exit_roots_locked(const std::function<void()>& check)const{
@@ -1177,6 +1190,13 @@ AuthenticatedCheckpointBlobClosure authenticate_capella_checkpoint_blob_closure(
   {"networkAnchor",hex(Bytes(network.begin(),network.end()))},
   {"genesisValidatorsRoot",hex(Bytes(context.genesis_root.begin(),context.genesis_root.end()))},
   {"genesisTimeMs",quantity(Int(std::to_string(store.timed.clock.genesis_time_ms)))}};
+ const auto checkpoint=[](const ConsensusCheckpoint& value){return Json{{"epoch",quantity(Int(std::to_string(value.epoch)))},{"root",hex(Bytes(value.root.begin(),value.root.end()))}};};
+ closure.observation_={{"format","nano-capella-authenticated-checkpoint-observation-v1"},
+  {"headSlot",quantity(Int(std::to_string(head->header.slot)))},{"genesisTimeMs",quantity(Int(std::to_string(store.timed.clock.genesis_time_ms)))},
+  {"timeMs",quantity(Int(std::to_string(store.timed.clock.time_ms)))},
+  {"finalized",checkpoint(store.timed.view.finalized)},{"justified",checkpoint(store.timed.view.justified)},
+  {"retainedBlocks",store.blocks.size()},
+  {"pending",{{"attestations",votes.size()},{"attesterSlashings",slashings.size()},{"blsChanges",changes.size()},{"exits",exits.size()},{"proposerSlashings",proposers.size()}}}};
  if(check)check();closure.head_context_=std::move(context);return closure;
 }
 }

@@ -29,3 +29,52 @@ for(const [name,alter] of [
  ['short root',r=>r.finalized.root='0xaa'],
  ['absent root',r=>delete r.finalized.root]
 ])test('restore audit refuses '+name,()=>{const r=receipt();alter(r);assert.throws(()=>restoreAuditRequest(node(),r),/stopped finalized checkpoint/);});
+
+const publicKey=n=>'0x'+n.repeat(96);
+function automaticFixture(){
+ const n=node(),r=receipt();
+ n.capella.validator.keys=[
+  {...n.capella.validator.keys[0],index:null,keyEnv:'FRESH_PENDING_ALPHA'},
+  {...n.capella.validator.keys[1],index:null,keyEnv:'FRESH_PENDING_BETA'}
+ ];
+ const identities=[{keyEnv:'FRESH_PENDING_ALPHA',publicKey:publicKey('a')},{keyEnv:'FRESH_PENDING_BETA',publicKey:publicKey('b')}];
+ r.validatorKeys=[{index:null,publicKey:publicKey('b'),restart:pin(2)},{index:null,publicKey:publicKey('a'),restart:pin(1)}];
+ return {n,r,identities};
+}
+test('automatic signers bind independent public keys without resolving or inventing indices',()=>{
+ const {n,r,identities}=automaticFixture(),before=structuredClone({n,r,identities});
+ const restored=pinnedRestoreConfiguration(n,r,identities.slice().reverse());
+ assert.deepEqual(restored.capella.validator.keys.map(k=>k.index),[null,null]);
+ assert.deepEqual(restored.capella.validator.keys.map(k=>k.restart),[pin(1),pin(2)]);
+ assert.equal(restored.capella.validator.keys[0].publicKey,undefined);
+ assert.deepEqual({n,r,identities},before);
+ restored.capella.validator.keys[0].restart.digest='0x'+'f'.repeat(64);
+ assert.deepEqual(r,before.r);
+});
+test('mixed indexed and automatic receipt preserves each configured identity and paths',()=>{
+ const {n,r,identities}=automaticFixture();
+ n.capella.validator.keys[0].index='0x0';r.validatorKeys[1]={index:'0x0',restart:pin(1)};
+ const restored=pinnedRestoreConfiguration(n,r,identities);
+ assert.deepEqual(restored.capella.validator.keys.map(k=>k.index),['0x0',null]);
+ assert.deepEqual(restored.capella.validator.keys.map(k=>k.restart),[pin(1),pin(2)]);
+ assert.equal(restored.capella.validator.keys[1].recoveryWitness,n.capella.validator.keys[1].recoveryWitness);
+});
+for(const [name,alter] of [
+ ['missing independent authority',f=>delete f.identities],
+ ['missing identity row',f=>f.identities.pop()],
+ ['wrong independent public key',f=>f.identities[0].publicKey=publicKey('c')],
+ ['duplicate independent public key',f=>f.identities[1].publicKey=f.identities[0].publicKey],
+ ['duplicate independent environment',f=>f.identities[1].keyEnv=f.identities[0].keyEnv],
+ ['foreign environment',f=>f.identities[0].keyEnv='UNKNOWN'],
+ ['malformed public key',f=>f.r.validatorKeys[0].publicKey='0x01'],
+ ['duplicate automatic receipt',f=>f.r.validatorKeys[0].publicKey=f.r.validatorKeys[1].publicKey],
+ ['substituted receipt public key',f=>f.r.validatorKeys[0].publicKey=publicKey('d')],
+ ['guessed resolved index',f=>f.r.validatorKeys[0]={index:'0x40',restart:pin(2)}],
+ ['missing receipt public key',f=>delete f.r.validatorKeys[0].publicKey],
+ ['null substituted into indexed identity',f=>{f.n.capella.validator.keys[0].index='0x0';}],
+ ['extra authority field',f=>f.identities[0].index='0x40'],
+ ['duplicate configured identity',f=>f.n.capella.validator.keys[1].keyEnv=f.n.capella.validator.keys[0].keyEnv]
+])test('automatic restore refuses '+name,()=>{
+ const f=automaticFixture();alter(f);const before=structuredClone(f);
+ assert.throws(()=>pinnedRestoreConfiguration(f.n,f.r,f.identities));assert.deepEqual(f,before);
+});

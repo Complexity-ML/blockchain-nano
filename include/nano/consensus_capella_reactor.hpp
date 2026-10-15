@@ -54,6 +54,11 @@ class CapellaDurableReactor {
  // Use shared_ptr atomic free functions for Apple libc++ compatibility.
  // Every access must remain atomic, including invalidation and restoration.
  std::shared_ptr<const CapellaPublishedStore> beacon_publication_;
+ // Both fields come from one authenticated store; historical means a proved
+ // strict finalized prefix before that store's retained anchor, never a hint.
+ struct AuthenticatedSignedBlock {ConsensusBeaconHeader header;Bytes wire;bool historical=false;};
+ std::optional<AuthenticatedSignedBlock> signed_block_from_store_locked(const CapellaForkStore&,const ConsensusRoot&,const std::function<void()>&)const;
+ std::optional<AuthenticatedSignedBlock> beacon_authenticated_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
  CapellaPublishedStore beacon_snapshot()const;
  std::optional<Bytes> beacon_signed_block(const CapellaPublishedStore&,const ConsensusRoot&,const std::function<void()>&)const;
  CapellaSignedVotes votes_,slashings_;CapellaPendingBlsChanges bls_changes_;CapellaPendingExits exits_;CapellaPendingProposerSlashings proposer_slashings_;CapellaStoreSnapshotCache cache_;CapellaReferenceSnapshotCache reference_cache_;bool unavailable_=false;bool automatic_pruning_=false;bool historical_state_pruning_=false;

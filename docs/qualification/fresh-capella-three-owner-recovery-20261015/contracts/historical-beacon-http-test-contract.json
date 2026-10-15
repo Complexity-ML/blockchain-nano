@@ -1,0 +1,133 @@
+{
+  "format": "nano-capella-historical-beacon-test-contract-v1",
+  "status": "SOURCE_ONLY_NOT_EXECUTED_BY_AUTHOR",
+  "target": "nano-capella-transition-tests",
+  "selector": "--historical-beacon-http",
+  "ctest": "consensus_capella_historical_beacon_http",
+  "timeoutSeconds": 180,
+  "label": "qualification_consensus_recovery",
+  "legacySelectorPreserved": "--historical-export",
+  "fixture": "Existing real minimal Capella finality fixture: signed blocks/votes, native deposit history, durable pruning, owner destruction and cold reopen; no new trust anchor or production keys.",
+  "fixtureLocalFinalityEndSlot": "5 * slots_per_epoch + 1; existing minimal profile unchanged",
+  "directPublicEntryPoint": "CapellaDurableReactor::beacon_read",
+  "httpHandlerResponsesVerified": true,
+  "tcpServerOrNetworkExercised": false,
+  "newScenarioRows": [
+    {
+      "scenario": "capella-historical-beacon-pruned-json-ssz",
+      "equals": {
+        "result": "PASS",
+        "reopenedPrunedOwner": true,
+        "canonicalAndFinalized": true,
+        "readSignatures": 0,
+        "checkpointUnchanged": true,
+        "networkTransport": false,
+        "productionQualified": false
+      },
+      "integerFields": {
+        "historicalRoots": {
+          "minimum": 1,
+          "relation": "all archive roots strictly below retained anchor and above original trusted anchor",
+          "maximum": 63
+        },
+        "walkedBlocks": {
+          "relation": "historicalRoots + 1; starts at retained finalized anchor and stops before original trusted anchor",
+          "minimum": 2,
+          "maximum": 64
+        }
+      }
+    },
+    {
+      "scenario": "capella-historical-beacon-authentication-refusals",
+      "equals": {
+        "result": "PASS",
+        "mutationFamilies": 6,
+        "routeAttempts": 24,
+        "refusals": 22,
+        "boundedSuccessfulRetries": 2,
+        "unknownSelectorRefusals": 3,
+        "cancelledReads": 2,
+        "readSignatures": 0,
+        "checkpointUnchanged": true,
+        "networkTransport": false,
+        "productionQualified": false
+      }
+    },
+    {
+      "scenario": "capella-historical-beacon-pinned-publication",
+      "equals": {
+        "result": "PASS",
+        "publishedAfterSnapshotCapture": true,
+        "oldHeadSszPreserved": true,
+        "newCheckpointCommitted": true,
+        "readSignatures": 0,
+        "networkTransport": false,
+        "productionQualified": false
+      }
+    },
+    {
+      "scenario": "capella-historical-beacon-summary",
+      "equals": {
+        "result": "PASS",
+        "newGroups": 3,
+        "newRows": 4,
+        "maximumTestFixtureBlsSignatures": 4096,
+        "signatureCounterKind": "Key::sign BLS only; ECDSA fixture transactions excluded",
+        "readSignatures": 0,
+        "privateInputsRead": false,
+        "childProcesses": 0,
+        "networkTransport": false,
+        "productionQualified": false
+      },
+      "integerFields": {
+        "beaconReadCalls": {
+          "minimum": 1,
+          "source": "incremented on every call through the new wrapper; reported actual, no guessed total",
+          "maximum": 224
+        },
+        "testFixtureBlsSignatures": {
+          "minimum": 1,
+          "maximum": 4096,
+          "source": "actual completed blst_sign_pk_in_g1 calls through Key::sign in this selector"
+        }
+      }
+    }
+  ],
+  "totalNewRows": 4,
+  "totalNewGroups": 3,
+  "legacyFixtureRowsAlsoEmitted": true,
+  "entireStdoutRowCountFixedByThisContract": false,
+  "signedBytesOracle": "Independent unpruned owner signed_block bytes plus retained original headers; full response.ssz and beacon_block_json projection must match exactly.",
+  "headerOracle": "All five header fields, exact signature, root, canonical/finalized flags match the authenticated archive.",
+  "ancestryOracle": "Follow returned signed parent_root across actual pruned anchor to the original trusted anchor, with old.blocks.size work bound. Never skip 404 and never request an invented signed trusted anchor.",
+  "negativeFamilies": [
+    "signature byte changed",
+    "body byte changed",
+    "archive slot metadata changed",
+    "valid separately signed foreign branch",
+    "immediate archive parent below anchor omitted",
+    "same bounded depth budget: first request refuses, second resumes previously authenticated prefix"
+  ],
+  "negativeStructure": "Six families x two routes x two repeated attempts, using an independent cold reactor/cache per route. Twenty-two non-200/invalid_argument refusals and two bounded successful retries. Corruption is not forced into HTTP404.",
+  "unchangedSelectors": [
+    "unknown all-ff root returns404",
+    "genesis signed header remains404",
+    "pruned numeric slot remains404"
+  ],
+  "cancellation": [
+    "First callback after snapshot capture: BeaconReadPhase::publication, no changed checkpoint.",
+    "Warm header control derives its preceding archive checkpoint from total callbacks minus the one final projection check. Cancellation must report BeaconReadPhase::archive and preserve checkpoint."
+  ],
+  "capturedPublicationOracle": "The first callback after beacon_snapshot admits the next already-signed valid block. The read must return the old captured HEAD SSZ while the durable current token advances. No signer is called by that read.",
+  "signatureAccounting": "4096 is an enforced test-only BLS ceiling checked before each Key::sign cryptographic call, not an expected measured result. Actual completed BLS calls are emitted. Existing fixture ECDSA transaction signatures are outside this counter. No total-signature claim is made.",
+  "resources": "Existing minimal profile and production blocks/envelope/cache/replay budgets unchanged. CTest timeout180s; ROOT measures actual resources externally.",
+  "codeScope": [
+    "tests/test_capella_transition.cpp",
+    "CMakeLists.txt"
+  ],
+  "baselineCmake": "Current composed D/source CMake af7ed434, preserving import/capture targets, not raw repository CMake.",
+  "productionQualified": false,
+  "runtimeRecoveryQualified": false,
+  "run04FailurePreserved": true,
+  "projectProgramsCompilersOrTestsExecutedByAuthor": false
+}

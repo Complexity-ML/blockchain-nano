@@ -1,0 +1,90 @@
+{
+  "status": "FAILED_AFTER_THREE_RUNTIMES_STARTED",
+  "elapsedSecondsReportedByRoot": 198.262,
+  "outerTimeout": false,
+  "preAdmissionQuiescence": {
+    "probes": 5,
+    "elapsedMs": 4328,
+    "stableSpanMs": 2162
+  },
+  "transport": {
+    "archivesVerified": 2,
+    "filesExtracted": 672,
+    "directoriesExtracted": 74
+  },
+  "sourceAfterTransport": {
+    "entries": 1432,
+    "strictFiles": 1302,
+    "directories": 130,
+    "changedDirectoryTimes": 122,
+    "changedRootTimeFields": 2,
+    "allEightRecordedFileFieldsAndShaUnchanged": true
+  },
+  "startupIdentityChecks": {
+    "distinctPeerIds": 3,
+    "sameExecutionGenesis": true
+  },
+  "firstFailure": {
+    "stage": "initial-required-beacon-ancestry-observation",
+    "httpStatus": 404,
+    "owner": "mac-docker",
+    "reason": "required ancestor block not retained",
+    "sourceDiagnosis": "Required root is the parent immediately below the pruned finalized anchor; retained-only Beacon route did not expose the existing authenticated historical archive path."
+  },
+  "initialFinalityPass": false,
+  "vpsRestoreAttempted": false,
+  "nativeAndTunnelAbsentAfterStopReportedByRoot": true,
+  "dockerAbsenceFinalCheck": {
+    "macRunningFreshCampaignContainers": 0,
+    "vpsRunningFreshCampaignContainers": 0,
+    "source": "ROOT public stop/absence receipt"
+  },
+  "secondaryFailure": "missing restored-finality output during final fence",
+  "cause": "SOURCE_GAP_IDENTIFIED_CORRECTIVE_SOURCE_FROZEN_ACTUAL_RESULT_PENDING",
+  "productionQualified": false,
+  "completedDistinctCommonFinalityAdvancesQualified": 0,
+  "runtimeStarted": true,
+  "runtimeInstances": 3,
+  "physicalHosts": 2,
+  "stoppedCapturePairsObservedByRoot": 3,
+  "stoppedCaptureCanonicalHistoryQualified": false,
+  "observedStopCheckpoint": {
+    "sameAcrossOwners": true,
+    "finalized": {
+      "epoch": "0x2",
+      "root": "0xc94798248e65a42cd05bd2839b29628bb1de41370f3888dffc7f8aa59f285100"
+    },
+    "justifiedEpoch": "0x3",
+    "clocksHealthy": true,
+    "validatorHealthy": true,
+    "validatorFailure": null,
+    "ownerOrder": [
+      "mac-native",
+      "mac-docker",
+      "vps-docker"
+    ],
+    "proposalsAdmitted": [
+      7,
+      10,
+      9
+    ],
+    "attestationsAdmitted": [
+      50,
+      51,
+      96
+    ],
+    "syncMessagesAdmitted": [
+      250,
+      135,
+      442
+    ],
+    "awaitingRegistration": [
+      0,
+      0,
+      1
+    ],
+    "provesObservedStopCheckpointAndDutiesOnly": true,
+    "provesDistinctLiveAdvancesOrRestore": false
+  },
+  "ownedVolumesAndPrivateArtifactsRetained": true
+}

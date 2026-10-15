@@ -1,0 +1,55 @@
+{
+  "format": "nano-capella-historical-beacon-source-contract-v2",
+  "productionFiles": [
+    "include/nano/consensus_capella_reactor.hpp",
+    "src/consensus_capella_reactor.cpp",
+    "src/capella_beacon_api.cpp"
+  ],
+  "publicApiChanged": false,
+  "classDataMembersAdded": false,
+  "durableFormatsChanged": false,
+  "rootLookupOnlyExtension": true,
+  "publishedStoreBinding": "explicit const CapellaForkStore from the exact pinned CapellaPublishedStore; never a newer state_",
+  "retainedReadPath": "existing authenticated helper without admission mutex; callback count unchanged",
+  "historicalReadPath": "existing mutex-protected bounded finalized-prefix proof factored with explicit store argument",
+  "proofChecksPreserved": [
+    "root/header/body commitment",
+    "strict descending slots",
+    "hash-linked ancestry from pinned retained anchor",
+    "requested block signature against pinned anchor registry/fork/genesis",
+    "bounded existing historical cache and limits.blocks/envelope_bytes",
+    "availability/cancellation checks"
+  ],
+  "historicalProjection": {
+    "canonical": true,
+    "finalized": true,
+    "requires": "strict prefix proved below pinned finalized anchor"
+  },
+  "missingOrUnproved": "404",
+  "corrupt": "existing invalid_argument refusal or non-200",
+  "numericSlotAndGenesisBehaviorChanged": false,
+  "observer404Ignored": false,
+  "budgetsRaised": false,
+  "regressionSelector": "--historical-beacon-http",
+  "regressionAuthoredSeparatelyBy": "recovery_clock_review",
+  "requiredNewScenarios": [
+    "immediate pruned parent and deeper prefix header/JSON/SSZ equality",
+    "cold reopen after real finalized pruning",
+    "unknown/missing and all inherited corrupt/wrong-branch/incomplete/budget refusals",
+    "cancellation and captured-publication versus later writer",
+    "read-only durable commitments preserved"
+  ],
+  "executionByAuthor": false,
+  "currentActualFailureRetained": "run04 FAILED; no production/canonical replay promotion",
+  "productionQualified": false,
+  "effectiveParentComposition": {
+    "reactorBaselineSha256": "46be37e5d644f3ab323ad6f8b209a5d516735d324993c10df81b17e26f48ad7d",
+    "reactorBaselineBytes": 124866,
+    "inheritedSealedObservationBytes": 825,
+    "inheritedSealedObservationPreservedByteExactly": true,
+    "historicalFixEquivalentToV1": true,
+    "headerAndBeaconApiBytesIdenticalToV1": true,
+    "currentComposedCmakeMustBeRetained": "af7ed43465435c1bbc258cf27ef0e958187341108803ffc8a7583747ae05bf1d",
+    "v1PreflightRefusalPreserved": true
+  }
+}

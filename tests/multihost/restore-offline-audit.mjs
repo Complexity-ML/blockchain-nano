@@ -1,9 +1,9 @@
 import {restoreAuditRequest,validateRestoredFinality,pinnedRestoreConfiguration} from './restore-config.mjs';
 // Observation and stop commitments arrive separately; never derive either
 // checkpoint from the restored database or from the audit's response.
-export function restoredFinalityAuditRequest(original,prior,stable,terminal){
+export function restoredFinalityAuditRequest(original,prior,stable,terminal,signerIdentities){
  validateRestoredFinality(prior,stable,terminal);
- pinnedRestoreConfiguration(original,terminal);
+ pinnedRestoreConfiguration(original,terminal,signerIdentities);
  return {...restoreAuditRequest(original,terminal),requiredFinalized:{epoch:'0x'+BigInt(stable.lastCheckpoint.epoch).toString(16),root:stable.lastCheckpoint.root}};
 }
 export function verifyRestoredFinalityAudit(request,terminal,audit){

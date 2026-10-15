@@ -156,20 +156,21 @@ BeaconReadResponse CapellaDurableReactor::beacon_read(std::string_view path,cons
   }
   if(!found)return error(404,"Block slot not retained on canonical branch");
  }
- const auto block=store.blocks.find(id);if(block==store.blocks.end())return error(404,"Block not retained");
- // Archive access still authenticates under the DB lock. If maintenance has
- // removed this root meanwhile, fail rather than fall back to the newer head.
+ // Absence from the retained Store can be a pruned finalized prefix. Only
+ // the same bounded/authenticated durable archive path may supply that root.
  phase=BeaconReadPhase::archive;
- const auto signed_block=beacon_signed_block(snapshot,id,check);if(!signed_block)return error(404,"Signed block not retained");
+ const auto authenticated=beacon_authenticated_block(snapshot,id,check);if(!authenticated)return error(404,store.blocks.contains(id)?"Signed block not retained":"Block not retained");
+ const auto& signed_block=authenticated->wire;const auto& h=authenticated->header;
+ const bool historical=authenticated->historical;
  phase=BeaconReadPhase::projection;
- if(full){const auto finalized=ancestor(store.timed.view.finalized.root,id);phase=BeaconReadPhase::projection;return {200,{{"version","capella"},{"execution_optimistic",false},{"finalized",finalized},{"data",beacon_block_json(*signed_block,rules,check)}},*signed_block,"capella"};}
- const auto& h=block->second.header();auto root=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
+ if(full){const auto finalized=historical||ancestor(store.timed.view.finalized.root,id);phase=BeaconReadPhase::projection;return {200,{{"version","capella"},{"execution_optimistic",false},{"finalized",finalized},{"data",beacon_block_json(signed_block,rules,check)}},signed_block,"capella"};}
+ auto root=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
  Json message={{"slot",std::to_string(h.slot)},{"proposer_index",std::to_string(h.proposer_index)},
   {"parent_root",root(h.parent_root)},{"state_root",root(h.state_root)},{"body_root",root(h.body_root)}};
  if(check)check();
- return {200,{{"execution_optimistic",false},{"finalized",ancestor(store.timed.view.finalized.root,id)},
-  {"data",{{"root",root(id)},{"canonical",ancestor(head_id,id)},
-   {"header",{{"message",std::move(message)},{"signature",octets(*signed_block,4,96)}}}}}}};
+ return {200,{{"execution_optimistic",false},{"finalized",historical||ancestor(store.timed.view.finalized.root,id)},
+  {"data",{{"root",root(id)},{"canonical",historical||ancestor(head_id,id)},
+   {"header",{{"message",std::move(message)},{"signature",octets(signed_block,4,96)}}}}}}};
  }catch(const ExecutionCancelled&){throw BeaconReadCancelled(phase,uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()));}
 }
 }

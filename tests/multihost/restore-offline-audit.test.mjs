@@ -7,3 +7,14 @@ test('separate observed root and terminal commitment bind different epochs witho
 for(const [name,alter] of [['legacy report',a=>delete a.externalFinalizedAncestorVerified],['unverified replay',a=>a.canonicalHistoryVerified=false],['wrong sequence',a=>a.checkpointSequence=8],['unsafe sequence',a=>a.checkpointSequence=Number.MAX_SAFE_INTEGER+1],['wrong digest',a=>a.checkpointDigest=root('a')],['wrong observed root',a=>a.requiredFinalized.root=root('a')],['wrong observed epoch',a=>a.requiredFinalized.epoch='0x4'],['missing observed checkpoint',a=>delete a.requiredFinalized],['wrong terminal root',a=>a.finalized={epoch:'0x6',root:root('a')}],['wrong terminal epoch',a=>a.finalized={epoch:'0x7',root:root('6')}],['missing terminal checkpoint',a=>delete a.finalized]])test('refuses '+name,()=>{const f=fixture();alter(f.audit);assert.throws(()=>verifyRestoredFinalityAudit(f.request,f.terminal,f.audit));});
 test('old/incomplete observed evidence cannot generate a native proof request',()=>{const f=fixture();delete f.stable.lastCheckpoint;assert.throws(()=>restoredFinalityAuditRequest(f.original,f.prior,f.stable,f.terminal));});
 test('missing signer witness prevents request generation before offline audit',()=>{const f=fixture();delete f.original.capella.validator.keys[0].recoveryWitness;assert.throws(()=>restoredFinalityAuditRequest(f.original,f.prior,f.stable,f.terminal));});
+
+test('restored finality audit accepts an independently bound automatic signer without an index guess',()=>{
+ const f=fixture(),publicKey='0x'+'a'.repeat(96),keyEnv='NEW_DOMAIN_AUTO';
+ f.original.capella.validator.keys[0].index=null;f.original.capella.validator.keys[0].keyEnv=keyEnv;
+ f.terminal.validatorKeys[0].index=null;f.terminal.validatorKeys[0].publicKey=publicKey;
+ const identities=[{keyEnv,publicKey}];
+ const request=restoredFinalityAuditRequest(f.original,f.prior,f.stable,f.terminal,identities);
+ assert.deepEqual(request.expectedCheckpoint,f.terminal.restart);
+ assert.throws(()=>restoredFinalityAuditRequest(f.original,f.prior,f.stable,f.terminal));
+ assert.throws(()=>restoredFinalityAuditRequest(f.original,f.prior,f.stable,f.terminal,[{keyEnv,publicKey:'0x'+'b'.repeat(96)}]));
+});

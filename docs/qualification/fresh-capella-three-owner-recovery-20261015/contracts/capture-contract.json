@@ -1,0 +1,227 @@
+{
+  "format": "nano-isolated-stopped-complete-capture-source-test-contract-v1",
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "requiredCoreComponent": {
+    "path": "core-manifest.json",
+    "sha256": "43ef993f43223f03eb0646f71562cc4dbb731aba0e7d9c0500a657a3fbb3a94a",
+    "bytes": 2057
+  },
+  "capture": {
+    "target": "nano-capella-isolated-stopped-capture",
+    "arguments": [
+      "--capture",
+      "PUBLIC_MANIFEST",
+      "PUBLIC_RUNTIME_CONFIG",
+      "EXTERNAL_STOP_RECEIPT",
+      "OBSERVED_DATA_OWNER_ROOT",
+      "OBSERVED_WITNESS_OWNER_ROOT",
+      "mac-native|mac-docker|vps-docker"
+    ],
+    "outputFormat": "nano-isolated-stopped-recovery-pins-v1",
+    "supportedFormats": "Every hot/cold/fragmented/durable representation accepted by the real complete restore_durable decoder; no independent JSON format whitelist or repair path",
+    "sourceOwners": [
+      {
+        "name": "mac-native",
+        "firstValidator": 0,
+        "count": 16
+      },
+      {
+        "name": "mac-docker",
+        "firstValidator": 16,
+        "count": 16
+      },
+      {
+        "name": "vps-docker",
+        "firstValidator": 32,
+        "count": 33
+      }
+    ],
+    "publicKeyInventory": 65,
+    "physicalRules": "Owned canonical disjoint roots; regular single-link files, distinct role inodes; exact full recorded tree byte/material inventory before/after; all DB opens read-only; no malicious same-UID writer exclusion claim",
+    "authenticatedObservation": "Sealed copy from the same fully decoded Store; description() remains exactly identity/executionHead/references",
+    "pendingSemantics": "All five durable queues pass existing canonical decoder authentication; the new focused fixture exercises a nonempty proposer-slashing queue",
+    "firstCapture": {
+      "observedWitnessPairsAuthenticated": true,
+      "externalWitnessTokensMatched": false
+    },
+    "optionalWitnessCommitments": {
+      "format": "nano-isolated-stopped-external-witness-commitments-v1",
+      "sourceCaptureSha256": "externally retained first report digest, 64 lowercase hex digits",
+      "core": "actual separately retained W ForkCheckpointToken",
+      "validatorKeys": "one actual W token per configured key; indexed identity or index:null plus publicKey for pending validator64"
+    },
+    "subsequentPinnedCapture": {
+      "externalWitnessTokensMatched": true,
+      "condition": "Every actual core and signing W token equals the supplied independent pin; caller separately authenticates the retained report digest/provenance"
+    },
+    "externalAuthorityRequired": [
+      "all source writers stopped and remain stopped",
+      "primary tokens from actual independently retained runtime stop receipt",
+      "witness pins and first-report digest retained outside copied roots before second capture/copy",
+      "operator authenticates stop nonce and input descriptors"
+    ],
+    "separateAuditRequired": {
+      "canonicalHistoryReplayVerified": false,
+      "historicalTokenDigestAncestryVerified": false,
+      "tool": "nano audit-capella with independently pinned profile/anchor/checkpoint/finality, separate from capture"
+    },
+    "writes": 0,
+    "privateKeysRead": false,
+    "envRead": false,
+    "signerCallbacksInvoked": 0,
+    "newSignaturesCreated": 0,
+    "runtimeStarted": false,
+    "networkUsed": false,
+    "productionQualified": false
+  },
+  "test": {
+    "target": "nano-isolated-stopped-capture-format-tests",
+    "selector": "--self-test",
+    "ctest": "consensus_isolated_stopped_capture_formats",
+    "ctestTimeoutSeconds": 180,
+    "childTimeoutSeconds": 25,
+    "rssMaximumKiB": 131072,
+    "requiredCompileDefinitions": [
+      "NANO_TEST_SOURCE",
+      "NANO_TEST_CAPTURE"
+    ],
+    "cmakeOverlayOwner": "fresh-capella-multihost-proposal-20261015",
+    "rows": [
+      {
+        "scenario": "stopped-capture-hot-v5",
+        "equals": {
+          "result": "PASS",
+          "actualCaptureCliInvocations": 2,
+          "captureSuccesses": 2,
+          "captureRefusals": 0,
+          "testFixtureSignatures": 4,
+          "captureSignatures": 0,
+          "privateInputsRead": false,
+          "runtimeDutiesQualified": false,
+          "productionQualified": false
+        },
+        "integerFields": {
+          "maxRssKiB": {
+            "minimum": 1,
+            "maximum": 131072
+          }
+        }
+      },
+      {
+        "scenario": "stopped-capture-cold-v5",
+        "equals": {
+          "result": "PASS",
+          "actualCaptureCliInvocations": 4,
+          "captureSuccesses": 4,
+          "captureRefusals": 0,
+          "testFixtureSignatures": 4,
+          "captureSignatures": 0,
+          "privateInputsRead": false,
+          "runtimeDutiesQualified": false,
+          "productionQualified": false
+        },
+        "integerFields": {
+          "maxRssKiB": {
+            "minimum": 1,
+            "maximum": 131072
+          }
+        }
+      },
+      {
+        "scenario": "stopped-capture-fragmented-v5",
+        "equals": {
+          "result": "PASS",
+          "actualCaptureCliInvocations": 6,
+          "captureSuccesses": 6,
+          "captureRefusals": 0,
+          "testFixtureSignatures": 4,
+          "captureSignatures": 0,
+          "privateInputsRead": false,
+          "runtimeDutiesQualified": false,
+          "productionQualified": false
+        },
+        "integerFields": {
+          "maxRssKiB": {
+            "minimum": 1,
+            "maximum": 131072
+          }
+        }
+      },
+      {
+        "scenario": "stopped-capture-external-pins-refused",
+        "equals": {
+          "result": "PASS",
+          "actualCaptureCliInvocations": 8,
+          "captureSuccesses": 6,
+          "captureRefusals": 2,
+          "testFixtureSignatures": 4,
+          "captureSignatures": 0,
+          "privateInputsRead": false,
+          "runtimeDutiesQualified": false,
+          "productionQualified": false
+        },
+        "integerFields": {
+          "maxRssKiB": {
+            "minimum": 1,
+            "maximum": 131072
+          }
+        }
+      },
+      {
+        "scenario": "stopped-capture-missing-corrupt-cold-refs-refused",
+        "equals": {
+          "result": "PASS",
+          "actualCaptureCliInvocations": 10,
+          "captureSuccesses": 6,
+          "captureRefusals": 4,
+          "testFixtureSignatures": 4,
+          "captureSignatures": 0,
+          "privateInputsRead": false,
+          "runtimeDutiesQualified": false,
+          "productionQualified": false
+        },
+        "integerFields": {
+          "maxRssKiB": {
+            "minimum": 1,
+            "maximum": 131072
+          }
+        }
+      },
+      {
+        "scenario": "stopped-capture-summary",
+        "equals": {
+          "result": "PASS",
+          "actualCaptureCliInvocations": 10,
+          "captureSuccesses": 6,
+          "captureRefusals": 4,
+          "testFixtureSignatures": 4,
+          "captureSignatures": 0,
+          "privateInputsRead": false,
+          "runtimeDutiesQualified": false,
+          "productionQualified": false,
+          "semanticGroups": 5
+        },
+        "integerFields": {
+          "maxRssKiB": {
+            "minimum": 1,
+            "maximum": 131072
+          }
+        }
+      }
+    ],
+    "testFixtures": "Fresh temporary independent synthetic RocksDB stores; public disjoint TestKey scalars; exactly four setup-only BLS signatures, no imported operational journals",
+    "externalStopFixtureAuthority": "Test-generated actual checkpoint tokens retained before child, explicitly not a production runtime-stop receipt",
+    "failureMutations": "Only synthetic cold fixture required-blob key; missing and corrupt bytes are installed with DB handles closed before refusal inventory",
+    "noOldSuiteReplay": true,
+    "rssMeasurement": "consumer RUSAGE_SELF only; Process helper does not measure child RSS"
+  },
+  "scope": {
+    "sourceOnly": true,
+    "testsExecutedByAuthor": 0,
+    "projectProgramsExecutedByAuthor": 0,
+    "actualQualification": "PENDING_ROOT",
+    "runtimeDutiesQualified": false,
+    "originalRecoveryQualified": false,
+    "productionQualified": false
+  }
+}

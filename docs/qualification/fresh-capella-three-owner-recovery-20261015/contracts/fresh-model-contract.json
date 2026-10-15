@@ -1,0 +1,53 @@
+{
+  "format": "nano-fresh-capella-pure-model-test-contract-v2",
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "source": "tests/multihost/fresh-model-fixture-check.mjs",
+  "arguments": [
+    "EXPORTED_NEW_FIXTURE",
+    "BOOTSTRAP_PLAN_JSON",
+    "TOPOLOGY_JSON",
+    "ROOT_CAMPAIGN_SPEC_JSON",
+    "ROOT_OWNER_ADMISSIONS_JSON",
+    "REVIEWED_PREPARE_MJS",
+    "PINNED_LEGACY_PREPARE_MJS"
+  ],
+  "apis": [
+    "buildFreshNodePlan",
+    "validateFreshCampaignSpec",
+    "validateFreshOwnerAdmission"
+  ],
+  "groups": 6,
+  "rows": 7,
+  "negativeMutations": 79,
+  "maximumInputBytes": 16777216,
+  "maximumElapsedMs": 180000,
+  "maximumRssKiB": 131072,
+  "newSignaturesCreated": 0,
+  "dbOpens": 0,
+  "childrenStarted": 0,
+  "rowScenarios": [
+    "fresh-model-real-export-and-independent-identities",
+    "fresh-model-domain-and-import-authority-refusals",
+    "fresh-model-owner-pending-namespace-and-environment-refusals",
+    "fresh-model-campaign-shape-physical-host-and-build-alias-refusals",
+    "fresh-model-current-root-admission-and-artifact-substitution-refusals",
+    "fresh-model-legacy-body-and-all-inputs-conservation",
+    "fresh-model-summary"
+  ],
+  "authority": "ROOT supplies and externally pins real NEW-domain fixture/import/build authorities; the consumer does not manufacture or cryptographically authenticate them",
+  "scope": {
+    "sourceOnly": true,
+    "testsExecutedByAuthor": 0,
+    "operationalPrivateInputsRead": false,
+    "runtimeDutiesQualified": false,
+    "productionQualified": false
+  },
+  "admissionFields": {
+    "currentCompilerMmdArchiveClosureVerified": true,
+    "sdkAuthority": {
+      "mac-native": "resolved-file-pins",
+      "mac-docker": "immutable-image",
+      "vps-docker": "immutable-image"
+    }
+  }
+}

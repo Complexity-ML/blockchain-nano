@@ -1,0 +1,71 @@
+{
+  "format": "nano-fresh-bootstrap-transport-pure-consumer-contract-v1",
+  "selector": "five explicit paths/pins; no automatic test discovery",
+  "arguments": [
+    "BEFORE",
+    "AFTER",
+    "PREPARE_MODULE",
+    "MODULE_SHA256",
+    "MODULE_BYTES"
+  ],
+  "api": "verifyFreshBootstrapTransportInventory(before,after)",
+  "expectedGroups": 6,
+  "expectedRows": 7,
+  "scenarioNames": [
+    "fresh-transport-real-run01-directory-times",
+    "fresh-transport-identity",
+    "fresh-transport-only-directory-times-allowed",
+    "fresh-transport-file-material-strict",
+    "fresh-transport-directory-root-identity-strict",
+    "fresh-transport-namespace-schema-and-aliases",
+    "fresh-transport-inventory-summary"
+  ],
+  "positiveComparisons": 6,
+  "negativeComparisons": 47,
+  "realFixture": {
+    "before": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-recovery-20261015/run-01/bootstrap-proof/source-inventory.json",
+      "sha256": "442aa7efcb4adaea6209dc1fb05991b9a2d9e2ca1e7a1f623d582970ac6b1188",
+      "bytes": 513701
+    },
+    "after": {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-recovery-20261015/run-01/bootstrap-proof/source-inventory-diagnostic-after.json",
+      "sha256": "483acd00e6b75239ff563dc3035bd0bb484ba3698402f3b550b35a1af8ec81e8",
+      "bytes": 372302
+    },
+    "sourceEntriesVerified": 1432,
+    "filesVerified": 1302,
+    "directoriesVerified": 130,
+    "directoryTimeChanges": 125,
+    "rootTimeChanges": 2
+  },
+  "expectedResultKeys": [
+    "format",
+    "passed",
+    "sourceEntriesVerified",
+    "filesVerified",
+    "directoriesVerified",
+    "directoryTimeChanges",
+    "rootTimeChanges",
+    "allRecordedFileMaterialAndSha256Unchanged",
+    "namespaceAndRecordedIdentitiesUnchanged",
+    "hardAliasIdentitiesRefused",
+    "runtimeStarted",
+    "productionQualified"
+  ],
+  "ceilings": {
+    "inputBytesEach": 16777216,
+    "elapsedMs": 180000,
+    "maxRssKiB": 131072
+  },
+  "moduleAuthority": "ROOT supplies exact reviewed prepare module SHA256 and byte count externally; never selected by consumer from untrusted fixture",
+  "scope": {
+    "newSignaturesCreated": 0,
+    "privateKeysRead": false,
+    "databaseOpened": false,
+    "runtimeStarted": false,
+    "freshCampaignQualified": false,
+    "productionQualified": false
+  },
+  "history": "The original strict run01 failure remains FAILED before runtime; no retry or reuse of its fresh seed/domain is authorized by this test."
+}

@@ -5,11 +5,12 @@ import {pruningRestoreMode,pruningRestoreConfiguration,verifyPrunedRestoreAudit,
 // Authorized isolated devnet only; code is deployed through Git, not this script.
 import {execFile,spawn} from 'node:child_process';
 import {promisify} from 'node:util';
-import {mkdir,writeFile,readFile,appendFile} from 'node:fs/promises';
-import {openSync,closeSync} from 'node:fs';
-import {resolve,join} from 'node:path';
+import {mkdir,writeFile,readFile,appendFile,open,lstat,realpath,chmod} from 'node:fs/promises';
+import {openSync,closeSync,constants as fsConstants} from 'node:fs';
+import {resolve,join,dirname} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
-import {createHash} from 'node:crypto';
+import {createHash,randomUUID} from 'node:crypto';
 import {validateStoppedValidators} from './validator-gate.mjs';
 import {partitionRemote} from './partition.mjs';
 import {fixtureStake,majorityIslandPolicy,majorityCutDuration} from './majority-island.mjs';
@@ -31,6 +32,15 @@ import {selectHostBuildPaths,selectRemoteSourceRepository,remoteDockerArgument,s
 import {advanceRestartConfiguration} from './restart-pins.mjs';
 import {decodeHttpResponse,httpStatusTrailer} from './http-response.mjs';
 import {hashHarness} from './harness-manifest.mjs';
+import {prepareFresh,validateFreshCampaignSpec,validateFreshOwnerAdmission,verifyFreshBootstrapTransportInventory} from './prepare.mjs';
+import {verifyIsolatedFixtureDomain,publicSha256,canonicalPublicJson} from '../capella/isolated-fixture-domain.mjs';
+import {createIsolatedBootstrapPlan} from '../capella/isolated-bootstrap-plan.mjs';
+import {isolatedBootstrapStateCheckpoint,isolatedRuntimeObservation,isolatedPendingObservation} from '../capella/isolated-runtime-observation.mjs';
+const freshArguments=process.argv.slice(2);
+if(freshArguments[3]==='--fresh-campaign'){
+ if(freshArguments.length!==7||freshArguments[5]!=='--fresh-campaign-sha')throw Error('Usage: run.mjs user@IPv4 source-base-revision new-output --fresh-campaign reviewed-spec.json --fresh-campaign-sha SHA256');
+ await runFreshCampaign(freshArguments);
+}else{
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
 const fork=process.env.NANO_TEST_CONSENSUS_PROFILE??'bellatrix';
 if(!['bellatrix','capella'].includes(fork))throw Error('Unsupported consensus profile');
@@ -460,4 +470,382 @@ if(pinnedRestart&&!process.exitCode){
   await log({event:process.exitCode?'validators-healthy-after-failed-campaign':'passed',validators});
  }
  catch(error){await log({event:'failed',message:error.stack});process.exitCode=1;}
+}
+
+} // Existing campaign modes above retain their original selection and flow.
+
+// NEW synthetic-domain branch of this launcher. Legacy modes above are not
+// silently rebound to new binaries, keys, archives or source revisions.
+async function runFreshCampaign(args){
+ const [target,revision,outputArg,,specFile,,specSha]=args,exec=promisify(execFile);
+ const need=(ok,why)=>{if(!ok)throw Error(why);},sha=b=>createHash('sha256').update(b).digest('hex');
+ const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
+ const names=['mac-native','mac-docker','vps-docker'],output=resolve(outputArg),harnessRoot=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
+ need(/^[a-z_][a-z0-9_-]*@[0-9.]+$/.test(target??'')&&/^[0-9a-f]{40}$/.test(revision??'')&&/^[0-9a-f]{64}$/.test(specSha??''),'Explicit reviewed fresh campaign arguments required');
+ // This first campaign closes finality and two-root recovery. Legacy fault,
+ // image, old build-volume and exporter selections cannot alter this branch.
+ for(const k of Object.keys(process.env))if(k.startsWith('NANO_TEST_')&&k!=='NANO_TEST_NETWORK_TRACE')need(process.env[k]===undefined,'Fresh campaign disallows legacy NANO_TEST selectors: '+k);
+ const materialFields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'],held=new Map(),newFiles=new Map(),material=s=>materialFields.map(k=>String(s[k]));
+ const publicExportLeaves=['isolated-domain.json','genesis-validators.ssz','genesis-state.ssz','genesis.json','profile.json','initial.json'],publicExportProbePaths=new Set();
+ // Diagnostics disclose only an explicitly public locator and fixed field names.
+ // They never publish either compared value or alter an admission predicate.
+ const diagnosticPublicPaths=new Set([resolve(specFile),join(harnessRoot,'tests/capella/isolated-fixture-domain.mjs'),join(harnessRoot,'tests/multihost/backup-restore.sh')]);let publicCheckStage='public-input-admission';
+ const materialChanges=(a,b)=>materialFields.filter((_,i)=>a[i]!==b[i]);
+ const rowChanges=(a,b)=>[...['path','sha256','bytes'].filter(k=>a[k]!==b[k]),...materialChanges(a.material,b.material)];
+ function inputNeed(ok,why,path,changedFieldNames){if(!ok){const diagnostic={stage:publicCheckStage,publicPath:diagnosticPublicPaths.has(path)?path:null,changedFieldNames:[...new Set(changedFieldNames)]};const e=Error(why+' '+JSON.stringify(diagnostic));e.publicInputDiagnostic=diagnostic;throw e;}}
+ async function observe(path,expected,body=false,admit=true){
+  path=resolve(path);if(newFiles.has(path)&&!held.has(path)){expected=newFiles.get(path);admit=false;}need(await realpath(path)===path,'Linked public input path refused');const f=await open(path,fsConstants.O_RDONLY|fsConstants.O_NOFOLLOW|fsConstants.O_NONBLOCK),before=await f.stat({bigint:true});
+  try{
+   need(before.isFile()&&before.nlink===1n&&before.size>0n&&before.size<=BigInt(body||publicExportProbePaths.has(path)&&!held.has(path)?16*1024*1024:1073741824),'Public software/document bound/type');
+   const hash=createHash('sha256'),buffer=Buffer.alloc(65536),chunks=[];let size=0;for(;;){const {bytesRead}=await f.read(buffer,0,buffer.length,null);if(!bytesRead)break;size+=bytesRead;need(BigInt(size)<=before.size,'Input grew');hash.update(buffer.subarray(0,bytesRead));if(body)chunks.push(Buffer.from(buffer.subarray(0,bytesRead)));}
+   const after=await f.stat({bigint:true}),linked=await lstat(path,{bigint:true}),row={path,sha256:hash.digest('hex'),bytes:size,material:material(after)};
+   inputNeed(size===Number(before.size)&&canonical(material(before))===canonical(row.material)&&canonical(row.material)===canonical(material(linked)),'Public input changed during FD read',path,[...(size===Number(before.size)?[]:['bytes']),...materialChanges(material(before),row.material),...materialChanges(row.material,material(linked))]);
+   if(expected)inputNeed(row.sha256===expected.sha256&&(expected.bytes===undefined||row.bytes===expected.bytes),'Public input SHA/bytes differs',path,[...(row.sha256===expected.sha256?[]:['sha256']),...(expected.bytes===undefined||row.bytes===expected.bytes?[]:['bytes'])]);
+   if(publicExportProbePaths.has(path)&&expected?.material&&!held.has(path))inputNeed(canonical(expected.material)===canonical(row.material),'New public export first admission material differs',path,materialChanges(expected.material,row.material));
+   if(held.has(path))inputNeed(canonical(held.get(path))===canonical(row),'Previously admitted public input changed',path,rowChanges(held.get(path),row));else if(admit)held.set(path,row);
+   return body?Buffer.concat(chunks):row;
+  }finally{await f.close();}
+ }
+ async function fence(){for(const z of [...held.values()])await observe(z.path,z);}
+ async function save(path,value){const bytes=Buffer.isBuffer(value)?value:Buffer.from(typeof value==='string'?value:JSON.stringify(value,null,2)+'\n');const f=await open(path,'wx',0o600);try{await f.writeFile(bytes);await f.sync();}finally{await f.close();}const directory=await open(dirname(path),'r');try{await directory.sync();}finally{await directory.close();}const expected={sha256:sha(bytes),bytes:bytes.length};await observe(path,expected,false,false);newFiles.set(resolve(path),expected);return bytes;}
+ const spec=validateFreshCampaignSpec(JSON.parse(await observe(resolve(specFile),{sha256:specSha},true)),{target,sourceBaseRevision:revision});
+ need(!output.includes(',')&&await realpath(dirname(output))===dirname(output),'New output parent must be canonical');
+ const within=(a,b)=>a===b||a.startsWith(b+'/');
+ for(const z of [spec.fixture.seedFile,spec.fixture.ledgerDirectory,...names.flatMap(n=>[spec.owners[n].coreBuildRoot,spec.owners[n].networkBuildRoot])])need(!within(output,z)&&!within(z,output),'Fresh output/code/seed/ledger roots must be disjoint');
+ const seedStat=await lstat(spec.fixture.seedFile),ledgerStat=await lstat(spec.fixture.ledgerDirectory);
+ need(await realpath(spec.fixture.seedFile)===spec.fixture.seedFile&&seedStat.isFile()&&seedStat.nlink===1&&seedStat.size===32&&(seedStat.mode&0o777)===0o600&&seedStat.uid===process.getuid(),'Fresh externally provisioned 32-byte seed0600 required');
+ need(await realpath(spec.fixture.ledgerDirectory)===spec.fixture.ledgerDirectory&&ledgerStat.isDirectory()&&(ledgerStat.mode&0o777)===0o700&&ledgerStat.uid===process.getuid(),'Persistent operator ledger0700 required');
+ for(const path of [spec.overlayManifest.path,...names.map(name=>spec.owners[name].admission.path),spec.fixture.legacyPublicIdentity.path])diagnosticPublicPaths.add(resolve(path));
+ await observe(spec.overlayManifest.path,spec.overlayManifest,true);
+ for(const name of names){const a=spec.owners[name];validateFreshOwnerAdmission(JSON.parse(await observe(a.admission.path,a.admission,true)),spec,name);}
+ const legacy=JSON.parse(await observe(spec.fixture.legacyPublicIdentity.path,spec.fixture.legacyPublicIdentity,true));
+ await mkdir(output,{mode:0o700});const record=async row=>appendFile(join(output,'run.jsonl'),JSON.stringify({timeMs:Date.now(),...row})+'\n',{mode:0o600});
+ const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'",sshArgs=['-o','BatchMode=yes','-o','ConnectTimeout=8'];
+ const sh=async(a,timeout=30000)=>(await exec('ssh',[...sshArgs,target,a.map(quote).join(' ')],{timeout,maxBuffer:16*1024*1024})).stdout;
+ const ownedRuns=[];let operation=0;const docker=async(a,remote=false,timeout=30000)=>{if(a[0]==='run'){a=[...a];const at=a.indexOf('--name'),name=at>=0?a[at+1]:'nano-qualification-op-'+uuid+'-'+(++operation);if(at<0)a.splice(1,0,'--name',name);a.splice(1,0,'--label',label);ownedRuns.push({name,remote});}return remote?sh(['sudo','-n','docker',...a],timeout):(await exec('docker',a,{timeout,maxBuffer:16*1024*1024})).stdout;};
+ const uuid=randomUUID(),remoteRoot='/home/'+target.split('@')[0]+'/nano-fresh-'+uuid,containers={ 'mac-docker':'nano-qualification-mac-'+uuid,'vps-docker':'nano-qualification-vps-'+uuid};
+ const label='nano.fresh.campaign='+uuid,assets=join(output,'assets'),prepared=join(output,'prepared'),journals=join(output,'imported-journals'),proof=join(output,'bootstrap-proof');
+ const configAt=name=>name==='vps-docker'?remoteRoot+'/config':join(prepared,name),owner=name=>spec.owners[name],mounts=name=>['--mount',`type=bind,src=${owner(name).coreBuildRoot},dst=/outputs,readonly`,'--mount',`type=bind,src=${owner(name).networkBuildRoot},dst=/network-build,readonly`];
+ const safe=name=>['--pull=never','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--user',owner(name).uid+':'+owner(name).gid,'--memory','3g','--cpus','2','--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=64m',...mounts(name)];
+ // Fixed public software paths only. No SDK/private build receipts/maps leave
+ // the VM; ROOT's separately retained admission supplies their provenance.
+ const metadata='set -eu; while [ "$#" -gt 0 ]; do role=$1; path=$2; shift 2; test "$(realpath -- "$path")" = "$path"; test ! -L "$path"; test -f "$path"; exec 9<"$path"; before=$(stat -Lc "%d:%i:%f:%u:%g:%h:%s:%y:%z" /proc/self/fd/9); test "$before" = "$(stat -c "%d:%i:%f:%u:%g:%h:%s:%y:%z" "$path")"; test "$(stat -Lc %h /proc/self/fd/9)" = 1; size=$(stat -Lc %s /proc/self/fd/9); test "$size" -gt 0; test "$size" -le 1073741824; hash=$(sha256sum /proc/self/fd/9); hash=${hash%% *}; if [ "$role" = coreArchive ]; then magic=$(od -An -tx1 -N8 /proc/self/fd/9 | tr -d " \n"); test "$magic" = 213c617263683e0a; arch=archive; else magic=$(od -An -tx1 -N4 /proc/self/fd/9 | tr -d " \n"); test "$magic" = 7f454c46; arch=$(od -An -tu2 -j18 -N2 /proc/self/fd/9 | tr -d " \n"); fi; test "$before" = "$(stat -Lc "%d:%i:%f:%u:%g:%h:%s:%y:%z" /proc/self/fd/9)"; test "$before" = "$(stat -c "%d:%i:%f:%u:%g:%h:%s:%y:%z" "$path")"; test "$(realpath -- "$path")" = "$path"; printf "%s %s %s %s\n" "$role" "$hash" "$size" "$arch"; exec 9<&-; done';
+ async function software(){const rows=[];for(const name of names){const a=owner(name);
+  if(name==='mac-native'){for(const [role,z] of Object.entries({coreArchive:a.coreArchive,...a.programs})){
+   diagnosticPublicPaths.add(resolve(z.path));const got=await observe(z.path,z);if(role!=='coreArchive'){const f=await open(z.path,'r');try{const b=Buffer.alloc(8);await f.read(b,0,8,0);need(b.readUInt32LE(0)===0xfeedfacf&&b.readUInt32LE(4)===0x0100000c,'Native Mach-O arm64 required');}finally{await f.close();}}rows.push({owner:name,role,sha256:got.sha256,bytes:got.bytes,architecture:role==='coreArchive'?'archive':'arm64'});
+  }}else{
+   const info=JSON.parse(await docker(['image','inspect',a.image,'--format','{{json .}}'],name==='vps-docker'));need(info.Id===a.image&&info.Architecture===(name==='vps-docker'?'amd64':'arm64'),'Existing image identity/architecture');
+   const selected={coreArchive:a.coreArchive,...a.programs},raw=await docker(['run','--rm',...safe(name),'--entrypoint','sh',a.image,'-ec',metadata,'sh',...Object.entries(selected).flatMap(([role,z])=>[role,z.path])],name==='vps-docker');
+   const got=raw.trim().split('\n').map(line=>{const m=/^([A-Za-z0-9]+) ([0-9a-f]{64}) ([1-9][0-9]*) (archive|62|183)$/.exec(line);need(m,'Only fixed public software fields may egress');return {role:m[1],sha256:m[2],bytes:Number(m[3]),architecture:m[4]==='archive'?'archive':Number(m[4])};});need(Array.isArray(got)&&got.length===Object.keys(selected).length&&new Set(got.map(z=>z.role)).size===got.length,'Exact fixed software roles');for(const z of got){need(Object.keys(z).sort().join(',')==='architecture,bytes,role,sha256'&&selected[z.role]&&z.sha256===selected[z.role].sha256&&z.bytes===selected[z.role].bytes&&z.architecture===(z.role==='coreArchive'?'archive':name==='vps-docker'?62:183),'Selected public ELF/archive differs');rows.push({owner:name,...z});}
+  }
+ }return rows;}
+ let initialSoftware;
+ const started=new Set(),volumes=new Map(),originalVolumes=new Map();let native,tunnel,failure,manifest,plan,preparedManifest,remotePeer,restoreReceipt,restoreStopEnvelope,restoreAudit,restoredMounts;
+ let interrupted;const onSignal=()=>{interrupted??=Error('Fresh campaign interrupted');};process.once('SIGINT',onSignal);process.once('SIGTERM',onSignal);
+ // Track close from spawn time: exitCode alone does not join stdio/handles.
+ const closedChildren=new WeakSet(),exited=child=>child.exitCode!==null||child.signalCode!==null;
+ const childAbsent=child=>!child||exited(child)&&closedChildren.has(child);
+ function tracked(child){child.once('close',()=>closedChildren.add(child));return child;}
+ async function waitJoined(child,milliseconds){const until=performance.now()+milliseconds;while(!childAbsent(child)&&performance.now()<until)await delay(50);return childAbsent(child);}
+ async function terminateJoined(child,name,termMilliseconds){
+  if(!child)return false;let forced=false;if(!exited(child))child.kill('SIGTERM');
+  if(!await waitJoined(child,termMilliseconds)){if(!exited(child)){child.kill('SIGKILL');forced=true;}need(await waitJoined(child,5000),name+' exit/close join deadline');}
+  need(childAbsent(child),name+' still has an unjoined process handle');return forced;
+ }
+ const runtimeRoot=name=>name==='mac-native'?join(prepared,name):'/var/lib/nano-data',rootFor=(name,role)=>name==='mac-native'?preparedManifest.nodes.find(n=>n.name===name)[role==='data'?'dataRoot':'witnessRoot']:join(role==='data'?'/var/lib/nano-data':'/var/lib/nano-witness',plan.campaignNamespace,name);
+ const dataMount=(name,readOnly=false)=>['--mount',`type=volume,src=${volumes.get(name).data},dst=/var/lib/nano-data${readOnly?',readonly':''}`,'--mount',`type=volume,src=${volumes.get(name).witness},dst=/var/lib/nano-witness${readOnly?',readonly':''}`];
+ const logs=async name=>{if(name==='mac-native')return readFile(join(output,'native.log'),'utf8');need(name!=='vps-docker','VPS raw logs remain in situ');const x=await exec('docker',['logs',containers[name]],{timeout:30000,maxBuffer:16*1024*1024});return x.stdout+x.stderr;};
+ const remoteProjection=String.raw`import os,sys,json,hashlib,stat,subprocess,pathlib,re,time
+root=pathlib.Path(sys.argv[1]);root.mkdir(mode=0o700,exist_ok=True)
+error=os.open(root/'projection-errors.private.log',os.O_WRONLY|os.O_CREAT|os.O_APPEND|os.O_NOFOLLOW,0o600);os.dup2(error,2);os.close(error)
+def need(v):
+ if not v:raise ValueError('fixed remote projection refusal')
+def saved(p,b):
+ p.parent.mkdir(mode=0o700,parents=True,exist_ok=True);fd=os.open(p,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+ try:
+  v=memoryview(b)
+  while v:v=v[os.write(fd,v):]
+  os.fsync(fd);os.lseek(fd,0,os.SEEK_SET);need(os.read(fd,len(b)+1)==b and not os.read(fd,1));s=os.fstat(fd);t=os.lstat(p);need(s.st_ino==t.st_ino and s.st_dev==t.st_dev and s.st_nlink==1 and stat.S_ISREG(s.st_mode))
+ finally:os.close(fd)
+ d=os.open(p.parent,os.O_RDONLY|os.O_DIRECTORY);os.fsync(d);os.close(d);return hashlib.sha256(b).hexdigest()
+def read(p):
+ p=pathlib.Path(p);need(p.is_relative_to(root));fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+ try:
+  s=os.fstat(fd);need(stat.S_ISREG(s.st_mode) and s.st_nlink==1 and 0<s.st_size<=67108864);b=b''
+  while len(b)<s.st_size:
+   x=os.read(fd,min(1048576,s.st_size-len(b)));need(bool(x));b+=x
+  need(not os.read(fd,1));t=os.fstat(fd);u=os.lstat(p);fields=('st_dev','st_ino','st_mode','st_nlink','st_uid','st_gid','st_size','st_mtime_ns','st_ctime_ns');need(all(getattr(s,k)==getattr(t,k)==getattr(u,k) for k in fields));return b
+ finally:os.close(fd)
+def transport_trees(archives):
+ need(type(archives) is list and len(archives)==2 and os.geteuid()==1000 and os.getegid()==1000)
+ top=os.lstat(root);need(root.resolve()==root and stat.S_ISDIR(top.st_mode) and top.st_uid==1000 and top.st_gid==1000 and stat.S_IMODE(top.st_mode)==0o700)
+ deadline=time.monotonic()+55
+ def tick():need(time.monotonic()<=deadline)
+ def field(b):
+  head,sep,tail=b.partition(b'\0');need(not sep or not any(tail));return head.decode('utf-8')
+ def octal(b):
+  need(re.fullmatch(b' *[0-7]+[\x00 ]*',b));return int(b.strip(b'\x00 '),8)
+ def parse(raw):
+  need(len(raw)%512==0);at=0;members={};ended=False
+  while at+512<=len(raw):
+   tick();h=raw[at:at+512]
+   if h==bytes(512):need(len(raw)-at>=1024 and not any(raw[at:]));ended=True;break
+   need(h[257:263]==b'ustar\0' and h[263:265]==b'00' and octal(h[148:156])==sum(h[:148])+8*32+sum(h[156:]))
+   name=field(h[:100]);prefix=field(h[345:500]);path=(prefix+'/' if prefix else '')+name;kind=h[156:157];size=octal(h[124:136]);mode=octal(h[100:108]);octal(h[108:116]);octal(h[116:124]);octal(h[136:148])
+   need(kind in (b'0',b'\0',b'5') and not any(h[157:257]));directory=kind==b'5'
+   need(bool(path) and not path.startswith('/'))
+   if directory and path in ('.','./'):path=''
+   elif path.startswith('./'):path=path[2:]
+   if directory and path.endswith('/'):path=path[:-1]
+   need(path=='' and directory or path and not path.startswith('/') and not any(c in path for c in '\0\r\n') and all(p not in ('','.','..') for p in path.split('/')))
+   need(path not in members and len(members)<10000 and mode in ((0o700,0o755) if directory else (0o600,0o644)) and (not directory or size==0))
+   start=at+512;end=start+size;at=start+((size+511)//512)*512;need(end<=at<=len(raw) and not any(raw[end:at]));members[path]=(directory,mode,start,end)
+  need(ended and '' in members and members[''][0])
+  for path in members:
+   if path:parent=path.rpartition('/')[0];need(parent in members and members[parent][0])
+  return members
+ validated=[]
+ fields=('st_dev','st_ino','st_mode','st_nlink','st_uid','st_gid','st_size','st_mtime_ns','st_ctime_ns')
+ for name,z in zip(('config','proof'),archives):
+  tick();need(type(z) is dict and set(z)=={'name','sha256','bytes'} and z['name']==name and type(z['bytes']) is int and 0<z['bytes']<=16777216 and re.fullmatch('[0-9a-f]{64}',z['sha256']))
+  p=root/('transport-'+name+'.ustar');need(p.resolve()==p);fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+  try:
+   s=os.fstat(fd);need(stat.S_ISREG(s.st_mode) and s.st_nlink==1 and s.st_uid==1000 and s.st_gid==1000 and stat.S_IMODE(s.st_mode)==0o600 and s.st_size==z['bytes']);chunks=[];remaining=s.st_size
+   while remaining:tick();b=os.read(fd,min(1048576,remaining));need(bool(b));chunks.append(b);remaining-=len(b)
+   need(not os.read(fd,1));raw=b''.join(chunks);t=os.fstat(fd);u=os.lstat(p);need(all(getattr(s,k)==getattr(t,k)==getattr(u,k) for k in fields) and p.resolve()==p and hashlib.sha256(raw).hexdigest()==z['sha256'])
+  finally:os.close(fd)
+  validated.append((name,raw,parse(raw)))
+ files=directories=0
+ for name,raw,members in validated:
+  tick();destination=root/name;os.mkdir(destination,0o700)
+  for path,(directory,mode,start,end) in sorted(members.items(),key=lambda row:(row[0].count('/'),row[0])):
+   if directory and path:os.mkdir(destination/path,0o700)
+  for path,(directory,mode,start,end) in members.items():
+   tick()
+   if directory:continue
+   p=destination/path;fd=os.open(p,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+   try:
+    view=memoryview(raw)[start:end]
+    while view:tick();n=os.write(fd,view);need(n>0);view=view[n:]
+    os.fchmod(fd,mode);os.fsync(fd);s=os.fstat(fd);need(stat.S_ISREG(s.st_mode) and s.st_nlink==1 and s.st_uid==1000 and s.st_gid==1000 and stat.S_IMODE(s.st_mode)==mode and s.st_size==end-start);os.lseek(fd,0,os.SEEK_SET);position=start
+    while position<end:tick();b=os.read(fd,min(1048576,end-position));need(bool(b) and b==raw[position:position+len(b)]);position+=len(b)
+    need(not os.read(fd,1));t=os.fstat(fd);u=os.lstat(p);need(all(getattr(s,k)==getattr(t,k)==getattr(u,k) for k in fields) and p.resolve()==p)
+   finally:os.close(fd)
+   files+=1
+  for path,(directory,mode,start,end) in sorted(members.items(),key=lambda row:row[0].count('/'),reverse=True):
+   if directory:
+    p=destination/path;fd=os.open(p,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+    try:os.fchmod(fd,mode);os.fsync(fd);s=os.fstat(fd);t=os.lstat(p);need(all(getattr(s,k)==getattr(t,k) for k in fields) and s.st_uid==1000 and s.st_gid==1000 and stat.S_IMODE(s.st_mode)==mode and p.resolve()==p)
+    finally:os.close(fd)
+    directories+=1
+ tick();d=os.open(root,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+ try:os.fsync(d)
+ finally:os.close(d)
+ return {'format':'nano-fresh-capella-two-ustar-extraction-v1','passed':True,'archivesVerified':2,'filesExtracted':files,'directoriesExtracted':directories,'hostOwnershipImported':False,'rawArchiveExported':False,'runtimeStarted':False,'productionQualified':False}
+def token(t):
+ need(type(t) is dict and set(t)=={'sequence','digest'} and re.fullmatch('0x[1-9a-f][0-9a-f]*',t['sequence']) and re.fullmatch('0x[0-9a-f]{64}',t['digest']));return t
+def checkpoint(t):
+ need(type(t) is dict and set(t)=={'epoch','root'} and re.fullmatch('(?:0|[1-9][0-9]*|0x(?:0|[1-9a-f][0-9a-f]*))',t['epoch']) and re.fullmatch('0x[0-9a-f]{64}',t['root']));return t
+def command(argv,prefix):
+ need(type(argv) is list and all(type(x) is str for x in argv));outputs=[root/(prefix+'-stdout.private.json'),root/(prefix+'-stderr.private.log')];fds=[]
+ try:
+  for p in outputs:fds.append(os.fdopen(os.open(p,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600),'wb',buffering=0))
+  z=subprocess.run(argv,stdout=fds[0],stderr=fds[1],timeout=180,check=False)
+ finally:
+  for f in fds:os.fsync(f.fileno());f.close()
+ saved(root/(prefix+'-exit.json'),json.dumps({'exitCode':z.returncode}).encode());need(z.returncode==0);return read(outputs[0])
+
+try:
+ x=json.loads(sys.argv[2]);mode=x['mode'];prefix=x['prefix'];need(re.fullmatch('[a-z0-9-]+',prefix));result=None
+ if mode=='extract-transport':
+  need(set(x)=={'mode','prefix','archives'});result=transport_trees(x['archives'])
+ elif mode=='stop-log':
+  raw=command(x['argv'],prefix);rows=[]
+  for line in raw.decode().splitlines():
+   try:r=json.loads(line)
+   except ValueError:continue
+   if r.get('event')=='capella-runtime-stopped':rows.append(r)
+  need(len(rows)==1);r=rows[0];v=r['validator'];need(v['healthy'] is True and v['failure'] is None and r['clockHealthy'] is True)
+  keys=[]
+  for k in r['validatorKeys']:
+   q={'index':k['index'],'restart':token(k['restart'])}
+   if k['index'] is None:need(re.fullmatch('0x[0-9a-f]{96}',k['publicKey']));q['publicKey']=k['publicKey']
+   else:need(re.fullmatch('0x(?:0|[1-9a-f][0-9a-f]*)',k['index']))
+   keys.append(q)
+  counters={k:v[k] for k in ('localKeys','awaitingRegistration','proposalsAdmitted','attestationsAdmitted','syncMessagesAdmitted')};need(all(type(z) is int and 0<=z<=18446744073709551615 for z in counters.values()));need(re.fullmatch('0x(?:0|[1-9a-f][0-9a-f]*)',r['justifiedEpoch']))
+  result={'event':'capella-runtime-stopped','restart':token(r['restart']),'validatorKeys':keys,'finalized':checkpoint(r['finalized']),'justifiedEpoch':r['justifiedEpoch'],'clockHealthy':True,'validator':{'healthy':True,'failure':None,**counters}}
+ elif mode in ('capture-pair','capture-once'):
+  argv=x['argv'];raw=command(argv,prefix+'-first');first=json.loads(raw);need(first['passed'] is True and first['canonicalStoreSnapshotVerified'] is True and first['primaryAndWitnessBlobClosuresVerified'] is True);firstSha=hashlib.sha256(raw).hexdigest();last=first;lastSha=firstSha
+  if mode=='capture-pair':
+   stop=json.loads(read(x['stopFile']));pins={'format':'nano-isolated-stopped-external-witness-commitments-v1','sourceCaptureSha256':firstSha,'core':token(first['core']['witness']),'validatorKeys':[{'index':k['index'],**({'publicKey':k['publicKey']} if k['index'] is None else {}),'restart':token(k['witness'])} for k in first['validatorKeys']]};stop['witnessCommitments']=pins
+   second=root/(prefix+'-stop-second.private.json');saved(second,json.dumps(stop,sort_keys=True,separators=(',',':')).encode());old='type=bind,src='+x['stopFile']+',dst=/stop.json,readonly';need(argv.count(old)==1);argv=[('type=bind,src='+str(second)+',dst=/stop.json,readonly') if z==old else z for z in argv];raw=command(argv,prefix+'-second');last=json.loads(raw);lastSha=hashlib.sha256(raw).hexdigest();need(last['passed'] is True and last['externalWitnessTokensMatched'] is True)
+  need(last['owner']=='vps-docker' and re.fullmatch('[0-9a-f]{64}',last['campaignId']) and last['primaryWitnessPairs']==33 and last['databasesReadOnly']==68)
+  flags=('canonicalStoreSnapshotVerified','primaryAndWitnessBlobClosuresVerified','allObservedFileBytesAndInodesUnchanged','observedWitnessPairsAuthenticated','externalStopTokensMatched','externalWitnessTokensMatched','externalWitnessPinOriginExternallyRequired');need(all(type(last[k]) is bool for k in flags))
+  result={'format':'nano-fresh-capella-stopped-capture-public-v1','passed':True,'owner':'vps-docker','campaignId':last['campaignId'],'primaryWitnessPairs':33,'databasesReadOnly':68,'firstCaptureSha256':firstSha,'lastCaptureSha256':lastSha,**{k:last[k] for k in flags},'rawCapsuleExported':False,'productionQualified':False}
+ elif mode=='bootstrap-audit':
+  raw=command(x['argv'],prefix);r=json.loads(raw);need(r['passed'] is True and r['owner']=='vps-docker' and r['primaryWitnessPairs']==33 and r['coldPairReopens']==66 and r['newSignaturesCreated']==0 and r['journalWritesRequested'] is False)
+  flags=('fullFileBytesMatchSource','copiedFilesInodesUnchanged','namespaceAndKeyFloorsVerified');need(all(r[k] is True for k in flags));result={'passed':True,'owner':'vps-docker','primaryWitnessPairs':33,'coldPairReopens':66,'newSignaturesCreated':0,'journalWritesRequested':False,**{k:True for k in flags},'reportSha256':hashlib.sha256(raw).hexdigest(),'rawCapsuleExported':False}
+ elif mode in ('audit-read','audit-run'):
+  raw=read(x['path']) if mode=='audit-read' else command(x['argv'],prefix);r=json.loads(raw);need(r['canonicalHistoryVerified'] is True and r['externalFinalizedAncestorVerified'] is True and type(r['checkpointSequence']) is int and 0<r['checkpointSequence']<=18446744073709551615 and re.fullmatch('0x[0-9a-f]{64}',r['checkpointDigest']))
+  result={'canonicalHistoryVerified':True,'externalFinalizedAncestorVerified':True,'checkpointSequence':r['checkpointSequence'],'checkpointDigest':r['checkpointDigest'],'requiredFinalized':checkpoint(r['requiredFinalized']),'finalized':checkpoint(r['finalized']),'reportSha256':hashlib.sha256(raw).hexdigest(),'rawCapsuleExported':False}
+ else:raise ValueError('unknown projection mode')
+ print(json.dumps({'format':'nano-fresh-capella-remote-public-projection-v1','passed':True,'result':result},separators=(',',':')))
+except BaseException:
+ import traceback;traceback.print_exc(file=sys.stderr);print('{"format":"nano-fresh-capella-remote-public-projection-v1","passed":false}')
+`;
+
+ async function remotePublic(payload,timeout=240000){const x=JSON.parse(await sh(['python3','-c',remoteProjection,remoteRoot,JSON.stringify(payload)],timeout));need(x.format==='nano-fresh-capella-remote-public-projection-v1'&&x.passed===true&&x.result,'Fixed remote projection refused; details remain VM');return x.result;}
+ // Only NEW synthetic imports, before publishing any source inventory.
+ // Once selected, that inventory is never rebased after a transport mismatch.
+ async function stageBootstrapTransport(){
+  const archives=[];for(const [name,source] of [['config',join(prepared,'vps-docker')],['proof',proof]]){
+   if(interrupted)throw interrupted;const packed=await exec('/usr/bin/tar',['--format=ustar','-cf','-','-C',source,'.'],{encoding:'buffer',env:{...process.env,COPYFILE_DISABLE:'1'},timeout:60000,maxBuffer:16*1024*1024});
+   need(Buffer.isBuffer(packed.stdout)&&packed.stdout.length>0&&packed.stdout.length<=16*1024*1024,'Bounded binary USTAR required');const path=join(output,'transport-'+name+'.ustar'),bytes=await save(path,packed.stdout);archives.push({name,path,sha256:sha(bytes),bytes:bytes.length});
+  }
+  if(interrupted)throw interrupted;await sh(['mkdir','-m','700',remoteRoot]);for(const z of archives)await observe(z.path,z,false,false);
+  await exec('scp',['-q',...archives.map(z=>z.path),target+':'+remoteRoot+'/'],{timeout:120000,maxBuffer:16*1024*1024});if(interrupted)throw interrupted;for(const z of archives)await observe(z.path,z,false,false);
+  const result=await remotePublic({mode:'extract-transport',prefix:'transport',archives:archives.map(({name,sha256,bytes})=>({name,sha256,bytes}))},60000);
+  need(result&&Object.keys(result).sort().join(',')==='archivesVerified,directoriesExtracted,filesExtracted,format,hostOwnershipImported,passed,productionQualified,rawArchiveExported,runtimeStarted'&&result.format==='nano-fresh-capella-two-ustar-extraction-v1'&&result.passed===true&&result.archivesVerified===2&&Number.isSafeInteger(result.filesExtracted)&&result.filesExtracted>0&&result.filesExtracted<=20000&&Number.isSafeInteger(result.directoriesExtracted)&&result.directoriesExtracted>0&&result.directoriesExtracted<=20000&&result.hostOwnershipImported===false&&result.rawArchiveExported===false&&result.runtimeStarted===false&&result.productionQualified===false,'Fixed USTAR extraction result required');
+  if(interrupted)throw interrupted;await save(join(output,'transport-public.json'),result);
+ }
+ // Only NEW public exports: no old HELD row is sampled into a new authority here.
+ async function stablePublicExportInventory(){
+  const began=performance.now(),deadlineMs=30000,deadline=began+deadlineMs,paths=publicExportLeaves.map(leaf=>join(assets,leaf));let probeCount=0,stableSamples=0,stableSince=0,previous;
+  for(const path of paths){need(!held.has(path)&&!newFiles.has(path),'Public export stability must precede first admission');publicExportProbePaths.add(path);}
+  while(performance.now()<deadline){
+   if(interrupted)throw interrupted;const rows=[];
+   for(const path of paths){need(performance.now()<deadline,'New public export pre-admission stability deadline');rows.push(await observe(path,null,false,false));need(performance.now()<=deadline,'New public export pre-admission stability deadline');}
+   if(interrupted)throw interrupted;const fingerprint=canonical(rows),now=performance.now();probeCount++;
+   if(fingerprint===previous)stableSamples++;else{previous=fingerprint;stableSamples=1;stableSince=now;}
+   if(stableSamples>=3&&now-stableSince>=2000)return {inventory:new Map(rows.map(row=>[row.path,row])),report:{format:'nano-fresh-public-export-pre-admission-quiescence-v1',publicFiles:6,probeCount,elapsedMs:Math.floor(now-began),stableSpanMs:Math.floor(now-stableSince),deadlineMs,stableSamples,requiredStableSamples:3,sampleSpacingMs:1000,strictWholeMaterialNineAndSha256Equality:true,firstAdmissionNotYetPublished:true,postAdmissionRebaseline:false,runtimeStarted:false,productionQualified:false}};
+   need(deadline-performance.now()>1000,'New public export pre-admission stability deadline');await delay(1000);
+  }
+  throw Error('New public export pre-admission stability deadline');
+ }
+ async function stableBootstrapInventory(program){
+  const began=performance.now(),deadlineMs=30000,deadline=began+deadlineMs;let probeCount=0,stableSamples=0,stableSince=0,previous;
+  while(performance.now()<deadline){
+   if(interrupted)throw interrupted;const remaining=deadline-performance.now();need(remaining>=1,'New bootstrap pre-admission quiescence deadline');
+   const text=(await exec(program,['--inventory',journals],{timeout:Math.min(180000,Math.floor(remaining)),maxBuffer:16*1024*1024})).stdout;
+   if(interrupted)throw interrupted;const inventory=JSON.parse(text),fingerprint=canonical(inventory),now=performance.now();probeCount++;need(now<=deadline,'New bootstrap pre-admission quiescence deadline');
+   if(fingerprint===previous)stableSamples++;else{previous=fingerprint;stableSamples=1;stableSince=now;}
+   if(stableSamples>=3&&now-stableSince>=2000)return {inventory,report:{format:'nano-fresh-bootstrap-pre-admission-quiescence-v1',probeCount,elapsedMs:Math.floor(now-began),stableSpanMs:Math.floor(now-stableSince),deadlineMs,stableSamples,requiredStableSamples:3,sampleSpacingMs:1000,strictWholeInventoryEquality:true,runtimeStarted:false,productionQualified:false}};
+   need(deadline-performance.now()>1000,'New bootstrap pre-admission quiescence deadline');await delay(1000);
+  }
+  throw Error('New bootstrap pre-admission quiescence deadline');
+ }
+ async function stopped(name){
+  if(name==='mac-native'){need(native&&native.pid,'Native process was not started');const forced=await terminateJoined(native,'Native runtime',30000);need(!forced,'Native clean-stop deadline required SIGKILL');need(native.exitCode===0,'Native runtime did not exit cleanly');}
+  else{await docker(['stop','--time','20',containers[name]],name==='vps-docker',30000);const x=JSON.parse(await docker(['inspect',containers[name],'--format','{{json .State}}'],name==='vps-docker'));need(x.Running===false&&x.ExitCode===0&&x.OOMKilled===false,'Runtime clean stopped state required');}
+  started.delete(name);if(name==='vps-docker'){const prefix='stopped-vps-'+(restoreReceipt?'restored':'initial'),receipt=await remotePublic({mode:'stop-log',prefix,argv:['sudo','-n','docker','logs',containers[name]]});stoppedReceipt(JSON.stringify(receipt));await save(join(output,prefix+'-public.json'),receipt);return {text:JSON.stringify(receipt),receipt};}const text=await logs(name);await save(join(output,name+'-'+(name==='vps-docker'&&restoreReceipt?'restored':'initial')+'.log'),text);return {text,receipt:stoppedReceipt(text)};
+ }
+ async function request(name,path,body){if(interrupted)throw interrupted;const argv=['-sS','--max-time','5','-H','Accept: application/json','--write-out',httpStatusTrailer];if(body)argv.push('-H','Content-Type: application/json','--data',JSON.stringify(body));argv.push('http://127.0.0.1:'+(name==='mac-native'?18545:8545)+path);const text=name==='mac-native'?(await exec('curl',argv,{timeout:8000,maxBuffer:16*1024*1024})).stdout:await docker(['exec',containers[name],'curl',...argv],name==='vps-docker');return decodeHttpResponse(text,name,path);}
+ async function rpc(name,method,params=[]){const x=await request(name,'/',{jsonrpc:'2.0',id:1,method,params});need(!x.error,'Fresh RPC returned an error');return x.result;}
+ async function finality(baseline,phase,bootstrap){const observer=isolatedRuntimeObservation({baseline,...(bootstrap?{bootstrapStateCheckpoint:isolatedBootstrapStateCheckpoint(JSON.parse(await readFile(join(assets,'initial.json'),'utf8')))}:{}),requiredAdvances:phase==='restored'?3:2,requiredStableSamples:3});const until=Date.now()+480000;
+  while(Date.now()<until){const rows=[];for(const name of names){try{const row=await observer.sample({name,read:p=>request(name,p),peers:await rpc(name,'net_peerCount')});if(row)rows.push(row);}catch(e){if(!isolatedPendingObservation(e))throw e;}}
+   const completed=observer.observe(rows);await record({event:'fresh-finality-sample',phase,rows,progress:observer.snapshot()});if(completed){const execution=[];for(const name of names){const block=(await request(name,'/eth/v2/beacon/blocks/'+completed.root)).data.message,payload=block.body.execution_payload.block_hash,head=await rpc(name,'eth_getBlockByNumber',['0x'+BigInt(block.body.execution_payload.block_number).toString(16),false]);need(head?.hash===payload&&BigInt(head.number)===BigInt(block.body.execution_payload.block_number),'Finalized checkpoint must bind execution');execution.push(payload);}need(execution.every(h=>h===execution[0]),'Three finalized executions differ');const snapshot=observer.snapshot(),result={epochs:snapshot.distinctAdvances.length,firstEpoch:baseline.epoch,lastEpoch:completed.epoch,lastCheckpoint:completed,lastExecutionHash:execution[0]};await save(join(output,phase+'-finality.json'),{result,observation:snapshot,physicalHosts:2,runtimes:3,productionQualified:false});return {result,observation:snapshot};}await delay(3000);
+  }throw Error('Fresh common-finality deadline');
+ }
+ async function auditCopy(name){if(interrupted)throw interrupted;const remote=name==='vps-docker',a=owner(name),cfg=configAt(name);let text;
+  if(name==='mac-native')text=(await exec(a.programs.bootstrapAudit.path,[join(assets,'isolated-domain.json'),join(proof,'plan.json'),join(proof,'anchors.json'),join(proof,'source-inventory.json'),name,rootFor(name,'data'),rootFor(name,'witness')],{timeout:180000,maxBuffer:16*1024*1024})).stdout;
+  else{const argv=['run','--rm',...safe(name),...dataMount(name,true),'--mount',`type=bind,src=${cfg},dst=/config,readonly`,'--mount',`type=bind,src=${remote?remoteRoot+'/proof':proof},dst=/proof,readonly`,'--entrypoint',a.programs.bootstrapAudit.path,a.image,'/config/isolated-domain.json','/proof/plan.json','/proof/anchors.json','/proof/source-inventory.json',name,rootFor(name,'data'),rootFor(name,'witness')];if(remote){const ownName='nano-qualification-op-'+uuid+'-'+(++operation);ownedRuns.push({name:ownName,remote:true});argv.splice(1,0,'--name',ownName,'--label',label);text=JSON.stringify(await remotePublic({mode:'bootstrap-audit',prefix:'bootstrap-vps-audit',argv:['sudo','-n','docker',...argv]}));}else text=await docker(argv,false,180000);}
+  const r=JSON.parse(text);need(r.passed===true&&r.owner===name&&r.primaryWitnessPairs===(name==='vps-docker'?33:16)&&r.newSignaturesCreated===0&&r.journalWritesRequested===false&&r.fullFileBytesMatchSource===true&&r.copiedFilesInodesUnchanged===true,'Actual destination journal audit required');await save(join(output,name+'-bootstrap-audit.json'),r);
+ }
+ async function startDocker(name,restoredMounts){if(interrupted)throw interrupted;const a=owner(name);await docker(['run','--pull=never','--init','-d','--name',containers[name],'--label',label,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,'--user',a.uid+':'+a.gid,'--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','3g','--cpus','2','--ulimit','nofile=65536:65536','--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=64m',...mounts(name),...(name==='vps-docker'?['-p','127.0.0.1:30307:30303']:[]),'--mount',`type=bind,src=${configAt(name)},dst=/config,readonly`,...(restoredMounts??dataMount(name)),'--env-file',configAt(name)+'/fixture.env',a.image,a.programs.nano.path,'run','/config/genesis.json',rootFor(name,'data')+'/chain','/config/node.json'],name==='vps-docker');started.add(name);}
+ async function captureOwner(name,stop,path,mountOverride){if(interrupted)throw interrupted;const bytes=await save(path,stop),a=owner(name);let raw;
+  if(name==='mac-native')raw=(await exec(a.programs.stoppedCapture.path,['--capture',join(prepared,name,'isolated-domain.json'),join(prepared,name,'node.json'),path,rootFor(name,'data'),rootFor(name,'witness'),name],{timeout:180000,maxBuffer:16*1024*1024})).stdout;
+  else{need(name!=='vps-docker','VPS complete capsules stay in situ');const remote=false,stopFile=path;if(remote)await exec('scp',['-q',path,target+':'+stopFile],{timeout:10000});const selected=mountOverride??(remote&&restoredMounts?restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x):dataMount(name,true));
+   raw=await docker(['run','--rm',...safe(name),...selected,'--mount',`type=bind,src=${configAt(name)},dst=/config,readonly`,'--mount',`type=bind,src=${stopFile},dst=/stop.json,readonly`,'--entrypoint',a.programs.stoppedCapture.path,a.image,'--capture','/config/isolated-domain.json','/config/node.json','/stop.json',rootFor(name,'data'),rootFor(name,'witness'),name],remote,180000);
+  }
+  const result=JSON.parse(raw);need(result.passed===true&&result.owner===name&&result.campaignId===manifest.campaignId&&result.manifestSha256===sha(await readFile(join(assets,'isolated-domain.json')))&&result.externalStopReceiptSha256===sha(bytes)&&result.canonicalStoreSnapshotVerified===true&&result.primaryAndWitnessBlobClosuresVerified===true,'Complete stopped P/W capture and exact public inputs required');return result;
+ }
+ function witnessStop(receipt,capture,bytes){return {...receipt,witnessCommitments:{format:'nano-isolated-stopped-external-witness-commitments-v1',sourceCaptureSha256:sha(bytes),core:capture.core.witness,validatorKeys:capture.validatorKeys.map(k=>k.index===null?{index:null,publicKey:k.publicKey,restart:k.witness}:{index:k.index,restart:k.witness})}};}
+ function captureVmArgv(stopFile,mountOverride){const a=owner('vps-docker'),name='nano-qualification-op-'+uuid+'-'+(++operation);ownedRuns.push({name,remote:true});return ['sudo','-n','docker','run','--rm','--name',name,'--label',label,...safe('vps-docker'),...(mountOverride??(restoredMounts?restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x):dataMount('vps-docker',true))),'--mount',`type=bind,src=${configAt('vps-docker')},dst=/config,readonly`,'--mount',`type=bind,src=${stopFile},dst=/stop.json,readonly`,'--entrypoint',a.programs.stoppedCapture.path,a.image,'--capture','/config/isolated-domain.json','/config/node.json','/stop.json',rootFor('vps-docker','data'),rootFor('vps-docker','witness'),'vps-docker'];}
+ async function capturePair(name,receipt,prefix){
+  if(name==='vps-docker'){const local=join(output,prefix+'-stop-first.json'),stopFile=remoteRoot+'/'+prefix+'-stop-first.json';await save(local,receipt);await exec('scp',['-q',local,target+':'+stopFile],{timeout:10000});const projected=await remotePublic({mode:'capture-pair',prefix,stopFile,argv:captureVmArgv(stopFile)});need(projected.rawCapsuleExported===false&&projected.externalWitnessTokensMatched===true&&projected.campaignId===manifest.campaignId,'Scoped VPS capture proof required');await save(join(output,prefix+'-capture-public.json'),projected);return {remoteStopFile:remoteRoot+'/'+prefix+'-stop-second.private.json'};}
+  const first=await captureOwner(name,receipt,join(output,prefix+'-stop-first.json')),firstBytes=await save(join(output,prefix+'-capture-first.json'),first),pins=witnessStop(receipt,first,firstBytes);const second=await captureOwner(name,pins,join(output,prefix+'-stop-second.json'));need(second.externalWitnessTokensMatched===true&&second.externalWitnessPinOriginExternallyRequired===true,'Retained external witness pin must match');await save(join(output,prefix+'-capture-second.json'),second);return pins;
+ }
+
+
+ try{
+  if(interrupted)throw interrupted;publicCheckStage='initial-software-read';initialSoftware=await software();publicCheckStage='initial-software-complete';await save(join(output,'software-public.json'),initialSoftware);publicCheckStage='initial-held-fence';await fence();publicCheckStage='campaign-body';await save(join(output,'harness.json'),await hashHarness(harnessRoot));
+  // Compilation, image and public artifact checks finish BEFORE the new clock
+  // and reserved key domain are exported. Never retry/reset a failed exporter.
+  const a=owner('mac-native');await exec(a.programs.exporter.path,['--export-isolated-deposit-network',assets],{env:{...process.env,NANO_TEST_ISOLATED_CAPELLA_SEED_FILE:spec.fixture.seedFile,NANO_TEST_ISOLATED_CAPELLA_LEDGER_DIR:spec.fixture.ledgerDirectory},timeout:180000,maxBuffer:16*1024*1024});
+  for(const leaf of publicExportLeaves)diagnosticPublicPaths.add(join(assets,leaf));
+  publicCheckStage='public-export-pre-admission-stability';const publicExportStability=await stablePublicExportInventory();if(interrupted)throw interrupted;publicCheckStage='public-export-first-admission';
+  const manifestBytes=await observe(join(assets,'isolated-domain.json'),publicExportStability.inventory.get(join(assets,'isolated-domain.json')),true);manifest=JSON.parse(manifestBytes);const publicFiles=new Map();for(const z of Object.values(manifest.files)){const path=join(assets,z.path),expected=publicExportStability.inventory.get(path);need(expected&&expected.sha256===z.sha256&&expected.bytes===z.bytes,'Public export manifest and last stable inventory differ');publicFiles.set(z.path,await observe(path,expected,true));}
+  publicCheckStage='public-export-immediate-held-fence';await fence();publicCheckStage='campaign-body';
+  const publicResult=verifyIsolatedFixtureDomain({manifest,artifacts:publicFiles,legacy});
+  const publicAudit={format:'nano-isolated-public-export-audit-v1',verdict:'PASSED_PUBLIC_BINDINGS_ONLY',verifiedAtUtc:new Date().toISOString(),publicExportDirectory:assets,verifierSha256:sha(await observe(join(harnessRoot,'tests/capella/isolated-fixture-domain.mjs'),null,true)),officialPublicSourceCommit:'194a91fd9e6f97118156421aac4c80e6e47a9a7f',publicExportFiles:[{name:'isolated-domain.json',sha256:sha(manifestBytes),bytes:manifestBytes.length},...Object.values(manifest.files).map(z=>({name:z.path,sha256:z.sha256,bytes:z.bytes}))],legacyPublicInputs:[spec.fixture.legacyPublicIdentity],legacyGenesisValidatorsRoot:legacy.genesisValidatorsRoot,result:publicResult,scope:Object.fromEntries(['exporterExecuted','signerInvoked','privateArtifactsRead','ledgerRead','networkUsed','blsCryptographyVerified','actualSigningOrderObserved','liveRuntimeVerified','productionQualified'].map(k=>[k,false]))};
+  await mkdir(proof,{mode:0o700});const publicBytes=await save(join(proof,'public-audit.json'),publicAudit);await save(join(proof,'public-export-pre-admission-quiescence.json'),publicExportStability.report);
+  const importText=(await exec(a.programs.bootstrapImport.path,[assets,sha(manifestBytes),journals],{timeout:180000,maxBuffer:16*1024*1024})).stdout,privateAudit=JSON.parse(importText);need(privateAudit.passed===true,'Bootstrap import must actually pass');const privateBytes=await save(join(proof,'import-audit.json'),privateAudit);
+  const bootstrapStability=await stableBootstrapInventory(a.programs.bootstrapAudit.path);
+  for(const leaf of ['journal-bindings.json','bootstrap-interchange.json'])diagnosticPublicPaths.add(join(journals,leaf));
+  const journalBytes=await observe(join(journals,'journal-bindings.json'),null,true),interchangeBytes=await observe(join(journals,'bootstrap-interchange.json'),null,true),initial=publicFiles.get('initial.json');
+  const documents={manifest:manifestBytes,publicAudit:publicBytes,privateAudit:privateBytes,journalBindings:journalBytes,initial,bootstrapInterchange:interchangeBytes},evidencePins=Object.fromEntries(Object.entries(documents).map(([k,v])=>[k,sha(v)]));
+  plan=createIsolatedBootstrapPlan({campaignNamespace:'isolated-capella-'+manifest.campaignId,documents,evidencePins,assignments:names.map((name,n)=>({owner:name,publicKeyIndices:Array.from({length:n===2?33:16},(_,i)=>i+(n===0?0:n===1?16:32))}))});
+  if(interrupted)throw interrupted;const planBytes=await save(join(proof,'plan.json'),plan),inventoryBytes=await save(join(proof,'source-inventory.json'),bootstrapStability.inventory);await save(join(proof,'bootstrap-pre-admission-quiescence.json'),bootstrapStability.report);
+  await save(join(proof,'anchors.json'),{format:'nano-isolated-bootstrap-physical-audit-anchors-v1',fixtureManifestSha256:sha(manifestBytes),planDocumentSha256:sha(planBytes),planSha256:plan.planSha256,sourceInventorySha256:sha(inventoryBytes)});
+  const topology=names.map((name,i)=>({name,host:i===2?target:'mac',mode:i===0?'native':'docker',rpcPort:i===0?18545:8545,p2pPort:i===0?30305:30303,runtimeDirectory:join(prepared,name),...(i===0?{p2pBinary:a.programs.p2p.path}:{})}));await save(join(output,'topology.json'),topology);preparedManifest=await prepareFresh(assets,prepared,topology,plan);
+  for(const name of names){const path=join(prepared,name,'node.json'),node=JSON.parse(await readFile(path,'utf8'));node.capella.clock.maximumStartupElapsedMs=spec.clock.maximumStartupElapsedMs;node.capella.clock.startupCatchup={maximumDowntimeMs:spec.clock.maximumDowntimeMs,maximumSteps:spec.clock.maximumSteps};await writeFile(path,JSON.stringify(node,null,2)+'\n',{mode:0o600});}
+  await stageBootstrapTransport();
+  for(const name of ['mac-docker','vps-docker']){
+   const remote=name==='vps-docker',a=owner(name),base=containers[name];volumes.set(name,{data:base+'-data',witness:base+'-witness'});originalVolumes.set(name,{...volumes.get(name)});
+   for(const v of Object.values(volumes.get(name)))await docker(['volume','create','--label',label,v],remote);
+   const v=volumes.get(name);await docker(['run','--rm','--pull=never','--name',base+'-init','--label',label,'--network','none','--read-only','--user','0:0','--cap-drop','ALL','--cap-add','CHOWN','--security-opt','no-new-privileges','--mount',`type=volume,src=${v.data},dst=/data`,'--mount',`type=volume,src=${v.witness},dst=/witness`,'--entrypoint','sh',a.image,'-ec','chmod 700 /data /witness; chown "$1:$2" /data /witness','sh',String(a.uid),String(a.gid)],remote);
+   await docker(['run','--rm',...safe(name),...dataMount(name),'--mount',`type=bind,src=${configAt(name)},dst=/staged,readonly`,'--entrypoint','sh',a.image,'-ec','cp -Rp /staged/data/. /var/lib/nano-data/; cp -Rp /staged/witness/. /var/lib/nano-witness/'],remote,60000);
+  }
+  for(const name of names)await auditCopy(name);const originalInventory=JSON.parse((await exec(a.programs.bootstrapAudit.path,['--inventory',journals],{timeout:180000,maxBuffer:16*1024*1024})).stdout);
+  // This new synthetic-bootstrap transport check reports directory time changes
+  // separately; every recorded file field and SHA remains exact. No runtime has
+  // started, and historical input/stopped-capture fences remain unchanged.
+  const transportInventory=verifyFreshBootstrapTransportInventory(JSON.parse(inventoryBytes),originalInventory);await save(join(proof,'source-inventory-after-transport.json'),originalInventory);await save(join(proof,'bootstrap-transport-inventory-check.json'),transportInventory);
+  const exportAge=BigInt(Date.now())-BigInt(plan.anchor.genesisTimeMs);need(exportAge>=0n&&exportAge<=BigInt(spec.clock.maximumDowntimeMs),'New fixture exceeded explicitly approved startup catch-up age');
+  await startDocker('vps-docker');for(let i=0;i<60;i++){if(interrupted)throw interrupted;try{remotePeer=(await rpc('vps-docker','nno_getNetworkInfo')).node?.peerId;if(remotePeer)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}if(interrupted)throw interrupted;need(/^[A-Za-z0-9]+$/.test(remotePeer??''),'VPS private peer identity unavailable');
+  const tunnelFd=openSync(join(output,'tunnel.log'),'wx',0o600);try{tunnel=tracked(spawn('ssh',[...sshArgs,'-N','-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=15','-L','127.0.0.1:30307:127.0.0.1:30307',target],{stdio:['ignore',tunnelFd,tunnelFd]}));}finally{closeSync(tunnelFd);}let tunnelError;tunnel.on('error',e=>{tunnelError=e;});await delay(1000);need(!tunnelError&&tunnel.exitCode===null&&tunnel.signalCode===null,'Private SSH tunnel unavailable');
+  for(const name of ['mac-native','mac-docker']){const path=join(prepared,name,'node.json'),c=JSON.parse(await readFile(path,'utf8'));c.bootnodes=[name==='mac-native'?'/ip4/127.0.0.1/tcp/30307/p2p/'+remotePeer:'/dns4/host.docker.internal/tcp/30307/p2p/'+remotePeer];await writeFile(path,JSON.stringify(c,null,2)+'\n',{mode:0o600});}
+  await startDocker('mac-docker');const nd=join(prepared,'mac-native'),env=Object.fromEntries((await readFile(join(nd,'fixture.env'),'utf8')).trim().split('\n').map(s=>{const at=s.indexOf('=');return [s.slice(0,at),s.slice(at+1)];}));const fd=openSync(join(output,'native.log'),'wx',0o600);try{native=tracked(spawn(a.programs.nano.path,['run',join(nd,'genesis.json'),rootFor('mac-native','data')+'/chain',join(nd,'node.json')],{env:{...process.env,...env},stdio:['ignore',fd,fd]}));}finally{closeSync(fd);}let nativeError;native.on('error',e=>{nativeError=e;});await delay(50);need(native.pid&&!nativeError,'Native runtime spawn failed');started.add('mac-native');
+  const peerIds=[];for(const name of names){const until=Date.now()+60000;let info;while(Date.now()<until){if(interrupted)throw interrupted;try{info=await rpc(name,'nno_getNetworkInfo');if(info?.node?.peerId)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}if(interrupted)throw interrupted;need(info?.node?.peerId&&!peerIds.includes(info.node.peerId),'Distinct three runtime peer identities required');peerIds.push(info.node.peerId);need((await rpc(name,'eth_getBlockByNumber',['0x0',false]))?.hash===manifest.executionGenesisHash,'Fresh execution genesis mismatch');}
+  await record({event:'fresh-started',campaignId:manifest.campaignId,sourceBaseRevision:revision,overlayManifestSha256:spec.overlayManifest.sha256,physicalHosts:2,runtimes:3,registeredValidators:64,pendingValidators:1,validatorAllocation:[16,16,33],productionQualified:false});
+  await finality({epoch:'0',root:manifest.initialHeadRoot},'initial',true);
+  if(spec.backupRestore){
+   const before=await stopped('vps-docker');restoreReceipt=before.receipt;const nonce=randomUUID();restoreStopEnvelope={format:'nano-fresh-capella-independent-stop-v1',stopNonce:nonce,receipt:restoreReceipt};const stopBytes=await save(join(output,'independent-stop.json'),restoreStopEnvelope),stopSha=sha(stopBytes);
+   const withWitness=await capturePair('vps-docker',restoreReceipt,'backup-source');
+   const rd=join(output,'restore');await mkdir(rd,{mode:0o700});const original=JSON.parse(await readFile(join(prepared,'vps-docker','node.json'),'utf8')),identities=preparedManifest.nodes[2].signerIdentities,pinned=pinnedRestoreConfiguration(original,restoreReceipt,identities);const request=restoreAuditRequest(original,restoreReceipt);
+   await save(join(rd,'node.json'),pinned);await save(join(rd,'audit-request.json'),request);await sh(['mkdir','-m','700',remoteRoot+'/restore']);await exec('scp',['-q',join(output,'independent-stop.json'),join(rd,'audit-request.json'),target+':'+remoteRoot+'/restore/'],{timeout:10000});
+   // The original data AND witness volumes stay stopped/read-only. The shell
+   // receives the independent receipt SHA, never pins derived from its archive.
+   const aa=owner('vps-docker');const script=join(harnessRoot,'tests/multihost/backup-restore.sh');await observe(script,null,true);await exec('scp',['-q',script,target+':'+remoteRoot+'/restore/backup-restore.sh'],{timeout:10000});
+   const begun=Date.now();await docker(['run','--rm',...safe('vps-docker'),...dataMount('vps-docker',true),'--mount',`type=bind,src=${configAt('vps-docker')},dst=/config,readonly`,'--mount',`type=bind,src=${remoteRoot}/restore,dst=/proof`,'--entrypoint','bash',aa.image,'/proof/backup-restore.sh','--two-roots',rootFor('vps-docker','data'),rootFor('vps-docker','witness'),'/proof/backup','/config/genesis.json','/proof/audit-request.json',aa.programs.nano.path,'/proof/independent-stop.json',stopSha],true,180000);
+   need(Date.now()-begun<=Number(BigInt(spec.clock.maximumDowntimeMs)),'Restore exceeded explicit downtime bound');const stopAgain=JSON.parse(await observe(join(output,'independent-stop.json'),{sha256:stopSha,bytes:stopBytes.length},true,false));need(stopAgain.stopNonce===nonce&&canonical(stopAgain.receipt)===canonical(restoreReceipt),'Independent stop receipt changed');
+   restoreAudit=await remotePublic({mode:'audit-read',prefix:'backup-audit',path:remoteRoot+'/restore/backup/audit.json'});verifyRestoredFinalityAudit(request,restoreReceipt,restoreAudit);await save(join(rd,'audit.json'),restoreAudit);
+   await docker(['rm',containers['vps-docker']],true);await exec('scp',['-q',join(rd,'node.json'),target+':'+configAt('vps-docker')+'/node.json'],{timeout:10000});
+   restoredMounts=['--mount',`type=bind,src=${remoteRoot}/restore/backup/restored-data,dst=${rootFor('vps-docker','data')}`,'--mount',`type=bind,src=${remoteRoot}/restore/backup/restored-witness,dst=${rootFor('vps-docker','witness')}`];
+   // Same virtual namespaces, explicitly new physical roots. Independent P/W
+   // capture runs on those exact restored mounts before any writer is started.
+   const restoredCapture=await remotePublic({mode:'capture-once',prefix:'restored-before-runtime',argv:captureVmArgv(withWitness.remoteStopFile,restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x))});need(restoredCapture.externalWitnessTokensMatched===true,'Restored copies must authenticate original independent witness pins');await save(join(rd,'restored-capture.json'),restoredCapture);
+   await startDocker('vps-docker',restoredMounts);let resumedPeer;for(let i=0;i<60;i++){if(interrupted)throw interrupted;try{resumedPeer=(await rpc('vps-docker','nno_getNetworkInfo')).node?.peerId;if(resumedPeer)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}if(interrupted)throw interrupted;need(resumedPeer===remotePeer,'Restored peer identity changed');
+   await finality({epoch:BigInt(restoreReceipt.finalized.epoch).toString(),root:restoreReceipt.finalized.root},'restored',false);
+  }
+ }catch(e){failure=e;await record({event:'fresh-failed',message:e.stack,productionQualified:false});}
+ finally{
+  const terminal=[];for(const name of [...started])try{const x=await stopped(name);terminal.push({name,receipt:x.receipt});}catch(e){failure??=e;await record({event:'fresh-clean-stop-failed',owner:name,message:e.message});}
+  // Also join a child spawned before it could be added to started.
+  for(const [child,name,timeout] of [[native,'Native runtime',30000],[tunnel,'Tunnel',5000]])try{if(await terminateJoined(child,name,timeout))failure??=Error(name+' cleanup required SIGKILL');}catch(e){failure??=e;}
+  publicCheckStage='terminal-capture-and-recovery-audit';
+  try{need(childAbsent(native)&&childAbsent(tunnel),'Native runtime and tunnel must exit and close before stopped captures');need(terminal.length===3,'All three terminal signer receipts required');for(const z of terminal)await capturePair(z.name,z.receipt,'terminal-'+z.name);for(const z of terminal)need(z.receipt.validator.healthy===true&&z.receipt.validator.failure===null&&z.receipt.validator.attestationsAdmitted>0,'Each owner must admit duties');if(spec.backupRestore){const restored=terminal.find(z=>z.name==='vps-docker')?.receipt,stable=JSON.parse(await readFile(join(output,'restored-finality.json'),'utf8')).result;validateRestoredFinality(restoreReceipt,stable,restored);
+    const original=JSON.parse(await readFile(join(prepared,'vps-docker','node.json'),'utf8')),request=restoredFinalityAuditRequest(original,restoreReceipt,stable,restored,preparedManifest.nodes[2].signerIdentities),requestPath=join(output,'restored-finalized-audit-request.json');await save(requestPath,request);await exec('scp',['-q',requestPath,target+':'+remoteRoot+'/restore/finalized-audit-request.json'],{timeout:10000});const a=owner('vps-docker');const auditName='nano-qualification-op-'+uuid+'-'+(++operation);ownedRuns.push({name:auditName,remote:true});const audit=await remotePublic({mode:'audit-run',prefix:'restored-finalized-audit',argv:['sudo','-n','docker','run','--name',auditName,'--label',label,'--rm',...safe('vps-docker'),...restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x),'--mount',`type=bind,src=${configAt('vps-docker')},dst=/config,readonly`,'--mount',`type=bind,src=${remoteRoot}/restore/finalized-audit-request.json,dst=/request.json,readonly`,'--entrypoint',a.programs.nano.path,a.image,'audit-capella','/config/genesis.json',rootFor('vps-docker','data')+'/chain','/request.json']});verifyRestoredFinalityAudit(request,restored,audit);await save(join(output,'restored-finalized-audit.json'),audit);
+   }
+   publicCheckStage='final-software-read';const finalSoftware=await software();publicCheckStage='final-software-comparison';need(initialSoftware&&canonical(finalSoftware)===canonical(initialSoftware),'Exact public software changed');publicCheckStage='final-held-fence';await fence();publicCheckStage='final-new-output-fence';for(const [path,z] of newFiles)await observe(path,z,false,false);publicCheckStage='terminal-receipts-publication';await save(join(output,'terminal-receipts.json'),terminal);publicCheckStage='terminal-receipts-complete';
+  }catch(e){failure??=e;await record({event:'fresh-final-fence-failed',stage:publicCheckStage,message:e.message,publicInputDiagnostic:e.publicInputDiagnostic??null});}
+  for(const x of ownedRuns)try{const raw=await docker(['ps','-a','--filter','name=^/'+x.name+'$','--format','{{.Names}}'],x.remote);if(raw.trim()){const inspect=JSON.parse(await docker(['inspect',x.name,'--format','{{json .}}'],x.remote));need(inspect.Name==='/'+x.name&&inspect.Config.Labels?.['nano.fresh.campaign']===uuid,'Cleanup owner label mismatch');if(inspect.State.Running){await docker(['stop','--time','10',x.name],x.remote,20000);failure??=Error('Late owned container required cleanup');}}}catch(e){failure??=e;}
+  // No pruning. Named volumes, stopped containers, private synthetic fixture
+  // and exact reports remain for ROOT's separate cold audit and next phase.
+  for(const name of ['mac-docker','vps-docker'])try{const active=(await docker(['ps','--filter','label='+label,'--format','{{.Names}}'],name==='vps-docker')).trim();need(!active,'Owned campaign still has running container');}catch(e){failure??=e;}
+  const nativeProcessAbsent=childAbsent(native),tunnelProcessAbsent=childAbsent(tunnel);try{need(nativeProcessAbsent&&tunnelProcessAbsent,'Native runtime/tunnel exit and close join required at terminal');}catch(e){failure??=e;}
+  if(interrupted)failure??=interrupted;process.removeListener('SIGINT',onSignal);process.removeListener('SIGTERM',onSignal);
+  await save(join(output,'result.json'),{format:'nano-fresh-capella-three-owner-result-v1',passed:!failure,sourceBaseRevision:revision,overlayManifestSha256:spec.overlayManifest.sha256,campaignId:manifest?.campaignId??null,runtimes:3,physicalHosts:2,registeredSyntheticKeys:64,pendingSyntheticKeys:1,backupRestoreRequested:spec.backupRestore,nativeProcessAbsent,tunnelProcessAbsent,originalOperationalRecoveryQualified:false,networkProductionQualified:false,productionQualified:false});
+ }
+ if(failure)throw failure;
 }

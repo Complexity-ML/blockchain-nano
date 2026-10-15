@@ -23,11 +23,14 @@ class AuthenticatedCheckpointBlobClosure {
   const std::function<std::optional<std::string>(const Bytes&,size_t)>&,
   const std::vector<CheckpointArchiveEntry>&,const std::function<void()>&);
  std::map<Bytes,size_t> references_;
- Json identity_,execution_head_;
+ Json identity_,execution_head_,observation_;
  Phase0ForkSlashingContext head_context_{};
  AuthenticatedCheckpointBlobClosure()=default;
 public:
  Json description()const;
+ // Value-only metadata from the same complete durable decoder. No Store,
+ // provider, lease, pending wire or mutable signing authority escapes.
+ Json observation()const{return observation_;}
  // Authenticated HEAD block context, not justified/target/UTC duty context.
  // Owns the full registry and returns a copy; no mutable Store/lease escapes.
  Phase0ForkSlashingContext head_context()const{return head_context_;}
