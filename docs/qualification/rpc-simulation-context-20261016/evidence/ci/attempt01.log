@@ -1,0 +1,77 @@
+✔ exact fifteen daily registrations validate without claiming full C++ qualification (47.461125ms)
+✔ missing, duplicated and foreign registrations cannot pass daily core gate (24.021167ms)
+✔ all CTest skip properties are refused even when value is false (17.840209ms)
+✔ green overrides cannot invert or ignore a failed positive C++ check (17.2985ms)
+✔ explicit positive numeric budgets and unique properties are required (21.471083ms)
+✔ new capture command, helper name, label and exact fifteen-second budget are bound (44.118208ms)
+✔ duty availability registration cannot substitute a different program, mode, label or budget (44.883917ms)
+✔ RPC simulation context registration binds its program, dedicated selector, label and ninety-second budget (36.657083ms)
+✖ daily shell refuses a green CTest exit with a skipped or incomplete JUnit report (36.097292ms)
+✖ operations job refuses a missing mandatory recovery test before globs can hide it (6.999291ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 8
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 341.437958
+
+✖ failing tests:
+
+test at scripts/ci/check-core.test.mjs:53:1
+✖ daily shell refuses a green CTest exit with a skipped or incomplete JUnit report (36.097292ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: Command failed: bash /work/scripts/ci/core.sh build
+  
+      at async file:///work/scripts/ci/check-core.test.mjs:66:3
+      at async fixture (file:///work/scripts/ci/check-core.test.mjs:20:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: bash /work/scripts/ci/core.sh build
+    
+        at genericNodeError (node:internal/errors:998:15)
+        at wrappedFn (node:internal/errors:543:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:509:20)
+        at maybeClose (node:internal/child_process:1108:16)
+        at Socket.<anonymous> (node:internal/child_process:480:11)
+        at Socket.emit (node:events:509:20)
+        at Pipe.<anonymous> (node:net:350:12),
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at scripts/ci/check-core.test.mjs:69:1
+✖ operations job refuses a missing mandatory recovery test before globs can hide it (6.999291ms)
+  AssertionError [ERR_ASSERTION]: The validation function is expected to return "true". Received false
+  
+  Caught error:
+  
+  Error: Command failed: sh /work/scripts/ci/operations.sh
+  /work/scripts/ci/operations.sh: 4: node: not found
+  
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///work/scripts/ci/check-core.test.mjs:70:2
+      at async fixture (file:///work/scripts/ci/check-core.test.mjs:20:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: Error: Command failed: sh /work/scripts/ci/operations.sh
+    /work/scripts/ci/operations.sh: 4: node: not found
+    
+        at genericNodeError (node:internal/errors:998:15)
+        at wrappedFn (node:internal/errors:543:14)
+        at ChildProcess.exithandler (node:child_process:417:12)
+        at ChildProcess.emit (node:events:509:20)
+        at maybeClose (node:internal/child_process:1108:16)
+        at ChildProcess._handle.onexit (node:internal/child_process:305:5),
+    operator: 'rejects',
+    diff: 'simple'
+  }

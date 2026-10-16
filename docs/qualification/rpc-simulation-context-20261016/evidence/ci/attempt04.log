@@ -1,0 +1,37 @@
+✖ daily shell refuses a green CTest exit with a skipped or incomplete JUnit report (55.201042ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 99.868375
+
+✖ failing tests:
+
+test at scripts/ci/check-core.test.mjs:53:1
+✖ daily shell refuses a green CTest exit with a skipped or incomplete JUnit report (55.201042ms)
+  AssertionError [ERR_ASSERTION]: {
+    "scenario": "incomplete",
+    "code": 127,
+    "signal": null,
+    "stdout": "",
+    "stderr": "+ set -euo pipefail\n+ [[ -n '' ]]\n+ build_dir=build\n+ mkdir -p ci-reports\n+ git -c safe.directory=/tmp/nano-core-selection-NTXTfb rev-parse HEAD\n+ cmake --version\n+ /tool/node --version\n+ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release\n+ tee ci-reports/configure.log\n+ cmake --build build --parallel 2 --target nano-rpc-simulation-context-tests nano-capella-duty-availability-tests nano nano-tests nano-chain-tests nano-rpc-queue-tests nano-consensus-bls-tests nano-consensus-bls-aggregate-tests nano-execution-checkpoint-tests nano-capella-execution-tests nano-capella-transition-tests nano-local-monotonic-time-tests nano-capella-slashing-fixture nano-capella-slashing-audit nano-capella-deposit-audit nano-capella-paused-capture nano-capella-isolated-bootstrap-audit nano-capella-isolated-stopped-capture\n+ tee ci-reports/build.log\n+ pattern='^(core|chain|rpc_queue_expiry|rpc_simulation_context|ethereum_consensus_bls_verify|ethereum_consensus_bls_fast_aggregate|storage_execution_checkpoint|consensus_capella_payload_paired_state|consensus_capella_signed_transition|consensus_capella_clock_diagnostics|consensus_capella_published_signed_inventory|consensus_capella_publication_cancel_boundary|consensus_local_monotonic_time|consensus_capella_duty_projection_availability|consensus_isolated_stopped_capture_guards)$'\n+ ctest --test-dir build -R '^(core|chain|rpc_queue_expiry|rpc_simulation_context|ethereum_consensus_bls_verify|ethereum_consensus_bls_fast_aggregate|storage_execution_checkpoint|consensus_capella_payload_paired_state|consensus_capella_signed_transition|consensus_capella_clock_diagnostics|consensus_capella_published_signed_inventory|consensus_capella_publication_cancel_boundary|consensus_local_monotonic_time|consensus_capella_duty_projection_availability|consensus_isolated_stopped_capture_guards)$' --show-only=json-v1\n+ cmake -DREGISTRY=/tmp/nano-core-selection-NTXTfb/ci-reports/selection.json -P scripts/ci/check-core.cmake\n++ find build -maxdepth 1 -type f '(' -name libnano-test-sync-fault.so -o -name libnano-test-sync-fault.dylib ')' -print\n++ sort\n+ fault_library=build/libnano-test-sync-fault.so\n+ test -f build/libnano-test-sync-fault.so\n+ sha256sum build/libnano-test-sync-fault.so\n+ ctest --test-dir build -R '^(core|chain|rpc_queue_expiry|rpc_simulation_context|ethereum_consensus_bls_verify|ethereum_consensus_bls_fast_aggregate|storage_execution_checkpoint|consensus_capella_payload_paired_state|consensus_capella_signed_transition|consensus_capella_clock_diagnostics|consensus_capella_published_signed_inventory|consensus_capella_publication_cancel_boundary|consensus_local_monotonic_time|consensus_capella_duty_projection_availability|consensus_isolated_stopped_capture_guards)$' --output-on-failure --no-tests=error --parallel 1 --output-junit /tmp/nano-core-selection-NTXTfb/ci-reports/core.xml\n+ tee ci-reports/core-tests.log\n+ bash scripts/ci/verify-results.sh ci-reports/selection.json ci-reports/core.xml\nscripts/ci/verify-results.sh: line 3: python3: command not found\n",
+    "selectionAudit": "-- Verified 15 daily core CTest registrations; full qualification not claimed\n",
+    "resultAudit": ""
+  }
+  
+  127 !== 1
+  
+      at file:///work/scripts/ci/check-core.test.mjs:88:10
+      at async fixture (file:///work/scripts/ci/check-core.test.mjs:20:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

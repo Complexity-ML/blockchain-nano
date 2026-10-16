@@ -127,7 +127,7 @@ int main(){try{
   check(receipt.success&&receipt.gas_used==gas,"estimated dynamic fee gas agrees with signed transaction execution");
   check(chain.state().root()==genesis.state.root(),"fee simulation leaves canonical state unchanged");
  }
- check(call("eth_call",{Json{{"to",price_contract},{"gasPrice","0x7"}}})==hex(bytes(Int(7),32)),"legacy call preserves explicit GASPRICE");
+ check(call("eth_call",{Json{{"from",sender},{"to",price_contract},{"gasPrice","0x7"}}})==hex(bytes(Int(7),32)),"legacy call preserves explicit GASPRICE");
  Transaction tx;tx.to=contract;tx.gas=100000;tx.gas_price=2000000000;auto signed_tx=SignedTransaction::sign(tx,key);
  check(call("eth_sendRawTransaction",{hex(signed_tx.raw())})==hex(signed_tx.hash()),"submit raw transaction");
  check(call("txpool_status")==Json{{"pending","0x1"},{"queued","0x0"}},"nonempty txpool status uses RPC quantities");
@@ -149,7 +149,7 @@ int main(){try{
  check(call("eth_getTransactionByBlockHashAndIndex",{hex(mined.header.hash()),"0x0"})["hash"]==hex(signed_tx.hash()),"transaction index lookup");
  check(call("eth_getBlockTransactionCountByNumber",{"latest"})=="0x1","block transaction count");
 
- Json historical_price={{"to",price_contract},{"maxFeePerGas","0xb2d05e00"},{"maxPriorityFeePerGas","0xbebc200"}};
+ Json historical_price={{"from",sender},{"to",price_contract},{"maxFeePerGas","0xb2d05e00"},{"maxPriorityFeePerGas","0xbebc200"}};
  check(call("eth_call",{historical_price,"earliest"})==hex(bytes(Int(genesis.block.header.base_fee.value_or(Int(0))+200000000),32)),"historical simulation uses genesis base fee");
  check(call("eth_call",{historical_price,"latest"})==hex(bytes(Int(mined.header.base_fee.value_or(Int(0))+200000000),32)),"latest simulation uses current base fee");
  Json hash_call={{"to",hash_contract},{"data",hex(bytes(Int(0),32))}};

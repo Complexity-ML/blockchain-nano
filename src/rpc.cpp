@@ -68,27 +68,47 @@ Transaction simulation_transaction(Json call){
  if(tx.type<2&&!call.contains("gasPrice"))tx.gas_price=0;
  return tx;
 }
-ExecutionResult simulate(const State& state,const Header& header,const Int& chain_id,const Json& call,uint64_t gas,const std::map<Int,Bytes>& ancestors,EvmRevision revision,const std::function<void()>& checkpoint){
- checkpoint();
- auto copy=state;Transaction tx=simulation_transaction(call);if(tx.type>2)throw RpcError(-32602,"Transaction type unavailable on Nano network");auto sender=address(call.value("from",std::string("0x0000000000000000000000000000000000000000")));
- Int intrinsic=transaction_intrinsic_gas(tx,revision);if(Int(std::to_string(gas))<intrinsic){ExecutionResult out;out.error="intrinsic gas exceeds limit";return out;}
- Int floor=transaction_floor_gas(tx,revision);if(Int(std::to_string(gas))<floor){ExecutionResult out;out.error="transaction gas below calldata floor";return out;}
- auto destination=tx.to?address(*tx.to):create_address(sender,state.get(sender).nonce);
- if(!tx.to&&(state.get(destination).nonce!=0||!state.get(destination).code.empty()||(revision!=EvmRevision::NanoExperimental&&!state.get(destination).storage.empty()))){
-  ExecutionResult out;out.error="contract address collision";out.gas_used=gas;return out;
+ExecutionResult simulate(const State& state,const Header& header,const Int& chain_id,const Json& call,uint64_t gas,const std::map<Int,Bytes>& ancestors,EvmRevision revision,const std::function<void()>& checkpoint,EvmAccessListTrace* trace=nullptr){
+ checkpoint();State copy=state;const auto tx=simulation_transaction(call);const auto sender=address(call.value("from",std::string("0x0000000000000000000000000000000000000000")));const auto& account=state.get(sender);
+ const Int intrinsic=transaction_intrinsic_gas(tx,revision),floor=transaction_floor_gas(tx,revision),gas_int(std::to_string(gas));
+ if(gas_int<intrinsic||gas_int<floor){
+  if(trace)throw RpcError(-32000,"Intrinsic gas exceeds access list simulation limit");
+  ExecutionResult out;out.error=gas_int<intrinsic?"intrinsic gas exceeds limit":"transaction gas below calldata floor";return out;
  }
+ // Keep the historical pre-London access-list base at zero. Normal calls on
+ // NanoExperimental retain their existing explicit dynamic GASPRICE calculation.
+ const Int base=trace&&revision<EvmRevision::Paris?Int(0):header.base_fee.value_or(Int(0));
+ // RPC messages select their fee style from the supplied fee fields, not the
+ // signed-envelope type hint. Omitted fees stay zero; no wallet tip is invented.
+ const Int cap=call.contains("gasPrice")?tx.gas_price:tx.max_fee;
+ const Int price=call.contains("gasPrice")?tx.gas_price:std::min(cap,Int(base+tx.priority_fee));
+ if(revision>=EvmRevision::Paris&&cap<base&&(cap!=0||tx.priority_fee!=0))throw RpcError(-32000,"Fee cap below selected block base fee");
+ const Int required=tx.value+gas_int*cap;
+ if(required>=(Int(1)<<256)||account.balance<required)throw RpcError(-32000,"Insufficient funds for gas and value");
+ if(account.nonce>=Int("18446744073709551615"))throw RpcError(-32000,"Sender nonce exceeds simulation limit");
+ const auto destination=tx.to?address(*tx.to):create_address(sender,account.nonce);
+ if(!tx.to&&(state.get(destination).nonce!=0||!state.get(destination).code.empty()||(revision!=EvmRevision::NanoExperimental&&!state.get(destination).storage.empty()))){ExecutionResult out;out.error="contract address collision";out.gas_used=gas;return out;}
+ // Gas purchase and nonce advancement are visible to this execution only.
+ // CREATE uses the captured state nonce, never the untrusted RPC nonce hint.
+ copy.get(sender).balance-=gas_int*price;copy.get(sender).nonce=account.nonce+1;
  if(!copy.transfer(sender,destination,tx.value))throw RpcError(-32000,"Insufficient funds for call value");
- ExecutionContext ctx;ctx.checkpoint=checkpoint;ctx.revision=revision;ctx.access_list=tx.access_list;ctx.origin=sender;ctx.caller=sender;ctx.address=destination;ctx.value=tx.value;ctx.gas=gas-u64(intrinsic);ctx.chain_id=chain_id;ctx.gas_price=tx.effective_gas_price(header.base_fee.value_or(Int(0)));ctx.coinbase=header.coinbase;ctx.timestamp=header.timestamp;ctx.number=header.number;ctx.prevrandao=block_randomness(header,revision);ctx.gas_limit=header.gas_limit;ctx.base_fee=header.base_fee.value_or(Int(0));if(revision>=EvmRevision::Cancun)ctx.blob_base_fee=blob_base_fee(header.excess_blob_gas.value_or(Int(0)),revision);ctx.block_hash=[&ancestors](const Int& number){auto it=ancestors.find(number);if(it==ancestors.end())throw std::runtime_error("missing ancestor block");return it->second;};
+ ExecutionContext ctx;ctx.checkpoint=checkpoint;ctx.revision=revision;ctx.access_list=tx.access_list;ctx.origin=sender;ctx.caller=sender;ctx.address=destination;ctx.value=tx.value;ctx.gas=gas-u64(intrinsic);ctx.chain_id=chain_id;ctx.gas_price=price;ctx.coinbase=header.coinbase;ctx.timestamp=header.timestamp;ctx.number=header.number;ctx.prevrandao=block_randomness(header,revision);ctx.gas_limit=header.gas_limit;ctx.base_fee=price==0?Int(0):base;if(revision>=EvmRevision::Cancun)ctx.blob_base_fee=blob_base_fee(header.excess_blob_gas.value_or(Int(0)),revision);ctx.block_hash=[&ancestors](const Int& number){auto it=ancestors.find(number);if(it==ancestors.end())throw std::runtime_error("missing ancestor block");return it->second;};
  if(tx.to){ctx.data=tx.data;ctx.code=copy.get(destination).code;}else{ctx.code=tx.data;ctx.contract_creation=true;copy.get(destination).nonce=1;}
  if(revision>=EvmRevision::Prague&&tx.to)if(auto target=delegation_target(ctx.code)){ctx.authorization_warm_addresses.insert(*target);ctx.code=is_precompile(integer(unhex(*target)),revision)?Bytes{}:static_cast<const State&>(copy).get(*target).code;}
- EVM evm(copy);auto result=evm.execute(ctx);
- if(result.success&&!tx.to){uint64_t deposit=result.return_data.size()*200;if(result.return_data.size()>24576||deposit>ctx.gas-result.gas_used||((revision>=EvmRevision::Paris)&&!result.return_data.empty()&&result.return_data[0]==0xef)){result.success=false;result.error="contract code deposit out of gas";}else result.gas_used+=deposit;}
- result.gas_used+=u64(intrinsic);result.gas_used=std::max(result.gas_used,u64(floor));return result;
+ EVM evm(copy);auto result=trace?evm.execute(ctx,*trace):evm.execute(ctx);
+ if(result.success&&!tx.to){const uint64_t deposit=result.return_data.size()*200;if(result.return_data.size()>24576||deposit>ctx.gas-result.gas_used||((revision>=EvmRevision::Paris)&&!result.return_data.empty()&&result.return_data[0]==0xef)){result.success=false;result.error="contract code deposit out of gas";if(trace){result.gas_used=ctx.gas;result.gas_refund=0;}}else result.gas_used+=deposit;}
+ // Access-list results quote gas after refunds. The estimator still needs its
+ // original pre-refund allowance hint and verifies every candidate by execution.
+ Int consumed=intrinsic+Int(std::to_string(result.gas_used));
+ if(trace&&result.success)consumed-=std::max(Int(0),std::min(result.gas_refund,Int(consumed/(revision==EvmRevision::Berlin?2:5))));
+ result.gas_used=u64(std::max(consumed,floor));if(trace)checkpoint();return result;
 }
 
 Int access_quantity(const Json& value,unsigned width,const char* name){
  if(!value.is_string())throw RpcError(-32602,std::string("Expected quantity: ")+name);
- const auto n=quantity(value);if(n<0||n>=(Int(1)<<width)||quantity(n)!=value.get<std::string>())throw RpcError(-32602,std::string("Invalid quantity: ")+name);return n;
+ const auto& text=value.get_ref<const std::string&>();
+ if(text.size()<3||text.size()>2+(width+3)/4||!text.starts_with("0x"))throw RpcError(-32602,std::string("Invalid quantity: ")+name);
+ const auto n=quantity(value);if(n<0||n>=(Int(1)<<width)||quantity(n)!=text)throw RpcError(-32602,std::string("Invalid quantity: ")+name);return n;
 }
 bool access_prefix(const std::string& s){return s.size()>=2&&s[0]=='0'&&(s[1]=='x'||s[1]=='X');}
 std::string access_address(const Json& value){if(!value.is_string())throw RpcError(-32602,"Expected 20-byte address");const auto& text=value.get_ref<const std::string&>();if(text.size()!=42||!access_prefix(text))throw RpcError(-32602,"Expected 20-byte address");return address(text);}
@@ -126,6 +146,22 @@ void access_seed_bound(const Json& call,const RpcSimulationLimits& limits,const 
   for(const auto& key:row["storageKeys"]){check();if(!key.is_string()||key.get_ref<const std::string&>().size()!=66||!access_prefix(key.get_ref<const std::string&>())||unhex(key.get<std::string>()).size()!=32)throw RpcError(-32602,"Expected 32-byte access list storage key");}
  }
 }
+// Validate and own the same bounded RPC message shape before capturing state.
+// Fee defaults remain method-specific: calls use zero; access-list discovery
+// retains its existing wallet-style defaults after selecting the header.
+Json simulation_arguments(Json args,const Int& chain_id,const RpcSimulationLimits& limits,const std::function<void()>& check){
+ for(auto it=args.begin();it!=args.end();)if(it.value().is_null())it=args.erase(it);else ++it;
+ for(const auto* field:{"blobVersionedHashes","maxFeePerBlobGas","blobs","commitments","proofs","authorizationList"})if(args.contains(field))throw RpcError(-32602,"Transaction extension unavailable on Nano network");
+ for(const auto* field:{"chainId","type","value","gasPrice","maxFeePerGas","maxPriorityFeePerGas"})if(args.contains(field))(void)access_quantity(args[field],256,field);
+ for(const auto* field:{"gas","nonce"})if(args.contains(field))(void)access_quantity(args[field],64,field);
+ if(args.contains("chainId")&&quantity(args["chainId"])!=chain_id)throw RpcError(-32602,"chainId does not match node");
+ if(args.contains("type")&&quantity(args["type"])>2)throw RpcError(-32602,"Transaction type unavailable on Nano network");
+ if(args.contains("gasPrice")&&(args.contains("maxFeePerGas")||args.contains("maxPriorityFeePerGas")))throw RpcError(-32602,"Both legacy and dynamic fees specified");
+ if(args.contains("from"))args["from"]=access_address(args["from"]);else args["from"]="0x0000000000000000000000000000000000000000";
+ if(args.contains("to"))args["to"]=access_address(args["to"]);
+ for(const auto* field:{"input","data"})if(args.contains(field))access_data(args[field]);
+ access_seed_bound(args,limits,check);return args;
+}
 void access_overrides(State& state,const Json& overrides,const RpcSimulationLimits& limits,const std::function<void()>& check){
  if(overrides.is_null())return;if(!overrides.is_object())throw RpcError(-32602,"Expected state override object");if(overrides.size()>limits.maximum_access_list_addresses)throw RpcError(-32005,"State override account limit exceeded");size_t slots=0,code_bytes=0;std::set<std::string> accounts;
  for(const auto& [text,row]:overrides.items()){check();const auto account=access_address(Json(text));if(!accounts.insert(account).second||!row.is_object())throw RpcError(-32602,"Invalid or duplicate state override account");
@@ -138,21 +174,7 @@ void access_overrides(State& state,const Json& overrides,const RpcSimulationLimi
   }
  }
 }
-ExecutionResult simulate_access(const State& state,const Header& header,const Int& chain_id,const Json& call,uint64_t gas,const std::map<Int,Bytes>& ancestors,EvmRevision revision,const std::function<void()>& checkpoint,EvmAccessListTrace& trace){
- checkpoint();State copy=state;const auto tx=simulation_transaction(call);const auto sender=address(call.value("from",std::string("0x0000000000000000000000000000000000000000")));const auto& account=state.get(sender);
- const Int intrinsic=transaction_intrinsic_gas(tx,revision),floor=transaction_floor_gas(tx,revision),gas_int(std::to_string(gas));if(gas_int<intrinsic||gas_int<floor)throw RpcError(-32000,"Intrinsic gas exceeds access list simulation limit");
- const Int base=revision>=EvmRevision::Paris?header.base_fee.value_or(Int(0)):Int(0),cap=tx.type>=2?tx.max_fee:tx.gas_price,price=tx.effective_gas_price(base);
- if(cap<base&&(cap!=0||tx.priority_fee!=0))throw RpcError(-32000,"Fee cap below selected block base fee");if(account.balance<tx.value+gas_int*cap)throw RpcError(-32000,"Insufficient funds for gas and value");
- if(account.nonce>=Int("18446744073709551615"))throw RpcError(-32000,"Sender nonce exceeds simulation limit");const auto destination=tx.to?address(*tx.to):create_address(sender,account.nonce);
- if(!tx.to&&(state.get(destination).nonce!=0||!state.get(destination).code.empty()||(revision!=EvmRevision::NanoExperimental&&!state.get(destination).storage.empty()))){ExecutionResult out;out.error="contract address collision";out.gas_used=gas;return out;}
- copy.get(sender).balance-=gas_int*price;copy.get(sender).nonce=account.nonce+1;if(!copy.transfer(sender,destination,tx.value))throw RpcError(-32000,"Insufficient funds for call value");
- ExecutionContext ctx;ctx.checkpoint=checkpoint;ctx.revision=revision;ctx.access_list=tx.access_list;ctx.origin=sender;ctx.caller=sender;ctx.address=destination;ctx.value=tx.value;ctx.gas=gas-u64(intrinsic);ctx.chain_id=chain_id;ctx.gas_price=price;ctx.coinbase=header.coinbase;ctx.timestamp=header.timestamp;ctx.number=header.number;ctx.prevrandao=block_randomness(header,revision);ctx.gas_limit=header.gas_limit;ctx.base_fee=price==0?Int(0):base;if(revision>=EvmRevision::Cancun)ctx.blob_base_fee=blob_base_fee(header.excess_blob_gas.value_or(Int(0)),revision);ctx.block_hash=[&ancestors](const Int& n){auto it=ancestors.find(n);if(it==ancestors.end())throw std::runtime_error("missing ancestor block");return it->second;};
- if(tx.to){ctx.data=tx.data;ctx.code=copy.get(destination).code;}else{ctx.code=tx.data;ctx.contract_creation=true;copy.get(destination).nonce=1;}
- if(revision>=EvmRevision::Prague&&tx.to)if(auto target=delegation_target(ctx.code)){ctx.authorization_warm_addresses.insert(*target);ctx.code=is_precompile(integer(unhex(*target)),revision)?Bytes{}:static_cast<const State&>(copy).get(*target).code;}
- EVM evm(copy);auto result=evm.execute(ctx,trace);
- if(result.success&&!tx.to){const uint64_t deposit=result.return_data.size()*200;if(result.return_data.size()>24576||deposit>ctx.gas-result.gas_used||((revision>=EvmRevision::Paris)&&!result.return_data.empty()&&result.return_data[0]==0xef)){result.success=false;result.error="contract code deposit out of gas";result.gas_used=ctx.gas;result.gas_refund=0;}else result.gas_used+=deposit;}
- Int consumed=intrinsic+Int(std::to_string(result.gas_used));if(result.success)consumed-=std::max(Int(0),std::min(result.gas_refund,Int(consumed/(revision==EvmRevision::Berlin?2:5))));result.gas_used=u64(std::max(consumed,floor));checkpoint();return result;
-}
+
 }
 RpcSimulationLimits RpcSimulationLimits::from_json(const Json& config){
  if(!config.is_object())throw std::invalid_argument("rpcSimulation must be an object");for(auto it=config.begin();it!=config.end();++it)if(it.key()!="timeout_ms"&&it.key()!="maximum_access_list_iterations"&&it.key()!="maximum_access_list_addresses"&&it.key()!="maximum_access_list_storage_keys"&&it.key()!="maximum_access_list_override_code_bytes")throw std::invalid_argument("Unknown rpcSimulation setting: "+it.key());
@@ -537,15 +559,7 @@ std::function<Json()> Rpc::prepare_access_list(const Json& p,const std::function
  arity(p,1,3);if(!p[0].is_object())throw RpcError(-32602,"Expected call object");const auto limits=simulation_limits_;
  if(limits.timeout.count()<=0||!limits.now||!limits.maximum_access_list_iterations||!limits.maximum_access_list_addresses||!limits.maximum_access_list_storage_keys||!limits.maximum_access_list_override_code_bytes)throw RpcError(-32602,"Invalid access list simulation limits");
  const auto deadline=limits.now()+limits.timeout;auto check=[deadline,now=limits.now,cancelled]{if(cancelled)cancelled();if(now()>=deadline)throw ExecutionCancelled("RPC access list execution timeout");};check();
- Json args=p[0];for(auto it=args.begin();it!=args.end();)if(it.value().is_null())it=args.erase(it);else ++it;
- for(const auto* field:{"blobVersionedHashes","maxFeePerBlobGas","blobs","commitments","proofs","authorizationList"})if(args.contains(field))throw RpcError(-32602,"Transaction extension unavailable on Nano network");
- for(const auto* field:{"chainId","type","value","gasPrice","maxFeePerGas","maxPriorityFeePerGas"})if(args.contains(field))(void)access_quantity(args[field],256,field);
- for(const auto* field:{"gas","nonce"})if(args.contains(field))(void)access_quantity(args[field],64,field);
- if(args.contains("chainId")&&quantity(args["chainId"])!=chain_.genesis().chain_id)throw RpcError(-32602,"chainId does not match node");
- if(args.contains("type")&&quantity(args["type"])>2)throw RpcError(-32602,"Transaction type unavailable on Nano network");
- if(args.contains("gasPrice")&&(args.contains("maxFeePerGas")||args.contains("maxPriorityFeePerGas")))throw RpcError(-32602,"Both legacy and dynamic fees specified");
- if(args.contains("from"))args["from"]=access_address(args["from"]);else args["from"]="0x0000000000000000000000000000000000000000";
- if(args.contains("to"))args["to"]=access_address(args["to"]);for(const auto* field:{"input","data"})if(args.contains(field))access_data(args[field]);access_seed_bound(args,limits,check);
+ Json args=simulation_arguments(p[0],chain_.genesis().chain_id,limits,check);
  const auto revision=chain_.genesis().evm_revision;const auto chain_id=chain_.genesis().chain_id;
  Json tag=p.size()>1&&!p[1].is_null()?p[1]:Json("latest");std::optional<Block> selected;std::optional<State> state;std::map<Int,Bytes> ancestors;std::function<std::pair<Header,State>()> pending;
  auto selector=simulation_block_selector(std::move(tag),true);tag=std::move(selector.tag);
@@ -579,10 +593,10 @@ std::function<Json()> Rpc::prepare_access_list(const Json& p,const std::function
    if(tip<0||cap<tip||cap>=(Int(1)<<256))throw RpcError(-32602,"Invalid dynamic fee caps");args["maxPriorityFeePerGas"]=quantity(tip);args["maxFeePerGas"]=quantity(cap);args["type"]="0x2";
   }else{if(has_cap||has_tip)throw RpcError(-32602,"Dynamic fees unavailable before London");args["gasPrice"]=quantity(default_tip);args["type"]=args.contains("accessList")?"0x1":"0x0";}
   const Int limit=std::min(header.gas_limit,args.contains("gas")?quantity(args["gas"]):header.gas_limit);const uint64_t gas=u64(limit);args["gas"]=quantity(limit);args["chainId"]=quantity(chain_id);
-  const auto tx=simulation_transaction(args);const auto excluded_to=tx.to?address(*tx.to):create_address(sender,quantity(args["nonce"]));std::set<std::string> excluded{sender,excluded_to};for(unsigned i=1;i<=256;++i)if(is_precompile(Int(i),revision))excluded.insert(address(hex(bytes(Int(i),20))));
+  const auto tx=simulation_transaction(args);const auto excluded_to=tx.to?address(*tx.to):create_address(sender,static_cast<const State&>(*state).get(sender).nonce);std::set<std::string> excluded{sender,excluded_to};for(unsigned i=1;i<=256;++i)if(is_precompile(Int(i),revision))excluded.insert(address(hex(bytes(Int(i),20))));
   EvmAccessListTrace initial(tx.access_list,excluded,limits.maximum_access_list_addresses,limits.maximum_access_list_storage_keys);auto current=initial.access_list();
   for(size_t iteration=0;iteration<limits.maximum_access_list_iterations;++iteration){
-   check();args["accessList"]=access_json(current,check);EvmAccessListTrace trace(current,excluded,limits.maximum_access_list_addresses,limits.maximum_access_list_storage_keys);ExecutionResult result;{rpc_timing::Span timing("access_list_round");result=simulate_access(*state,header,chain_id,args,gas,ancestors,revision,check,trace);}check();auto next=trace.access_list();
+   check();args["accessList"]=access_json(current,check);EvmAccessListTrace trace(current,excluded,limits.maximum_access_list_addresses,limits.maximum_access_list_storage_keys);ExecutionResult result;{rpc_timing::Span timing("access_list_round");result=simulate(*state,header,chain_id,args,gas,ancestors,revision,check,&trace);}check();auto next=trace.access_list();
    if(same_access(current,next)){Json out={{"accessList",access_json(next,check)},{"gasUsed",quantity(Int(std::to_string(result.gas_used)))}};if(!result.success)out["error"]=result.error;check();return out;}current=std::move(next);
   }
   throw RpcError(-32005,"Access list convergence limit exceeded");
@@ -591,17 +605,16 @@ std::function<Json()> Rpc::prepare_access_list(const Json& p,const std::function
 std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Json& p,const std::function<void()>& cancelled){
   if(method=="eth_createAccessList")return prepare_access_list(p,cancelled);
   arity(p,1,2);if(!p[0].is_object())throw RpcError(-32602,"Expected call object");
-  const auto& args=p[0];auto supplied=[&](const char* name){return args.contains(name)&&!args[name].is_null();};
-  if(supplied("chainId")&&quantity(args["chainId"])!=chain_.genesis().chain_id)throw RpcError(-32602,"chainId does not match node");
-  if(supplied("type")&&quantity(args["type"])>2)throw RpcError(-32602,"Transaction type unavailable on Nano network");
-  if(supplied("gasPrice")&&(supplied("maxFeePerGas")||supplied("maxPriorityFeePerGas")))throw RpcError(-32602,"Both legacy and dynamic fees specified");
-  if(supplied("maxPriorityFeePerGas")){
-   Int cap=supplied("maxFeePerGas")?quantity(args["maxFeePerGas"]):Int(0);
-   if(quantity(args["maxPriorityFeePerGas"])>cap)throw RpcError(-32602,"Priority fee exceeds maximum fee");
-  }
-  auto limits=simulation_limits_;auto deadline=limits.now()+limits.timeout;
+  auto limits=simulation_limits_;
+  if(limits.timeout.count()<=0||!limits.now)throw RpcError(-32602,"Invalid call simulation limits");
+  auto deadline=limits.now()+limits.timeout;
   auto checkpoint=[deadline,now=limits.now,cancelled]{if(cancelled)cancelled();if(now()>=deadline)throw ExecutionCancelled("RPC simulation execution timeout");};
   checkpoint();
+  auto args=simulation_arguments(p[0],chain_.genesis().chain_id,limits,checkpoint);
+  if(args.contains("maxPriorityFeePerGas")){
+   const Int cap=args.contains("maxFeePerGas")?quantity(args["maxFeePerGas"]):Int(0);
+   if(quantity(args["maxPriorityFeePerGas"])>cap)throw RpcError(-32602,"Priority fee exceeds maximum fee");
+  }
   std::optional<Block> b;std::optional<State> state;
   std::map<Int,Bytes> ancestors;std::function<std::pair<Header,State>()> pending;
   auto selector=simulation_block_selector(p.size()==2?p[1]:Json("latest"),false);
@@ -626,20 +639,20 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
    else for(Int n=std::max(Int(0),Int(b->header.number-256));n<b->header.number;++n){checkpoint();auto ancestor=chain_.store().block_by_number(n);if(!ancestor)throw RpcError(-32000,"Missing simulation ancestor");ancestors.emplace(n,ancestor->header.hash());}
   }
   auto chain_id=chain_.genesis().chain_id;auto revision=chain_.genesis().evm_revision;
-  return [method,p,b=std::move(b),state=std::move(state),ancestors=std::move(ancestors),chain_id,revision,checkpoint,pending=std::move(pending)]() mutable -> Json {
+  return [method,args=std::move(args),b=std::move(b),state=std::move(state),ancestors=std::move(ancestors),chain_id,revision,checkpoint,pending=std::move(pending)]() mutable -> Json {
   checkpoint();
   if(pending){auto candidate=pending();b->header=std::move(candidate.first);state=std::move(candidate.second);}
-  Int requested=quantity(p[0].value("gas",Json(quantity(b->header.gas_limit))));
+  Int requested=quantity(args.value("gas",Json(quantity(b->header.gas_limit))));
   // Geth treats sub-intrinsic gas as an unspecified estimate hint. Calls and
   // signed admission still enforce their actual gas budget.
   Int limit=method=="eth_estimateGas"&&requested<21000?b->header.gas_limit:std::min(b->header.gas_limit,requested);
   if(method=="eth_estimateGas"){
-   auto tx=simulation_transaction(p[0]);Int cap=0;
+   auto tx=simulation_transaction(args);Int cap=0;
    // Omitted/zero fees are simulation requests, not an invented wallet fee budget.
-   if(p[0].contains("maxFeePerGas")&&!p[0]["maxFeePerGas"].is_null())cap=quantity(p[0]["maxFeePerGas"]);
-   else if(p[0].contains("gasPrice")&&!p[0]["gasPrice"].is_null())cap=quantity(p[0]["gasPrice"]);
+   if(args.contains("maxFeePerGas")&&!args["maxFeePerGas"].is_null())cap=quantity(args["maxFeePerGas"]);
+   else if(args.contains("gasPrice")&&!args["gasPrice"].is_null())cap=quantity(args["gasPrice"]);
    if(cap>0){
-    auto sender=address(p[0].value("from",std::string("0x0000000000000000000000000000000000000000")));
+    auto sender=address(args.value("from",std::string("0x0000000000000000000000000000000000000000")));
     Int balance=static_cast<const State&>(*state).get(sender).balance;
     if(tx.value>=balance)throw RpcError(-32000,"Insufficient funds for gas and value");
     limit=std::min(limit,Int((balance-tx.value)/cap));
@@ -650,12 +663,12 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
   // Preserve their order, budgets, cancellation and return values.
   auto probe=[&](const char* phase,uint64_t gas){
    rpc_timing::Span timing(phase);
-   return simulate(*state,b->header,chain_id,p[0],gas,ancestors,revision,checkpoint);
+   return simulate(*state,b->header,chain_id,args,gas,ancestors,revision,checkpoint);
   };
   uint64_t high=u64(limit);auto result=probe(method=="eth_call"?"call_initial":"estimate_initial",high);
   if(!result.success)throw RpcError(3,"Execution failed: "+result.error,hex(result.return_data));
   if(method=="eth_call")return hex(result.return_data);
-  auto tx=simulation_transaction(p[0]);
+  auto tx=simulation_transaction(args);
   uint64_t low=u64(std::max(transaction_intrinsic_gas(tx,revision),transaction_floor_gas(tx,revision)))-1;
   // A measured budget is returned only after a successful verification.
   // Nested EIP-150 calls can need headroom above their actual consumption.

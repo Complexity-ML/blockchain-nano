@@ -1,0 +1,1380 @@
+{
+  "format": "nano-rpc-context-anvil-oracle-v1",
+  "passed": false,
+  "completed": true,
+  "compared": 258,
+  "expectedCases": 258,
+  "forks": [
+    {
+      "fork": "Paris",
+      "clientVersion": "anvil/v1.5.1",
+      "chainId": "1337",
+      "baseFeePerGas": "0x3b9aca00",
+      "gasLimit": "0x1c9c380",
+      "allocationsVerified": 6,
+      "cases": 129,
+      "headerUnchanged": true,
+      "allocatedAccountsUnchanged": true
+    },
+    {
+      "fork": "Shanghai",
+      "clientVersion": "anvil/v1.5.1",
+      "chainId": "1337",
+      "baseFeePerGas": "0x3b9aca00",
+      "gasLimit": "0x1c9c380",
+      "allocationsVerified": 6,
+      "cases": 129,
+      "headerUnchanged": true,
+      "allocatedAccountsUnchanged": true
+    }
+  ],
+  "readinessObservations": [
+    {
+      "fork": "Paris",
+      "observedClientVersion": "anvil/v1.5.1",
+      "lastReadinessError": "fetch failed",
+      "attempts": 2,
+      "ready": true
+    },
+    {
+      "fork": "Shanghai",
+      "observedClientVersion": "anvil/v1.5.1",
+      "lastReadinessError": "fetch failed",
+      "attempts": 2,
+      "ready": true
+    }
+  ],
+  "unexpectedComparisons": 116,
+  "documentedAccessListZeroFeePolicyComparisons": 0,
+  "estimateQuoteDifferences": 4,
+  "exactAllComparedValuesEqual": false,
+  "differences": [
+    {
+      "index": 0,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 1,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 2,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 3,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 4,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 5,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 6,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 7,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 8,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 9,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 10,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 11,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 12,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 13,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 14,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 15,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 16,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 21,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 26,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 31,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 36,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 41,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 46,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 49,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 51,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xdaa4",
+        "anvil": "0xd783"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 55,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xdaa4",
+        "anvil": "0xd783"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 84,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 85,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 86,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 87,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 88,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 89,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 90,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 91,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 92,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 93,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 94,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 95,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 100,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 102,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 103,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 104,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 105,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 106,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 107,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 108,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 109,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 110,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 114,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 115,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 116,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 117,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 118,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 119,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 120,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "insufficientFunds"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 123,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "invalidParameters"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 124,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "invalidParameters"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 125,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "invalidParameters"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 126,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 127,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 129,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 130,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 131,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 132,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 133,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 134,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 135,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 136,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 137,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 138,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 139,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 140,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 141,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 142,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 143,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 144,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 145,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "returnData",
+      "detail": {
+        "candidate": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a",
+        "anvil": "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 150,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 155,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 160,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 165,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 170,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 175,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 178,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "executionFailure"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 180,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xdaa6",
+        "anvil": "0xd785"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 184,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xdaa6",
+        "anvil": "0xd785"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 213,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 214,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 215,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 216,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 217,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 218,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 219,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 220,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 221,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 222,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 223,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 224,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 229,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 231,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 232,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 233,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 234,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 235,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 236,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 237,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 238,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 239,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 243,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 244,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 245,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 246,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 247,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 248,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 249,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "success",
+        "anvil": "insufficientFunds"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 252,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "invalidParameters"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 253,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "invalidParameters"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 254,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "invalidParameters"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 255,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 256,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "insufficientFunds",
+        "anvil": "success"
+      },
+      "affectsQualitativeComparison": true
+    }
+  ],
+  "firstFailure": null,
+  "cleanupErrors": [],
+  "elapsedMs": 260,
+  "maximumRunMs": 180000,
+  "productionQualified": false,
+  "globalSdkQualified": false,
+  "authorExecuted": false
+}

@@ -1,0 +1,40 @@
+✖ daily shell refuses a green CTest exit with a skipped or incomplete JUnit report (42.306583ms)
+✔ operations job refuses a missing mandatory recovery test before globs can hide it (23.631583ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 120.192791
+
+✖ failing tests:
+
+test at scripts/ci/check-core.test.mjs:53:1
+✖ daily shell refuses a green CTest exit with a skipped or incomplete JUnit report (42.306583ms)
+  AssertionError [ERR_ASSERTION]: {
+    "scenario": "incomplete",
+    "code": 1,
+    "signal": null,
+    "stdout": "CMake Error: The source directory \"/tmp/nano-core-selection-rsmhMD\" does not appear to contain CMakeLists.txt.\nSpecify --help for usage, or press the help button on the CMake GUI.\n",
+    "stderr": "+ set -euo pipefail\n+ [[ -n '' ]]\n+ build_dir=build\n+ mkdir -p ci-reports\n+ git -c safe.directory=/tmp/nano-core-selection-rsmhMD rev-parse HEAD\n+ cmake --version\n+ /tool/node --version\n+ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release\n+ tee ci-reports/configure.log\n",
+    "selectionAudit": "<not created>",
+    "resultAudit": "<not created>"
+  }
+  + actual - expected
+  
+  + '<not created>'
+  - 'ctest executed\n'
+  
+      at file:///work/scripts/ci/check-core.test.mjs:89:10
+      at async fixture (file:///work/scripts/ci/check-core.test.mjs:20:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '<not created>',
+    expected: 'ctest executed\n',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
