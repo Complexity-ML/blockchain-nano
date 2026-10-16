@@ -5596,3 +5596,19 @@ Preuves publiques et sources des controles : [Native02 SDK](qualification/native
 Le reçu autorisé historique confirme un PASS borné : 64 validateurs, 178 blocs rejoués, 12 blocs distants et 16 blocs observés des trois propriétaires, zéro nouvelle signature/runtime. La tentative actuelle transfère les fichiers autorisés et retrouve 13 entrées conformes, zéro divergente/manquante, puis refuse la sortie déjà existante avant tout nouvel audit ; ce n’est pas un échec C++. Le résultat historique compact correspond exactement au reçu VPS retenu (3 579 octets). Le run08 initial reste FAILED ; aucune ancienne autorité neuf-champs/octets n’est rafraîchie. L’état actuel des volumes, la restauration, les duties, la finalité commune et la production ne sont pas qualifiés.
 
 [Recu historique et observation actuelle](qualification/authorized-historical-cold-audit-20261016/README.md).
+
+
+## 16 octobre 2026 — environnement natif du lanceur : tests ciblés ; production non qualifiée
+
+Le mode fresh utilise un snapshot natif figé, refuse les contrôles loader et les deux variables de child possédées par le superviseur, et conserve les overlays de fixture/soumission attendus. Les environnements Docker/VPS et le C++ sont inchangés. ROOT a passé trois groupes purs, couvrant 29 refus de politique. Ces groupes déjà verts en tentative 01 sont réutilisés sans replay. Les trois échecs de projection 01–03 restent conservés ; aucun n’est transformé en réussite. La tentative 04 passe le guard existant pertinent : un test, trois cas enfants d’autorisation refusée, 6 600 ms, zéro échec/cancel/skip/todo. Aucun Nano, Docker, réseau ou accès à des clés réelles n’est exécuté par ces vérifications.
+
+La garde d’environnement ne démontre ni égalité de toutes les valeurs avec l’ancien consommateur Native02, ni fermeture complète du loader. Les symboles lazy, la compatibilité OS/protocole, les admissions de campagne, le runtime, les duties, la finalité commune et la production restent ouverts. Aucun test C++, rebuild SDK ou nouveau probe de binaire n’est revendiqué. Les critères, échecs et limites historiques restent intégralement conservés ; le goal demeure actif.
+
+
+## 16 octobre 2026 — sélecteurs des simulations RPC : preuve causale ARM ; production non qualifiée
+
+ROOT a compilé deux TUs seulement, rpc et un test dédié, avec M indépendant égal au MD (529 et 463 dépendances). Le Core copié conserve 142 membres sur 143 ; son nouveau membre rpc égale l’objet compilé. Le test neuf lié à l’ancien Core refuse exactement le premier objet connu après sa baseline chaîne valide (code 1 attendu, quatre checks). Le candidat passe cinq groupes, 120 checks et 58 refus, sans ancienne suite, image reconstruite, nœud ni réseau. La tentative 01 reste refusée avant M/CXX/test : dérive de ctime de trois nouveaux contrôles, octets identiques, cause inconnue. Les anciennes autorités sont intactes ; conteneur absent et volume Linux de sortie conservé.
+
+Cette preuve couvre partiellement eth_call selon EIP-1898 ; estimateGas est une extension Nano explicite. Aucun configure CMake complet n’a été exécuté : CMake global, candidat multiarchitecture/déploiement, état propre des branches non canoniques retenues, autres méthodes EIP-1898, HTTP, AMD64, CI, admissions de campagne, duties, finalité commune et production restent ouverts. Les historiques et limites restent conservés ; le goal demeure actif.
+
+[Sources et preuves RPC](qualification/rpc-eip1898-simulation-20261016/README.md) · [Politique d’environnement natif](qualification/native-runtime-environment-20261016/README.md).

@@ -1,0 +1,111 @@
+{
+  "format": "nano-rpc-eip1898-perl-worker-source-proposal-v1",
+  "status": "FROZEN_SOURCE_ONLY_AWAITING_ROOT_QUALIFICATION",
+  "sourceOnly": true,
+  "repositoryModifiedByAuthor": false,
+  "projectProgramExecutedByAuthor": false,
+  "perlExecutedByAuthor": false,
+  "compilerExecutedByAuthor": false,
+  "sdkReadByAuthor": false,
+  "privateInputsReadByAuthor": false,
+  "payloads": [
+    {
+      "path": "worker.pl",
+      "sha256": "5c45bb5a8c65fd9d2cdd491c4ebb6ccc57d715adad938d0e948f5cf722806527",
+      "bytes": 14145
+    },
+    {
+      "path": "README.md",
+      "sha256": "1aae13c2af7a498c84fd7bb881040c5d6b3edcb25ebe66c9cf450cf6cf4d73cc",
+      "bytes": 4413
+    }
+  ],
+  "payloadCount": 2,
+  "payloadBytes": 18558,
+  "reviewedHistoricalController": {
+    "path": "qualify-rpc-eip1898-arm-root-20261016.py",
+    "sha256": "062861a2628a93ea469193da0f7376a76ee40c2ebd7f74a8d87b35c51badd9d7",
+    "bytes": 17640
+  },
+  "targetSourceManifest": {
+    "path": "rpc-eip1898-simulation-source-proposal-20261016/manifest.json",
+    "sha256": "f73446f39014be876ebceff97449fb4ebad6c9660c9e0e05a3017386c0c8d3e3",
+    "bytes": 3877
+  },
+  "helperStatConvention": {
+    "path": "docs/qualification/local-supervisor-linux-20261015/source/known-files.pl",
+    "sha256": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
+    "bytes": 12273
+  },
+  "interface": {
+    "entrypoint": [
+      "/usr/bin/perl",
+      "/controls/worker.pl"
+    ],
+    "extraArguments": 0,
+    "controls": [
+      "/controls/recipes.json",
+      "/controls/source-expected.private.json"
+    ],
+    "outputRoot": "/outputs",
+    "owner": "501:20",
+    "mode": "0700",
+    "outputRootMustBeNewAndEmpty": true
+  },
+  "originalAttempt": {
+    "preserved": true,
+    "refusal": "immutable ARM image has no Python",
+    "independentMCommands": 0,
+    "cxxCommands": 0,
+    "projectTests": 0,
+    "reportedByRoot": true
+  },
+  "plannedQualification": {
+    "compiledTranslationUnits": 2,
+    "independentMCommands": 2,
+    "links": 2,
+    "baselineExit": 1,
+    "candidateExit": 0,
+    "coreMembers": 143,
+    "unchangedCoreMembers": 142,
+    "targetedGroups": 5,
+    "expectedRefusals": 58,
+    "oldSuiteExecuted": false
+  },
+  "limits": {
+    "commandSecondsIncludingCleanup": 180,
+    "workerSecondsBeforeCleanup": 590,
+    "outerSeconds": 600,
+    "streamBytes": 16777216,
+    "fileReadBytes": 536870912,
+    "dependencyStableSamples": 3,
+    "dependencyStableSpanMs": 2000,
+    "dependencyStabilityBudgetSeconds": 30
+  },
+  "privateMaterialShape": {
+    "fields": [
+      "material",
+      "bytes",
+      "sha256"
+    ],
+    "materialOrder": [
+      "dev",
+      "ino",
+      "mode",
+      "nlink",
+      "uid",
+      "gid",
+      "size",
+      "mtime",
+      "ctime"
+    ],
+    "materialValues": "GNU-stat strings; no atime or rounded Perl timestamps",
+    "historicalAuthoritiesRefreshed": false
+  },
+  "rootQualificationPending": true,
+  "rootProbeRequired": true,
+  "runtimeQualified": false,
+  "wholeSdkQualified": false,
+  "completeEip1898Qualified": false,
+  "productionQualified": false
+}

@@ -1,0 +1,13 @@
+# Environnement natif : politique et tests ciblés
+
+Le mode fresh du lanceur partage maintenant un snapshot natif explicite et figé entre exporter, imports/audits, captures, actions lifecycle et démarrages/reprises de Nano. Il refuse les variables `DYLD_*`, la liste fermée `LD_PRELOAD`/`LD_LIBRARY_PATH`/`LD_AUDIT` et les deux contrôles de child possédés par le superviseur C++. Les overlays de fixture et de soumission attendus sont conservés. Le parent n’est pas modifié. Aucun C++ ni environnement Docker/VPS n’est changé.
+
+ROOT a exécuté trois nouveaux groupes purs : snapshots canoniques immuables, seize refus d’injection loader/ownership et treize refus de valeurs ou formes non canoniques. Ces 29 refus portent sur la politique d’environnement. Les trois groupes sont verts dès la tentative 01 et sont réutilisés sans être rejoués dans les tentatives suivantes ; cela n’efface pas l’échec global de cette première tentative.
+
+Les échecs de projection restent conservés byte pour byte : 01 omettait les deux helpers Perl publics et le guard s’arrêtait avant ses cas enfants ; 02 n’atteignait pas la garde d’autorisation attendue, son reçu signalant une projection incomplète et un diagnostic encore pending ; 03 échouait au chargement ESM faute de `isolated-bootstrap-plan.mjs`. Ce sont des échecs réels de préparation/collecte, pas des réussites rétrospectives.
+
+La tentative 04 complète la projection publique et passe le seul guard existant pertinent en 6 600 ms : un test, trois cas enfants de refus d’autorisation, zéro échec/cancel/skip/todo. Le guard est rejoué parce que ses imports et empreintes de source changent. Il ne démarre ni Nano, ni Docker, ni réseau et ne lit pas de clés réelles. Les anciennes autorités restent inchangées.
+
+Le manifeste de proposition `e5bbd165…` est conservé comme preuve de source. Les quatre fichiers MJS sont intégrés directement à leurs chemins du dépôt ; le gros `run.mjs` n’est pas dupliqué dans ce paquet. Le manifeste de livraison donne leurs origines et empreintes. Les sources de la tentative 04 sont copiées exactement ; aucune table privée, donnée SDK, binaire ou log brut n’est inclus. Le README et le patch historiques de la proposition restent référencés hors paquet, sans revendiquer leur copie.
+
+Cette politique commune ne prouve pas l’égalité de toutes les valeurs avec l’ancien environnement du consommateur Native02. Elle ne qualifie ni le loader complet, ni les symboles lazy, les anciens macOS, la compatibilité P2P, un runtime réseau, les duties, la finalité commune, les 24 admissions de campagne ou la production. Aucun probe du binaire, test C++, build SDK, déploiement ou dépense supplémentaire n’est effectué par ce lot. Le goal et toutes les exigences antérieures restent ouverts.

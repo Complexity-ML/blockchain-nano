@@ -93,6 +93,25 @@ Int access_quantity(const Json& value,unsigned width,const char* name){
 bool access_prefix(const std::string& s){return s.size()>=2&&s[0]=='0'&&(s[1]=='x'||s[1]=='X');}
 std::string access_address(const Json& value){if(!value.is_string())throw RpcError(-32602,"Expected 20-byte address");const auto& text=value.get_ref<const std::string&>();if(text.size()!=42||!access_prefix(text))throw RpcError(-32602,"Expected 20-byte address");return address(text);}
 void access_data(const Json& value){if(!value.is_string())throw RpcError(-32602,"Expected hex data");const auto& text=value.get_ref<const std::string&>();if(!access_prefix(text)||text.size()%2)throw RpcError(-32602,"Invalid hex data");(void)unhex(text);}
+// Shared object validation; legacy DATA strings remain an access-list extension.
+struct SimulationBlockSelector {Json tag;bool hash_selected=false,canonical_required=false,object=false;Bytes hash;};
+SimulationBlockSelector simulation_block_selector(Json tag,bool legacy_hash_string){
+ SimulationBlockSelector out;out.object=tag.is_object();
+ if(out.object){
+  for(auto it=tag.begin();it!=tag.end();++it)if(it.key()!="blockNumber"&&it.key()!="blockHash"&&it.key()!="requireCanonical")throw RpcError(-32602,"Invalid block selector field");
+  const bool number=tag.contains("blockNumber"),hash=tag.contains("blockHash");if(number==hash)throw RpcError(-32602,"Specify one block number or block hash");
+  if(tag.contains("requireCanonical")){if(!hash||!tag["requireCanonical"].is_boolean())throw RpcError(-32602,"requireCanonical requires blockHash and boolean");out.canonical_required=tag["requireCanonical"].get<bool>();}
+  if(hash){if(!tag["blockHash"].is_string()||tag["blockHash"].get_ref<const std::string&>().size()!=66||!access_prefix(tag["blockHash"].get_ref<const std::string&>()))throw RpcError(-32602,"Expected 32-byte block hash");out.hash=hash_arg(tag["blockHash"]);out.hash_selected=true;}
+  else{(void)access_quantity(tag["blockNumber"],64,"blockNumber");tag=Json(tag["blockNumber"]);}
+ }else if(legacy_hash_string&&tag.is_string()&&tag.get_ref<const std::string&>().size()==66){out.hash=hash_arg(tag);out.hash_selected=true;}
+ out.tag=std::move(tag);return out;
+}
+void require_simulation_canonical_header(const Header& selected,const std::optional<Block>& canonical,bool require_canonical){
+ const bool is_canonical=canonical&&canonical->header.hash()==selected.hash();
+ if(require_canonical&&!is_canonical)throw RpcError(-32000,"Selected block is not canonical");
+ // Historical states are keyed by canonical height, never fabricate branch state.
+ if(!is_canonical)throw RpcError(-32000,"Selected block state is unavailable");
+}
 Json access_json(const std::vector<Access>& list,const std::function<void()>& check){
  Json out=Json::array();for(const auto& row:list){check();Json keys=Json::array();for(const auto& key:row.keys){check();keys.push_back(hex(key));}out.push_back({{"address",row.address},{"storageKeys",std::move(keys)}});}return out;
 }
@@ -529,14 +548,8 @@ std::function<Json()> Rpc::prepare_access_list(const Json& p,const std::function
  if(args.contains("to"))args["to"]=access_address(args["to"]);for(const auto* field:{"input","data"})if(args.contains(field))access_data(args[field]);access_seed_bound(args,limits,check);
  const auto revision=chain_.genesis().evm_revision;const auto chain_id=chain_.genesis().chain_id;
  Json tag=p.size()>1&&!p[1].is_null()?p[1]:Json("latest");std::optional<Block> selected;std::optional<State> state;std::map<Int,Bytes> ancestors;std::function<std::pair<Header,State>()> pending;
- bool hash_selected=false,canonical_required=false;Bytes requested_hash;
- if(tag.is_object()){
-  for(auto it=tag.begin();it!=tag.end();++it)if(it.key()!="blockNumber"&&it.key()!="blockHash"&&it.key()!="requireCanonical")throw RpcError(-32602,"Invalid block selector field");
-  const bool number=tag.contains("blockNumber"),hash=tag.contains("blockHash");if(number==hash)throw RpcError(-32602,"Specify one block number or block hash");
-  if(tag.contains("requireCanonical")){if(!hash||!tag["requireCanonical"].is_boolean())throw RpcError(-32602,"requireCanonical requires blockHash and boolean");canonical_required=tag["requireCanonical"].get<bool>();}
-  if(hash){if(!tag["blockHash"].is_string()||tag["blockHash"].get_ref<const std::string&>().size()!=66||!access_prefix(tag["blockHash"].get_ref<const std::string&>()))throw RpcError(-32602,"Expected 32-byte block hash");requested_hash=hash_arg(tag["blockHash"]);hash_selected=true;}
-  else{(void)access_quantity(tag["blockNumber"],64,"blockNumber");tag=Json(tag["blockNumber"]);}
- }else if(tag.is_string()&&tag.get_ref<const std::string&>().size()==66){requested_hash=hash_arg(tag);hash_selected=true;}
+ auto selector=simulation_block_selector(std::move(tag),true);tag=std::move(selector.tag);
+ const bool hash_selected=selector.hash_selected,canonical_required=selector.canonical_required;const auto requested_hash=std::move(selector.hash);
  if(hash_selected)selected=chain_.store().block_by_hash(requested_hash);
  else if(tag=="pending"){
   Int now(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));if(dev_mode_)now=development_timestamp();auto snapshot=chain_.pending_snapshot(coinbase_,now,check);selected=Block{};selected->header=std::move(snapshot.header);ancestors=std::move(snapshot.ancestors);pending=std::move(snapshot.execute);
@@ -545,11 +558,9 @@ std::function<Json()> Rpc::prepare_access_list(const Json& p,const std::function
  }
  if(!selected)throw RpcError(-32000,"Unknown block");check();
  if(!pending){
-  const auto canonical=chain_.store().block_by_number(selected->header.number);const bool is_canonical=canonical&&canonical->header.hash()==selected->header.hash();
-  if(hash_selected&&canonical_required&&!is_canonical)throw RpcError(-32000,"Selected block is not canonical");
-  // This store retains historical states by canonical height, never invent a
-  // side-branch state by pairing it with a header for the same height.
-  if(!is_canonical)throw RpcError(-32000,"Selected block state is unavailable");state=chain_.store().state_at(selected->header.number);if(!state)throw RpcError(-32000,"State unavailable");
+  const auto canonical=chain_.store().block_by_number(selected->header.number);
+  require_simulation_canonical_header(selected->header,canonical,hash_selected&&canonical_required);
+  state=chain_.store().state_at(selected->header.number);if(!state)throw RpcError(-32000,"State unavailable");
   check();
   Header cursor=selected->header;for(size_t i=0;i<256&&cursor.number>0;++i){check();auto parent=chain_.store().block_by_hash(cursor.parent_hash);if(!parent||parent->header.number+1!=cursor.number||parent->header.hash()!=cursor.parent_hash)throw RpcError(-32000,"Missing simulation ancestor");ancestors.emplace(parent->header.number,parent->header.hash());cursor=parent->header;}
  }
@@ -593,19 +604,27 @@ std::function<Json()> Rpc::prepare_simulation(const std::string& method,const Js
   checkpoint();
   std::optional<Block> b;std::optional<State> state;
   std::map<Int,Bytes> ancestors;std::function<std::pair<Header,State>()> pending;
-  // Estimates without an explicit block target the candidate used for inclusion.
-  // eth_call and explicit latest/historical requests retain their selected context.
-  if((p.size()==1&&method=="eth_estimateGas")||(p.size()==2&&p[1]=="pending")){
+  auto selector=simulation_block_selector(p.size()==2?p[1]:Json("latest"),false);
+  // Omitted estimates still target inclusion; explicit pending is unchanged.
+  if((p.size()==1&&method=="eth_estimateGas")||selector.tag=="pending"){
    Int now(std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
    if(dev_mode_)now=development_timestamp();
    auto snapshot=chain_.pending_snapshot(coinbase_,now,checkpoint);b=Block{};b->header=std::move(snapshot.header);ancestors=std::move(snapshot.ancestors);pending=std::move(snapshot.execute);
   }else{
-   b=block(p.size()==2?p[1]:Json("latest"));if(!b)throw RpcError(-32000,"Unknown block");state=chain_.store().state_at(b->header.number);if(!state)throw RpcError(-32000,"State unavailable");
+   b=selector.hash_selected?chain_.store().block_by_hash(selector.hash):block(selector.tag);
+   // EIP-1898 object requests distinguish missing blocks; legacy errors stay fixed.
+   if(!b)throw RpcError(selector.object?-32001:-32000,"Unknown block");
+   if(selector.object)require_simulation_canonical_header(b->header,chain_.store().block_by_number(b->header.number),selector.canonical_required);
+   state=chain_.store().state_at(b->header.number);if(!state)throw RpcError(-32000,"State unavailable");
+   if(selector.object&&state->root()!=b->header.state_root)throw RpcError(-32000,"Selected block and state do not match");
   }
   checkpoint();
-  // Capture the full BLOCKHASH window before releasing the RPC lock. A later
-  // block import or development rewind must not change this simulation.
-  if(!pending)for(Int n=std::max(Int(0),Int(b->header.number-256));n<b->header.number;++n){checkpoint();auto ancestor=chain_.store().block_by_number(n);if(!ancestor)throw RpcError(-32000,"Missing simulation ancestor");ancestors.emplace(n,ancestor->header.hash());}
+  // Freeze the ancestor window before unlocking. Object selection follows the
+  // selected header's parent hashes instead of mixing a later canonical suffix.
+  if(!pending){
+   if(selector.object){Header cursor=b->header;for(size_t i=0;i<256&&cursor.number>0;++i){checkpoint();auto parent=chain_.store().block_by_hash(cursor.parent_hash);if(!parent||parent->header.number+1!=cursor.number||parent->header.hash()!=cursor.parent_hash)throw RpcError(-32000,"Missing simulation ancestor");ancestors.emplace(parent->header.number,parent->header.hash());cursor=parent->header;}}
+   else for(Int n=std::max(Int(0),Int(b->header.number-256));n<b->header.number;++n){checkpoint();auto ancestor=chain_.store().block_by_number(n);if(!ancestor)throw RpcError(-32000,"Missing simulation ancestor");ancestors.emplace(n,ancestor->header.hash());}
+  }
   auto chain_id=chain_.genesis().chain_id;auto revision=chain_.genesis().evm_revision;
   return [method,p,b=std::move(b),state=std::move(state),ancestors=std::move(ancestors),chain_id,revision,checkpoint,pending=std::move(pending)]() mutable -> Json {
   checkpoint();
