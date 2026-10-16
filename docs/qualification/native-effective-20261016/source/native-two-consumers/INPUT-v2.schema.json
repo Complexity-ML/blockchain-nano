@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ROOT Native two-consumer input10 with exact U64 portability overlay",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "controller",
+    "nativeInput",
+    "firstSoftwareAdmission",
+    "nativeTerminal",
+    "currentSourceRoot",
+    "sourceRepository",
+    "gitTool",
+    "outputRoot",
+    "sourceOverlayArtifact"
+  ],
+  "properties": {
+    "format": {
+      "const": "nano-native-two-consumers-input-v2"
+    },
+    "controller": {
+      "$ref": "#/$defs/artifact"
+    },
+    "nativeInput": {
+      "$ref": "#/$defs/artifact"
+    },
+    "firstSoftwareAdmission": {
+      "$ref": "#/$defs/artifact"
+    },
+    "nativeTerminal": {
+      "$ref": "#/$defs/artifact"
+    },
+    "currentSourceRoot": {
+      "type": "string",
+      "pattern": "^/",
+      "maxLength": 4095
+    },
+    "sourceRepository": {
+      "type": "string",
+      "pattern": "^/",
+      "maxLength": 4095
+    },
+    "gitTool": {
+      "$ref": "#/$defs/osGitUtility"
+    },
+    "outputRoot": {
+      "type": "string",
+      "pattern": "^/",
+      "maxLength": 4095
+    },
+    "sourceOverlayArtifact": {
+      "$ref": "#/$defs/artifact"
+    }
+  },
+  "$defs": {
+    "osGitUtility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes",
+        "material"
+      ],
+      "properties": {
+        "path": {
+          "const": "/usr/bin/git"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 268435456
+        },
+        "material": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "st_dev",
+            "st_ino",
+            "st_mode",
+            "st_nlink",
+            "st_uid",
+            "st_gid",
+            "st_size",
+            "st_mtime_ns",
+            "st_ctime_ns",
+            "sha256"
+          ],
+          "properties": {
+            "st_dev": {
+              "type": "integer"
+            },
+            "st_ino": {
+              "type": "integer"
+            },
+            "st_mode": {
+              "type": "integer"
+            },
+            "st_nlink": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "st_uid": {
+              "const": 0
+            },
+            "st_gid": {
+              "type": "integer"
+            },
+            "st_size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 268435456
+            },
+            "st_mtime_ns": {
+              "type": "integer"
+            },
+            "st_ctime_ns": {
+              "type": "integer"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/",
+          "maxLength": 4095
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 268435456
+        }
+      }
+    }
+  }
+}
