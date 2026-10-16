@@ -94,6 +94,45 @@ extern "C" void nano_test_arm_sync_fault(const char*);
 extern "C" unsigned nano_test_sync_failures();
 #endif
 static const CapellaStoreSnapshotLimits crash_limits{16*1024*1024,64,1000,1000,4*1024*1024,8*1024*1024,64,100000};
+static void isolated_identity_preview_self_test(const fs::path& seed,const fs::path& directory){
+ namespace isolated=test::isolated_capella;
+ // The caller supplies a PUBLIC synthetic test seed, never campaign material.
+ isolated::durable_path(directory,true);check(!fs::exists(directory),"identity preview test destination exists");
+ check(::mkdir(directory.c_str(),0700)==0,"identity preview test directory creation");
+ const auto ledger=directory/"ledger",destination=directory/"unreserved-export";
+ check(fs::is_empty(directory)&&!fs::exists(ledger)&&!fs::exists(destination),"identity preview test namespace not empty");
+ const auto preview=isolated::Session::preview_public_identities(seed);
+ check(preview==isolated::Session::preview_public_identities(seed),"identity preview changed between unsigned reads");
+ check(fs::is_empty(directory)&&!fs::exists(ledger)&&!fs::exists(destination),"identity preview created a ledger or export destination");
+ check(preview.at("format")=="nano-isolated-capella-identity-preview-v1"&&preview.at("publicKeys").size()==65&&preview.at("withdrawalPublicKeys").size()==64,"identity preview public shape");
+ check(preview.at("reservationWritten")==false&&preview.at("ledgerOpened")==false&&preview.at("signaturesStarted")==0&&preview.at("productionQualified")==false,"identity preview claimed a signing domain");
+ check(!preview.contains("seedFingerprint")&&!preview.contains("campaignId")&&!preview.contains("genesisValidatorsRoot")&&!preview.contains("reservation"),"identity preview exposed private seed binding or unprepared domain");
+ check(::mkdir(ledger.c_str(),0700)==0,"identity preview test ledger creation");
+ const auto fixtures=fs::path(NANO_TEST_SOURCE)/"tests/fixtures";const auto rules=altair_transition_rules(fixtures);
+ auto state=binary(fixtures/"consensus-capella-slots-official/slots_1/pre.ssz");
+ isolated::Session session(destination,seed,ledger);session.prepare_genesis(state,rules.state);
+ const size_t history=176+64*rules.state.slots_per_historical_root;const auto start=isolated::number(state,history+88,4);
+ std::set<std::string> unique;
+ for(uint64_t index=0;index<65;++index){
+  const auto& row=preview.at("publicKeys").at(index);auto scalar=session.derive(0,index);const auto key=isolated::scalar_public_key(scalar);OPENSSL_cleanse(&scalar,sizeof(scalar));
+  check(row.at("index")==index&&row.at("publicKey")==hex(key)&&unique.insert(hex(key)).second,"identity preview differs from export validator derivation");
+  if(index<64)check(std::equal(key.begin(),key.end(),state.begin()+size_t(start)+121*index),"identity preview differs from prepared genesis validator");
+ }
+ for(uint64_t index=0;index<64;++index){
+  const auto& row=preview.at("withdrawalPublicKeys").at(index);auto scalar=session.derive(1,index);const auto key=isolated::scalar_public_key(scalar);OPENSSL_cleanse(&scalar,sizeof(scalar));auto credentials=sha256(key);credentials[0]=0;
+  check(row.at("index")==index&&row.at("publicKey")==hex(key)&&unique.insert(hex(key)).second,"identity preview differs from export withdrawal derivation");
+  check(std::equal(credentials.begin(),credentials.end(),state.begin()+size_t(start)+121*index+48),"identity preview differs from prepared withdrawal credentials");
+ }
+ auto scalar=session.derive(2,0);auto secret=isolated::scalar_bytes(scalar);OPENSSL_cleanse(&scalar,sizeof(scalar));
+ struct SecretCleanup {Bytes& bytes;~SecretCleanup(){OPENSSL_cleanse(bytes.data(),bytes.size());}} secret_cleanup{secret};
+ const auto sender_key=public_key(secret);OPENSSL_cleanse(secret.data(),secret.size());
+ check(preview.at("transactionSender")==Json{{"address",address(public_address(sender_key))},{"publicKey",hex(sender_key)}},"identity preview differs from export sender");
+ check(preview.at("keySetSha256")==isolated::digest_json(Json{{"publicKeys",preview.at("publicKeys")},{"withdrawalPublicKeys",preview.at("withdrawalPublicKeys")}}),"identity preview key-set commitment");
+ unsigned refusals=0;auto refuse=[&](const std::function<void()>& attempt){bool rejected=false;try{attempt();}catch(const std::runtime_error&){rejected=true;}check(rejected,"identity preview bypassed reservation guard");++refusals;};
+ refuse([&]{session.validator_secret(0);});refuse([&]{session.sender_secret();});refuse([&]{session.before_signature();});
+ check(session.signatures_started()==0&&fs::is_empty(ledger)&&fs::is_empty(destination),"unsigned identity preparation consumed a domain or signed");
+ std::cout<<Json{{"scenario","isolated-capella-identity-preview-self-test"},{"passed",true},{"groups",1},{"previewReads",2},{"validatorIdentities",65},{"withdrawalIdentities",64},{"preparedGenesisCompared",true},{"expectedRefusals",refusals},{"ledgerMarkers",0},{"exportFiles",0},{"signaturesStarted",0},{"nodeRun",false},{"networkQualified",false},{"productionQualified",false}}.dump()<<std::endl;
+}
 static void isolated_fixture_guards(const fs::path& directory){
  namespace isolated=test::isolated_capella;
  isolated::durable_path(directory,true);check(!fs::exists(directory),"isolated guard destination exists");check(::mkdir(directory.c_str(),0700)==0,"isolated guard directory creation");
@@ -3083,6 +3122,8 @@ static void scenario(bool migrate,uint64_t skipped=0,bool finality=false,unsigne
 }
 #include "support/capella_exit_owner.hpp"
 int main(int argc,char** argv){try{executable=argv[0];
+if(argc>1&&std::string(argv[1])=="--preview-isolated-capella-identities"){check(argc==3,"identity preview requires only a seed file");std::cout<<test::isolated_capella::Session::preview_public_identities(fs::path(argv[2])).dump()<<std::endl;return 0;}
+if(argc>1&&std::string(argv[1])=="--isolated-identity-preview-self-test"){check(argc==4,"identity preview self-test requires public seed and new workspace");isolated_identity_preview_self_test(fs::path(argv[2]),fs::path(argv[3]));return 0;}
 if(argc>1&&std::string(argv[1])=="--gc-crash-child")return gc_crash_child(argc,argv);
 if(argc==2&&std::string(argv[1])=="--runtime-catalog-preflight"){runtime_catalog_preflight=true;configured_runtime=true;scenario(false);return 0;}
 if(argc==2&&(std::string(argv[1])=="--atomic-proposal"||std::string(argv[1])=="--proposal-gap")){atomic_proposal=std::string(argv[1])=="--atomic-proposal";proposal_gap=!atomic_proposal;prepared_block=true;scenario(false);return 0;}

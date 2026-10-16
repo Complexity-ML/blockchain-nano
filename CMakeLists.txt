@@ -1484,6 +1484,9 @@ if(NANO_NETWORK_EXECUTABLE)
   add_test(NAME consensus_multihost_fresh_lifecycle_driver_guard COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/lifecycle-driver-guard.test.mjs)
   set_tests_properties(consensus_multihost_fresh_lifecycle_driver_guard PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_lifecycle")
+  add_test(NAME consensus_multihost_vps_linux_bootstrap COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/vps-linux-bootstrap.test.mjs)
+  set_tests_properties(consensus_multihost_vps_linux_bootstrap PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_harness")
   add_test(NAME consensus_multihost_fresh_lifecycle_runtime_protocol COMMAND
    ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/lifecycle-runtime.test.mjs)

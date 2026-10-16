@@ -1,3 +1,11 @@
+## 16 octobre 2026 — Acteurs publics avant réservation et préparation Linux des journaux VPS
+
+La preview unsigned Native passe sur un seed PUBLIC : 1 TU, M=MD 2539 et Core 143 inchangé ; 65 identités validateurs + 64 retraits comparés au vrai genesis non réservé, 3 refus et 0 signature. Le P2P Native courant est réutilisé après rapprochement sélectionné, sans compilation/lien/exécution ni qualification du SDK/DAG entier.
+
+Le launcher prépare les 33 paires Linux 32–64 pour le VPS. Les 6 syntaxes initiales et les 3 tests purs/guard finaux passent ; le lecteur modifié justifie le second passage. Le probe physique public passe : 65 paires / 131 fichiers, sélection 33/67, 1 corruption refusée, inventaires conservés et conteneur absent, 0 DB/seed/signature/transfert privé. Il qualifie seulement ce lecteur synthétique, pas les SST, 33 vrais P/W, 66 réouvertures C++ ou la portabilité ARM Linux→AMD Linux. Les échecs de staging, ctime, collecteur et probes 01/02 restent conservés ; les autorités physiques restent distinctes.
+
+Les 24 admissions, autorisations privées de la campagne fraîche, reprise, duties, finalité commune, cycle complet et production restent ouverts ; goal actif. Aucun EIP/fork ni loader/DAG/CMake global promu ; historiques intégraux et portées antérieures conservés. [Sources et preuves](qualification/runtime-preparation-20261016/README.md).
+
 ## 16 octobre 2026 — Nano lié dans trois environnements (deux architectures CPU) ; reprise réseau encore ouverte
 
 Les Nano courants passent deux smokes CLI sur Mac natif, Docker ARM et Docker AMD64 : aide réussie et refus d’arité RPC attendu, avant DB/réseau. Native compile trois TUs et vérifie Core 143/142 puis RPC causal 5 groupes/120 checks/58 refus. ARM compile seulement Main ; AMD le réutilise après un vrai M=MD. Les deux Linux relient chacun Nano au Core RPC déjà qualifié, sans rejouer les suites RPC. Le tail ARM dérive d’un autre consommateur canonique nano_core retenu et des déclarations Nano actuelles, sans configure CMake complet.

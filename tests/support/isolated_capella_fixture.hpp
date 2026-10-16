@@ -133,6 +133,11 @@ class Session {
   require(before.st_mtim.tv_sec==after.st_mtim.tv_sec&&before.st_mtim.tv_nsec==after.st_mtim.tv_nsec&&before.st_ctim.tv_sec==after.st_ctim.tv_sec&&before.st_ctim.tv_nsec==after.st_ctim.tv_nsec,"isolated fixture seed timestamps changed while reading");
 #endif
  }
+ static blst_scalar derive_from_seed(const std::array<uint8_t,32>& seed,uint8_t role,uint64_t index){
+  require((role==0&&index<=64)||(role==1&&index<64)||(role==2&&index==0),"isolated fixture key role/index bounds");
+  Bytes info(info_prefix,info_prefix+sizeof(info_prefix)-1);info.push_back(role);for(unsigned i=0;i<8;++i)info.push_back(uint8_t(index>>(8*(7-i))));
+  blst_scalar scalar;blst_keygen(&scalar,seed.data(),seed.size(),info.data(),info.size());require(blst_sk_check(&scalar),"isolated fixture derived scalar invalid");return scalar;
+ }
 public:
  Session(const fs::path& destination,const fs::path& seed,const fs::path& ledger):destination_(destination),ledger_(ledger){
   durable_path(destination_,true);durable_path(ledger_);private_directory(ledger_);struct stat absent{};
@@ -149,10 +154,19 @@ public:
   const auto* seed=std::getenv("NANO_TEST_ISOLATED_CAPELLA_SEED_FILE"),*ledger=std::getenv("NANO_TEST_ISOLATED_CAPELLA_LEDGER_DIR");
   require(seed&&*seed&&ledger&&*ledger,"isolated fixture seed file and persistent ledger paths required");return std::make_unique<Session>(destination,fs::path(seed),fs::path(ledger));
  }
- blst_scalar derive(uint8_t role,uint64_t index)const{
-  require((role==0&&index<=64)||(role==1&&index<64)||(role==2&&index==0),"isolated fixture key role/index bounds");
-  Bytes info(info_prefix,info_prefix+sizeof(info_prefix)-1);info.push_back(role);for(unsigned i=0;i<8;++i)info.push_back(uint8_t(index>>(8*(7-i))));
-  blst_scalar scalar;blst_keygen(&scalar,seed_.value.data(),seed_.value.size(),info.data(),info.size());require(blst_sk_check(&scalar),"isolated fixture derived scalar invalid");return scalar;
+ blst_scalar derive(uint8_t role,uint64_t index)const{return derive_from_seed(seed_.value,role,index);}
+ // Read-only identity selection before the reviewed campaign spec exists. This
+ // never constructs Session, opens a ledger, reserves a domain, or signs.
+ static Json preview_public_identities(const fs::path& seed_path){
+  PrivateSeed seed;seed_file(seed_path,seed.value);Json validators=Json::array(),withdrawals=Json::array();std::set<Bytes> unique;
+  auto public_key=[&](uint8_t role,uint64_t index){auto scalar=derive_from_seed(seed.value,role,index);auto key=scalar_public_key(scalar);OPENSSL_cleanse(&scalar,sizeof(scalar));require(unique.insert(key).second,"isolated fixture preview duplicate public identity");return nano::hex(key);};
+  for(uint64_t index=0;index<65;++index)validators.push_back({{"index",index},{"publicKey",public_key(0,index)}});
+  for(uint64_t index=0;index<64;++index)withdrawals.push_back({{"index",index},{"publicKey",public_key(1,index)}});
+  auto scalar=derive_from_seed(seed.value,2,0);auto secret=scalar_bytes(scalar);OPENSSL_cleanse(&scalar,sizeof(scalar));
+  struct SecretCleanup {Bytes& bytes;~SecretCleanup(){OPENSSL_cleanse(bytes.data(),bytes.size());}} secret_cleanup{secret};
+  const auto sender_key=nano::public_key(secret);OPENSSL_cleanse(secret.data(),secret.size());
+  const Json sender{{"address",nano::address(nano::public_address(sender_key))},{"publicKey",nano::hex(sender_key)}};
+  return Json{{"format","nano-isolated-capella-identity-preview-v1"},{"synthetic",true},{"registryCount",64},{"publicKeys",validators},{"withdrawalPublicKeys",withdrawals},{"transactionSender",sender},{"keySetSha256",digest_json(Json{{"publicKeys",validators},{"withdrawalPublicKeys",withdrawals}})},{"keyDerivation",{{"algorithm","blst-keygen"},{"infoPrefix",info_prefix},{"infoEncoding","tag-bytes||role-u8||index-u64-be"},{"validatorRole",0},{"withdrawalRole",1},{"senderRole",2}}},{"reservationWritten",false},{"ledgerOpened",false},{"signaturesStarted",0},{"productionQualified",false}};
  }
  blst_scalar indexed_key(uint64_t index)const{return index>=1000?derive(1,index-1000):derive(0,index);}
  Bytes validator_secret(uint64_t index)const{require_reserved();auto scalar=derive(0,index);auto result=scalar_bytes(scalar);OPENSSL_cleanse(&scalar,sizeof(scalar));return result;}

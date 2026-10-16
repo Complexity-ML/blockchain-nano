@@ -220,12 +220,16 @@ export async function prepareFresh(input,output,topology,bootstrapPlan){
  for(const t of model.nodes){
   freshNeed(resolve(join(output,t.name))===t.directory,'Topology runtime directory must be its exact new output child');await mkdir(t.directory,{mode:0o700});
   for(const name of ['genesis.json','profile.json','initial.json','isolated-domain.json'])await copyFile(join(input,name),join(t.directory,name));
+  // Docker runtimes receive journals from the independently imported Linux
+  // bootstrap. Native SSTs must never become their transport source.
+  if(t.mode==='native'){
   await mkdir(t.stagedDataRoot,{recursive:true,mode:0o700});await mkdir(t.stagedWitnessRoot,{recursive:true,mode:0o700});
   const owner=bootstrapPlan.owners.find(x=>x.owner===t.name);
   for(const bound of owner.keys){
    const i=bound.publicKeyIndex;for(const [role,base,leaf] of [['primary',t.stagedDataRoot,'journal-'],['witness',t.stagedWitnessRoot,'witness-']]){
     const source=freshAbsolute(bound.source[role]);freshNeed(source.endsWith('/'+role+'-'+i)&&await realpath(source)===source,'Exact imported journal source required');await noAliasTree(source);await cp(source,join(base,leaf+i),{recursive:true,errorOnExist:true,force:false,preserveTimestamps:true});
    }
+  }
   }
   await writeFile(join(t.directory,'node.json'),JSON.stringify(t.node,null,2)+'\n',{flag:'wx',mode:0o600});await writeFile(join(t.directory,'fixture.env'),Object.entries(t.environment).map(([k,v])=>k+'='+v).join('\n')+'\n',{flag:'wx',mode:0o600});
   manifest.nodes.push({name:t.name,mode:t.mode,host:t.host,indices:t.indices,signerIdentities:t.signerIdentities,configuration:t.directory,dataRoot:t.dataRoot,witnessRoot:t.witnessRoot,stagedDataRoot:t.stagedDataRoot,stagedWitnessRoot:t.stagedWitnessRoot});
