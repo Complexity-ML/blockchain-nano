@@ -1,0 +1,222 @@
+{
+  "$defs": {
+    "corePin": {
+      "$ref": "#/$defs/pin"
+    },
+    "pin": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 536870912,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "sourceExpected": {
+      "additionalProperties": {
+        "$ref": "#/$defs/pin"
+      },
+      "maxProperties": 20000,
+      "minProperties": 1,
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": {
+        "elfMachine": {
+          "const": 183
+        },
+        "gid": {
+          "const": 20
+        },
+        "imageId": {
+          "const": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb"
+        },
+        "owner": {
+          "const": "mac-docker"
+        },
+        "uid": {
+          "const": 501
+        }
+      }
+    },
+    {
+      "properties": {
+        "elfMachine": {
+          "const": 62
+        },
+        "gid": {
+          "const": 1000
+        },
+        "imageId": {
+          "const": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14"
+        },
+        "owner": {
+          "const": "vps-docker"
+        },
+        "uid": {
+          "const": 1000
+        }
+      }
+    }
+  ],
+  "properties": {
+    "elfMachine": {
+      "enum": [
+        183,
+        62
+      ]
+    },
+    "format": {
+      "const": "nano-current-linux-rpc-test-recipes-v1"
+    },
+    "gid": {
+      "enum": [
+        20,
+        1000
+      ]
+    },
+    "imageId": {
+      "type": "string"
+    },
+    "owner": {
+      "enum": [
+        "mac-docker",
+        "vps-docker"
+      ]
+    },
+    "programs": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "compileFlags": {
+            "items": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 512,
+            "minItems": 1,
+            "type": "array"
+          },
+          "linkPrefix": {
+            "items": {
+              "maxLength": 8192,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 512,
+            "minItems": 1,
+            "type": "array"
+          },
+          "linkTail": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 256,
+            "minItems": 7,
+            "type": "array"
+          },
+          "reuse": {
+            "type": "null"
+          },
+          "role": {
+            "const": "rpcSimulationTest"
+          },
+          "source": {
+            "const": "/work/tests/test_rpc_simulation_block_id.cpp"
+          }
+        },
+        "required": [
+          "role",
+          "source",
+          "compileFlags",
+          "linkPrefix",
+          "linkTail",
+          "reuse"
+        ],
+        "type": "object"
+      },
+      "maxItems": 1,
+      "minItems": 1,
+      "type": "array"
+    },
+    "sourceRevision": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "sourceTreeEntries": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "oid": {
+            "pattern": "^[0-9a-f]{40}$",
+            "type": "string"
+          },
+          "path": {
+            "enum": [
+              "include",
+              "src",
+              "network",
+              "third_party",
+              "tests/support",
+              "tests/capella",
+              "tests/multihost"
+            ]
+          }
+        },
+        "required": [
+          "path",
+          "oid"
+        ],
+        "type": "object"
+      },
+      "maxItems": 7,
+      "minItems": 7,
+      "type": "array"
+    },
+    "uid": {
+      "enum": [
+        501,
+        1000
+      ]
+    }
+  },
+  "required": [
+    "format",
+    "owner",
+    "uid",
+    "gid",
+    "imageId",
+    "elfMachine",
+    "sourceRevision",
+    "sourceTreeEntries",
+    "programs"
+  ],
+  "title": "Root RPC-only Linux controls; source proposal, not executed",
+  "type": "object",
+  "x-runtime-checks": [
+    "seven tree path names unique; Root verifies Git provenance externally",
+    "exact current TU SHA/bytes fixed",
+    "fixed known Core SHA/bytes by owner",
+    "Root authenticates canonical flags/order, exactly five archives/two ASM",
+    "no NANO_* tokens, no reuse, no output/dependency flags in semantic flags",
+    "new output ownership/mode and empty tmpfs",
+    "current M normalized set equals generated actual MD, literal equality separately reported",
+    "full input rows unchanged and new outputs stable >=3 samples/2 seconds",
+    "exact six-line 5groups/120checks/58refusals test; <=45 seconds; stderr empty"
+  ]
+}

@@ -1,3 +1,11 @@
+## Test RPC courant qualifié sur les trois environnements — 16 octobre 2026
+
+La variante courante RocksDB du test RPC (`3f3dc2bc…`) passe maintenant Linux ARM64 et AMD64 : chaque essai réalise une M indépendante, une compilation, un lien au Core conservé, un `ldd` et le seul sélecteur ciblé ; cinq groupes, 120 checks et 58 refus attendus passent par environnement (M=MD : 463/461 dépendances). La réussite Native antérieure est réutilisée sans la rejouer. Les Core à 143 membres, les sept arbres source de base `bd11…`, le manifeste `d30e…` et les trois admissions de code restent conservés.
+
+Le refus ARM01 avant M/CXX reste dans l’historique, avec son point précis non instrumenté ; ARM02 valide le montage sans copie et ses permissions avant le worker. Les tests utilisent seulement leurs DB synthétiques `/tmp`, nettoyées ensuite. Le probe de la garde ressources passe avec trois échantillons de démarrage, sans coordinateur lancé ni chemin d’arrêt exercé. Aucun ancien test, Core ou image n’est reconstruit. Ce lot ne qualifie pas HTTP, CMake global, tout le SDK/loader, ni une campagne fraîche. Les échecs historiques et la facturation CI restent conservés ; nouvelle campagne sans autorisation, reprise des devoirs, finalité commune et production demeurent ouvertes.
+
+[Sources et preuves](qualification/rpc-current-linux-20261016/README.md). Goal actif.
+
 ## 16 octobre 2026 — Cohérence Doppler corrigée et garde de ressources vérifié
 
 43 cas ciblés distincts passent, dont 18 nouveaux : 33 Doppler/transport (32 au premier passage puis le seul test corrigé), 8 de politique ressources et 2 de sélection CI. Le premier échec BigInt d'assertion reste conservé. Trois incohérences sont corrigées : configuration mutable, reçu mutable et lectures de blocs mélangées. Transport borné, méthodes fermées, selectors hash canoniques sans fallback ; estimateGas exige une extension fournisseur dont le support réel Base reste non qualifié. Nouveau workflow Doppler verrouillé/YAML parsé ; aucun PASS GitHub CI n'est déduit des tests locaux.
