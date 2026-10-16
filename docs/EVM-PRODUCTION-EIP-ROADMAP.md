@@ -1,3 +1,11 @@
+## 16 octobre 2026 — Nano lié dans trois environnements (deux architectures CPU) ; reprise réseau encore ouverte
+
+Les Nano courants passent deux smokes CLI sur Mac natif, Docker ARM et Docker AMD64 : aide réussie et refus d’arité RPC attendu, avant DB/réseau. Native compile trois TUs et vérifie Core 143/142 puis RPC causal 5 groupes/120 checks/58 refus. ARM compile seulement Main ; AMD le réutilise après un vrai M=MD. Les deux Linux relient chacun Nano au Core RPC déjà qualifié, sans rejouer les suites RPC. Le tail ARM dérive d’un autre consommateur canonique nano_core retenu et des déclarations Nano actuelles, sans configure CMake complet.
+
+Le test adapté à RocksDB est qualifié uniquement sur Native ; les preuves RPC Linux gardent leur ancien test. Les échecs Native01 (API de compilation) et ARM01 (nom de contrôle, avant programme projet) restent conservés, avec leurs fences et nettoyages bornés. Les historiques ci-dessous restent intégraux. Ce lot ne qualifie pas globalement loader/SDK/DAG/CMake, test adapté Linux ou HTTP ; les preuves historiques gardent leurs portées. Les 24 admissions, la reprise runtime, la restauration, les duties, la finalité commune et la production restent ouvertes ; goal actif.
+
+[Identités Nano/Core, sources et preuves](qualification/complete-nano-cross-arch-20261016/README.md).
+
 > **15 octobre 2026 — Coordinateur fresh Mac/Linux : tests ciblés et transport synthétique validés, production non qualifiée.**
 >
 > Le [lot Mac/Linux](qualification/fresh-campaign-mac-linux-20261015/README.md) livre 8 overlays du launcher existant. Root a passé 8 contrôles de syntaxe puis 7 nouveaux tests purs et le guard avec 3 refus avant seed/sortie/réseau (phase de tests : 9 486 ms ; 46 MJS + 2 Perl). Le probe physique passe séparément en 27 770 ms : 4 syntaxes Perl, 3 lecteurs, 3 refus spécifiques, 16 paires/64 fichiers synthétiques, 128 comparaisons de contenus préalablement connus et 256 identités distinctes ; 38 conteneurs vérifiés absents, 8 volumes conservés. Les anciennes autorités Node/Docker et les nouvelles copies de sources restent strictes.

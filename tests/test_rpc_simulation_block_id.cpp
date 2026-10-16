@@ -13,6 +13,12 @@ namespace {
 size_t checks=0,refusals=0,groups=0;
 std::string stage="arguments";
 void check(bool value,const char* message){++checks;if(!value)throw std::runtime_error(message);}
+// Detect the RocksDB output API, as storage.cpp does, without a version guess.
+template<class Database>
+rocksdb::Status open_fixture_database(const rocksdb::Options& options,const std::string& path,std::unique_ptr<Database>& opened){
+ if constexpr(requires { Database::Open(options,path,&opened); })return Database::Open(options,path,&opened);
+ else{Database* raw=nullptr;auto status=Database::Open(options,path,&raw);opened.reset(raw);return status;}
+}
 struct OwnedDirectory {
  std::filesystem::path path=std::filesystem::temp_directory_path()/("nano-rpc-eip1898-"+std::to_string(getpid()));
  OwnedDirectory(){check(std::filesystem::create_directory(path),"new fixture namespace already exists");}
@@ -110,7 +116,7 @@ int main(int argc,char** argv){try{
  stage="unavailable-historical-state";const auto missing_path=owned.path/"missing-state";Bytes historical_hash;
  {Blockchain chain(missing_path,genesis);historical_hash=chain.mine(sender,12).header.hash();chain.mine(sender,24);}
  // Remove only an owned synthetic historical state, retaining its known block.
- {rocksdb::Options options;options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,missing_path.string(),&raw).ok(),"owned synthetic database must reopen for missing-state fixture");std::unique_ptr<rocksdb::DB> db(raw);rocksdb::WriteOptions writes;writes.sync=true;check(db->Delete(writes,"state/"+hex(bytes(Int(1),8))).ok(),"owned fixture historical state removal must succeed");}
+ {rocksdb::Options options;options.create_if_missing=false;std::unique_ptr<rocksdb::DB> db;check(open_fixture_database(options,missing_path.string(),db).ok(),"owned synthetic database must reopen for missing-state fixture");rocksdb::WriteOptions writes;writes.sync=true;check(db->Delete(writes,"state/"+hex(bytes(Int(1),8))).ok(),"owned fixture historical state removal must succeed");}
  {Blockchain chain(missing_path,genesis,ChainStore::OpenMode::ReadWriteExisting);Rpc rpc(chain);const auto root=chain.state().root();
   for(const auto* method:methods)refused(rpc,method,call,Json{{"blockHash",hex(historical_hash)},{"requireCanonical",false}},-32000);
   check(value(rpc,"eth_call",call,"latest")==hex(bytes(Int(2),32)),"missing historical state must not make a valid latest state unavailable");check(chain.state().root()==root,"unavailable historical state refusal must preserve the tip");
