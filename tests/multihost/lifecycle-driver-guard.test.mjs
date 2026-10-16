@@ -20,7 +20,7 @@ const sourcePins={
  "harness-manifest.mjs": "b01e069ade274ac38e612f9f8eefa7ce17e204b4764593d0371891047374c09d",
  "lifecycle.mjs": "16ceccd02e7487d4424285554d210753aa70943b39714819b32f9c158a2f4a23",
  "lifecycle-runtime.mjs": "376669bf088a20e85281b30651c0ca979b3ebd1581c28da8c27c29ac1eff081f",
- "lifecycle-owner.mjs": "8c3cbb8ee26655b9e76c5e30da308195c9beb48b59f022d3c2094942831e7d65",
+ "lifecycle-owner.mjs": "ab92d7136b88b528912275fe017778608c7ad0a2c43c4252bcc74e1cb862f216",
  "../../docs/qualification/local-supervisor-linux-20261015/source/known-files.pl": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
  "../../docs/qualification/local-supervisor-linux-20261015/source/copy-bootstrap-pairs.pl": "9fcd47d3bee3530c163e00e8b6a8dd475645336ba48579db45bdc9e20bb3bdf3"
 };

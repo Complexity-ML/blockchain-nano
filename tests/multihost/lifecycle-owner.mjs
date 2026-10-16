@@ -2,13 +2,27 @@
 // No stdout mode returns an action, Job/session, capture, environment or DB bytes.
 import {linuxRotationCopy} from './rotation-owned-copy.mjs';
 const need=(v,m)=>{if(!v)throw Error('Lifecycle owner: '+m);};
+export const lifecycleLinuxStatx=String.raw`use Config qw(%Config);use Math::BigInt ();
+sub lifecycle_statx_abi{my($os,$arch,$iv,$ptr,$order)=@_;need(defined($os)&&defined($arch)&&defined($iv)&&defined($ptr)&&defined($order)&&$os eq 'linux'&&$iv eq '8'&&$ptr eq '8'&&$order eq '12345678');return 332 if $arch=~m{\Ax86_64-linux(?:-|\z)};return 291 if $arch=~m{\Aaarch64-linux(?:-|\z)};need(0);}
+my $lifecycle_statx_number=lifecycle_statx_abi(@Config{qw(osname archname ivsize ptrsize byteorder)});
+sub lifecycle_statx_text{return pack('a*',"$_[0]");}
+sub lifecycle_statx_ns{my($raw,$offset)=@_;my $sec=unpack('q<',substr($raw,$offset,8));my $ns=unpack('V',substr($raw,$offset+8,4));need($ns<1000000000);return Math::BigInt->new(lifecycle_statx_text($sec))->bmul('1000000000')->badd(lifecycle_statx_text($ns))->bstr;}
+sub lifecycle_statx_decode{my($raw)=@_;need(defined($raw)&&!ref($raw)&&length($raw)==256);my $mask=unpack('V',substr($raw,0,4));need(($mask&0x3df)==0x3df);my($links,$owner,$group)=unpack('V3',substr($raw,16,12));my $mode=unpack('v',substr($raw,28,2));my $ino=unpack('Q<',substr($raw,32,8));my $size=unpack('Q<',substr($raw,40,8));my($major,$minor)=unpack('V2',substr($raw,136,8));my $ma=Math::BigInt->new(lifecycle_statx_text($major));my $mi=Math::BigInt->new(lifecycle_statx_text($minor));my $dev=$ma->copy->band('4095')->blsft(8)->bior($mi->copy->band('255'))->bior($mi->copy->band('4294967040')->blsft(12))->bior($ma->copy->band('4294963200')->blsft(32));return [map{lifecycle_statx_text($_)}($dev->bstr,$ino,$mode,$links,$owner,$group,$size,lifecycle_statx_ns($raw,112),lifecycle_statx_ns($raw,96))];}
+sub stat9{my($object,$follow)=@_;tick();need(defined($follow)&&($follow==0||$follow==1));my($dirfd,$name,$flags);if($follow){need(defined($object)&&!ref($object)&&lifecycle_statx_text($object)=~m{\A(?:0|[1-9][0-9]*)\z}&&$object<=2147483647);$dirfd=0+$object;$name='';$flags=0x1000;}else{need(defined($object)&&!ref($object)&&$object=~m{\A/}&&index($object,"\0")<0);$dirfd=-100;$name=$object;$flags=0x100|0x800;}my $buffer="\0"x256;my $rc=syscall($lifecycle_statx_number,$dirfd,$name,$flags,0x7ff,$buffer);tick();need($rc==0);return lifecycle_statx_decode($buffer);}
+`;
 export function lifecycleWholeCopyProgram(namespace,owner,resources){
  need(/^isolated-capella-[0-9a-f]{64}$/.test(namespace)&&['mac-native','mac-docker','vps-docker'].includes(owner),'exact owner namespace');
  const files=BigInt(resources.maximumInventoryFiles),bytes=BigInt(resources.maximumInventoryBytes);need(files>0n&&files<=BigInt(Number.MAX_SAFE_INTEGER)&&bytes>0n&&bytes<=BigInt(Number.MAX_SAFE_INTEGER),'declared safe inventory bounds');
  let p=linuxRotationCopy;
  const replace=(a,b)=>{need(p.split(a).length===2,'fixed copy derivation anchor');p=p.replace(a,b);};
+ const legacyStat=String.raw`sub stat9{my($p,$follow)=@_;tick();open(my $pipe,'-|','stat',$follow?'-Lc':'-c','%d|%i|%f|%h|%u|%g|%s|%y|%z','--',$p)or die "stat refused\n";local $/;my $s=<$pipe>;need(close($pipe)&&defined($s)&&length($s)<1024);chomp $s;my @a=split(/\|/,$s,-1);need(@a==9);return \@a;}`;
+ replace(legacyStat,lifecycleLinuxStatx);
+ replace("sub fdpath{return '/proc/'.$$.'/fd/'.fileno($_[0]);}","sub fdpath{my $fd=fileno($_[0]);need(defined($fd));return $fd;}");
  replace("my @targets=($out.'/data/chain',$out.'/witness/chain-witness');","my @targets=($out.'/data/"+namespace+"/"+owner+"',$out.'/witness/"+namespace+"/"+owner+"');");
- replace("mkdirprivate($out.($i?'/witness':'/data'));","mkdirprivate($out.($i?'/witness':'/data'));mkdirprivate($out.($i?'/witness':'/data')+'/"+namespace+"');");
+ replace("mkdirprivate($out.($i?'/witness':'/data'));","mkdirprivate($out.($i?'/witness':'/data'));mkdirprivate($out.($i?'/witness':'/data').'/"+namespace+"');");
+ replace("for my $p($out.'/data',$out.'/witness',$out){","for my $p($out.'/data/"+namespace+"',$out.'/witness/"+namespace+"',$out.'/data',$out.'/witness',$out){");
+ replace("format=>'nano-fresh-rotation-owned-copy-private-proof-v1',stability=>","format=>'nano-fresh-lifecycle-owner-copy-private-proof-v2',materialEncoding=>'linux-statx-nine-decimal-ns-v1',stability=>");
+ replace("need($proof->{format} eq 'nano-fresh-rotation-owned-copy-private-proof-v1');","need($proof->{format} eq 'nano-fresh-lifecycle-owner-copy-private-proof-v2'&&$proof->{materialEncoding} eq 'linux-statx-nine-decimal-ns-v1');");
  // Full owner roots include core, every signer/witness journal and peer.key.
  // Source setters remain absent; all original nine fields+SHA stay exact.
  p=p.replaceAll('<=20000','<='+files.toString()).replaceAll('<=536870912','<='+bytes.toString());

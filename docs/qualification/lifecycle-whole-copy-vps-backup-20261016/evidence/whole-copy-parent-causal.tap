@@ -1,0 +1,107 @@
+TAP version 13
+# Subtest: runtime and every specific private transfer authority fail closed before adapters
+ok 1 - runtime and every specific private transfer authority fail closed before adapters
+  ---
+  duration_ms: 1.728417
+  type: 'test'
+  ...
+# Subtest: plan hash comes from owned known bytes and retains independent artifact pins
+ok 2 - plan hash comes from owned known bytes and retains independent artifact pins
+  ---
+  duration_ms: 0.82325
+  type: 'test'
+  ...
+# Subtest: PREPARED is not acceptance; accepted projection cannot leak a session or fake finality
+ok 3 - PREPARED is not acceptance; accepted projection cannot leak a session or fake finality
+  ---
+  duration_ms: 0.315292
+  type: 'test'
+  ...
+# Subtest: operation commitment encodes actual public SSZ fields without private action export
+ok 4 - operation commitment encodes actual public SSZ fields without private action export
+  ---
+  duration_ms: 0.395333
+  type: 'test'
+  ...
+# Subtest: opaque known-file admission refuses post-admission mutation and physical aliases
+ok 5 - opaque known-file admission refuses post-admission mutation and physical aliases
+  ---
+  duration_ms: 2025.109376
+  type: 'test'
+  ...
+# Subtest: whole-owner copy plan refuses unsafe namespace, owner and zero inventory authority
+ok 6 - whole-owner copy plan refuses unsafe namespace, owner and zero inventory authority
+  ---
+  duration_ms: 0.528625
+  type: 'test'
+  ...
+# Subtest: only terminal C++ replay closes accounting; 3 captures never mean 3 full audits
+ok 7 - only terminal C++ replay closes accounting; 3 captures never mean 3 full audits
+  ---
+  duration_ms: 2.581375
+  type: 'test'
+  ...
+# Subtest: stopped capture receipt retains real owner-local storage and only public commitments
+ok 8 - stopped capture receipt retains real owner-local storage and only public commitments
+  ---
+  duration_ms: 1.424708
+  type: 'test'
+  ...
+# Subtest: stopped capture receipt refuses missing authority, bad bindings and non-exact counters or flags
+ok 9 - stopped capture receipt refuses missing authority, bad bindings and non-exact counters or flags
+  ---
+  duration_ms: 2.654167
+  type: 'test'
+  ...
+# Subtest: stopped capture receipt requires all three distinct owners and rejects public extra fields
+ok 10 - stopped capture receipt requires all three distinct owners and rejects public extra fields
+  ---
+  duration_ms: 1.211417
+  type: 'test'
+  ...
+# Subtest: stopped capture receipt is awaited and remains published when lifecycle closing fails
+ok 11 - stopped capture receipt is awaited and remains published when lifecycle closing fails
+  ---
+  duration_ms: 0.614542
+  type: 'test'
+  ...
+# Subtest: stopped capture receipt publication refusal prevents closing and missing capture prevents publication
+ok 12 - stopped capture receipt publication refusal prevents closing and missing capture prevents publication
+  ---
+  duration_ms: 0.7465
+  type: 'test'
+  ...
+# Subtest: whole-owner generated Perl copies complete namespaced roots and refuses copy mutation
+not ok 13 - whole-owner generated Perl copies complete namespaced roots and refuses copy mutation
+  ---
+  duration_ms: 74.777791
+  type: 'test'
+  location: '/test/tests/multihost/lifecycle-runtime.test.mjs:98:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Argument "/isolated-capella-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee..." isn't numeric in addition (+) at -e line 19.
+    Argument "/tmp/nano-lifecycle-whole-copy-iwGFFi/output/data" isn't numeric in addition (+) at -e line 19.
+    new directory refused
+    
+    
+    2 !== 0
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 0
+  actual: 2
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///test/tests/multihost/lifecycle-runtime.test.mjs:120:114)
+    async Test.run (node:internal/test_runner/test:1208:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
+  ...
+1..13
+# tests 13
+# suites 0
+# pass 12
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2170.011292

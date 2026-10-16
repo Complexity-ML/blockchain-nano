@@ -3,9 +3,11 @@ import {test,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {join} from 'node:path';
-import {writeFile,symlink,link,unlink,rm,mkdir,chmod,lstat} from 'node:fs/promises';
+import {writeFile,readFile,readdir,symlink,link,unlink,rm,mkdir,chmod,lstat} from 'node:fs/promises';
+import {spawnSync} from 'node:child_process';
+import {validateRotationCopySummary} from './rotation-owned-copy.mjs';
 import {requireLifecycleRuntimeAuthority,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleCheckpoint,lifecycleRollingFinalityWindow,lifecycleOperationDigest,lifecyclePrivateDirectory,writeLifecycleKnownFile,readLifecycleKnownFile,admitLifecycleKnownFiles,projectLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,publishLifecycleStoppedCapturesBeforeClosing} from './lifecycle-runtime.mjs';
-import {lifecycleWholeCopyProgram} from './lifecycle-owner.mjs';
+import {lifecycleWholeCopyProgram,lifecycleLinuxStatx} from './lifecycle-owner.mjs';
 const q=n=>'0x'+BigInt(n).toString(16),root=n=>'0x'+String(n).padStart(64,'0'),pub=n=>'0x'+String(n).padStart(96,'0'),digest=b=>createHash('sha256').update(b).digest('hex');
 const names=['mac-native','mac-docker','vps-docker'];
 let expectedRefusals=0;const refuses=f=>{assert.throws(f);++expectedRefusals;},rejects=async f=>{await assert.rejects(f);++expectedRefusals;};
@@ -89,3 +91,72 @@ test('stopped capture receipt publication refusal prevents closing and missing c
  const result=await publishLifecycleStoppedCapturesBeforeClosing(projected(),{campaignId,publish:async()=>{++publishes;},close:async()=>{++closes;return 'actual closing result';}});assert.equal(result,'actual closing result');assert.equal(closes,1);
 });
 }
+
+// Linux-only, actual generated Perl over public opaque fixtures. No Nano/DB/key.
+// Relocate exactly ONE output-equality literal to a NEW private fixture root;
+// all filesystem code and namespace/owner paths remain the generated program.
+test('whole-owner generated Perl copies complete namespaced roots and refuses copy mutation',{skip:process.platform!=='linux',timeout:24000},async t=>{
+ const namespace='isolated-capella-'+'e'.repeat(64),owner='vps-docker',base=await lifecyclePrivateDirectory('nano-lifecycle-whole-copy-');t.after(()=>rm(base,{recursive:true,force:true}));
+ const sourceData=join(base,'source-data',namespace,owner),sourceWitness=join(base,'source-witness',namespace,owner),output=join(base,'output');
+ for(const path of [sourceData,sourceWitness,output])await mkdir(path,{recursive:true,mode:0o700});
+ const files=[
+  [join(sourceData,'chain/CURRENT'),'MANIFEST-000001\n'],[join(sourceData,'chain/MANIFEST-000001'),'PUBLIC opaque core bytes'],[join(sourceData,'chain/LOCK'),''],
+  [join(sourceData,'journal-32/CURRENT'),'PUBLIC journal32'],[join(sourceData,'journal-64/nested/checkpoint'),'PUBLIC journal64 nested'],[join(sourceData,'peer.key'),'PUBLIC TEST peer identity, not a private key'],
+  [join(sourceWitness,'chain-witness/CURRENT'),'PUBLIC core witness'],[join(sourceWitness,'witness-32/CURRENT'),'PUBLIC witness32'],[join(sourceWitness,'witness-64/nested/checkpoint'),'PUBLIC witness64 nested']
+ ];
+ for(const [path,bytes] of files){await mkdir(path.slice(0,path.lastIndexOf('/')),{recursive:true,mode:0o700});await writeFile(path,bytes,{flag:'wx',mode:0o600});}
+ await mkdir(join(sourceData,'chain/empty-directory'),{mode:0o700});await mkdir(join(sourceWitness,'empty-directory'),{mode:0o700});
+ const fields=['dev','ino','mode','nlink','uid','gid','size','mtimeNs','ctimeNs'];
+ async function inventory(root){const rows=[];async function walk(path,relative=''){const s=await lstat(path,{bigint:true});assert(s.isDirectory()||s.isFile());const row={path:relative,kind:s.isDirectory()?'directory':'file',material:fields.map(k=>String(s[k]))};if(s.isFile()){const bytes=await readFile(path);row.bytes=bytes.length;row.sha256=digest(bytes);}rows.push(row);if(s.isDirectory())for(const leaf of (await readdir(path)).sort())await walk(join(path,leaf),relative?relative+'/'+leaf:leaf);}await walk(root);return rows;}
+ const before=[await inventory(sourceData),await inventory(sourceWitness)],resources={maximumInventoryFiles:'0x40',maximumInventoryBytes:'0x10000'},generated=lifecycleWholeCopyProgram(namespace,owner,resources),guard="$out eq '/rotation-audit'";
+ assert.equal(generated.split(guard).length,2,'One exact virtual-output equality must remain');assert.match(output,/^[A-Za-z0-9_./-]+$/);const program=generated.replace(guard,"$out eq '"+output+"'");
+ const trace=join(base,'sync-create.json');
+ const syncObserver=String.raw`use IO::Handle ();use Fcntl qw(O_WRONLY O_CREAT O_EXCL);
+my @test_sync_paths;my $test_real_sync=\&IO::Handle::sync;
+{no warnings 'redefine';*IO::Handle::sync=sub{my($handle,@args)=@_;my $target=readlink('/proc/'.$$.'/fd/'.fileno($handle));die "test sync FD unavailable\n" unless defined($target);push @test_sync_paths,$target;return $test_real_sync->($handle,@args);};}
+END{sysopen(my $log,'${trace}',O_WRONLY|O_CREAT|O_EXCL,0600)or die "test trace refused\n";print {$log} JSON::PP->new->canonical(1)->encode(\@test_sync_paths) or die "test trace write refused\n";close($log)or die "test trace close refused\n";}
+`;
+ const invoke=(mode,pin,timeout)=>spawnSync('/usr/bin/perl',['-e',mode==='create'?syncObserver+program:program,sourceData,sourceWitness,output,mode,pin],{cwd:base,env:{PATH:'/usr/bin:/bin',HOME:base,LANG:'C',LC_ALL:'C'},encoding:'utf8',timeout,maxBuffer:1048576});
+ const created=invoke('create','-',12000);assert.ifError(created.error);assert.equal(created.signal,null);assert.equal(created.status,0,created.stderr);const summary=validateRotationCopySummary(JSON.parse(created.stdout),false),proofBytes=await readFile(join(output,'physical-copy.private.json')),proof=JSON.parse(proofBytes);assert.equal(digest(proofBytes),summary.copyProofSha256);assert.equal(summary.sourceFiles,files.length);assert.equal(proof.format,'nano-fresh-lifecycle-owner-copy-private-proof-v2');assert.equal(proof.materialEncoding,'linux-statx-nine-decimal-ns-v1');
+ const targets=[join(output,'data',namespace,owner),join(output,'witness',namespace,owner)];assert.deepEqual(proof.sources.map(x=>x.root),[sourceData,sourceWitness]);assert.deepEqual(proof.copies.map(x=>x.root),targets);
+ const synced=JSON.parse(await readFile(trace,'utf8')),parents=[join(output,'data',namespace),join(output,'witness',namespace),join(output,'data'),join(output,'witness'),output];assert.deepEqual(synced.filter(path=>parents.includes(path)),parents,'Namespace parents must really sync before data/witness/output');for(const target of targets)assert(synced.includes(target),'Owner root must really sync');
+ const sourceIds=new Set(before.flat().map(row=>row.material[0]+':'+row.material[1])),ids=new Set(sourceIds);
+ for(let i=0;i<2;++i){const copied=await inventory(targets[i]);assert.deepEqual(copied.map(x=>x.path),before[i].map(x=>x.path));for(let j=0;j<copied.length;++j){const row=copied[j],original=before[i][j],id=row.material[0]+':'+row.material[1];assert.equal(row.kind,original.kind);assert.equal(ids.has(id),false,'All copied inodes must be independent');ids.add(id);assert.equal(row.material[4],String(process.getuid()));assert.equal(BigInt(row.material[2])&0o7777n,row.kind==='directory'?0o700n:0o600n);if(row.kind==='file'){assert.equal(row.material[3],'1');assert.equal(row.sha256,original.sha256);assert.equal(row.bytes,original.bytes);}}}
+ assert.deepEqual([await inventory(sourceData),await inventory(sourceWitness)],before);assert.equal(await readFile(join(targets[0],'peer.key'),'utf8'),files[5][1]);assert.equal((await lstat(join(targets[0],'chain/LOCK'))).size,0);
+ const verified=invoke('verify',summary.copyProofSha256,5000);assert.ifError(verified.error);assert.equal(verified.signal,null);assert.equal(verified.status,0,verified.stderr);assert.equal(validateRotationCopySummary(JSON.parse(verified.stdout),true).copyProofSha256,summary.copyProofSha256);assert.deepEqual(await readFile(join(output,'physical-copy.private.json')),proofBytes);
+ await writeFile(join(targets[0],'peer.key'),'PUBLIC changed copy',{flag:'a'});const refused=invoke('verify',summary.copyProofSha256,5000);assert.ifError(refused.error);assert.equal(refused.signal,null);assert.notEqual(refused.status,0);assert.equal(refused.stdout,'');assert.match(refused.stderr,/stopped rotation physical copy refused/);assert.deepEqual([await inventory(sourceData),await inventory(sourceWitness)],before);assert.deepEqual(await readFile(join(output,'physical-copy.private.json')),proofBytes);
+});
+
+
+// Kernel metadata conformance for the exact backend used by the owner program.
+// Synthetic files only; Node bigint stat/lstat is an independent ns reference.
+test('whole-owner statx keeps exact FD/path nine fields, one ns and closed ABI refusals',{skip:process.platform!=='linux',timeout:5000},async t=>{
+ const base=await lifecyclePrivateDirectory('nano-lifecycle-statx-');t.after(()=>rm(base,{recursive:true,force:true}));assert.match(base,/^[A-Za-z0-9_./-]+$/);
+ const mtime=join(base,'mtime'),renamed=join(base,'renamed'),moved=join(base,'moved'),alias=join(base,'alias'),missing=join(base,'missing');
+ await writeFile(mtime,'PUBLIC statx timestamp bytes',{flag:'wx',mode:0o600});await writeFile(renamed,'PUBLIC original inode',{flag:'wx',mode:0o600});await symlink(mtime,alias);
+ const touched=spawnSync('/usr/bin/touch',['-m','--date=@1700000000.123456789',mtime],{cwd:base,env:{PATH:'/usr/bin:/bin',HOME:base,LANG:'C',LC_ALL:'C'},encoding:'utf8',timeout:1000,maxBuffer:4096});assert.ifError(touched.error);assert.equal(touched.signal,null);assert.equal(touched.status,0,touched.stderr);
+ const fields=['dev','ino','mode','nlink','uid','gid','size','mtimeNs','ctimeNs'],row=async path=>{const s=await lstat(path,{bigint:true});return fields.map(k=>String(s[k]));};
+ const before=await row(mtime);
+ const probe=String.raw`use strict;use warnings;use Fcntl qw(:DEFAULT);use JSON::PP ();
+sub need{die "statx probe refused\n" unless $_[0]}sub tick{}
+`+lifecycleLinuxStatx+String.raw`
+my($mtime,$rename,$moved,$link,$missing)=@ARGV;need(@ARGV==5);
+sysopen(my $mf,$mtime,O_RDONLY|O_NOFOLLOW)or die "test open refused\n";my $before_path=stat9($mtime,0);my $before_fd=stat9(fileno($mf),1);
+need(system('/usr/bin/touch','-m','--date=@1700000000.123456790',$mtime)==0);my $after_path=stat9($mtime,0);my $after_fd=stat9(fileno($mf),1);close($mf)or die "test close refused\n";
+sysopen(my $rf,$rename,O_RDONLY|O_NOFOLLOW)or die "test rename open refused\n";rename($rename,$moved)or die "test rename refused\n";sysopen(my $replacement,$rename,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600)or die "test replacement refused\n";print {$replacement} 'PUBLIC replacement inode' or die "test replacement write refused\n";close($replacement)or die "test replacement close refused\n";my $renamed_fd=stat9(fileno($rf),1);my $replacement_path=stat9($rename,0);close($rf)or die "test rename close refused\n";my $symlink_path=stat9($link,0);
+my $raw="\0"x256;substr($raw,0,4)=pack('V',0xffffffff);substr($raw,16,12)=pack('V3',1,0,0);substr($raw,28,2)=pack('v',0100600);substr($raw,32,8)="\xff"x8;substr($raw,40,8)="\xff"x8;substr($raw,96,12)=pack('q<V',2,3);substr($raw,112,12)=pack('q<V',-1,999999999);substr($raw,136,8)=pack('V2',0xffffffff,0xffffffff);my $exact_limits=lifecycle_statx_decode($raw);
+my $refusals=0;sub refused{my($f)=@_;my $ok=eval{$f->();1};need(!$ok&&$@ eq "statx probe refused\n");++$refusals;}
+refused(sub{lifecycle_statx_decode(substr($raw,0,255))});
+my $mask=$raw;substr($mask,0,4)=pack('V',0x3de);refused(sub{lifecycle_statx_decode($mask)});
+my $mtime_bad=$raw;substr($mtime_bad,120,4)=pack('V',1000000000);refused(sub{lifecycle_statx_decode($mtime_bad)});
+my $ctime_bad=$raw;substr($ctime_bad,104,4)=pack('V',1000000000);refused(sub{lifecycle_statx_decode($ctime_bad)});
+for my $args(['linux','ppc64-linux',8,8,'12345678'],['darwin','x86_64-linux',8,8,'12345678'],['linux','x86_64-linux',4,8,'12345678'],['linux','x86_64-linux',8,4,'12345678'],['linux','x86_64-linux',8,8,'87654321']){refused(sub{lifecycle_statx_abi(@$args)});}
+refused(sub{stat9('relative',0)});refused(sub{stat9(-1,1)});refused(sub{stat9($missing,0)});
+print JSON::PP->new->canonical(1)->encode({number=>$lifecycle_statx_number,beforePath=>$before_path,beforeFd=>$before_fd,afterPath=>$after_path,afterFd=>$after_fd,renamedFd=>$renamed_fd,replacementPath=>$replacement_path,symlinkPath=>$symlink_path,exactLimits=>$exact_limits,refusals=>$refusals})."\n";
+`;
+ const result=spawnSync('/usr/bin/perl',['-e',probe,mtime,renamed,moved,alias,missing],{cwd:base,env:{PATH:'/usr/bin:/bin',HOME:base,LANG:'C',LC_ALL:'C'},encoding:'utf8',timeout:3000,maxBuffer:16384});assert.ifError(result.error);assert.equal(result.signal,null);assert.equal(result.status,0,result.stderr);assert.equal(result.stderr,'');const actual=JSON.parse(result.stdout);
+ assert.equal(actual.number,process.arch==='x64'?332:291);assert.deepEqual(actual.beforePath,before);assert.deepEqual(actual.beforeFd,before);assert.deepEqual(actual.afterPath,await row(mtime));assert.deepEqual(actual.afterFd,actual.afterPath);assert.equal(BigInt(actual.afterPath[7])-BigInt(actual.beforePath[7]),1n);
+ assert.deepEqual(actual.renamedFd,await row(moved));assert.deepEqual(actual.replacementPath,await row(renamed));assert.notEqual(actual.renamedFd[1],actual.replacementPath[1]);assert.deepEqual(actual.symlinkPath,await row(alias));assert.equal(BigInt(actual.symlinkPath[2])&0o170000n,0o120000n);
+ assert.deepEqual(actual.exactLimits,['18446744073709551615','18446744073709551615','33152','1','0','0','18446744073709551615','-1','2000000003']);assert.equal(actual.refusals,12);
+ for(const key of ['beforePath','beforeFd','afterPath','afterFd','renamedFd','replacementPath','symlinkPath','exactLimits'])assert(actual[key].every(value=>typeof value==='string'&&/^-?(?:0|[1-9][0-9]*)$/.test(value)),'All nine fields remain exact decimal strings');
+});

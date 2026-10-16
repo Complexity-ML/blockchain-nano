@@ -1,0 +1,75 @@
+--- a/tests/multihost/lifecycle-driver-guard.test.mjs
++++ b/tests/multihost/lifecycle-driver-guard.test.mjs
+@@ -20,7 +20,7 @@
+  "harness-manifest.mjs": "b01e069ade274ac38e612f9f8eefa7ce17e204b4764593d0371891047374c09d",
+  "lifecycle.mjs": "16ceccd02e7487d4424285554d210753aa70943b39714819b32f9c158a2f4a23",
+  "lifecycle-runtime.mjs": "376669bf088a20e85281b30651c0ca979b3ebd1581c28da8c27c29ac1eff081f",
+- "lifecycle-owner.mjs": "8c3cbb8ee26655b9e76c5e30da308195c9beb48b59f022d3c2094942831e7d65",
++ "lifecycle-owner.mjs": "ef06b22e8b7102abc5126f3fd355f26cefb776dd477fc5dde25abfb386b84fe3",
+  "../../docs/qualification/local-supervisor-linux-20261015/source/known-files.pl": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
+  "../../docs/qualification/local-supervisor-linux-20261015/source/copy-bootstrap-pairs.pl": "9fcd47d3bee3530c163e00e8b6a8dd475645336ba48579db45bdc9e20bb3bdf3"
+ };
+--- a/tests/multihost/lifecycle-owner.mjs
++++ b/tests/multihost/lifecycle-owner.mjs
+@@ -8,7 +8,8 @@
+  let p=linuxRotationCopy;
+  const replace=(a,b)=>{need(p.split(a).length===2,'fixed copy derivation anchor');p=p.replace(a,b);};
+  replace("my @targets=($out.'/data/chain',$out.'/witness/chain-witness');","my @targets=($out.'/data/"+namespace+"/"+owner+"',$out.'/witness/"+namespace+"/"+owner+"');");
+- replace("mkdirprivate($out.($i?'/witness':'/data'));","mkdirprivate($out.($i?'/witness':'/data'));mkdirprivate($out.($i?'/witness':'/data')+'/"+namespace+"');");
++ replace("mkdirprivate($out.($i?'/witness':'/data'));","mkdirprivate($out.($i?'/witness':'/data'));mkdirprivate($out.($i?'/witness':'/data').'/"+namespace+"');");
++ replace("for my $p($out.'/data',$out.'/witness',$out){","for my $p($out.'/data/"+namespace+"',$out.'/witness/"+namespace+"',$out.'/data',$out.'/witness',$out){");
+  // Full owner roots include core, every signer/witness journal and peer.key.
+  // Source setters remain absent; all original nine fields+SHA stay exact.
+  p=p.replaceAll('<=20000','<='+files.toString()).replaceAll('<=536870912','<='+bytes.toString());
+--- a/tests/multihost/lifecycle-runtime.test.mjs
++++ b/tests/multihost/lifecycle-runtime.test.mjs
+@@ -3,7 +3,9 @@
+ import assert from 'node:assert/strict';
+ import {createHash} from 'node:crypto';
+ import {join} from 'node:path';
+-import {writeFile,symlink,link,unlink,rm,mkdir,chmod,lstat} from 'node:fs/promises';
++import {writeFile,readFile,readdir,symlink,link,unlink,rm,mkdir,chmod,lstat} from 'node:fs/promises';
++import {spawnSync} from 'node:child_process';
++import {validateRotationCopySummary} from './rotation-owned-copy.mjs';
+ import {requireLifecycleRuntimeAuthority,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleCheckpoint,lifecycleRollingFinalityWindow,lifecycleOperationDigest,lifecyclePrivateDirectory,writeLifecycleKnownFile,readLifecycleKnownFile,admitLifecycleKnownFiles,projectLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,publishLifecycleStoppedCapturesBeforeClosing} from './lifecycle-runtime.mjs';
+ import {lifecycleWholeCopyProgram} from './lifecycle-owner.mjs';
+ const q=n=>'0x'+BigInt(n).toString(16),root=n=>'0x'+String(n).padStart(64,'0'),pub=n=>'0x'+String(n).padStart(96,'0'),digest=b=>createHash('sha256').update(b).digest('hex');
+@@ -89,3 +91,38 @@
+  const result=await publishLifecycleStoppedCapturesBeforeClosing(projected(),{campaignId,publish:async()=>{++publishes;},close:async()=>{++closes;return 'actual closing result';}});assert.equal(result,'actual closing result');assert.equal(closes,1);
+ });
+ }
++
++// Linux-only, actual generated Perl over public opaque fixtures. No Nano/DB/key.
++// Relocate exactly ONE output-equality literal to a NEW private fixture root;
++// all filesystem code and namespace/owner paths remain the generated program.
++test('whole-owner generated Perl copies complete namespaced roots and refuses copy mutation',{skip:process.platform!=='linux',timeout:24000},async t=>{
++ const namespace='isolated-capella-'+'e'.repeat(64),owner='vps-docker',base=await lifecyclePrivateDirectory('nano-lifecycle-whole-copy-');t.after(()=>rm(base,{recursive:true,force:true}));
++ const sourceData=join(base,'source-data',namespace,owner),sourceWitness=join(base,'source-witness',namespace,owner),output=join(base,'output');
++ for(const path of [sourceData,sourceWitness,output])await mkdir(path,{recursive:true,mode:0o700});
++ const files=[
++  [join(sourceData,'chain/CURRENT'),'MANIFEST-000001\n'],[join(sourceData,'chain/MANIFEST-000001'),'PUBLIC opaque core bytes'],[join(sourceData,'chain/LOCK'),''],
++  [join(sourceData,'journal-32/CURRENT'),'PUBLIC journal32'],[join(sourceData,'journal-64/nested/checkpoint'),'PUBLIC journal64 nested'],[join(sourceData,'peer.key'),'PUBLIC TEST peer identity, not a private key'],
++  [join(sourceWitness,'chain-witness/CURRENT'),'PUBLIC core witness'],[join(sourceWitness,'witness-32/CURRENT'),'PUBLIC witness32'],[join(sourceWitness,'witness-64/nested/checkpoint'),'PUBLIC witness64 nested']
++ ];
++ for(const [path,bytes] of files){await mkdir(path.slice(0,path.lastIndexOf('/')),{recursive:true,mode:0o700});await writeFile(path,bytes,{flag:'wx',mode:0o600});}
++ await mkdir(join(sourceData,'chain/empty-directory'),{mode:0o700});await mkdir(join(sourceWitness,'empty-directory'),{mode:0o700});
++ const fields=['dev','ino','mode','nlink','uid','gid','size','mtimeNs','ctimeNs'];
++ async function inventory(root){const rows=[];async function walk(path,relative=''){const s=await lstat(path,{bigint:true});assert(s.isDirectory()||s.isFile());const row={path:relative,kind:s.isDirectory()?'directory':'file',material:fields.map(k=>String(s[k]))};if(s.isFile()){const bytes=await readFile(path);row.bytes=bytes.length;row.sha256=digest(bytes);}rows.push(row);if(s.isDirectory())for(const leaf of (await readdir(path)).sort())await walk(join(path,leaf),relative?relative+'/'+leaf:leaf);}await walk(root);return rows;}
++ const before=[await inventory(sourceData),await inventory(sourceWitness)],resources={maximumInventoryFiles:'0x40',maximumInventoryBytes:'0x10000'},generated=lifecycleWholeCopyProgram(namespace,owner,resources),guard="$out eq '/rotation-audit'";
++ assert.equal(generated.split(guard).length,2,'One exact virtual-output equality must remain');assert.match(output,/^[A-Za-z0-9_./-]+$/);const program=generated.replace(guard,"$out eq '"+output+"'");
++ const trace=join(base,'sync-create.json');
++ const syncObserver=String.raw`use IO::Handle ();use Fcntl qw(O_WRONLY O_CREAT O_EXCL);
++my @test_sync_paths;my $test_real_sync=\&IO::Handle::sync;
++{no warnings 'redefine';*IO::Handle::sync=sub{my($handle,@args)=@_;my $target=readlink('/proc/'.$$.'/fd/'.fileno($handle));die "test sync FD unavailable\n" unless defined($target);push @test_sync_paths,$target;return $test_real_sync->($handle,@args);};}
++END{sysopen(my $log,'${trace}',O_WRONLY|O_CREAT|O_EXCL,0600)or die "test trace refused\n";print {$log} JSON::PP->new->canonical(1)->encode(\@test_sync_paths) or die "test trace write refused\n";close($log)or die "test trace close refused\n";}
++`;
++ const invoke=(mode,pin,timeout)=>spawnSync('/usr/bin/perl',['-e',mode==='create'?syncObserver+program:program,sourceData,sourceWitness,output,mode,pin],{cwd:base,env:{PATH:'/usr/bin:/bin',HOME:base,LANG:'C',LC_ALL:'C'},encoding:'utf8',timeout,maxBuffer:1048576});
++ const created=invoke('create','-',12000);assert.ifError(created.error);assert.equal(created.signal,null);assert.equal(created.status,0,created.stderr);const summary=validateRotationCopySummary(JSON.parse(created.stdout),false),proofBytes=await readFile(join(output,'physical-copy.private.json')),proof=JSON.parse(proofBytes);assert.equal(digest(proofBytes),summary.copyProofSha256);assert.equal(summary.sourceFiles,files.length);
++ const targets=[join(output,'data',namespace,owner),join(output,'witness',namespace,owner)];assert.deepEqual(proof.sources.map(x=>x.root),[sourceData,sourceWitness]);assert.deepEqual(proof.copies.map(x=>x.root),targets);
++ const synced=JSON.parse(await readFile(trace,'utf8')),parents=[join(output,'data',namespace),join(output,'witness',namespace),join(output,'data'),join(output,'witness'),output];assert.deepEqual(synced.filter(path=>parents.includes(path)),parents,'Namespace parents must really sync before data/witness/output');for(const target of targets)assert(synced.includes(target),'Owner root must really sync');
++ const sourceIds=new Set(before.flat().map(row=>row.material[0]+':'+row.material[1])),ids=new Set(sourceIds);
++ for(let i=0;i<2;++i){const copied=await inventory(targets[i]);assert.deepEqual(copied.map(x=>x.path),before[i].map(x=>x.path));for(let j=0;j<copied.length;++j){const row=copied[j],original=before[i][j],id=row.material[0]+':'+row.material[1];assert.equal(row.kind,original.kind);assert.equal(ids.has(id),false,'All copied inodes must be independent');ids.add(id);assert.equal(row.material[4],String(process.getuid()));assert.equal(BigInt(row.material[2])&0o7777n,row.kind==='directory'?0o700n:0o600n);if(row.kind==='file'){assert.equal(row.material[3],'1');assert.equal(row.sha256,original.sha256);assert.equal(row.bytes,original.bytes);}}}
++ assert.deepEqual([await inventory(sourceData),await inventory(sourceWitness)],before);assert.equal(await readFile(join(targets[0],'peer.key'),'utf8'),files[5][1]);assert.equal((await lstat(join(targets[0],'chain/LOCK'))).size,0);
++ const verified=invoke('verify',summary.copyProofSha256,5000);assert.ifError(verified.error);assert.equal(verified.signal,null);assert.equal(verified.status,0,verified.stderr);assert.equal(validateRotationCopySummary(JSON.parse(verified.stdout),true).copyProofSha256,summary.copyProofSha256);assert.deepEqual(await readFile(join(output,'physical-copy.private.json')),proofBytes);
++ await writeFile(join(targets[0],'peer.key'),'PUBLIC changed copy',{flag:'a'});const refused=invoke('verify',summary.copyProofSha256,5000);assert.ifError(refused.error);assert.equal(refused.signal,null);assert.notEqual(refused.status,0);assert.equal(refused.stdout,'');assert.match(refused.stderr,/stopped rotation physical copy refused/);assert.deepEqual([await inventory(sourceData),await inventory(sourceWitness)],before);assert.deepEqual(await readFile(join(output,'physical-copy.private.json')),proofBytes);
++});

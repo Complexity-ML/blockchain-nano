@@ -1,0 +1,99 @@
+--- a/tests/multihost/lifecycle-owner.mjs
++++ b/tests/multihost/lifecycle-owner.mjs
+@@ -2,14 +2,27 @@
+ // No stdout mode returns an action, Job/session, capture, environment or DB bytes.
+ import {linuxRotationCopy} from './rotation-owned-copy.mjs';
+ const need=(v,m)=>{if(!v)throw Error('Lifecycle owner: '+m);};
++export const lifecycleLinuxStatx=String.raw`use Config qw(%Config);use Math::BigInt ();
++sub lifecycle_statx_abi{my($os,$arch,$iv,$ptr,$order)=@_;need(defined($os)&&defined($arch)&&defined($iv)&&defined($ptr)&&defined($order)&&$os eq 'linux'&&$iv eq '8'&&$ptr eq '8'&&$order eq '12345678');return 332 if $arch=~m{\Ax86_64-linux(?:-|\z)};return 291 if $arch=~m{\Aaarch64-linux(?:-|\z)};need(0);}
++my $lifecycle_statx_number=lifecycle_statx_abi(@Config{qw(osname archname ivsize ptrsize byteorder)});
++sub lifecycle_statx_text{return pack('a*',"$_[0]");}
++sub lifecycle_statx_ns{my($raw,$offset)=@_;my $sec=unpack('q<',substr($raw,$offset,8));my $ns=unpack('V',substr($raw,$offset+8,4));need($ns<1000000000);return Math::BigInt->new(lifecycle_statx_text($sec))->bmul('1000000000')->badd(lifecycle_statx_text($ns))->bstr;}
++sub lifecycle_statx_decode{my($raw)=@_;need(defined($raw)&&!ref($raw)&&length($raw)==256);my $mask=unpack('V',substr($raw,0,4));need(($mask&0x3df)==0x3df);my($links,$owner,$group)=unpack('V3',substr($raw,16,12));my $mode=unpack('v',substr($raw,28,2));my $ino=unpack('Q<',substr($raw,32,8));my $size=unpack('Q<',substr($raw,40,8));my($major,$minor)=unpack('V2',substr($raw,136,8));my $ma=Math::BigInt->new(lifecycle_statx_text($major));my $mi=Math::BigInt->new(lifecycle_statx_text($minor));my $dev=$ma->copy->band('4095')->blsft(8)->bior($mi->copy->band('255'))->bior($mi->copy->band('4294967040')->blsft(12))->bior($ma->copy->band('4294963200')->blsft(32));return [map{lifecycle_statx_text($_)}($dev->bstr,$ino,$mode,$links,$owner,$group,$size,lifecycle_statx_ns($raw,112),lifecycle_statx_ns($raw,96))];}
++sub stat9{my($object,$follow)=@_;tick();need(defined($follow)&&($follow==0||$follow==1));my($dirfd,$name,$flags);if($follow){need(defined($object)&&!ref($object)&&lifecycle_statx_text($object)=~m{\A(?:0|[1-9][0-9]*)\z}&&$object<=2147483647);$dirfd=0+$object;$name='';$flags=0x1000;}else{need(defined($object)&&!ref($object)&&$object=~m{\A/}&&index($object,"\0")<0);$dirfd=-100;$name=$object;$flags=0x100|0x800;}my $buffer="\0"x256;my $rc=syscall($lifecycle_statx_number,$dirfd,$name,$flags,0x7ff,$buffer);tick();need($rc==0);return lifecycle_statx_decode($buffer);}
++`;
+ export function lifecycleWholeCopyProgram(namespace,owner,resources){
+  need(/^isolated-capella-[0-9a-f]{64}$/.test(namespace)&&['mac-native','mac-docker','vps-docker'].includes(owner),'exact owner namespace');
+  const files=BigInt(resources.maximumInventoryFiles),bytes=BigInt(resources.maximumInventoryBytes);need(files>0n&&files<=BigInt(Number.MAX_SAFE_INTEGER)&&bytes>0n&&bytes<=BigInt(Number.MAX_SAFE_INTEGER),'declared safe inventory bounds');
+  let p=linuxRotationCopy;
+  const replace=(a,b)=>{need(p.split(a).length===2,'fixed copy derivation anchor');p=p.replace(a,b);};
++ const legacyStat=String.raw`sub stat9{my($p,$follow)=@_;tick();open(my $pipe,'-|','stat',$follow?'-Lc':'-c','%d|%i|%f|%h|%u|%g|%s|%y|%z','--',$p)or die "stat refused\n";local $/;my $s=<$pipe>;need(close($pipe)&&defined($s)&&length($s)<1024);chomp $s;my @a=split(/\|/,$s,-1);need(@a==9);return \@a;}`;
++ replace(legacyStat,lifecycleLinuxStatx);
++ replace("sub fdpath{return '/proc/'.$$.'/fd/'.fileno($_[0]);}","sub fdpath{my $fd=fileno($_[0]);need(defined($fd));return $fd;}");
+  replace("my @targets=($out.'/data/chain',$out.'/witness/chain-witness');","my @targets=($out.'/data/"+namespace+"/"+owner+"',$out.'/witness/"+namespace+"/"+owner+"');");
+  replace("mkdirprivate($out.($i?'/witness':'/data'));","mkdirprivate($out.($i?'/witness':'/data'));mkdirprivate($out.($i?'/witness':'/data').'/"+namespace+"');");
+  replace("for my $p($out.'/data',$out.'/witness',$out){","for my $p($out.'/data/"+namespace+"',$out.'/witness/"+namespace+"',$out.'/data',$out.'/witness',$out){");
++ replace("format=>'nano-fresh-rotation-owned-copy-private-proof-v1',stability=>","format=>'nano-fresh-lifecycle-owner-copy-private-proof-v2',materialEncoding=>'linux-statx-nine-decimal-ns-v1',stability=>");
++ replace("need($proof->{format} eq 'nano-fresh-rotation-owned-copy-private-proof-v1');","need($proof->{format} eq 'nano-fresh-lifecycle-owner-copy-private-proof-v2'&&$proof->{materialEncoding} eq 'linux-statx-nine-decimal-ns-v1');");
+  // Full owner roots include core, every signer/witness journal and peer.key.
+  // Source setters remain absent; all original nine fields+SHA stay exact.
+  p=p.replaceAll('<=20000','<='+files.toString()).replaceAll('<=536870912','<='+bytes.toString());
+--- a/tests/multihost/lifecycle-runtime.test.mjs
++++ b/tests/multihost/lifecycle-runtime.test.mjs
+@@ -7,7 +7,7 @@
+ import {spawnSync} from 'node:child_process';
+ import {validateRotationCopySummary} from './rotation-owned-copy.mjs';
+ import {requireLifecycleRuntimeAuthority,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleCheckpoint,lifecycleRollingFinalityWindow,lifecycleOperationDigest,lifecyclePrivateDirectory,writeLifecycleKnownFile,readLifecycleKnownFile,admitLifecycleKnownFiles,projectLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,publishLifecycleStoppedCapturesBeforeClosing} from './lifecycle-runtime.mjs';
+-import {lifecycleWholeCopyProgram} from './lifecycle-owner.mjs';
++import {lifecycleWholeCopyProgram,lifecycleLinuxStatx} from './lifecycle-owner.mjs';
+ const q=n=>'0x'+BigInt(n).toString(16),root=n=>'0x'+String(n).padStart(64,'0'),pub=n=>'0x'+String(n).padStart(96,'0'),digest=b=>createHash('sha256').update(b).digest('hex');
+ const names=['mac-native','mac-docker','vps-docker'];
+ let expectedRefusals=0;const refuses=f=>{assert.throws(f);++expectedRefusals;},rejects=async f=>{await assert.rejects(f);++expectedRefusals;};
+@@ -117,7 +117,7 @@
+ END{sysopen(my $log,'${trace}',O_WRONLY|O_CREAT|O_EXCL,0600)or die "test trace refused\n";print {$log} JSON::PP->new->canonical(1)->encode(\@test_sync_paths) or die "test trace write refused\n";close($log)or die "test trace close refused\n";}
+ `;
+  const invoke=(mode,pin,timeout)=>spawnSync('/usr/bin/perl',['-e',mode==='create'?syncObserver+program:program,sourceData,sourceWitness,output,mode,pin],{cwd:base,env:{PATH:'/usr/bin:/bin',HOME:base,LANG:'C',LC_ALL:'C'},encoding:'utf8',timeout,maxBuffer:1048576});
+- const created=invoke('create','-',12000);assert.ifError(created.error);assert.equal(created.signal,null);assert.equal(created.status,0,created.stderr);const summary=validateRotationCopySummary(JSON.parse(created.stdout),false),proofBytes=await readFile(join(output,'physical-copy.private.json')),proof=JSON.parse(proofBytes);assert.equal(digest(proofBytes),summary.copyProofSha256);assert.equal(summary.sourceFiles,files.length);
++ const created=invoke('create','-',12000);assert.ifError(created.error);assert.equal(created.signal,null);assert.equal(created.status,0,created.stderr);const summary=validateRotationCopySummary(JSON.parse(created.stdout),false),proofBytes=await readFile(join(output,'physical-copy.private.json')),proof=JSON.parse(proofBytes);assert.equal(digest(proofBytes),summary.copyProofSha256);assert.equal(summary.sourceFiles,files.length);assert.equal(proof.format,'nano-fresh-lifecycle-owner-copy-private-proof-v2');assert.equal(proof.materialEncoding,'linux-statx-nine-decimal-ns-v1');
+  const targets=[join(output,'data',namespace,owner),join(output,'witness',namespace,owner)];assert.deepEqual(proof.sources.map(x=>x.root),[sourceData,sourceWitness]);assert.deepEqual(proof.copies.map(x=>x.root),targets);
+  const synced=JSON.parse(await readFile(trace,'utf8')),parents=[join(output,'data',namespace),join(output,'witness',namespace),join(output,'data'),join(output,'witness'),output];assert.deepEqual(synced.filter(path=>parents.includes(path)),parents,'Namespace parents must really sync before data/witness/output');for(const target of targets)assert(synced.includes(target),'Owner root must really sync');
+  const sourceIds=new Set(before.flat().map(row=>row.material[0]+':'+row.material[1])),ids=new Set(sourceIds);
+@@ -126,3 +126,37 @@
+  const verified=invoke('verify',summary.copyProofSha256,5000);assert.ifError(verified.error);assert.equal(verified.signal,null);assert.equal(verified.status,0,verified.stderr);assert.equal(validateRotationCopySummary(JSON.parse(verified.stdout),true).copyProofSha256,summary.copyProofSha256);assert.deepEqual(await readFile(join(output,'physical-copy.private.json')),proofBytes);
+  await writeFile(join(targets[0],'peer.key'),'PUBLIC changed copy',{flag:'a'});const refused=invoke('verify',summary.copyProofSha256,5000);assert.ifError(refused.error);assert.equal(refused.signal,null);assert.notEqual(refused.status,0);assert.equal(refused.stdout,'');assert.match(refused.stderr,/stopped rotation physical copy refused/);assert.deepEqual([await inventory(sourceData),await inventory(sourceWitness)],before);assert.deepEqual(await readFile(join(output,'physical-copy.private.json')),proofBytes);
+ });
++
++
++// Kernel metadata conformance for the exact backend used by the owner program.
++// Synthetic files only; Node bigint stat/lstat is an independent ns reference.
++test('whole-owner statx keeps exact FD/path nine fields, one ns and closed ABI refusals',{skip:process.platform!=='linux',timeout:5000},async t=>{
++ const base=await lifecyclePrivateDirectory('nano-lifecycle-statx-');t.after(()=>rm(base,{recursive:true,force:true}));assert.match(base,/^[A-Za-z0-9_./-]+$/);
++ const mtime=join(base,'mtime'),renamed=join(base,'renamed'),moved=join(base,'moved'),alias=join(base,'alias'),missing=join(base,'missing');
++ await writeFile(mtime,'PUBLIC statx timestamp bytes',{flag:'wx',mode:0o600});await writeFile(renamed,'PUBLIC original inode',{flag:'wx',mode:0o600});await symlink(mtime,alias);
++ const touched=spawnSync('/usr/bin/touch',['-m','--date=@1700000000.123456789',mtime],{cwd:base,env:{PATH:'/usr/bin:/bin',HOME:base,LANG:'C',LC_ALL:'C'},encoding:'utf8',timeout:1000,maxBuffer:4096});assert.ifError(touched.error);assert.equal(touched.signal,null);assert.equal(touched.status,0,touched.stderr);
++ const fields=['dev','ino','mode','nlink','uid','gid','size','mtimeNs','ctimeNs'],row=async path=>{const s=await lstat(path,{bigint:true});return fields.map(k=>String(s[k]));};
++ const before=await row(mtime);
++ const probe=String.raw`use strict;use warnings;use Fcntl qw(:DEFAULT);use JSON::PP ();
++sub need{die "statx probe refused\n" unless $_[0]}sub tick{}
++`+lifecycleLinuxStatx+String.raw`
++my($mtime,$rename,$moved,$link,$missing)=@ARGV;need(@ARGV==5);
++sysopen(my $mf,$mtime,O_RDONLY|O_NOFOLLOW)or die "test open refused\n";my $before_path=stat9($mtime,0);my $before_fd=stat9(fileno($mf),1);
++need(system('/usr/bin/touch','-m','--date=@1700000000.123456790',$mtime)==0);my $after_path=stat9($mtime,0);my $after_fd=stat9(fileno($mf),1);close($mf)or die "test close refused\n";
++sysopen(my $rf,$rename,O_RDONLY|O_NOFOLLOW)or die "test rename open refused\n";rename($rename,$moved)or die "test rename refused\n";sysopen(my $replacement,$rename,O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW,0600)or die "test replacement refused\n";print {$replacement} 'PUBLIC replacement inode' or die "test replacement write refused\n";close($replacement)or die "test replacement close refused\n";my $renamed_fd=stat9(fileno($rf),1);my $replacement_path=stat9($rename,0);close($rf)or die "test rename close refused\n";my $symlink_path=stat9($link,0);
++my $raw="\0"x256;substr($raw,0,4)=pack('V',0xffffffff);substr($raw,16,12)=pack('V3',1,0,0);substr($raw,28,2)=pack('v',0100600);substr($raw,32,8)="\xff"x8;substr($raw,40,8)="\xff"x8;substr($raw,96,12)=pack('q<V',2,3);substr($raw,112,12)=pack('q<V',-1,999999999);substr($raw,136,8)=pack('V2',0xffffffff,0xffffffff);my $exact_limits=lifecycle_statx_decode($raw);
++my $refusals=0;sub refused{my($f)=@_;my $ok=eval{$f->();1};need(!$ok&&$@ eq "statx probe refused\n");++$refusals;}
++refused(sub{lifecycle_statx_decode(substr($raw,0,255))});
++my $mask=$raw;substr($mask,0,4)=pack('V',0x3de);refused(sub{lifecycle_statx_decode($mask)});
++my $mtime_bad=$raw;substr($mtime_bad,120,4)=pack('V',1000000000);refused(sub{lifecycle_statx_decode($mtime_bad)});
++my $ctime_bad=$raw;substr($ctime_bad,104,4)=pack('V',1000000000);refused(sub{lifecycle_statx_decode($ctime_bad)});
++for my $args(['linux','ppc64-linux',8,8,'12345678'],['darwin','x86_64-linux',8,8,'12345678'],['linux','x86_64-linux',4,8,'12345678'],['linux','x86_64-linux',8,4,'12345678'],['linux','x86_64-linux',8,8,'87654321']){refused(sub{lifecycle_statx_abi(@$args)});}
++refused(sub{stat9('relative',0)});refused(sub{stat9(-1,1)});refused(sub{stat9($missing,0)});
++print JSON::PP->new->canonical(1)->encode({number=>$lifecycle_statx_number,beforePath=>$before_path,beforeFd=>$before_fd,afterPath=>$after_path,afterFd=>$after_fd,renamedFd=>$renamed_fd,replacementPath=>$replacement_path,symlinkPath=>$symlink_path,exactLimits=>$exact_limits,refusals=>$refusals})."\n";
++`;
++ const result=spawnSync('/usr/bin/perl',['-e',probe,mtime,renamed,moved,alias,missing],{cwd:base,env:{PATH:'/usr/bin:/bin',HOME:base,LANG:'C',LC_ALL:'C'},encoding:'utf8',timeout:3000,maxBuffer:16384});assert.ifError(result.error);assert.equal(result.signal,null);assert.equal(result.status,0,result.stderr);assert.equal(result.stderr,'');const actual=JSON.parse(result.stdout);
++ assert.equal(actual.number,process.arch==='x64'?332:291);assert.deepEqual(actual.beforePath,before);assert.deepEqual(actual.beforeFd,before);assert.deepEqual(actual.afterPath,await row(mtime));assert.deepEqual(actual.afterFd,actual.afterPath);assert.equal(BigInt(actual.afterPath[7])-BigInt(actual.beforePath[7]),1n);
++ assert.deepEqual(actual.renamedFd,await row(moved));assert.deepEqual(actual.replacementPath,await row(renamed));assert.notEqual(actual.renamedFd[1],actual.replacementPath[1]);assert.deepEqual(actual.symlinkPath,await row(alias));assert.equal(BigInt(actual.symlinkPath[2])&0o170000n,0o120000n);
++ assert.deepEqual(actual.exactLimits,['18446744073709551615','18446744073709551615','33152','1','0','0','18446744073709551615','-1','2000000003']);assert.equal(actual.refusals,12);
++ for(const key of ['beforePath','beforeFd','afterPath','afterFd','renamedFd','replacementPath','symlinkPath','exactLimits'])assert(actual[key].every(value=>typeof value==='string'&&/^-?(?:0|[1-9][0-9]*)$/.test(value)),'All nine fields remain exact decimal strings');
++});
+--- a/tests/multihost/lifecycle-driver-guard.test.mjs
++++ b/tests/multihost/lifecycle-driver-guard.test.mjs
+@@ -20,7 +20,7 @@
+  "harness-manifest.mjs": "b01e069ade274ac38e612f9f8eefa7ce17e204b4764593d0371891047374c09d",
+  "lifecycle.mjs": "16ceccd02e7487d4424285554d210753aa70943b39714819b32f9c158a2f4a23",
+  "lifecycle-runtime.mjs": "376669bf088a20e85281b30651c0ca979b3ebd1581c28da8c27c29ac1eff081f",
+- "lifecycle-owner.mjs": "ef06b22e8b7102abc5126f3fd355f26cefb776dd477fc5dde25abfb386b84fe3",
++ "lifecycle-owner.mjs": "ab92d7136b88b528912275fe017778608c7ad0a2c43c4252bcc74e1cb862f216",
+  "../../docs/qualification/local-supervisor-linux-20261015/source/known-files.pl": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
+  "../../docs/qualification/local-supervisor-linux-20261015/source/copy-bootstrap-pairs.pl": "9fcd47d3bee3530c163e00e8b6a8dd475645336ba48579db45bdc9e20bb3bdf3"
+ };
