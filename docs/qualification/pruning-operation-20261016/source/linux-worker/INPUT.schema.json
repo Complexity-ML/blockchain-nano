@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Root recipes for --pruning-operation (three other controls are described in README)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "owner",
+    "uid",
+    "gid",
+    "imageId",
+    "elfMachine",
+    "sourceRevision",
+    "runtime",
+    "programs"
+  ],
+  "properties": {
+    "format": {
+      "const": "nano-linux-pruning-operation-recipes-v1"
+    },
+    "owner": {
+      "enum": [
+        "mac-docker",
+        "vps-docker"
+      ]
+    },
+    "uid": {
+      "type": "integer"
+    },
+    "gid": {
+      "type": "integer"
+    },
+    "imageId": {
+      "type": "string"
+    },
+    "elfMachine": {
+      "type": "integer"
+    },
+    "sourceRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "compileFlags"
+      ],
+      "properties": {
+        "source": {
+          "const": "/work/src/consensus_capella_runtime.cpp"
+        },
+        "compileFlags": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 512,
+          "prefixItems": [
+            {
+              "const": "/usr/bin/clang++"
+            }
+          ],
+          "items": {
+            "type": "string",
+            "maxLength": 8192
+          }
+        }
+      }
+    },
+    "programs": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "source",
+          "compileFlags",
+          "linkPrefix",
+          "linkTail"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "startupValidation",
+              "sstReclaim",
+              "maintenance"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "compileFlags": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 512,
+            "prefixItems": [
+              {
+                "const": "/usr/bin/clang++"
+              }
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 8192
+            }
+          },
+          "linkPrefix": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 512,
+            "prefixItems": [
+              {
+                "const": "/usr/bin/clang++"
+              }
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 8192
+            }
+          },
+          "linkTail": {
+            "type": "array",
+            "minItems": 7,
+            "maxItems": 256,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "startupValidation"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/tests/test_capella_startup_deadline.cpp"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "sstReclaim"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/tests/test_owned_copy_physical_admission.cpp"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "maintenance"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/tools/storage-maintenance/compact-owned-copy.cpp"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "owner": {
+            "const": "mac-docker"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "uid": {
+            "const": 501
+          },
+          "gid": {
+            "const": 20
+          },
+          "elfMachine": {
+            "const": 183
+          },
+          "imageId": {
+            "const": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "owner": {
+            "const": "vps-docker"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "uid": {
+            "const": 1000
+          },
+          "gid": {
+            "const": 1000
+          },
+          "elfMachine": {
+            "const": 62
+          },
+          "imageId": {
+            "const": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "format": "nano-linux-pruning-operation-worker-source-proposal-v1",
+  "status": "GO_SOURCE_ONLY_PENDING_ROOT_QUALIFICATION",
+  "payloadCount": 3,
+  "payloadBytes": 51881,
+  "payloads": [
+    {
+      "path": "worker.pl",
+      "sha256": "fc0f3bddc134321f0eabc0b830e0a5ffdb484741321fa9cc3fd6a093d1b04082",
+      "bytes": 36785
+    },
+    {
+      "path": "INPUT.schema.json",
+      "sha256": "d85189a3d4a506f1c4d4e67d8e48106525c8a7eb9e29ad5ba55795fd830b0dc5",
+      "bytes": 5145
+    },
+    {
+      "path": "README.md",
+      "sha256": "84d9123ce5907d2e3f38f6da35aee93a5a7742454ac2eee0cf10ed01d21ea8bc",
+      "bytes": 9951
+    }
+  ],
+  "baseWorker": {
+    "path": "docs/qualification/pruning-base-hash-20261016/source/linux-worker.pl",
+    "sha256": "61c3f64d8b0b8cc8754a515789f9bade225ff8a3aca67fa5f17e81ca38ed8eef",
+    "bytes": 36051
+  },
+  "prefixReuse": "through json_refusal; only deadline590->1200",
+  "sourceAuthorities": [
+    {
+      "path": "../pruning-startup-validation-source-20261016/manifest.json",
+      "sha256": "4ff963f1df494dae2e6fb584bd8eec4a82f162e74800217750f804d6f2ab531b",
+      "bytes": 2598
+    },
+    {
+      "path": "../pruning-sst-reclaim-source-proposal-20261016/manifest.json",
+      "sha256": "e363ef804115b86ff86afdebee19a931c601bca56540dd3ec08eca278d597914",
+      "bytes": 2403
+    }
+  ],
+  "expectedScope": {
+    "independentMCommands": 4,
+    "compiledTranslationUnits": 4,
+    "linkCommands": 4,
+    "loaderCommands": 3,
+    "archiveUpdates": 1,
+    "coreArchiveMembers": 143,
+    "otherCoreMembersByteExact": 142,
+    "selectedTestRuns": 3,
+    "expectedOldCoreRefusals": 1,
+    "newPositiveModeRuns": 2,
+    "startupGroups": 3,
+    "startupExpectedRefusals": 31,
+    "sstScenarioRows": 3,
+    "sstCliInvocations": 3,
+    "fixtureBlocks": 64,
+    "fixtureEcdsaSignatures": 64,
+    "sstoreWrites": 65536,
+    "liveStorageSlots": 1024,
+    "deletedStates": 63
+  },
+  "deadlinesSeconds": {
+    "global": 1200,
+    "command": 179,
+    "startupBaseline": 45,
+    "startupCandidate": 45,
+    "sst": 120,
+    "sstChildCli": 20
+  },
+  "authorProjectOrCompilerOrOpsExecution": false,
+  "authorPrivateOrSdkReads": false,
+  "repositoryModifiedByAuthor": false,
+  "qualificationPending": true,
+  "sourceGitVerifiedByWorker": false,
+  "fullCmakeQualified": false,
+  "wholeSdkOrDagQualified": false,
+  "runtimeDutiesResumed": false,
+  "campaignAdmission": false,
+  "productionQualified": false
+}

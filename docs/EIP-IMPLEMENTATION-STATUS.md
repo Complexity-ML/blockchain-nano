@@ -1,3 +1,9 @@
+> **16 octobre 2026 — Correctif de démarrage et essais de pruning ARM64/AMD64.**
+> [Rapport et preuves](qualification/pruning-operation-20261016/README.md).
+> Source `68d64a5` : les 31 refus attendus passent sur les deux architectures ; le même objet de test reproduit le défaut avec l’ancien Core. Un seul objet est remplacé parmi 143 membres du Core, les 142 autres restent identiques. Aucune ancienne suite ni image reconstruite.
+> Quatre essais SST (deux architectures, tmpfs puis volume Linux), chacun avec 64 transactions, 65 536 SSTORE et 63 états historiques supprimés : gain apparié de 4 934 734 octets SST et 4 935 680 octets alloués aux fichiers. Blocs, reçus, états conservés et engagements vérifiés. Les essais sur volume réutilisent les binaires, sans compilation ni test de démarrage rejoué. Ces gains ne garantissent pas la réduction du backing Docker/APFS, la capacité NVMe ou la résistance à une perte électrique.
+> Les anciennes admissions gardent leurs identités. Restent ouverts : nouveau Core Native et assemblage Nano/admissions, campagne autorisée puis restauration/duties/finalité, consensus WAN/charge et cycle des validateurs, pruning prolongé, bridge/lancement Base–NANO, CI et revue indépendante. La CI source est refusée pour facturation avant toute étape. Historique intégral conservé ; aucun EIP/fork ni production promu. Goal actif.
+
 > **16 octobre 2026 — rétention RPC et chemin Doppler par hash : preuves ciblées.**
 > [Rapport et artefacts](qualification/pruning-base-hash-20261016/README.md).
 > Docker ARM : nouveau mode dédié, 3 scénarios, 112 vérifications et 20 refus attendus ; vraie rétention before3→5/ancre6, simulation concurrente, réouverture et engagements externes. Un M/CXX/lien/loader ; Core bd11 inchangé, aucune image construite ni ancien groupe rejoué. Nouveau test du commit 583c5895 ; Mac natif/AMD non rejoués pour ce mode.
