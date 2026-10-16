@@ -1,3 +1,5 @@
+> **Actualisation du 16 octobre 2026.** Le [protocole en préparation](BRIDGE-PROTOCOL-DRAFT.md) définit les composants, les invariants de réserves et les reprises à réaliser, avec une frontière de preuve encore non implémentée. L’[observateur Base](qualification/bridge-source-serial-20261016/README.md) corrige trois collisions de cache ; ses tests injectés n’authentifient pas la finalité ou l’inclusion et n’autorisent aucune émission. Aucun contrat lock/mint/burn/release ni route réelle n’est livré par ce lot. Les critères et scénarios du document restent ouverts ; son historique est conservé ci-dessous.
+
 # Bridge USDC : critères de sécurité avant fonds réels
 
 État au 25 septembre 2026 : exigences, pas implémentation ni qualification du

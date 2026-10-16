@@ -1,0 +1,79 @@
+{
+  "format": "nano-bridge-source-serial-observation-proposal-v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_EXECUTION",
+  "sourceBaseReportedByRoot": "d6b6fee3",
+  "baselines": [
+    {
+      "path": "tools/bridge-source/finality.mjs",
+      "sha256": "eff69139da63068d9b6338e175c1b1dc48c6ea94d63bd21f740a752d57dd27a5",
+      "bytes": 6432
+    },
+    {
+      "path": "tools/bridge-source/finality.test.mjs",
+      "sha256": "6211783b74861c0c36d3a9bea42b3120535d8a543aa2025f6e7feca06a0a9fa7",
+      "bytes": 9195
+    }
+  ],
+  "payloads": [
+    {
+      "path": "source/tools/bridge-source/finality.mjs",
+      "target": "tools/bridge-source/finality.mjs",
+      "sha256": "edbb5e05c127948bd3085661c6872f05c683ceafee3c09ea525cb33174f0db8b",
+      "bytes": 6610
+    },
+    {
+      "path": "source/tools/bridge-source/finality.test.mjs",
+      "target": "tools/bridge-source/finality.test.mjs",
+      "sha256": "cb808fc14eb9fb3e242ff0ec9117ebd9dcd65426be65e5c268e1527b5dc747d1",
+      "bytes": 11622
+    },
+    {
+      "path": "baseline/tools/bridge-source/finality.mjs",
+      "sha256": "eff69139da63068d9b6338e175c1b1dc48c6ea94d63bd21f740a752d57dd27a5",
+      "bytes": 6432
+    },
+    {
+      "path": "baseline/tools/bridge-source/finality.test.mjs",
+      "sha256": "6211783b74861c0c36d3a9bea42b3120535d8a543aa2025f6e7feca06a0a9fa7",
+      "bytes": 9195
+    },
+    {
+      "path": "source.patch",
+      "sha256": "84d093eadbe5010da4d0faf0fe55d1ad91bc4863c838ee8f5b804f54500b0f1c",
+      "bytes": 4112
+    },
+    {
+      "path": "README.md",
+      "sha256": "6c90d8c57c8c614916d4665bf0d612ff4574227845e16b58e812b3ad3365a240",
+      "bytes": 4468
+    }
+  ],
+  "payloadBytes": 42439,
+  "scope": {
+    "serializedFinalFenceRequests": 5,
+    "newParentTestGroups": 1,
+    "newLeafCases": 3,
+    "existingTestBodiesByteExact": true,
+    "observerApiChanged": false,
+    "trustFlagsChanged": false,
+    "rpcTransportChanged": false,
+    "retriesAdded": 0,
+    "signingOrMintingAdded": false,
+    "historicalFailuresPreserved": true,
+    "testsExecutedByAuthor": 0,
+    "sdkOrPrivateReads": 0,
+    "rWrites": 0,
+    "operations": 0,
+    "productionQualified": false,
+    "newRpcMethodsAdded": false,
+    "maximumRequestCountsUnchanged": true,
+    "successfulPathRequestCountsUnchanged": true,
+    "refusalsMayStopEarlier": true,
+    "rootQualificationPlan": {
+      "baselineNewLeafCases": 3,
+      "baselineFiltered": true,
+      "candidateCompleteFile": true,
+      "candidateExpectedNodeResults": 35
+    }
+  }
+}

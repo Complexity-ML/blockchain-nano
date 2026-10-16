@@ -122,3 +122,32 @@ test('advanced finalized responses stay fixed across the final canonical-header 
   assert.ok(calls.every(c=>!/^eth_(send|sign)/.test(c.method)));
  });
 });
+
+
+// Each old final-fence Promise is fulfilled before the next synchronous cache
+// refresh, but its .then projection has not run yet. Old code accepts all three.
+test('synchronous RPC cache collisions cannot erase already fulfilled divergences',async t=>{
+ for(const attack of ['canonical-header','finalized-header','second-receipt'])await t.test(`synchronous collision: ${attack}`,async()=>{
+  let shared,collisions=0,active=0,peak=0;
+  const {rpc,calls}=fixture(o=>{
+   if(attack==='canonical-header'){
+    if(o.method==='eth_getBlockByNumber'&&o.params[0]==='0xa'&&o.nth===2){shared={number:'0xa',hash:final};return shared;}
+    if(o.method==='eth_getTransactionReceipt'&&o.nth===2){shared.hash=block;++collisions;}
+   }
+   if(attack==='finalized-header'){
+    if(o.method==='eth_getBlockByNumber'&&o.params[0]==='0xb'){shared={number:'0xb',hash:block};return shared;}
+    if(o.method==='eth_getBlockByNumber'&&o.params[0]==='finalized'&&o.nth===2){shared.hash=final;++collisions;}
+   }
+   if(attack==='second-receipt'){
+    if(o.method==='eth_getTransactionReceipt'&&o.nth===2){shared=o.value;shared.logs[0].data='0x5678';return shared;}
+    if(o.method==='eth_chainId'&&o.nth===2){shared.logs[0].data='0x1234';++collisions;}
+   }
+  });
+  const request=rpc.request;rpc.request=async value=>{++active;peak=Math.max(peak,active);try{return await request(value);}finally{--active;}};
+  const expected=attack==='canonical-header'?/Canonical source block changed during observation/:attack==='finalized-header'?/Finalized source checkpoint changed during observation/:/Source receipt changed during observation/;
+  await assert.rejects(observeBaseFinalizedReceipt(rpc,{transactionHash:tx,event}),expected);
+  assert.equal(collisions,1,'The later request must really mutate the original response');assert.equal(active,0);assert.equal(peak,1,'No observer RPC may overlap the previous response projection');assert.equal(calls.length,10,'The same ten requests are retained without retries');
+  assert.deepEqual(calls.map(c=>c.method),['eth_chainId','eth_getBlockByNumber','eth_getTransactionReceipt','eth_getBlockByNumber','eth_getCode','eth_getBlockByNumber','eth_getBlockByNumber','eth_getBlockByNumber','eth_getTransactionReceipt','eth_chainId']);
+  assert.ok(calls.every(c=>!/^eth_(send|sign)/.test(c.method)));assert.ok(calls.every(c=>!JSON.stringify(c).includes('"latest"')&&!JSON.stringify(c).includes('"safe"')));
+ });
+});

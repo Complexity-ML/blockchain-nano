@@ -46,12 +46,13 @@ export async function observeBaseFinalizedReceipt(rpc,{transactionHash,event}={}
  const code=await request('eth_getCode',[event.emitter,{blockHash:first.blockHash,requireCanonical:true}]);
  check(data(code)&&code!=='0x','Source emitter code unavailable at canonical receipt hash');
  const digest=createHash('sha256').update(Buffer.from(code.slice(2),'hex')).digest('hex');check(digest===event.codeSha256,'Source emitter code SHA-256 differs');
- const [after,finalizedAtHeight,latestFinalized,second,chain]=await Promise.all([
-  requestHeader(first.blockNumber),
-  requestHeader(finalized.number),
-  requestHeader('finalized'),
-  requestReceipt(),request('eth_chainId',[])
- ]);
+ // Await each projection before starting the next request: a synchronous
+ // cache refresh in that request must not rewrite an earlier fulfilled value.
+ const after=await requestHeader(first.blockNumber);
+ const finalizedAtHeight=await requestHeader(finalized.number);
+ const latestFinalized=await requestHeader('finalized');
+ const second=await requestReceipt();
+ const chain=await request('eth_chainId',[]);
  check(chain==='0x2105','Source chain ID changed during observation');
  check(after.number===first.blockNumber&&after.hash===first.blockHash,'Canonical source block changed during observation');
  check(finalizedAtHeight.number===finalized.number&&finalizedAtHeight.hash===finalized.hash,'Finalized source checkpoint changed during observation');

@@ -86,3 +86,21 @@ Les 15 tests du transport inchangé ne sont pas rejoués. Le module demeure
 une observation RPC avec `eligibleForMint:false`, sans bridge ni preuve
 cryptographique de finalité.
 [Rapport et limites](../../docs/qualification/base-arm-admission-20261016/README.md).
+
+## 16 octobre 2026 — collisions synchrones du cache dans la dernière relecture
+
+Une nouvelle reproduction montre que démarrer cinq requêtes dans `Promise.all`
+peut laisser une requête ultérieure réécrire une réponse déjà résolue avant sa
+projection `.then`. Les cinq lectures finales sont désormais sérielles : chaque
+projection termine avant le prochain appel. Les méthodes, sélecteurs et dix
+requêtes du parcours courant sont conservés, sans retry ; la latence maximale
+d’une observation peut augmenter. Le budget reste par requête, sans délai global.
+
+Sur l’ancienne source, trois nouveaux cas aboutissent à une observation au lieu
+du refus attendu ; ces échecs causaux sont conservés. Le fichier corrigé passe
+35 résultats Node (33 feuilles et deux parents), sans skip, dans Docker sans
+réseau. Le transport HTTP, qui parse des réponses JSON distinctes, est inchangé
+et non rejoué. Il ne s’agit pas d’un exploit démontré du transport HTTP.
+L’observateur reste `eligibleForMint:false` et
+`cryptographicFinalityVerified:false`, sans contrat bridge ni journal de
+consommation atomique. [Rapport](../../docs/qualification/bridge-source-serial-20261016/README.md).

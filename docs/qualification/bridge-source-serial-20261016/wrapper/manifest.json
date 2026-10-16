@@ -1,0 +1,114 @@
+{
+  "format": "nano-bridge-source-serial-linux-wrapper-source-v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_QUALIFICATION",
+  "payloads": [
+    {
+      "path": "wrapper.mjs",
+      "sha256": "6e85ef4fefd917b9e236622a493cb5bd02669a612a9b5db80ffc60f171fed46d",
+      "bytes": 14482
+    }
+  ],
+  "reviewedProjectSourceManifest": {
+    "path": "../bridge-source-serial-observation-proposal-20261016/manifest.json",
+    "sha256": "2ee5e2a6bd0f6e99ebc8f537f52da7d6cfe7d8957bae69327e96603133f23ec2",
+    "bytes": 2508
+  },
+  "stdinContract": {
+    "topLevelExactFields": [
+      "format",
+      "phases",
+      "newTestPattern",
+      "expectations"
+    ],
+    "phases": [
+      "baseline",
+      "candidate"
+    ],
+    "filesPerPhase": [
+      "tools/bridge-source/finality.mjs",
+      "tools/bridge-source/finality.test.mjs"
+    ],
+    "fileExactFields": [
+      "path",
+      "sha256",
+      "bytes",
+      "contentBase64"
+    ],
+    "candidateTestBytesEqualAcrossPhases": true,
+    "newTestPattern": "^synchronous RPC cache collisions cannot erase already fulfilled divergences$",
+    "expectationsExactFields": [
+      "baselineCounts",
+      "candidateCounts",
+      "baselineMissingExpectedRejections"
+    ],
+    "countFields": [
+      "tests",
+      "pass",
+      "fail",
+      "cancelled",
+      "skipped",
+      "todo"
+    ],
+    "exampleExpectationsProvidedByRoot": {
+      "baselineCounts": {
+        "tests": 4,
+        "pass": 0,
+        "fail": 4,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "candidateCounts": {
+        "tests": 35,
+        "pass": 35,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "baselineMissingExpectedRejections": 3
+    },
+    "countsChosenFromObservedTestOutput": false,
+    "format": "nano-bridge-source-serial-linux-unit-input-v1"
+  },
+  "budgets": {
+    "inputBytes": 1048576,
+    "fileBytes": 131072,
+    "totalDecodedSourceBytes": 524288,
+    "childStdoutAndStderrBytesEach": 524288,
+    "wrapperDeadlineMs": 60000,
+    "newSourceAdmissionDeadlineMs": 30000,
+    "newSourceMinimumSamples": 3,
+    "newSourceMinimumStableSpanMs": 2000,
+    "childExecutionTimeoutMsMaximum": 14500,
+    "ownedProcessGroupCleanupMsMaximum": 450,
+    "outputBytes": 3145728
+  },
+  "execution": {
+    "command": "node --input-type=module -e <known wrapper bytes>; public JSON on stdin",
+    "candidateRunsEntireTestFile": true,
+    "baselineRunsOnlyExactNewGroup": true,
+    "nodeBuiltinImportsOnly": true,
+    "sdkImports": 0,
+    "sourceFilesMode": "0400",
+    "newNamespaceRoot": "/tmp",
+    "baselineAndCandidatePostFencesRequired": true,
+    "finalAllCopiesFenceRequired": true,
+    "forceKilledOrUnjoinedChildCanPass": false,
+    "leftoverPromiseRaceTimers": false,
+    "rootMustBindKnownProjectManifestAndNodeTool": true,
+    "rootMustProvideContainerNetworkNoneAndOuterCleanup": true,
+    "projectTestsExecutedByAuthor": 0
+  },
+  "scope": {
+    "oldAuthorityRefreshed": false,
+    "previousFailuresRequalified": false,
+    "cryptographicFinalityVerified": false,
+    "eligibleForMint": false,
+    "runtimeDutiesResumed": false,
+    "productionQualified": false,
+    "rWrites": 0,
+    "privateOrSdkReads": 0,
+    "operations": 0
+  }
+}
