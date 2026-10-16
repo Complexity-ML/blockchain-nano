@@ -1,0 +1,25 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"ROOT ARM Tool uint64 input10",
+  "type":"object","additionalProperties":false,
+  "required":["format","controller","utility","oldObserveInput","oldObserveAdmission","overlayAdmission","docker","dockerEndpoint","controlRoot","containerPrefix"],
+  "properties":{
+    "format":{"const":"nano-arm-tool-u64-input-v1"},
+    "controller":{"$ref":"#/$defs/artifact"},
+    "utility":{"$ref":"#/$defs/artifact"},
+    "oldObserveInput":{"$ref":"#/$defs/artifact"},
+    "oldObserveAdmission":{"$ref":"#/$defs/artifact","description":"Explicit posthoc digest binding; no recovered historical raw producer digest is claimed."},
+    "overlayAdmission":{"$ref":"#/$defs/artifact","description":"ROOT nano-arm-tool-u64-staged-sources-v1 with nine original-row guarded readable projections, heldMaterials and original descriptor joins."},
+    "docker":{
+      "type":"object","additionalProperties":false,"required":["path","sha256","bytes","material"],
+      "properties":{"path":{"type":"string"},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"bytes":{"type":"integer","minimum":1,"maximum":268435456},"material":{"$ref":"#/$defs/material"}}
+    },
+    "dockerEndpoint":{"const":"unix:///Users/boris/.docker/run/docker.sock"},
+    "controlRoot":{"type":"string","description":"Existing physical empty host UID501 mode0700 root, disjoint from source/build/overlay. Input JSON is outside it."},
+    "containerPrefix":{"type":"string","pattern":"^nano-arm-tool-u64-[0-9a-f]{32}$"}
+  },
+  "$defs":{
+    "artifact":{"type":"object","additionalProperties":false,"required":["path","sha256","bytes"],"properties":{"path":{"type":"string"},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"bytes":{"type":"integer","minimum":1,"maximum":268435456}}},
+    "material":{"type":"object","additionalProperties":false,"required":["st_dev","st_ino","st_mode","st_nlink","st_uid","st_gid","st_size","st_mtime_ns","st_ctime_ns","sha256"],"properties":{"st_dev":{"type":"integer"},"st_ino":{"type":"integer"},"st_mode":{"type":"integer"},"st_nlink":{"type":"integer","minimum":1},"st_uid":{"type":"integer"},"st_gid":{"type":"integer"},"st_size":{"type":"integer","minimum":1},"st_mtime_ns":{"type":"integer"},"st_ctime_ns":{"type":"integer"},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}}}
+  }
+}
