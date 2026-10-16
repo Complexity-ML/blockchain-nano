@@ -1,0 +1,23 @@
+# Assets de reprise : liaison ARM et inventaire courant P2P
+
+Ce lot agrège deux avancées réelles à partir de `944aa77b6d92e3ac609938f6d5a024acd88cc118`. Il conserve les sources publiques exécutées et les reçus bornés. Le contrôle final de l’inventaire P2P a réussi par jointure des seuls descripteurs, sans relecture des fichiers SDK. Aucun nœud n’est démarré et aucun rôle n’est admis à une campagne.
+
+## Importeur ARM : dérive de Core fermée pour cette liaison
+
+Le vrai relink de l’importeur contre le Core ARM `9ccadf8f…` a réussi : un `-M` indépendant égal à l’ancien MD, une liaison, zéro CXX et un refus d’arguments attendu. Le programme reste `3b635993…` (4 765 512 octets), exactement égal à l’ancien exécutable. Cette égalité ne renomme pas l’ancienne production contre Core `9a03ae14…` : une nouvelle liaison et sa nouvelle admission sont établies. Les 44 phases sont validées : 43 sorties avec le code 0 et un refus d’arguments attendu avec le code 1 ; le conteneur et le volume détenus ont disparu.
+
+L’audit d’entrée et la postqualification ont réussi : 77 lignes originales, puis 86 lignes hôte utilisées sont conservées. Les 426 lignes SDK de compilation et 18 lignes SDK d’exécution ont été enregistrées dans le même conteneur ; aucune ligne SDK n’a été relue après sa suppression. Les 474 dépendances de `-M` comprennent 65 fichiers projet et 409 noms de dépendances d’image. Ces compteurs décrivent des portées distinctes. Le refus initial de stabilité des trois nouveaux descripteurs, avant leur admission, reste copié avec les deux sources d’audit réellement exécutées. Aucune fixture d’import 65 n’a été rejouée ; ses anciennes preuves ne sont pas requalifiées.
+
+## P2P natif : inventaire actuel acquis, producteurs encore ouverts
+
+La collecte réelle trouve 101 archives liées. Pour 79 archives, la séquence ordonnée des membres non-index est égale à celle des archives de build ; aucune des 79 archives n’a des octets complets égaux. Les différences sont hors payload non-index. Le premier collecteur, qui exigeait cette égalité complète, a réellement refusé ; son source et son reçu sont conservés. Le diagnostic de membres a été exécuté inline par Root à partir du parser figé : aucun source autonome de ce diagnostic n’a été conservé ou reconstruit ici.
+
+Les 127 objets sélectionnés ont leurs lignes de compilation et MD présents, et correspondent aux membres retenus dans l’ordre. 123 sources de TUs sont égales aux blobs du Git direct `c03bf7c44c4fd30a390f3ef93bd1eab482e686a6` ; quatre sources Protobuf `.pb.cc` générées sont distinguées. L’inventaire enregistre 3 638 noms de dépendances et 4 434 fichiers avec neuf champs et SHA initial/final. Ses quatre observations de métadonnées et de résolutions d’alias couvrent 4 977 ms ; ce ne sont pas quatre lectures SHA complètes. Il n’a exécuté aucun `-M`, compilateur, outil SDK, projet, Docker ou réseau. La présence des MD n’est donc pas une nouvelle comparaison indépendante M/MD ni une reproduction des objets.
+
+Les 22 archives transitives sans producteur de build retenu contiennent 683 membres non-index : ce n’est pas un nombre de TUs. Dix paquets source en cache correspondent à leur SHA1 et définition Hunter historiques ; aucun n’authentifie le producteur d’une archive liée. L’objet du consumer Native historique est absent ; une compilation de ce seul consumer serait nécessaire si aucun autre objet authentifié n’est retrouvé. Le contrôle final retrouve les 4 434 lignes du descripteur retenu et distingue ces quatre sources générées : c’est une jointure de descripteurs, pas une nouvelle lecture SDK. Son nouveau descripteur a quatre échantillons couvrant 2 427 ms. La provenance historique, la fermeture transitive, la reproduction et la qualification des producteurs Linux restent ouvertes.
+
+## Frontière de production et conservation
+
+Les 24 identités connues restent à zéro admission de campagne. La restauration des anciens journaux Mac, les duties des trois propriétaires et une finalité commune qui avance ne sont pas établis. L’échec global des entrées originales, l’alias historique inconnu, les engagements historiques manquants et les qualifications complètes CMake/loader restent ouverts ; aucune autorité ancienne n’est rafraîchie. La liaison ARM actuelle ne prouve pas un import réel, et l’inventaire P2P n’est pas une qualification réseau.
+
+Les quatre documents de production gardent leur contenu intégral avant le même appendice. Aucun fichier C++ du projet n’est modifié ; CSV, contrat RPC et header de support Native restent inchangés. Le lot ne promeut aucun EIP, fork, CI, cycle complet ni statut de production. Le goal reste actif. Les résultats antérieurs et refus présents dans les historiques sont conservés.

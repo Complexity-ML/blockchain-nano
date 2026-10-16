@@ -1,0 +1,22 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"ROOT ARM importer current-Core input9",
+ "description":"ROOT-only. Three selected descriptor shapes and exact pins are fixed by audit-inputs-root-v2.py eed9ae09…/11151; no old authority is refreshed.",
+ "type":"object","additionalProperties":false,
+ "required":["format","controller","originalClosure","currentSourceAdmission","currentCoreAdmission","docker","dockerEndpoint","controlRoot","containerPrefix"],
+ "properties":{
+  "format":{"const":"nano-arm-import-current-core-input-v1"},
+  "controller":{"$ref":"#/$defs/artifact"},
+  "originalClosure":{"$ref":"#/$defs/artifact"},
+  "currentSourceAdmission":{"$ref":"#/$defs/artifact"},
+  "currentCoreAdmission":{"$ref":"#/$defs/artifact"},
+  "docker":{"type":"object","additionalProperties":false,"required":["path","sha256","bytes","material"],"properties":{"path":{"type":"string"},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"bytes":{"type":"integer","minimum":1,"maximum":268435456},"material":{"$ref":"#/$defs/nineSha"}}},
+  "dockerEndpoint":{"const":"unix:///Users/boris/.docker/run/docker.sock"},
+  "controlRoot":{"type":"string","description":"NEW existing empty physical Mac output directory, UID501/mode0700, disjoint from all inputs and source/build roots."},
+  "containerPrefix":{"type":"string","pattern":"^nano-arm-import-current-core-[0-9a-f]{32}$"}
+ },
+ "$defs":{
+  "artifact":{"type":"object","additionalProperties":false,"required":["path","sha256","bytes"],"properties":{"path":{"type":"string"},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"bytes":{"type":"integer","minimum":1,"maximum":268435456}}},
+  "nineSha":{"type":"object","additionalProperties":false,"required":["st_dev","st_ino","st_mode","st_nlink","st_uid","st_gid","st_size","st_mtime_ns","st_ctime_ns","sha256"],"properties":{"st_dev":{"type":"integer"},"st_ino":{"type":"integer"},"st_mode":{"type":"integer"},"st_nlink":{"type":"integer"},"st_uid":{"type":"integer"},"st_gid":{"type":"integer"},"st_size":{"type":"integer"},"st_mtime_ns":{"type":"integer"},"st_ctime_ns":{"type":"integer"},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}}}
+ }
+}
