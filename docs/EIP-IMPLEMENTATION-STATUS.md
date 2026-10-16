@@ -8042,3 +8042,21 @@ Le garde JS du seul `fullPayoutGwei` total est corrigé dans ce lot, après vali
 La construction source SDK globale reste en cours, sans terminal de succès acquis. Le correctif JS et son nouveau test sont intégrés indépendamment de ce build C++, qui ne change pas pour ce lot. La qualification du consommateur exige les mêmes sources réseau/tiers/script SDK que `5fc36d9a`, même sur un descendant ne changeant que le harness/documentation. Ces preuves ferment le parseur du total, pas un cycle long, des sorties/paiements réellement exécutés, une reprise ou la finalité. Les autres appels compilateur, recettes d’archivage, DAG transitif, runtime, admissions de campagne, duties et production restent non qualifiés.
 
 [Preuves publiques et périmètre](qualification/native02-source-and-payout-20261016/README.md). Aucun critère de production ni échec antérieur n’est retiré.
+
+
+## 16 octobre 2026 — SDK source natif terminé et consommateur lié ; production non qualifiée
+
+La construction Native02 à partir des sources termine réellement avec le code 0 après 6 683,292 s, avec zéro construction d’image Docker ou de Core et aucun démarrage de nœud. Le consommateur `nano-p2p` est configuré et lié au nouveau SDK : 101 archives, M indépendant égal au MD réel, 1 739 headers Boost Hunter 1.87 et tag ARM64 `-a64`. Ses sources réseau restent celles de `5fc36d9a…` ; le HEAD `769ab6f3…` conserve les mêmes trois entrées Git réseau/tiers/script SDK. Le refus d’usage sans identité sort avec le code 1 attendu. Le nouvel exécutable est `65d08eee…`, 13 406 616 octets. Le linker ne produit aucun avertissement ; cela ne qualifie pas l’exécution sur d’anciens macOS.
+
+La jointure couvre par valeur les 810 occurrences de membres des archives : 636 ont un seul candidat de compilation qualifié observé, 174 en ont plusieurs. Ce ne sont ni des TUs ni des tests. L’index conserve séparément 2 276 appels M==MD, 74 sorties non nulles, 22 refus sur M indépendant non nul et 371 observations forward ; aucun échec n’est converti en réussite. Les constats de chemins historiques restent distincts : objets 137 présents/741 absents, MD 266 présents/622 absents, sans rafraîchissement d’autorité. Ils ne prouvent ni causalité `ar`, ni tous les générateurs, ni le DAG complet.
+
+Les anciens refus et l’échec global des sept fichiers hors closure restent conservés. La CI du commit `769ab6f3…` échoue pour facturation avant démarrage des jobs, sans tests exécutés ni relance/dépense. Les 24 identités restent sans admission de campagne. Loader complet, anciens OS, ce SDK sur AMD64, runtime réseau, restauration, duties, finalité commune et production restent ouverts ; aucun EIP, fork ou cycle complet n’est nouvellement qualifié. Le goal reste actif.
+
+Preuves publiques et sources des controles : [Native02 SDK](qualification/native02-sdk-terminal-20261016/README.md).
+
+
+## 16 octobre 2026 — Reçu d’audit à froid historique rapproché
+
+Le reçu autorisé historique confirme un PASS borné : 64 validateurs, 178 blocs rejoués, 12 blocs distants et 16 blocs observés des trois propriétaires, zéro nouvelle signature/runtime. La tentative actuelle transfère les fichiers autorisés et retrouve 13 entrées conformes, zéro divergente/manquante, puis refuse la sortie déjà existante avant tout nouvel audit ; ce n’est pas un échec C++. Le résultat historique compact correspond exactement au reçu VPS retenu (3 579 octets). Le run08 initial reste FAILED ; aucune ancienne autorité neuf-champs/octets n’est rafraîchie. L’état actuel des volumes, la restauration, les duties, la finalité commune et la production ne sont pas qualifiés.
+
+[Recu historique et observation actuelle](qualification/authorized-historical-cold-audit-20261016/README.md).
