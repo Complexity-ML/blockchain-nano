@@ -1,0 +1,21 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "title":"ROOT AMD lifecycle consumers input14",
+ "type":"object","additionalProperties":false,
+ "required":["format","controller","sourceAdmission","sourceRetained","artifactAdmission","consumerLinks","linkedArchives","portableLlvm","headerAfter","outputRoot","docker","sudo","git","effectiveSourceRevision"],
+ "properties":{
+  "format":{"const":"nano-amd-lifecycle-consumers-input-v1"},
+  "controller":{"$ref":"#/$defs/artifact"},
+  "sourceAdmission":{"$ref":"#/$defs/artifact"},"sourceRetained":{"$ref":"#/$defs/artifact"},
+  "artifactAdmission":{"$ref":"#/$defs/artifact"},"consumerLinks":{"$ref":"#/$defs/artifact"},
+  "linkedArchives":{"$ref":"#/$defs/artifact"},"portableLlvm":{"$ref":"#/$defs/artifact"},
+  "headerAfter":{"$ref":"#/$defs/record","description":"Exact current public Git header6681926f…/24376, with explicit Root nine fields; never overwrites the original source."},
+  "docker":{"$ref":"#/$defs/record"},"sudo":{"$ref":"#/$defs/record"},"git":{"$ref":"#/$defs/record"},
+  "effectiveSourceRevision":{"type":"string","pattern":"^[0-9a-f]{40}$"},
+  "outputRoot":{"type":"string","pattern":"^/home/ubuntu/nano-candidate-e37f349c-5b37-444a-901c-7b7a8747c63a/lifecycle-consumers-[0-9a-f]{32}$","description":"Existing empty physical directory, UID/GID1000, mode0700. Input JSON remains outside it."}
+ },
+ "$defs":{
+  "artifact":{"type":"object","additionalProperties":false,"required":["path","sha256","bytes"],"properties":{"path":{"type":"string"},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"bytes":{"type":"integer","minimum":1,"maximum":268435456}}},
+  "record":{"type":"object","additionalProperties":false,"required":["path","material","sha256","bytes"],"properties":{"path":{"type":"string"},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"bytes":{"type":"integer","minimum":1,"maximum":268435456},"material":{"type":"array","minItems":9,"maxItems":9,"items":{"type":"string","pattern":"^-?(0|[1-9][0-9]*)$"},"description":"Exact producer order dev,ino,mode,nlink,uid,gid,size,mtime_ns,ctime_ns. Values are compared, not refreshed."}}}
+ }
+}
