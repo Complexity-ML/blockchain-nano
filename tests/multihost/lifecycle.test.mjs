@@ -80,3 +80,34 @@ test('only the freshly exported pending deposit and funded sender can be submitt
  const evidence=validateLifecycleDeposit(d,domain,id);assert.equal(evidence.amountGwei,q(32000000000));assert.equal(evidence.rawTransaction,'0x0102');
  for(const change of [d=>d.kind='old_deposit',d=>d.validatorIndex=64,d=>d.publicKey=pub(1),d=>d.amountGwei=1,d=>d.sender='0x'+'3'.repeat(40),d=>d.withdrawalRecipient='0x'+'3'.repeat(40),d=>d.nonce=null,d=>d.productionQualified=true,d=>d.raw='0x1',d=>d.extra=1]){const bad=structuredClone(d);change(bad);assert.throws(()=>validateLifecycleDeposit(bad,domain,id));}
 });
+
+// Producer boundary: C++ public_address/checksum_address differs textually from
+// Session::preview_public_identities/prepare_genesis address(...), for one key.
+// This is a public address fixture only; no key, transaction or signer is used.
+const exportedChecksummedSender='0x6c3Ca06387CEd1BCd4a5F920AC22C9d57FB6F047';
+function exportedDepositBoundary(){
+ const {domain,bindings}=setup(),id=bindings.identities.voluntaryExit;domain.transactionSender.address=exportedChecksummedSender.toLowerCase();
+ const document={kind:'native_deposit_transaction',raw:'0x0102',hash:root(2),validatorIndex:3,publicKey:id.publicKey,amountGwei:32000000000,withdrawalRecipient:address,sender:exportedChecksummedSender,nonce:'0x0',productionQualified:false};
+ return {domain,id,document};
+}
+test('exporter address boundary accepts casing of the same twenty bytes without changing the export',()=>{
+ const variants=[exportedChecksummedSender,exportedChecksummedSender.toLowerCase(),'0x'+exportedChecksummedSender.slice(2).toUpperCase()];let cases=0;
+ for(const sender of variants)for(const fundedSender of variants){
+  const {domain,id,document}=exportedDepositBoundary();document.sender=sender;domain.transactionSender.address=fundedSender;const before=JSON.stringify({domain,document});
+  assert.deepEqual(validateLifecycleDeposit(document,domain,id),{rawTransaction:document.raw,transactionHash:document.hash,amountGwei:q(32000000000),withdrawalCredentials:credentials});
+  assert.equal(JSON.stringify({domain,document}),before);++cases;
+ }
+ assert.equal(cases,9);
+});
+test('exporter address boundary refuses malformed values and different address bytes on either side',()=>{
+ const invalid=[null,1,{},'',exportedChecksummedSender.slice(2),'0X'+exportedChecksummedSender.slice(2),exportedChecksummedSender.slice(0,-1),exportedChecksummedSender+'0',' '+exportedChecksummedSender,exportedChecksummedSender+'\n',exportedChecksummedSender.slice(0,-1)+'g'];let refusals=0;
+ for(const value of invalid)for(const side of ['export','domain','both']){
+  const {domain,id,document}=exportedDepositBoundary();if(side!=='domain')document.sender=value;if(side!=='export')domain.transactionSender.address=value;
+  assert.throws(()=>validateLifecycleDeposit(document,domain,id),/new funded sender and exact deposit amount/);++refusals;
+ }
+ for(const side of ['export','domain']){
+  const {domain,id,document}=exportedDepositBoundary();if(side==='export')document.sender='0x'+'3'.repeat(40);else domain.transactionSender.address='0x'+'3'.repeat(40);
+  assert.throws(()=>validateLifecycleDeposit(document,domain,id),/new funded sender and exact deposit amount/);++refusals;
+ }
+ assert.equal(refusals,35);
+});

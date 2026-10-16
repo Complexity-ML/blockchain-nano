@@ -99,7 +99,11 @@ export function validateLifecycleDeposit(document,domain,binding){
  const d=owned(document);exact(d,['kind','raw','hash','validatorIndex','publicKey','amountGwei','withdrawalRecipient','sender','nonce','productionQualified'],'exported deposit');
  need(d.kind==='native_deposit_transaction'&&d.productionQualified===false&&d.publicKey===binding.publicKey&&d.publicKey===domain.bootstrapSigningHistory.deposit.publicKey&&d.validatorIndex===domain.registryCount,'new pending public deposit identity');
  need(typeof d.raw==='string'&&/^0x(?:[0-9a-f]{2})+$/.test(d.raw)&&d.raw.length<=2+2*1048576&&rootPattern.test(d.hash),'bounded exported raw transaction/commitment');
- need(Number.isSafeInteger(d.amountGwei)&&d.amountGwei>0&&d.amountGwei===domain.bootstrapSigningHistory.deposit.amountGwei&&d.sender===domain.transactionSender.address&&/^0x[0-9a-f]{40}$/.test(d.sender),'new funded sender and exact deposit amount');lifecycleQuantity(d.nonce,'deposit nonce');
+ // C++ SignedTransaction::sender() uses checksum casing; the public domain
+ // stores the same twenty address bytes in lowercase. Compare byte identity.
+ const senderAddress=value=>typeof value==='string'&&value.length===42&&/^0x[0-9a-fA-F]{40}$/.test(value)?value.toLowerCase():null;
+ const sender=senderAddress(d.sender),fundedSender=senderAddress(domain.transactionSender.address);
+ need(Number.isSafeInteger(d.amountGwei)&&d.amountGwei>0&&d.amountGwei===domain.bootstrapSigningHistory.deposit.amountGwei&&sender!==null&&fundedSender!==null&&sender===fundedSender,'new funded sender and exact deposit amount');lifecycleQuantity(d.nonce,'deposit nonce');
  const credentials=domain.bootstrapSigningHistory.deposit.withdrawalCredentials;need(rootPattern.test(credentials)&&credentials.startsWith('0x01')&&d.withdrawalRecipient==='0x'+credentials.slice(-40),'exported execution withdrawal credentials');
  // C++ closing replay, not a Node SHA3 approximation, authenticates raw/hash.
  return {rawTransaction:d.raw,transactionHash:d.hash,amountGwei:quantity(BigInt(d.amountGwei)),withdrawalCredentials:credentials};

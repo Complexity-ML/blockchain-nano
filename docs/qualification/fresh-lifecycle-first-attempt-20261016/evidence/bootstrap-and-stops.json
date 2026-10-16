@@ -1,0 +1,220 @@
+{
+  "absentTerminalArtifacts": [
+    {
+      "artifact": "capture",
+      "owner": "vps-docker",
+      "phase": "first"
+    },
+    {
+      "artifact": "stop",
+      "owner": "vps-docker",
+      "phase": "second"
+    },
+    {
+      "artifact": "capture",
+      "owner": "vps-docker",
+      "phase": "second"
+    }
+  ],
+  "bootstrapAudits": [
+    {
+      "coldPairReopens": 32,
+      "copiedFilesInodesUnchanged": true,
+      "fullFileBytesMatchSource": true,
+      "journalWritesRequested": false,
+      "namespaceAndKeyFloorsVerified": true,
+      "newSignaturesCreated": 0,
+      "owner": "mac-native",
+      "passed": true,
+      "primaryWitnessPairs": 16
+    },
+    {
+      "coldPairReopens": 32,
+      "copiedFilesInodesUnchanged": true,
+      "fullFileBytesMatchSource": true,
+      "journalWritesRequested": false,
+      "namespaceAndKeyFloorsVerified": true,
+      "newSignaturesCreated": 0,
+      "owner": "mac-docker",
+      "passed": true,
+      "primaryWitnessPairs": 16
+    },
+    {
+      "coldPairReopens": 66,
+      "copiedFilesInodesUnchanged": true,
+      "fullFileBytesMatchSource": true,
+      "journalWritesRequested": false,
+      "namespaceAndKeyFloorsVerified": true,
+      "newSignaturesCreated": 0,
+      "owner": "vps-docker",
+      "passed": true,
+      "primaryWitnessPairs": 33
+    }
+  ],
+  "completeLifecycleClosingAuditQualified": false,
+  "format": "nano-fresh-lifecycle-bootstrap-stops-projection-v1",
+  "localCaptureProjections": [
+    {
+      "allObservedFileBytesAndInodesUnchanged": true,
+      "artifact": {
+        "bytes": 2680589,
+        "sha256": "a44248ee9c6cf866e011518893b430e8588da1ac5c3dee57839f3cf9ad630b16"
+      },
+      "canonicalHistoryReplayVerified": false,
+      "canonicalStoreSnapshotVerified": true,
+      "owner": "mac-native",
+      "phase": "first"
+    },
+    {
+      "allObservedFileBytesAndInodesUnchanged": true,
+      "artifact": {
+        "bytes": 2680587,
+        "sha256": "f7bd64bc6bdac4d3c50919cb1e3579cd9447eef8378b5b50dae3c045baa252e4"
+      },
+      "canonicalHistoryReplayVerified": false,
+      "canonicalStoreSnapshotVerified": true,
+      "owner": "mac-native",
+      "phase": "second"
+    },
+    {
+      "allObservedFileBytesAndInodesUnchanged": true,
+      "artifact": {
+        "bytes": 2673899,
+        "sha256": "c3fa496f495e73478396ec758a511c7bd9866b25f09e318d9c7c68785e8db4ff"
+      },
+      "canonicalHistoryReplayVerified": false,
+      "canonicalStoreSnapshotVerified": true,
+      "owner": "mac-docker",
+      "phase": "first"
+    },
+    {
+      "allObservedFileBytesAndInodesUnchanged": true,
+      "artifact": {
+        "bytes": 2673897,
+        "sha256": "3b872a1612d9853e542060ad46e91debf9188445203d1b32d1a436b4c795d491"
+      },
+      "canonicalHistoryReplayVerified": false,
+      "canonicalStoreSnapshotVerified": true,
+      "owner": "mac-docker",
+      "phase": "second"
+    }
+  ],
+  "productionQualified": false,
+  "stoppedOwners": [
+    {
+      "artifact": {
+        "bytes": 4074,
+        "sha256": "7d8128ecd621508bf5cc55bcf73796c68e95a3b6fc7e38fc9947e0300e1530a1"
+      },
+      "clockHealthy": true,
+      "event": "capella-runtime-stopped",
+      "finalized": {
+        "epoch": "0x3",
+        "root": "0x57e6750aab2c034bc3747c3f6ebc0caa035011d707c2deddbccf72fd0872a222"
+      },
+      "owner": "mac-native",
+      "phase": "first",
+      "validator": {
+        "attestationsAdmitted": 61,
+        "awaitingRegistration": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 9,
+        "syncMessagesAdmitted": 320
+      }
+    },
+    {
+      "artifact": {
+        "bytes": 7472,
+        "sha256": "84cb1265230a2a870528a9fd2fb390f1d28a927684d5b032bad91a2f15a47da9"
+      },
+      "clockHealthy": true,
+      "event": "capella-runtime-stopped",
+      "finalized": {
+        "epoch": "0x3",
+        "root": "0x57e6750aab2c034bc3747c3f6ebc0caa035011d707c2deddbccf72fd0872a222"
+      },
+      "owner": "mac-native",
+      "phase": "second",
+      "validator": {
+        "attestationsAdmitted": 61,
+        "awaitingRegistration": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 9,
+        "syncMessagesAdmitted": 320
+      }
+    },
+    {
+      "artifact": {
+        "bytes": 4089,
+        "sha256": "03aec69d376e783fbf5b7359f7bbd8b3859061e6ece17a0ffcb7f68ac952ed3d"
+      },
+      "clockHealthy": true,
+      "event": "capella-runtime-stopped",
+      "finalized": {
+        "epoch": "0x3",
+        "root": "0x57e6750aab2c034bc3747c3f6ebc0caa035011d707c2deddbccf72fd0872a222"
+      },
+      "owner": "mac-docker",
+      "phase": "first",
+      "validator": {
+        "attestationsAdmitted": 65,
+        "awaitingRegistration": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 6,
+        "syncMessagesAdmitted": 160
+      }
+    },
+    {
+      "artifact": {
+        "bytes": 7503,
+        "sha256": "6800bcc142fd43c37c112f7345cf59af967cc83d7ace4b146cda5cadba551454"
+      },
+      "clockHealthy": true,
+      "event": "capella-runtime-stopped",
+      "finalized": {
+        "epoch": "0x3",
+        "root": "0x57e6750aab2c034bc3747c3f6ebc0caa035011d707c2deddbccf72fd0872a222"
+      },
+      "owner": "mac-docker",
+      "phase": "second",
+      "validator": {
+        "attestationsAdmitted": 65,
+        "awaitingRegistration": 0,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 16,
+        "proposalsAdmitted": 6,
+        "syncMessagesAdmitted": 160
+      }
+    },
+    {
+      "artifact": {
+        "bytes": 6538,
+        "sha256": "f7a723778dd7c45058584d6a43229a5bc47f2567d35aff4a4661f04d1bfbf58b"
+      },
+      "clockHealthy": true,
+      "event": "capella-runtime-stopped",
+      "finalized": {
+        "epoch": "0x3",
+        "root": "0x57e6750aab2c034bc3747c3f6ebc0caa035011d707c2deddbccf72fd0872a222"
+      },
+      "owner": "vps-docker",
+      "phase": "first",
+      "validator": {
+        "attestationsAdmitted": 127,
+        "awaitingRegistration": 1,
+        "failure": null,
+        "healthy": true,
+        "localKeys": 33,
+        "proposalsAdmitted": 17,
+        "syncMessagesAdmitted": 544
+      }
+    }
+  ]
+}

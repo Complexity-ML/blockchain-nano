@@ -3,7 +3,7 @@ import {nativeRuntimeEnvironment} from './native-runtime-env.mjs';
 import {linuxSourceFiles,createMacLinuxFiles,linuxInventory,linuxBootstrapProof} from './linux-owned-files.mjs';
 import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest} from './lifecycle-runtime.mjs';
 import {lifecycleWholeCopyProgram,lifecycleOwnerProjection} from './lifecycle-owner.mjs';
-import {deriveLifecycleParameters} from './lifecycle.mjs';
+import {deriveLifecycleParameters,validateLifecycleDeposit} from './lifecycle.mjs';
 import {freshSoftwareLocators,freshSoftwareFileMounts} from './program-locators.mjs';
 import {createNativeRotationCopies,linuxRotationCopy,validateRotationCopySummary} from './rotation-owned-copy.mjs';
 import {monotonicClockConfiguration} from './local-clock.mjs';
@@ -1110,7 +1110,13 @@ except BaseException:
   const manifestBytes=await observe(join(assets,'isolated-domain.json'),publicExportStability.inventory.get(join(assets,'isolated-domain.json')),true);manifest=JSON.parse(manifestBytes);const publicFiles=new Map();for(const z of Object.values(manifest.files)){const path=join(assets,z.path),expected=publicExportStability.inventory.get(path);need(expected&&expected.sha256===z.sha256&&expected.bytes===z.bytes,'Public export manifest and last stable inventory differ');publicFiles.set(z.path,await observe(path,expected,true));}
   publicCheckStage='public-export-immediate-held-fence';await fence();publicCheckStage='campaign-body';
   const publicResult=verifyIsolatedFixtureDomain({manifest,artifacts:publicFiles,legacy});
-  if(spec.lifecycle){const parameters=deriveLifecycleParameters(publicFiles.get('profile.json'),spec.lifecycle,{maximumBootstrapAgeMs:Number(BigInt(spec.clock.maximumDowntimeMs))});lifecycleRollingFinalityWindow(parameters,spec.lifecycle.deadlines.finalityMs);}
+  if(spec.lifecycle){
+   // Refuse a mismatched exported deposit before journal import, transport or
+   // starting any runtime. lifecycleBranch rechecks this held file before send.
+   const depositPath=join(assets,'deposit.json');diagnosticPublicPaths.add(depositPath);
+   validateLifecycleDeposit(JSON.parse(await observe(depositPath,null,true)),manifest,spec.lifecycle.identities.voluntaryExit);
+   const parameters=deriveLifecycleParameters(publicFiles.get('profile.json'),spec.lifecycle,{maximumBootstrapAgeMs:Number(BigInt(spec.clock.maximumDowntimeMs))});lifecycleRollingFinalityWindow(parameters,spec.lifecycle.deadlines.finalityMs);
+  }
   const publicAudit={format:'nano-isolated-public-export-audit-v1',verdict:'PASSED_PUBLIC_BINDINGS_ONLY',verifiedAtUtc:new Date().toISOString(),publicExportDirectory:assets,verifierSha256:sha(await observe(join(harnessRoot,'tests/capella/isolated-fixture-domain.mjs'),null,true)),officialPublicSourceCommit:'194a91fd9e6f97118156421aac4c80e6e47a9a7f',publicExportFiles:[{name:'isolated-domain.json',sha256:sha(manifestBytes),bytes:manifestBytes.length},...Object.values(manifest.files).map(z=>({name:z.path,sha256:z.sha256,bytes:z.bytes}))],legacyPublicInputs:[spec.fixture.legacyPublicIdentity],legacyGenesisValidatorsRoot:legacy.genesisValidatorsRoot,result:publicResult,scope:Object.fromEntries(['exporterExecuted','signerInvoked','privateArtifactsRead','ledgerRead','networkUsed','blsCryptographyVerified','actualSigningOrderObserved','liveRuntimeVerified','productionQualified'].map(k=>[k,false]))};
   await mkdir(proof,{mode:0o700});const publicBytes=await save(join(proof,'public-audit.json'),publicAudit);await save(join(proof,'public-export-pre-admission-quiescence.json'),publicExportStability.report);
   const importText=(await nativeExec(a.programs.bootstrapImport.path,[assets,sha(manifestBytes),journals],{timeout:180000,maxBuffer:16*1024*1024})).stdout,privateAudit=JSON.parse(importText);need(privateAudit.passed===true,'Bootstrap import must actually pass');const privateBytes=await save(join(proof,'import-audit.json'),privateAudit);

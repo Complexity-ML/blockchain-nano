@@ -1,0 +1,81 @@
+{
+  "authorNodeExecutions": 0,
+  "authorPrivateInputReads": false,
+  "authorRMutations": false,
+  "authorSdkReads": false,
+  "authorTestExecutions": 0,
+  "changes": [
+    "createBackup snapshots input with structuredClone before validation and first await",
+    "deterministic caller-input mutation regression at new-backup-root; all original test groups retained"
+  ],
+  "format": "nano-stopped-backup-production-source-proposal-v2",
+  "javascriptSyntaxExecuted": false,
+  "payloads": [
+    {
+      "bytes": 25555,
+      "path": "source/scripts/operations/stopped-backup.mjs",
+      "sha256": "e81746c9e32c88bcc623ce3208edc7b68cee0bc392d2434b186ca147f298074a",
+      "target": "scripts/operations/stopped-backup.mjs"
+    },
+    {
+      "bytes": 12877,
+      "path": "source/scripts/operations/stopped-backup.test.mjs",
+      "sha256": "d04179c456e694792ed2260a2d5194f6aa4233cc90b0e8f434371a1587616486",
+      "target": "scripts/operations/stopped-backup.test.mjs"
+    },
+    {
+      "bytes": 10145,
+      "path": "README.md",
+      "sha256": "70248136de2dd614333f030bb393194d0546b3dc530c2786dd180d77af4ccfe4",
+      "target": "docs/STOPPED-BACKUP.md"
+    }
+  ],
+  "predecessor": {
+    "bytes": 2293,
+    "immutable": true,
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/stopped-backup-production-source-20261016/manifest.json",
+    "sha256": "6b7bc0ee2de64f84739b4213843fafd43c5b5ee2d21fbf6ffbb11cbaf715354e"
+  },
+  "qualificationsPending": [
+    "Node filesystem tests",
+    "Root two real stopped RocksDB copies and separate Nano audits",
+    "actual RO mounts and filesystem durability scope"
+  ],
+  "scope": {
+    "atomicNoReplaceCommitFile": true,
+    "cppSemanticValidationRequired": true,
+    "directoryRenameUsed": false,
+    "existingDestinationOverwritten": false,
+    "externallyPinnedManifestRequired": true,
+    "privateCampaignPermissionInferred": false,
+    "productionQualified": false,
+    "runtimeStarted": false,
+    "signingAuthorized": false,
+    "twoStoppedPhysicalRoots": true
+  },
+  "sourceContractsReviewed": [
+    "tests/multihost/backup-restore.sh --two-roots",
+    "tests/multihost/restore-config.mjs",
+    "tests/multihost/restore-recovery.mjs",
+    "tests/capella/isolated_stopped_capture.cpp",
+    "tools/storage-maintenance/journal-observe.cpp publication pattern"
+  ],
+  "sourceOnly": true,
+  "status": "FROZEN_SOURCE_REVIEW_PENDING_ROOT_EXECUTION",
+  "targetBaselines": [
+    {
+      "existsAtAuthorRead": false,
+      "path": "scripts/operations/stopped-backup.mjs"
+    },
+    {
+      "existsAtAuthorRead": false,
+      "path": "scripts/operations/stopped-backup.test.mjs"
+    },
+    {
+      "existsAtAuthorRead": false,
+      "path": "docs/STOPPED-BACKUP.md"
+    }
+  ],
+  "testsExecuted": false,
+  "totalPayloadBytes": 48577
+}

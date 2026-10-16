@@ -1,0 +1,169 @@
+TAP version 13
+# Subtest: create, verify and new-only restore preserve two full roots, empty files and source nine
+ok 1 - create, verify and new-only restore preserve two full roots, empty files and source nine
+  ---
+  duration_ms: 108.241291
+  type: 'test'
+  ...
+# Subtest: create snapshots caller input before asynchronous checkpoints
+ok 2 - create snapshots caller input before asynchronous checkpoints
+  ---
+  duration_ms: 40.640917
+  type: 'test'
+  ...
+# Subtest: stop/read-only assertions and budgets are mandatory; root overlap refuses before destination
+ok 3 - stop/read-only assertions and budgets are mandatory; root overlap refuses before destination
+  ---
+  duration_ms: 2.710833
+  type: 'test'
+  ...
+# Subtest: symlinks, hardlinks across roots and linked input roots are refused
+    # Subtest: leaf-symlink
+    ok 1 - leaf-symlink
+      ---
+      duration_ms: 5.025208
+      type: 'test'
+      ...
+    # Subtest: cross-root-hardlink
+    ok 2 - cross-root-hardlink
+      ---
+      duration_ms: 3.9765
+      type: 'test'
+      ...
+    # Subtest: root-symlink
+    ok 3 - root-symlink
+      ---
+      duration_ms: 2.365959
+      type: 'test'
+      ...
+    1..3
+ok 4 - symlinks, hardlinks across roots and linked input roots are refused
+  ---
+  duration_ms: 11.61675
+  type: 'test'
+  ...
+# Subtest: external manifest mismatch and old restore destination do not touch old files
+ok 5 - external manifest mismatch and old restore destination do not touch old files
+  ---
+  duration_ms: 38.105709
+  type: 'test'
+  ...
+# Subtest: archive corruption and truncation refuse before making restore namespace
+    # Subtest: corrupt
+    ok 1 - corrupt
+      ---
+      duration_ms: 38.117125
+      type: 'test'
+      ...
+    # Subtest: truncate
+    ok 2 - truncate
+      ---
+      duration_ms: 34.603791
+      type: 'test'
+      ...
+    1..2
+ok 6 - archive corruption and truncation refuse before making restore namespace
+  ---
+  duration_ms: 72.917666
+  type: 'test'
+  ...
+# Subtest: even an externally pinned malformed manifest cannot traverse or replace parents
+    # Subtest: ../escape
+    ok 1 - ../escape
+      ---
+      duration_ms: 35.545167
+      type: 'test'
+      ...
+    # Subtest: /absolute
+    ok 2 - /absolute
+      ---
+      duration_ms: 37.750541
+      type: 'test'
+      ...
+    # Subtest: chain/../../escape
+    ok 3 - chain/../../escape
+      ---
+      duration_ms: 35.13875
+      type: 'test'
+      ...
+    # Subtest: chain\\escape
+    ok 4 - chain\\escape
+      ---
+      duration_ms: 34.931375
+      type: 'test'
+      ...
+    1..4
+ok 7 - even an externally pinned malformed manifest cannot traverse or replace parents
+  ---
+  duration_ms: 143.641375
+  type: 'test'
+  ...
+# Subtest: source mutation after inventory is a refusal, with no completion marker
+ok 8 - source mutation after inventory is a refusal, with no completion marker
+  ---
+  duration_ms: 6.699792
+  type: 'test'
+  ...
+# Subtest: process crash before publication leaves an incomplete package, never a committed backup
+ok 9 - process crash before publication leaves an incomplete package, never a committed backup
+  ---
+  duration_ms: 82.492833
+  type: 'test'
+  ...
+# Subtest: unsupported volatile filesystems and unsupported fsync never issue a successful pin
+ok 10 - unsupported volatile filesystems and unsupported fsync never issue a successful pin
+  ---
+  duration_ms: 12.700166
+  type: 'test'
+  ...
+# Subtest: directory fsync failure preserves the original error and the source inventory
+ok 11 - directory fsync failure preserves the original error and the source inventory
+  ---
+  duration_ms: 24.306667
+  type: 'test'
+  ...
+# Subtest: a concurrent final manifest is never replaced by publication
+ok 12 - a concurrent final manifest is never replaced by publication
+  ---
+  duration_ms: 31.763375
+  type: 'test'
+  ...
+# Subtest: failure after link is explicitly uncertain, not a successful create receipt
+ok 13 - failure after link is explicitly uncertain, not a successful create receipt
+  ---
+  duration_ms: 31.65575
+  type: 'test'
+  ...
+# Subtest: restored bytes are read back before publishing completion
+ok 14 - restored bytes are read back before publishing completion
+  ---
+  duration_ms: 82.723167
+  type: 'test'
+  ...
+# Subtest: a first operation refusal survives a failing final source fence
+ok 15 - a first operation refusal survives a failing final source fence
+  ---
+  duration_ms: 6.528708
+  type: 'test'
+  ...
+# Subtest: verify and restore share one elapsed-time budget without resetting at phase boundaries
+ok 16 - verify and restore share one elapsed-time budget without resetting at phase boundaries
+  ---
+  duration_ms: 37.260708
+  type: 'test'
+  ...
+# Subtest: directory enumeration refuses its entry budget without archiving an oversized namespace
+ok 17 - directory enumeration refuses its entry budget without archiving an oversized namespace
+  ---
+  duration_ms: 4.34825
+  type: 'test'
+  ...
+1..17
+# tests 26
+# suites 0
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 802.234292

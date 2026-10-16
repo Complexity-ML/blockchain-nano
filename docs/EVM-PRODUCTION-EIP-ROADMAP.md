@@ -5682,3 +5682,39 @@ ROOT a passé sur Docker AMD64 le test dédié déjà qualifié sur ARM : cinq g
 Les anciennes tables complètes de matériaux/autorités SDK ne sont pas relues ; les reçus de recettes peuvent contenir des noms SDK et les dépendances sélectionnées de l’image actuelle sont réellement relues/admises. Aucune autorité historique n’est récupérée. L’arrêt normal ne qualifie pas le chemin TERM/KILL. Eth_call reste partiellement couvert, estimateGas est une extension Nano ; CMake global, Nano cohérent multiarchitecture, autres méthodes, états de branches non canoniques, HTTP, CI, admissions, runtime, duties, finalité et production restent ouverts. La CI du commit 1f6 échoue pour facturation avant lancement des jobs, sans relance. Tous les historiques sont conservés ; goal actif.
 
 [Preuve AMD](qualification/rpc-eip1898-amd-20261016/README.md) · [Preuve ARM](qualification/rpc-eip1898-simulation-20261016/README.md).
+
+
+## 16 octobre 2026 — Premier essai lifecycle autorisé : finalité initiale, cycle FAILED
+
+[Sept projections publiques et limites](qualification/fresh-lifecycle-first-attempt-20261016/README.md). Root a reçu le consentement pour un essai synthétique privé borné à sept heures, puis l’a exécuté sur trois runtimes/deux hôtes (source 4984e7e). Les 65 paires bootstrap 16+16+33 passent 130 réouvertures froides ; les runtimes signent et admettent réellement des duties. Finalité commune observée 0 → 2 → 3 : deux avances distinctes puis trois échantillons stables ; trois premiers arrêts sains.
+
+L’essai termine **FAILED, exit1** avant toute soumission du dépôt : comparaison JS d’adresse sensible à la casse malgré identité canonique/montant exacts. Dépôt non soumis ; sortie/slashing et restauration non atteints, aucun paiement du cycle qualifié. Le domaine est consommé, sans reset/rejeu autorisé par ce constat. L’audit terminal refuse les stages incomplets : capture VPS du premier arrêt et second arrêt/capture VPS absents ; quatre captures locales ne remplacent pas ces preuves. Le guard rapporte 29 mesures, aucune SIGINT et le launcher joint, sans preuve de tenue sept heures.
+
+Le correctif JS est ensuite qualifié séparément : ancien 1 PASS / 1 FAIL contre candidat 2 PASS, document exporté accepté inchangé ; suite ciblée 18/18, 0 skip (9 variantes de casse/35 refus). Aucune clé lue, signature ou transaction soumise par ces tests, aucun C++/image reconstruit ni nouvelle campagne. Cette réussite ne requalifie pas l’essai FAILED.
+
+Consentement reçu pour cet essai ne vaut ni réussite du cycle complet ni autorisation supplémentaire déduite. Historiques intégraux conservés : V37/campagne08 et ancien fence ARM restent échoués/ouverts, anciennes identités non récupérées, NAS refusé, Base/Doppler et CI/facturation inchangés. Restauration/duties après reprise, finalité après restauration, cycle long, WAN/charge, bridge/mint, revue indépendante et production restent ouverts. Aucun EIP/fork promu ; goal actif.
+
+
+## 16 octobre 2026 — sauvegarde physique arrêtée : outil livré, reprise consensus encore ouverte
+
+Un seul CLI `scripts/operations/stopped-backup.mjs` fournit create/verify/restore de
+deux racines complètes, preuves externes épinglées, synchronisation des fichiers et
+répertoires, publication exclusive et restauration vers un dossier neuf. Les
+engagements de consensus ne sont pas déduits des copies. Documentation :
+`docs/STOPPED-BACKUP.md` ; preuves : `docs/qualification/stopped-backup-20261016`.
+
+Qualification Root : 26/26 tests Mac et 26/26 Linux ARM sur volume Docker ; le
+prédécesseur échoue à la nouvelle régression de mutation d'entrée (0 PASS/1 FAIL).
+L'essai Docker sur partage de dossier macOS reste 21/26, 5 FAIL de métadonnées ou
+permissions, voie non qualifiée. Aucun ancien champ d'admission n'est rafraîchi.
+Deux DB RocksDB synthétiques arrêtées au genesis sont sauvegardées/vérifiées/
+restaurées ; deux audits C++ restituent exactement les hashes/racines des originaux.
+Sources RO, neuf champs et SHA inchangés ; aucun build C++/image, clé, signature ou
+réseau. Le volume neuf de test a été supprimé, aucun volume existant supprimé.
+
+Cette preuve physique ne fait pas de la seconde DB un témoin de consensus, ne
+qualifie ni panne électrique, sauvegarde hors hôte, reprise de duties ou V37, et
+n'ajoute aucun EIP/fork activé. Le cycle lifecycle complet reste échoué/non qualifié,
+comme sa clôture incomplète ; ses journaux et le domaine consommé sont conservés.
+CI/facturation, revue indépendante et toutes les autres exigences de production
+restent ouvertes. Goal actif ; production non qualifiée.
