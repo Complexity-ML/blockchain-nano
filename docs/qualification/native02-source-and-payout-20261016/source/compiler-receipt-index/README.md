@@ -1,0 +1,11 @@
+# Compiler receipt index
+
+Source-only pure Python helper for the frozen compiler proxy `a7406e1e5d588364a9c91e1692c506d0ff8a3124663469e0ff94b23b0b5092c0`. It has no CLI, file reads, subprocesses, capture, environment access or project operations. The author did not execute it or add a mirrored test suite.
+
+Call `index_compiler_receipts(records)` with a list or tuple. Each record has exactly `id`, `command`, `executed`, `dependenciesBefore`, `terminal`, and `refusal`; use `None` for an absent receipt. ROOT reads and authenticates the files first. The helper raises `ReceiptIndexError` with `record_id` and a fixed `code` for an inconsistent shape or cross-receipt claim. Duplicate IDs refuse.
+
+The return value contains `observedRecords`, `categories`, `byProducedPath`, and `divergences`. Entries retain references to the original record and produced-output dict, without deep copies. Every observed producer is appended, including repeated producers of the same resolved path. Nothing selects a newest or preferred producer. Divergences report observation count, distinct content pins, and distinct full-nine/SHA pins separately; different identities with identical bytes remain visible.
+
+Categories are `compileMEqualsMd`, `forward`, `returnNonzero`, `refusal`, and `incomplete`. A nonzero return is never declared expected. A successful compile requires the proxy's true M/MD claims, coherent before-dependencies, an object and distinct actual MD with full-nine/SHA records, and the successful independent-M/actual events. Missing prerequisite receipt dicts classify it as incomplete. Compiler queries and links remain forward observations. Refusals and incomplete records remain available even when no output exists.
+
+`resolvedPath` indexes the producer's assertion. ROOT must independently match the exact archive member to the observed object bytes and the object's retained physical FD/path full-nine/SHA, resolve any recorded aliases, and choose the appropriate producer using actual provenance. This helper cannot verify current objects, compiler/SDK files, archive membership, generated-source causality, all producers or any runtime state. Its `wholeSdkQualified`, `wholeTransitiveDagQualified`, and `currentPhysicalObjectsVerified` fields are always false.
