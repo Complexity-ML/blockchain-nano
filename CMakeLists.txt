@@ -156,6 +156,8 @@ add_executable(nano-rpc-simulation-block-id-tests tests/test_rpc_simulation_bloc
 target_link_libraries(nano-rpc-simulation-block-id-tests PRIVATE nano_core)
 add_test(NAME rpc_simulation_eip1898 COMMAND nano-rpc-simulation-block-id-tests --eip1898-self-test)
 set_tests_properties(rpc_simulation_eip1898 PROPERTIES TIMEOUT 45 LABELS qualification_rpc_simulation_eip1898)
+add_test(NAME rpc_pruning_retention_boundaries COMMAND nano-rpc-simulation-block-id-tests --pruning-boundary-self-test)
+set_tests_properties(rpc_pruning_retention_boundaries PROPERTIES TIMEOUT 45 LABELS "qualification_rpc_pruning_retention")
 add_executable(nano-rpc-access-list-tests tests/test_rpc_access_list.cpp)
 target_link_libraries(nano-rpc-access-list-tests PRIVATE nano_core)
 add_test(NAME rpc_create_access_list_shanghai COMMAND nano-rpc-access-list-tests --self-test)
