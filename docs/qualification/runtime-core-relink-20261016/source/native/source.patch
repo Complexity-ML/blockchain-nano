@@ -1,0 +1,46 @@
+--- v1/qualify-native-runtime-relink-root.py
++++ v2/qualify-native-runtime-relink-root.py
+@@ -151,14 +151,25 @@
+  cmake=m.hold(R/'CMakeLists.txt').decode()
+  # The old R/runtime row remains historical. Compile a new known-byte projection,
+  # never refresh or discard the original row merely because R has advanced.
+- runtime_source=O/'source/src/consensus_capella_runtime.cpp';runtime_source.parent.mkdir(parents=True,mode=0o700)
+- runtime_bytes=git('show',args.revision+':src/consensus_capella_runtime.cpp');need(pin(runtime_bytes)==RUNTIME,'new runtime projection known bytes');m.EXPECTED[str(runtime_source)]=RUNTIME
+- with runtime_source.open('xb') as stream:stream.write(runtime_bytes);stream.flush();os.fsync(stream.fileno())
+- os.chmod(runtime_source,0o400);directory=os.open(runtime_source.parent,os.O_RDONLY)
+- try:os.fsync(directory)
+- finally:os.close(directory)
++ source_root=O/'source';source_root.mkdir(mode=0o700);projection={}
++ with tarfile.open(fileobj=io.BytesIO(git('archive',args.revision,'src','network'))) as archive:
++  for entry in archive:
++   relative=pathlib.PurePosixPath(entry.name);need(not relative.is_absolute() and '..' not in relative.parts and relative.parts[0] in ('src','network') and (entry.isfile() or entry.isdir()),'public runtime projection leaf')
++   path=source_root/entry.name
++   if entry.isdir():path.mkdir(parents=True,exist_ok=True,mode=0o700)
++   else:
++    need(entry.name in project and entry.size<=16777216,'projection known Git file');body=archive.extractfile(entry).read();need(pin(body)==project[entry.name],'projection Git byte pin');projection[str(path)]=project[entry.name];path.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
++    with path.open('xb') as stream:stream.write(body);stream.flush();os.fsync(stream.fileno())
++    os.chmod(path,0o400)
++ for directory in sorted((p for p in source_root.rglob('*') if p.is_dir()),key=lambda p:len(p.parts),reverse=True):os.chmod(directory,0o500)
++ os.chmod(source_root,0o500);m.EXPECTED.update(projection)
++ runtime_source=source_root/'src/consensus_capella_runtime.cpp';need(projection[str(runtime_source)]==RUNTIME,'new runtime projection known bytes')
+  m.stable([runtime_source],'new-runtime-source')
+- runtime_obj,runtime_stats=m.compile_one('consensus_capella_runtime',runtime_flags,runtime_source)
++ # Only this genuinely new TU may admit new providers in the original bounded
++ # SDK namespaces. Existing AUTH/HELD/alias rows remain strict inside that helper.
++ m.candidate=original_candidate
++ try:runtime_obj,runtime_stats=m.compile_one('consensus_capella_runtime',runtime_flags,runtime_source)
++ finally:m.candidate=selected_candidate
+  m.admit_products([runtime_obj,O/'consensus_capella_runtime.cpp.o.d'],'runtime-object')
+  newcore=O/'libnano_core.a'
+  with newcore.open('xb') as stream:stream.write(m.hold(core));stream.flush();os.fsync(stream.fileno())
+@@ -197,8 +208,8 @@
+   for rel in fixture_rel:m.EXPECTED[str(root/rel)]=pin(git('show',args.revision+':'+rel))
+  m.stable([root/rel for root in (R,S) for rel in fixture_rel],'public-runtime-fixtures')
+  m.fence();need(git('rev-parse','HEAD').decode().strip()==args.revision and git('status','--porcelain')==b'','source remained clean')
+- m.save('software-admission.private.json',{'format':'nano-current-native-runtime-relink-software-binding-v1','sourceRevision':args.revision,'files':m.HELD,'aliases':m.ALIASES,'products':m.PRODUCTS,'programs':qualified,'stats':statistics,'directLoaderBindings':loaders,'core':dict(path=str(newcore),**pin(m.material(newcore)[1])),'oldAuthoritiesRefreshed':False,'historicalRawMdIdentityRecoveredForThreeOldHelpers':False})
+- result={'format':'nano-current-native-runtime-relink-qualification-v1','passed':True,'sourceRevision':args.revision,'compiledTranslationUnits':1,'independentDependencyScans':8,'authenticatedObjectReuses':7,'currentCoreLinks':7,'smokeCliCount':8,'coreArchiveMembers':143,'otherMembersUnchanged':142,'runtimeMemberMatchesCompiledObject':True,'runtime':runtime_stats,'core':pin(m.material(newcore)[1]),'programs':qualified,'stats':statistics,'softwareAdmission':pin(m.material(O/'software-admission.private.json')[1]),'steps':m.STEPS,'p2pDependencyScans':0,'p2pLinks':0,'p2pExecutions':0,'oldTestsReplayed':0,'rpc120ChecksReplayed':False,'startup31RefusalsExecuted':False,'newSeedOrLedgerCreated':False,'signaturesCreated':0,'runtimeStarted':False,'dutiesResumed':False,'all24CampaignAdmissions':False,'wholeSdkQualified':False,'recursiveDylibClosureRequalified':False,'fullCmakeConfigureExecuted':False,'fullLoaderQualified':False,'productionQualified':False,'oldAuthoritiesRefreshed':False,'elapsedMs':int((time.monotonic()-m.START)*1000)}
++ m.save('software-admission.private.json',{'format':'nano-current-native-runtime-relink-software-binding-v2','sourceRevision':args.revision,'files':m.HELD,'aliases':m.ALIASES,'products':m.PRODUCTS,'programs':qualified,'stats':statistics,'directLoaderBindings':loaders,'core':dict(path=str(newcore),**pin(m.material(newcore)[1])),'oldAuthoritiesRefreshed':False,'historicalRawMdIdentityRecoveredForThreeOldHelpers':False})
++ result={'format':'nano-current-native-runtime-relink-qualification-v2','passed':True,'sourceRevision':args.revision,'compiledTranslationUnits':1,'independentDependencyScans':8,'authenticatedObjectReuses':7,'currentCoreLinks':7,'smokeCliCount':8,'coreArchiveMembers':143,'otherMembersUnchanged':142,'runtimeMemberMatchesCompiledObject':True,'runtime':runtime_stats,'core':pin(m.material(newcore)[1]),'programs':qualified,'stats':statistics,'softwareAdmission':pin(m.material(O/'software-admission.private.json')[1]),'steps':m.STEPS,'p2pDependencyScans':0,'p2pLinks':0,'p2pExecutions':0,'oldTestsReplayed':0,'rpc120ChecksReplayed':False,'startup31RefusalsExecuted':False,'newSeedOrLedgerCreated':False,'signaturesCreated':0,'runtimeStarted':False,'dutiesResumed':False,'all24CampaignAdmissions':False,'wholeSdkQualified':False,'recursiveDylibClosureRequalified':False,'fullCmakeConfigureExecuted':False,'fullLoaderQualified':False,'productionQualified':False,'oldAuthoritiesRefreshed':False,'elapsedMs':int((time.monotonic()-m.START)*1000)}
+  m.save('result-public.json',result);print(json.dumps(result,sort_keys=True),flush=True)
+ 
+ if __name__=='__main__':

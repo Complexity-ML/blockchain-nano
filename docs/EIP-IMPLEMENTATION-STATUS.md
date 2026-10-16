@@ -1,3 +1,8 @@
+> **16 octobre 2026 — Programmes assemblés au Core corrigé.**
+> [Rapport, sources et identités](qualification/runtime-core-relink-20261016/README.md). Nano et les outils sont reliés au Core courant sur Mac natif, Docker ARM et Docker AMD ; les rapports bornent les dépendances, réutilisations et vérifications CLI. Le P2P inchangé reste joint séparément à ses preuves conservées.
+> Le worker ARM passe ses vérifications mais son contrôleur hôte échoue à la dernière barrière d'identités ; la cause reste inexpliquée et cette qualification complète reste ouverte. Un rapprochement séparé vérifie 1 226 entrées conservées et sept fichiers logiciels, sans rejeu ni rafraîchissement des anciennes identités.
+> Aucune reprise réseau/duties ni finalité commune démontrée par ce lot ; aucune image reconstruite, suite antérieure rejouée ou ancienne admission retargetée. Campagne privée, consensus/WAN/charge, cycle des validateurs, opérations prolongées, bridge/lancement, CI et revue indépendante restent ouverts. Historique intégral conservé ; production non qualifiée, goal actif.
+
 > **16 octobre 2026 — Correctif de démarrage et essais de pruning ARM64/AMD64.**
 > [Rapport et preuves](qualification/pruning-operation-20261016/README.md).
 > Source `68d64a5` : les 31 refus attendus passent sur les deux architectures ; le même objet de test reproduit le défaut avec l’ancien Core. Un seul objet est remplacé parmi 143 membres du Core, les 142 autres restent identiques. Aucune ancienne suite ni image reconstruite.
