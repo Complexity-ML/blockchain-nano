@@ -1,0 +1,76 @@
+{
+  "format": "nano-rpc-eip1898-amd-worker-source-proposal-v1",
+  "status": "FROZEN",
+  "sourceOnly": true,
+  "baseArmWorker": {
+    "path": "../rpc-eip1898-perl-worker-source-20261016/worker.pl",
+    "sha256": "5c45bb5a8c65fd9d2cdd491c4ebb6ccc57d715adad938d0e948f5cf722806527",
+    "bytes": 14145
+  },
+  "payloads": [
+    {
+      "path": "worker.pl",
+      "sha256": "33878e695b2661be97fc094d01337801821ee9d1290c5c4024aa27f342426bda",
+      "bytes": 14150
+    },
+    {
+      "path": "worker.patch",
+      "sha256": "ca1645ab407a167232dc21816cad982f38c08d29fbbe01a415040a28dd0425e4",
+      "bytes": 3386
+    },
+    {
+      "path": "README.md",
+      "sha256": "7622221fb55386901d025e0bfcb4d5f2217bc970b7761f6705cdde10837d60b9",
+      "bytes": 2047
+    }
+  ],
+  "payloadCount": 3,
+  "payloadBytes": 19583,
+  "changedWorkerLines": 2,
+  "literalSubstitutions": 3,
+  "changes": [
+    "real/effective UID 501 becomes 1000",
+    "output directory owner 501:20 becomes 1000:1000",
+    "public result format arm becomes amd"
+  ],
+  "publicFormat": "nano-rpc-eip1898-amd-thin-qualification-v1",
+  "entrypoint": [
+    "/usr/bin/perl",
+    "/controls/worker.pl"
+  ],
+  "extraArguments": 0,
+  "controlPaths": [
+    "/controls/recipes.json",
+    "/controls/source-expected.private.json"
+  ],
+  "expected": {
+    "compiledTranslationUnits": 2,
+    "independentMEqualsMd": true,
+    "archiveMembers": 143,
+    "oldMembersUnchanged": 142,
+    "baselineExitCode": 1,
+    "baselineChecks": 4,
+    "targetedGroups": 5,
+    "targetedChecksToVerifyByRoot": 120,
+    "expectedRefusals": 58
+  },
+  "budgetsUnchanged": true,
+  "functionalAlgorithmsChanged": false,
+  "oldWorkerModified": false,
+  "sourceRevisionReportedByRoot": "1f6c0d04",
+  "sourceRevisionVerifiedByAuthor": false,
+  "privateInputsReadByAuthor": false,
+  "sdkReadByAuthor": false,
+  "oldSdkMapsReauditedOrRecovered": false,
+  "perlExecutedByAuthor": false,
+  "projectProgramExecutedByAuthor": false,
+  "repositoryModifiedByAuthor": false,
+  "rootQualificationPending": true,
+  "amdQualified": false,
+  "httpQualified": false,
+  "all24CampaignAdmissions": false,
+  "dutiesResumed": false,
+  "commonFinalityQualified": false,
+  "multiarchitectureCandidateQualified": false,
+  "productionQualified": false
+}

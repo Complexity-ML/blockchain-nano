@@ -1,0 +1,20 @@
+--- arm-worker-5c45.pl
++++ amd-worker.pl
+@@ -176,7 +176,7 @@
+ }
+ sub json_rows {my ($raw)=@_;return [map {$J->decode($_)} grep {/\S/} split(/\n/,$raw)];}
+ sub main {
+- need(@ARGV==0&&$>==501&&$<==501);need(abs_path($out) eq $out);my @s=lstat($out);need(@s&&S_ISDIR($s[2])&&($s[2]&07777)==0700&&$s[4]==501&&$s[5]==20);
++ need(@ARGV==0&&$>==1000&&$<==1000);need(abs_path($out) eq $out);my @s=lstat($out);need(@s&&S_ISDIR($s[2])&&($s[2]&07777)==0700&&$s[4]==1000&&$s[5]==1000);
+  opendir(my $dir,$out) or die "RPC worker refused\n";my @existing=grep {$_ ne '.'&&$_ ne '..'} readdir($dir);closedir($dir);need(!@existing);
+  my $recipe=$J->decode(read_bytes('/controls/recipes.json'));$expected=$J->decode(read_bytes('/controls/source-expected.private.json'));
+  need(keys_are($recipe,qw(coreFlags testFlags linkTail))&&ref($expected) eq 'HASH'&&ref($recipe->{linkTail}) eq 'ARRAY');
+@@ -198,7 +198,7 @@
+  need(@$rows==6);for my $i(0..4){need(keys_are($rows->[$i],qw(scenario passed checks expectedRefusals))&&$rows->[$i]{scenario} eq $names[$i]&&same($rows->[$i]{passed},$yes)&&$rows->[$i]{expectedRefusals}==$refusals[$i]);}
+  my $summary=$rows->[5];need(keys_are($summary,qw(format passed groups checks expectedRefusals oldSuiteExecuted networkStarted productionQualified))&&$summary->{format} eq 'nano-rpc-simulation-eip1898-targeted-v1'&&same($summary->{passed},$yes)&&$summary->{groups}==5&&$summary->{expectedRefusals}==58&&same($summary->{oldSuiteExecuted},$no)&&same($summary->{networkStarted},$no)&&same($summary->{productionQualified},$no));
+  save('sdk-and-inputs.private.json',\%held);save('first-dependency-observations.private.json',\@observations);
+- my $result={format=>'nano-rpc-eip1898-arm-thin-qualification-v1',passed=>$yes,compiledTranslationUnits=>2,archiveMembers=>143,oldMembersUnchanged=>142,actualRpcMemberMatchesNewObject=>$yes,independentMEqualsMd=>$yes,coreDependencies=>$core->{dependencies},testDependencies=>$test->{dependencies},baselineExpectedFailure=>$yes,baselineExpectedStage=>'canonical-selectors',targetedTestSummary=>$summary,baselineStdoutSha256=>Digest::SHA::sha256_hex($baseline),newSelectorStdoutSha256=>Digest::SHA::sha256_hex($actual),coreSha256=>material('/outputs/libnano_core.a')->{sha256},executableSha256=>material('/outputs/nano-rpc-simulation-block-id-tests')->{sha256},steps=>\@steps,oldSuiteExecuted=>$no,dockerImageBuilt=>$no,nodeRuntimeStarted=>$no,campaignAdmission=>$no,productionQualified=>$no};
++ my $result={format=>'nano-rpc-eip1898-amd-thin-qualification-v1',passed=>$yes,compiledTranslationUnits=>2,archiveMembers=>143,oldMembersUnchanged=>142,actualRpcMemberMatchesNewObject=>$yes,independentMEqualsMd=>$yes,coreDependencies=>$core->{dependencies},testDependencies=>$test->{dependencies},baselineExpectedFailure=>$yes,baselineExpectedStage=>'canonical-selectors',targetedTestSummary=>$summary,baselineStdoutSha256=>Digest::SHA::sha256_hex($baseline),newSelectorStdoutSha256=>Digest::SHA::sha256_hex($actual),coreSha256=>material('/outputs/libnano_core.a')->{sha256},executableSha256=>material('/outputs/nano-rpc-simulation-block-id-tests')->{sha256},steps=>\@steps,oldSuiteExecuted=>$no,dockerImageBuilt=>$no,nodeRuntimeStarted=>$no,campaignAdmission=>$no,productionQualified=>$no};
+  save('result-public.json',$result);print $J->encode($result)."\n" or die "RPC worker refused\n";
+ }
+ my $ok=eval{main();1;};my $first=$@;

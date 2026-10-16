@@ -5228,3 +5228,12 @@ ROOT a compilé deux TUs seulement, rpc et un test dédié, avec M indépendant 
 Cette preuve couvre partiellement eth_call selon EIP-1898 ; estimateGas est une extension Nano explicite. Aucun configure CMake complet n’a été exécuté : CMake global, candidat multiarchitecture/déploiement, état propre des branches non canoniques retenues, autres méthodes EIP-1898, HTTP, AMD64, CI, admissions de campagne, duties, finalité commune et production restent ouverts. Les historiques et limites restent conservés ; le goal demeure actif.
 
 [Sources et preuves RPC](qualification/rpc-eip1898-simulation-20261016/README.md) · [Politique d’environnement natif](qualification/native-runtime-environment-20261016/README.md).
+
+
+## 16 octobre 2026 — sélecteurs RPC : preuve causale AMD ; production non qualifiée
+
+ROOT a passé sur Docker AMD64 le test dédié déjà qualifié sur ARM : cinq groupes, 120 checks et 58 refus, avec baseline ancien Core refusée exactement comme attendu (code 1, quatre checks). Deux TUs seulement ont été compilés avec M indépendant égal au MD, 527 et 461 dépendances ; le Core copié conserve 142 membres sur 143 et son nouveau membre rpc égale l’objet compilé. Le test prend 129 ms et le contrôle hôte 113 227 ms. Les stdout baseline/candidat sont identiques à ARM. Les 18 fichiers hôte tenus restent inchangés ; conteneur absent, répertoire de sortie conservé sur le VPS.
+
+Les anciennes tables complètes de matériaux/autorités SDK ne sont pas relues ; les reçus de recettes peuvent contenir des noms SDK et les dépendances sélectionnées de l’image actuelle sont réellement relues/admises. Aucune autorité historique n’est récupérée. L’arrêt normal ne qualifie pas le chemin TERM/KILL. Eth_call reste partiellement couvert, estimateGas est une extension Nano ; CMake global, Nano cohérent multiarchitecture, autres méthodes, états de branches non canoniques, HTTP, CI, admissions, runtime, duties, finalité et production restent ouverts. La CI du commit 1f6 échoue pour facturation avant lancement des jobs, sans relance. Tous les historiques sont conservés ; goal actif.
+
+[Preuve AMD](qualification/rpc-eip1898-amd-20261016/README.md) · [Preuve ARM](qualification/rpc-eip1898-simulation-20261016/README.md).
