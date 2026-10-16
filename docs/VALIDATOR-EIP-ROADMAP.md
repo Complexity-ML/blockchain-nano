@@ -8745,3 +8745,14 @@ n'ajoute aucun EIP/fork activé. Le cycle lifecycle complet reste échoué/non q
 comme sa clôture incomplète ; ses journaux et le domaine consommé sont conservés.
 CI/facturation, revue indépendante et toutes les autres exigences de production
 restent ouvertes. Goal actif ; production non qualifiée.
+
+
+## 16 octobre 2026 — Correction : captures VPS présentes, absence de copies locales seulement
+
+[Preuve publique et correction ciblée](qualification/fresh-lifecycle-capture-correction-20261016/README.md). Les trois absences du rapport précédent étaient **locales Mac** : première capture VPS, second arrêt VPS et seconde capture VPS. Elles ne prouvaient pas une absence distante. Root a rapproché quatre fichiers distants connus ; le premier arrêt correspond au SHA Mac et les deux captures VPS sont PASS, chacune pour 33 paires et 68 DB en lecture seule. Le second arrêt épingle la première capture et ses témoins externes (première capture : jetons externes false ; seconde : true). Capsules conservées sur VPS, originaux inchangés ; replay historique canonique toujours non qualifié.
+
+Le launcher attend les trois captures avant la clôture ; celle-ci refuse `lifecyclePending` absent après l'échec du dépôt avant soumission, et non l'absence des captures VPS. L'ancien rapport/manifeste restent intacts, cette seule inférence est corrigée. L'inspection ne relit pas les DB, ne signe rien et ne reprend aucun runtime. Essai FAILED, domaine consommé non réemployable ; aucun dépôt/retrait/slashing/paiement, restauration de duties, cycle complet, V37 ou production qualifié. Historiques et autres gates inchangés ; goal actif.
+
+La sauvegarde physique arrêtée est ensuite qualifiée sur les deux racines entières data/witness RO de mac-docker : 369 fichiers (119 767 303 octets), create/verify/restore PASS. Les captures C++ restaurées valident 16 paires/34 DB et les jetons externes du second arrêt/témoins ; Core et états validateurs sont byte-identiques, inventaires historiques originaux respectés. Capture source de 2 667 597 octets byte-identique avant/après ; huit nouveaux contrôles Linux stables sur 2 018 ms, fence neuf champs/SHA PASS. Le premier refus Mac `control-nine-changed` après create reste non qualifié, sans rafraîchir ses anciennes autorités. Backup privé sur le même hôte Docker Mac : aucune reprise de duties, signature, replay historique, sauvegarde hors hôte, panne électrique ou production qualifiée. Aucune nouvelle campagne ; nouvelle tentative en attente d'autorisation.
+
+Le correctif JS du reçu avant clôture passe 13/13 tests (cinq groupes nouveaux, garde des 55 refus conservé). La reprojection hors ligne des trois captures réelles retenues représente 65 paires/136 rôles DB ; aucune nouvelle ouverture des 136 DB. Le test publie avec fsync avant une clôture en échec **injecté** : aucune publication terminale par un nouveau runtime, nouvelle campagne ou réussite lifecycle n'en est déduite.

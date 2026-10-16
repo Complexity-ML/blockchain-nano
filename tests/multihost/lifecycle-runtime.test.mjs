@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {join} from 'node:path';
 import {writeFile,symlink,link,unlink,rm,mkdir,chmod,lstat} from 'node:fs/promises';
-import {requireLifecycleRuntimeAuthority,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleCheckpoint,lifecycleRollingFinalityWindow,lifecycleOperationDigest,lifecyclePrivateDirectory,writeLifecycleKnownFile,readLifecycleKnownFile,admitLifecycleKnownFiles} from './lifecycle-runtime.mjs';
+import {requireLifecycleRuntimeAuthority,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleCheckpoint,lifecycleRollingFinalityWindow,lifecycleOperationDigest,lifecyclePrivateDirectory,writeLifecycleKnownFile,readLifecycleKnownFile,admitLifecycleKnownFiles,projectLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,publishLifecycleStoppedCapturesBeforeClosing} from './lifecycle-runtime.mjs';
 import {lifecycleWholeCopyProgram} from './lifecycle-owner.mjs';
 const q=n=>'0x'+BigInt(n).toString(16),root=n=>'0x'+String(n).padStart(64,'0'),pub=n=>'0x'+String(n).padStart(96,'0'),digest=b=>createHash('sha256').update(b).digest('hex');
 const names=['mac-native','mac-docker','vps-docker'];
@@ -49,3 +49,43 @@ test('only terminal C++ replay closes accounting; 3 captures never mean 3 full a
  const context={campaignId:'a'.repeat(64),requiredFinalized:terminal().requiredFinalized};assert.deepEqual(lifecycleCheckpoint({epoch:'335',root:root(2)}),context.requiredFinalized);refuses(()=>lifecycleCheckpoint({epoch:'0335',root:root(2)}));refuses(()=>lifecycleCheckpoint({epoch:(1n<<64n).toString(),root:root(2)}));assert.equal(validateLifecycleTerminalProjection(terminal(),context).restoredCapturePairsBound,2);
  for(const mutate of [x=>x.owner='mac-native',x=>x.canonicalDepositTransactions=0,x=>x.canonicalActionInclusions=1,x=>x.fullPayouts=1,x=>x.restoredCapturePairsBound=1,x=>x.finalizedRestartProposals=3,x=>x.exactWithdrawalAccountingVerified=false,x=>x.canonicalWithdrawalIndicesStrictlyIncreasing=false,x=>x.postSecondRestartDuplicateFullPayouts=1,x=>x.rawCapsuleExported=true,x=>x.runtimeStarted=true,x=>x.productionQualified=true,x=>x.identities=[],x=>x.requiredFinalized.root=root(9)]){const x=terminal();mutate(x);refuses(()=>validateLifecycleTerminalProjection(x,context));}
 });
+
+// These groups are pure and can be selected without the earlier filesystem cases.
+{
+const campaignId='a'.repeat(64),root='0x'+'1'.repeat(64),names=['mac-native','mac-docker','vps-docker'];
+const flags=['canonicalStoreSnapshotVerified','primaryAndWitnessBlobClosuresVerified','allObservedFileBytesAndInodesUnchanged','observedWitnessPairsAuthenticated','externalStopTokensMatched','externalWitnessTokensMatched','externalWitnessPinOriginExternallyRequired'];
+const falseFlags=['privateKeysRead','envRead','journalWritesRequested','runtimeStarted','networkUsed','productionQualified'];
+function captured(name){
+ const pairs=name==='vps-docker'?33:16,stopSha='b'.repeat(64),captureSha='c'.repeat(64),firstCaptureSha256='d'.repeat(64),finalized={epoch:'0x3',root};
+ return {name,receipt:{event:'capella-runtime-stopped',clockHealthy:true,finalized,validator:{healthy:true,failure:null,localKeys:pairs,awaitingRegistration:name==='vps-docker'?1:0,proposalsAdmitted:2,attestationsAdmitted:3,syncMessagesAdmitted:0},validatorKeys:['RAW-PRIVATE-KEY-INVENTORY'],session:'RAW-PRIVATE-SESSION'},firstCaptureSha256,stopArtifact:{path:'/RAW-PRIVATE-PATH/stop.json',sha256:stopSha,bytes:200},captureArtifact:{path:'/RAW-PRIVATE-PATH/capture.json',sha256:captureSha,bytes:1000},capture:{format:name==='vps-docker'?'nano-fresh-capella-stopped-capture-public-v1':'nano-isolated-stopped-recovery-pins-v1',passed:true,owner:name,campaignId,firstCaptureSha256,lastCaptureSha256:captureSha,externalStopReceiptSha256:stopSha,headSlot:43,finalized,primaryWitnessPairs:pairs,databasesReadOnly:2+2*pairs,...Object.fromEntries(flags.map(k=>[k,true])),...Object.fromEntries(falseFlags.map(k=>[k,false])),signerCallbacksInvoked:0,newSignaturesCreated:0,rawCapsuleExported:false,snapshot:'RAW-PRIVATE-SNAPSHOT',fullFileInodeInventories:'RAW-PRIVATE-INVENTORY',core:{snapshot:'RAW-PRIVATE-CORE'},session:'RAW-PRIVATE-SESSION'}};
+}
+const projected=()=>names.map(name=>projectLifecycleStoppedCapture(captured(name),{campaignId}));
+test('stopped capture receipt retains real owner-local storage and only public commitments',()=>{
+ const inputs=names.map(captured),before=JSON.stringify(inputs),rows=inputs.map(value=>projectLifecycleStoppedCapture(value,{campaignId})),result=lifecycleStoppedCapturesReceipt(rows.slice().reverse(),{campaignId});
+ assert.equal(JSON.stringify(inputs),before);assert.deepEqual(result.owners.map(x=>x.owner),names);assert.deepEqual(result.owners.map(x=>x.artifactStorage),['mac-local','mac-local','vps-local']);assert.deepEqual(result.owners.map(x=>x.primaryWitnessPairs),[16,16,33]);assert.deepEqual(result.owners.map(x=>x.readOnlyDatabaseRoles),[34,34,68]);
+ assert.equal(result.validatorPrimaryWitnessPairs,65);assert.equal(result.readOnlyDatabaseRoles,136);assert.equal(result.captureOnly,true);assert.equal(result.lifecycleClosingExecutedAtPublication,false);assert.equal(result.lifecycleTerminalQualified,false);assert.equal(result.restorationSigningAuthorized,false);assert.equal(result.productionQualified,false);assert.equal(JSON.stringify(result).includes('RAW-PRIVATE-'),false);
+ assert.deepEqual(result.owners[2].capture,{sha256:'c'.repeat(64),bytes:1000});assert.deepEqual(result.owners[2].finalized,{epoch:'0x3',root});rows[0].capture.sha256='f'.repeat(64);assert.equal(result.owners[0].capture.sha256,'c'.repeat(64));
+});
+test('stopped capture receipt refuses missing authority, bad bindings and non-exact counters or flags',()=>{
+ const changes=[v=>v.name='other',v=>v.capture.owner='mac-docker',v=>v.capture.campaignId='e'.repeat(64),v=>v.capture.passed=false,v=>v.capture.rawCapsuleExported=true,v=>v.capture.firstCaptureSha256='e'.repeat(64),v=>v.capture.externalStopReceiptSha256='e'.repeat(64),v=>v.capture.lastCaptureSha256='e'.repeat(64),v=>v.stopArtifact.bytes=0,v=>v.captureArtifact.sha256+='\n',v=>v.capture.headSlot=43.5,v=>v.capture.finalized={epoch:'0x2',root},v=>v.capture.primaryWitnessPairs=32,v=>v.capture.databasesReadOnly='68',v=>v.receipt.clockHealthy=false,v=>v.receipt.validator.failure='unhealthy',v=>v.receipt.validator.localKeys=32,v=>v.receipt.validator.attestationsAdmitted=0,v=>v.receipt.validator.awaitingRegistration=34,v=>v.capture.newSignaturesCreated=1,v=>v.capture.signerCallbacksInvoked=1,v=>delete v.capture.externalWitnessTokensMatched,v=>v.extra='RAW-PRIVATE-EXTRA'];
+ for(const change of changes){const input=captured('vps-docker');change(input);assert.throws(()=>projectLifecycleStoppedCapture(input,{campaignId}));}
+ for(const key of flags){const input=captured('vps-docker');input.capture[key]=false;assert.throws(()=>projectLifecycleStoppedCapture(input,{campaignId}));}
+ for(const key of falseFlags){const input=captured('vps-docker');input.capture[key]=true;assert.throws(()=>projectLifecycleStoppedCapture(input,{campaignId}));}
+});
+test('stopped capture receipt requires all three distinct owners and rejects public extra fields',()=>{
+ const rows=projected();for(const selected of [[],rows.slice(0,2),[rows[0],rows[1],rows[1]]])assert.throws(()=>lifecycleStoppedCapturesReceipt(selected,{campaignId}));
+ const extras=structuredClone(rows);extras[2].privatePath='/RAW-PRIVATE-PATH';assert.throws(()=>lifecycleStoppedCapturesReceipt(extras,{campaignId}));const wrong=structuredClone(rows);wrong[2].artifactStorage='mac-local';assert.throws(()=>lifecycleStoppedCapturesReceipt(wrong,{campaignId}));
+ assert.throws(()=>lifecycleStoppedCapturesReceipt(rows,{campaignId:'f'.repeat(64)}));
+});
+test('stopped capture receipt is awaited and remains published when lifecycle closing fails',async()=>{
+ const events=[],failure=Error('missing real live lifecycle stages');let committed;
+ await assert.rejects(publishLifecycleStoppedCapturesBeforeClosing(projected(),{campaignId,publish:async receipt=>{events.push('publish-start');await Promise.resolve();committed=structuredClone(receipt);events.push('published');},close:async()=>{events.push('closing');assert(committed);throw failure;}}),error=>error===failure);
+ assert.deepEqual(events,['publish-start','published','closing']);assert.equal(committed.owners.length,3);assert.equal(committed.owners[2].artifactStorage,'vps-local');assert.equal(committed.lifecycleTerminalQualified,false);assert.equal(committed.productionQualified,false);
+});
+test('stopped capture receipt publication refusal prevents closing and missing capture prevents publication',async()=>{
+ let closes=0,publishes=0;const failure=Error('publication refused');
+ await assert.rejects(publishLifecycleStoppedCapturesBeforeClosing(projected(),{campaignId,publish:async()=>{++publishes;throw failure;},close:async()=>{++closes;}}),error=>error===failure);assert.equal(publishes,1);assert.equal(closes,0);
+ await assert.rejects(publishLifecycleStoppedCapturesBeforeClosing(projected().slice(0,2),{campaignId,publish:async()=>{++publishes;},close:async()=>{++closes;}}));assert.equal(publishes,1);assert.equal(closes,0);
+ const result=await publishLifecycleStoppedCapturesBeforeClosing(projected(),{campaignId,publish:async()=>{++publishes;},close:async()=>{++closes;return 'actual closing result';}});assert.equal(result,'actual closing result');assert.equal(closes,1);
+});
+}

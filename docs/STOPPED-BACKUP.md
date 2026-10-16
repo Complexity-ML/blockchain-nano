@@ -168,3 +168,8 @@ pas un témoin de consensus authentifié. Aucun validateur n'est restauré ou re
 par cette preuve ; aucune panne électrique ni durabilité hors hôte n'est qualifiée.
 Les [rapports et échecs conservés](qualification/stopped-backup-20261016/README.md)
 donnent le détail. La production et la reprise opérationnelle restent ouvertes.
+
+
+## 16 octobre 2026 — sauvegarde des journaux et témoins de consensus arrêtés
+
+[Preuves publiques et refus conservé](qualification/fresh-lifecycle-capture-correction-20261016/README.md). Root a sauvegardé/vérifié/restauré les deux racines entières data/witness du volume mac-docker arrêté, montées RO : 369 fichiers, 119 767 303 octets. Les captures C++ de la restauration valident 16 paires primary/witness et 34 DB, les jetons externes du second arrêt/témoins et les fermetures de blobs ; Core et états validateurs byte-identiques. Les inventaires historiques des originaux restent respectés et la capture source de 2 667 597 octets est byte-identique avant/après. Huit contrôles Linux sont nouvellement admis, stables sur 2 018 ms, puis neuf champs/SHA inchangés en fence finale. Le premier contrôle Mac refuse après create (`control-nine-changed`), sans restauration ni refresh de ses anciennes autorités. Backup privé sur le même hôte Docker Mac, sans publication des DB/capsules. Pas de reprise de duties/signature, replay historique, durabilité hors hôte ou panne électrique qualifiés ; V37, cycle complet et production restent ouverts.
