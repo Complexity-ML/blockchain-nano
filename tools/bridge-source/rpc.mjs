@@ -1,6 +1,14 @@
 // Read-only, bounded transport for source observations. No retries or signing.
-const methods = new Set(['eth_chainId', 'eth_getBlockByNumber', 'eth_getTransactionReceipt', 'eth_getCode']);
-export function createSourceRpc(endpoint, {timeoutMs = 10000, maxResponseBytes = 1048576} = {}) {
+const sourceMethods = new Set(['eth_chainId', 'eth_getBlockByNumber', 'eth_getTransactionReceipt', 'eth_getCode']);
+const launchMethods = new Set(['eth_chainId', 'eth_getBlockByNumber', 'eth_getCode', 'eth_call', 'eth_estimateGas']);
+export function createSourceRpc(endpoint, options) {
+  return createReadOnlyRpc(endpoint, options, sourceMethods);
+}
+export function createLaunchRpc(endpoint, {timeoutMs = 10000, maxResponseBytes = 1048576, onRpcError} = {}) {
+  if (onRpcError !== undefined && typeof onRpcError !== 'function') throw Error('Invalid launch diagnostic callback');
+  return createReadOnlyRpc(endpoint, {timeoutMs, maxResponseBytes}, launchMethods, onRpcError);
+}
+function createReadOnlyRpc(endpoint, {timeoutMs = 10000, maxResponseBytes = 1048576} = {}, methods, onRpcError) {
   let url;
   try { url = new URL(endpoint); } catch { throw Error('Invalid source endpoint'); }
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
@@ -35,7 +43,16 @@ export function createSourceRpc(endpoint, {timeoutMs = 10000, maxResponseBytes =
         const envelope = JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(Buffer.concat(chunks, size)));
         const own = key => Object.hasOwn(envelope, key);
         if (!envelope || Array.isArray(envelope) || envelope.jsonrpc !== '2.0' || envelope.id !== id || own('result') === own('error')) throw Error('Malformed or mismatched source RPC envelope');
-        if (own('error')) throw Error('Source RPC error');
+        if (own('error')) {
+          if (onRpcError) {
+            const value = envelope.error, diagnostic = {method};
+            if (Number.isSafeInteger(value?.code)) diagnostic.code = value.code;
+            // Keep only bounded revert bytes, never provider messages or URLs.
+            if (typeof value?.data === 'string' && value.data.length <= 8194 && /^0x(?:[0-9a-f]{2})*$/i.test(value.data)) diagnostic.data = value.data;
+            onRpcError(diagnostic);
+          }
+          throw Error('Source RPC error');
+        }
         return envelope.result;
       } catch (error) {
         // Do not expose endpoint secrets, RPC payloads or provider messages.

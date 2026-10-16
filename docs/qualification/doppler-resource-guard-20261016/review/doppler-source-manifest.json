@@ -1,0 +1,137 @@
+{
+  "format": "nano-bridge-launch-review-snapshot-source-proposal-v1",
+  "status": "SOURCE_ONLY_V2_TEST_ASSERTION_FIX_AWAITING_ROOT_TARGETED_RETEST",
+  "revisionReportedByRoot": "aa09f7f6",
+  "gitRevisionIndependentlyRead": false,
+  "baselines": {
+    "tools/bridge-source/rpc.mjs": {
+      "sha256": "0f50b67bd43d5051c879449cf7a81c931bf1e94e3e5993f854c1e149010f4c07",
+      "bytes": 3386
+    },
+    "tools/doppler-launch/preview.mjs": {
+      "sha256": "2073c2bbf15bd6b4a921303fb60eb1292093170aa83a7bc2c8aa56fa322a6217",
+      "bytes": 10033
+    },
+    "tools/doppler-launch/verify-migration.mjs": {
+      "sha256": "1e7f20be9af202f2ac09bb94cd135899fe9cb49bbf7b3f5ab23a8f96be95ee9b",
+      "bytes": 4862
+    },
+    "tools/doppler-launch/test.mjs": {
+      "sha256": "17b6357056d2f1d0311bb85054700b7b61eef8afdaa9da0ab605ac1806b9e3ec",
+      "bytes": 4629
+    },
+    "tools/doppler-launch/README.md": {
+      "sha256": "a274de51100ebfd1e52f57850753563d11170feba92417f0c26a5644dbf73ae4",
+      "bytes": 5602
+    }
+  },
+  "publicSourceReferences": [
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/contracts/WrappedNano.sol",
+      "sha256": "d8ebf59077115a39e7abf30e795d32bfdb85993ea47a6f36a15e2efc5dee0e73",
+      "bytes": 1051
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tools/bridge-source/finality.mjs",
+      "sha256": "2b01031db93c8e1e80eca5c72f3667001149a20c0f141f3b444774c798234166",
+      "bytes": 6438
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tools/bridge-source/rpc.mjs",
+      "sha256": "0f50b67bd43d5051c879449cf7a81c931bf1e94e3e5993f854c1e149010f4c07",
+      "bytes": 3386
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tools/doppler-launch/test.mjs",
+      "sha256": "17b6357056d2f1d0311bb85054700b7b61eef8afdaa9da0ab605ac1806b9e3ec",
+      "bytes": 4629
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tools/doppler-launch/migration.test.mjs",
+      "sha256": "413af24967047301c87208d663724633d9e0714321a48bfbddcfeb2d633fcaf9",
+      "bytes": 4015
+    }
+  ],
+  "changes": 3,
+  "newTests": 8,
+  "repositoryModified": false,
+  "privateOrSdkFilesRead": false,
+  "transactionsOrSignatures": 0,
+  "bridgeImplementedByThisProposal": false,
+  "heightOnlyPreviewRaceClosedByThisProposal": true,
+  "productionQualified": false,
+  "payloadCount": 8,
+  "payloadBytes": 69591,
+  "payloads": [
+    {
+      "path": "README.md",
+      "sha256": "7a7acfe402ea31b4913cfe46ae1bf79df550c167db3e2a9269d20fd406e254c0",
+      "bytes": 7482
+    },
+    {
+      "path": "source/tools/bridge-source/rpc.mjs",
+      "sha256": "c94674fdebd4d947badc3ac770c9c955cbc28d3721cba104e4d8d681cffeae06",
+      "bytes": 4446
+    },
+    {
+      "path": "source/tools/doppler-launch/README.md",
+      "sha256": "638e235a452ee7ff8f1802c122dee98d874cb8f9982a1715fc5e3aba14b5ab59",
+      "bytes": 6868
+    },
+    {
+      "path": "source/tools/doppler-launch/preview.mjs",
+      "sha256": "4799ace32712390254066366acf6c287ab029bd354869afd122cae1eda58ab2c",
+      "bytes": 10746
+    },
+    {
+      "path": "source/tools/doppler-launch/review-snapshot.test.mjs",
+      "sha256": "d535ef8ef86919d8ea11c81a72d8a6aecc8891d3703a2fbe5b6240895816aa17",
+      "bytes": 10139
+    },
+    {
+      "path": "source/tools/doppler-launch/test.mjs",
+      "sha256": "dffe9c54da05e1129a0ec6e511c678b79e7cb1c139f4b1ce26315b428cc4656e",
+      "bytes": 4666
+    },
+    {
+      "path": "source/tools/doppler-launch/verify-migration.mjs",
+      "sha256": "e77c193c2f55c45f74644a6366ee9bd375f776e8131f26539a07ed54ffdf1e98",
+      "bytes": 4946
+    },
+    {
+      "path": "source.patch",
+      "sha256": "70afc4fa8464c081c9f5a9daff2d5ba440c59831ed0a14ba0002c4de7ef8a92a",
+      "bytes": 20298
+    }
+  ],
+  "estimateGasHashExtensionActualBaseSupportQualified": false,
+  "sharedTransportStrictlyBounded": true,
+  "sourceRpcMethodSetUnchanged": true,
+  "launchRpcFixedMethods": [
+    "eth_chainId",
+    "eth_getBlockByNumber",
+    "eth_getCode",
+    "eth_call",
+    "eth_estimateGas"
+  ],
+  "affectedExistingTestAssertionsChanged": 1,
+  "primaryReferences": [
+    "https://eips.ethereum.org/EIPS/eip-1898",
+    "https://ethereum.github.io/execution-apis/api/methods/eth_estimateGas/",
+    "https://github.com/ethereum/go-ethereum/blob/master/ethclient/ethclient.go"
+  ],
+  "previousProposal": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bridge-launch-review-snapshots-source-proposal-20261016/manifest.json",
+    "sha256": "297d042c1f3aa4b156856daac9d7459e5b0208785df372c1a78d6067b0e25c2b",
+    "bytes": 4279
+  },
+  "testsExecutedByAuthor": 0,
+  "productSourceBytesChangedFromPreviousProposal": false,
+  "rootReportedInitialQualification": {
+    "tests": 33,
+    "passed": 32,
+    "failed": 1,
+    "failure": "test assertion JSON.stringify BigInt",
+    "rawResultPreserved": true
+  }
+}

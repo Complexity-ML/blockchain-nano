@@ -1,0 +1,30 @@
+name: Doppler read-only review checks
+on:
+  push:
+    branches: [main]
+    paths: ['tools/doppler-launch/**', 'tools/bridge-source/rpc.mjs', '.github/workflows/doppler-review.yml']
+  pull_request:
+    paths: ['tools/doppler-launch/**', 'tools/bridge-source/rpc.mjs', '.github/workflows/doppler-review.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: nano-doppler-review-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  doppler:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools/doppler-launch
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '25.9.0'
+          package-manager-cache: false
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node --test test.mjs *.test.mjs

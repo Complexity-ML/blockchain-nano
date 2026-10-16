@@ -7,7 +7,8 @@ export async function verifyMigration(rpc,{tokenAddress,numeraire,migrationHash,
  assert(await rpc.getChainId()===31337,'Private Anvil chain required');
  assert(/anvil/i.test(await rpc.request({method:'web3_clientVersion'})),'Anvil required');
  const airlock=getAddresses(8453).airlock;
- const receipt=await rpc.getTransactionReceipt({hash:migrationHash});
+ // Detach the provider cache before any later state/header await.
+ const receipt=structuredClone(await rpc.getTransactionReceipt({hash:migrationHash}));
  assert(receipt.status==='success','Migration receipt failed');
  const sameHash=(a,b)=>typeof a==='string'&&typeof b==='string'&&/^0x[0-9a-f]{64}$/i.test(a)&&a.toLowerCase()===b.toLowerCase();
  assert(sameHash(receipt.transactionHash,migrationHash),'Receipt transaction mismatch');

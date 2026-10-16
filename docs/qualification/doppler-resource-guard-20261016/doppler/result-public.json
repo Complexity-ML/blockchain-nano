@@ -1,0 +1,100 @@
+{
+  "format": "nano-doppler-snapshot-and-rpc-root-qualification-v1",
+  "sourceBaseRevision": "aa09f7f683e9e14d18a7af7c38ba0d5c91ee7ce0",
+  "effectiveCppSourceRevision": "bd11bd9f9dedf3f003b707d1c38fb1ecbabae91d",
+  "nodeVersion": "v25.9.0",
+  "sourcePins": {
+    "tools/bridge-source/rpc.mjs": {
+      "sha256": "c94674fdebd4d947badc3ac770c9c955cbc28d3721cba104e4d8d681cffeae06",
+      "bytes": 4446
+    },
+    "tools/doppler-launch/preview.mjs": {
+      "sha256": "4799ace32712390254066366acf6c287ab029bd354869afd122cae1eda58ab2c",
+      "bytes": 10746
+    },
+    "tools/doppler-launch/verify-migration.mjs": {
+      "sha256": "e77c193c2f55c45f74644a6366ee9bd375f776e8131f26539a07ed54ffdf1e98",
+      "bytes": 4946
+    },
+    "tools/doppler-launch/review-snapshot.test.mjs": {
+      "sha256": "d535ef8ef86919d8ea11c81a72d8a6aecc8891d3703a2fbe5b6240895816aa17",
+      "bytes": 10139
+    },
+    "tools/doppler-launch/test.mjs": {
+      "sha256": "dffe9c54da05e1129a0ec6e511c678b79e7cb1c139f4b1ce26315b428cc4656e",
+      "bytes": 4666
+    },
+    "tools/doppler-launch/README.md": {
+      "sha256": "638e235a452ee7ff8f1802c122dee98d874cb8f9982a1715fc5e3aba14b5ab59",
+      "bytes": 6868
+    },
+    ".github/workflows/doppler-review.yml": {
+      "sha256": "da14ef070fdf62efbb1cce969794536ed73d4b7b37d1ecbf836bb707bd69021e",
+      "bytes": 993
+    },
+    "scripts/ci/changes.mjs": {
+      "sha256": "e2e0f19146a1b34e7446903b8a4e5f26f5014cca91d15698100241bc955b5a5c",
+      "bytes": 2685
+    },
+    "scripts/ci/doppler-workflow-scope.test.mjs": {
+      "sha256": "642a4793527e650d2b512dee0862d824cf053fe88366e16a204b26b2af9fe18f",
+      "bytes": 1421
+    },
+    "tools/doppler-launch/package.json": {
+      "sha256": "c64df2ff667febf5e3370544f6b47a5645cfe738a3f7a5d46d1a02a585c64ebd",
+      "bytes": 341
+    }
+  },
+  "logs": {
+    "doppler-snapshot-root-qualification-20261016.tap": {
+      "sha256": "0d16c00c1f5d9eac56748b728a163380646fb02f436c7c9e15693a124986dc1e",
+      "bytes": 3425
+    },
+    "doppler-snapshot-root-testonly-retry-20261016.tap": {
+      "sha256": "744ab05050188322b14efe50b81cd7b3ba9ca998acbda338013569dbf1ef27c0",
+      "bytes": 218
+    },
+    "doppler-ci-scope-root-qualification-20261016.tap": {
+      "sha256": "c740896ca8971463c0db7ba5d417542cdf8ab4cc1eff1b5c0c1f491daf29023c",
+      "bytes": 314
+    }
+  },
+  "functionalQualification": {
+    "uniqueCasesPassed": 33,
+    "initialCases": 33,
+    "initialPassed": 32,
+    "initialFailed": 1,
+    "initialExitCode": 1,
+    "retainedFailure": "New unsupported-selector test JSON.stringify of BigInt; product assertions were not the cause",
+    "retryOnlyChangedCase": true,
+    "retryCasesPassed": 1,
+    "retryExitCode": 0,
+    "onlyRetryChange": "BigInt replacer in test diagnostic assertion; product sources unchanged"
+  },
+  "ciQualification": {
+    "purePathSelectionTestsPassed": 2,
+    "yamlParsed": true,
+    "githubJobsExecuted": false,
+    "dependencyLockChanged": false
+  },
+  "scenarioScope": [
+    "reviewed configuration snapshot before SDK awaits",
+    "mutable receipt/header reorg refusal",
+    "canonical hash pinned code/calls and required gas provider extension",
+    "ABA refusal and no height fallback",
+    "bounded read-only RPC envelopes, response size and safe errors"
+  ],
+  "limitations": [
+    "Mocks and local-loopback transport only",
+    "Actual Base support for the required estimateGas hash extension unqualified",
+    "No Base token to native NANO conversion or backing implemented",
+    "No bridge implementation or cryptographic source finality proof"
+  ],
+  "cppCompilationCommands": 0,
+  "dockerImageBuilds": 0,
+  "nodeRuntimeStarted": false,
+  "newConsensusSignatures": 0,
+  "transactionsBroadcast": 0,
+  "fundsUsed": false,
+  "productionQualified": false
+}

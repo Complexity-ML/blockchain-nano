@@ -50,7 +50,7 @@ test('simulation uses creator, a single pinned block and read-only RPC',async()=
   const result=await preview(copy(),`http://127.0.0.1:${server.address().port}`);
   assert.equal(result.simulation.performed,true);
   assert.equal(result.simulation.blockHash,hash);
-  for(const q of calls.filter(q=>['eth_getCode','eth_call','eth_estimateGas'].includes(q.method))) assert.equal(q.params[1],block);
+  for(const q of calls.filter(q=>['eth_getCode','eth_call','eth_estimateGas'].includes(q.method))) assert.deepEqual(q.params[1],{blockHash:hash,requireCanonical:true});
   for(const q of calls.filter(q=>['eth_call','eth_estimateGas'].includes(q.method)&&q.params[0].data!=='0x313ce567')) assert.equal(q.params[0].from.toLowerCase(),fixture.creator);
   assert.ok(calls.every(q=>!q.method.startsWith('eth_send')));
  } finally {await new Promise(resolve=>server.close(resolve));}

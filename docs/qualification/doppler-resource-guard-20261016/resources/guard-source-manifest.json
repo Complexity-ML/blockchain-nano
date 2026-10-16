@@ -1,0 +1,50 @@
+{
+  "format": "nano-external-resource-guard-source-proposal-v1",
+  "status": "FROZEN_SOURCE_ONLY",
+  "sourceOnly": true,
+  "independentSourceReview": "GO; no execution",
+  "payloads": [
+    {
+      "path": "campaign-resource-guard.mjs",
+      "target": "scripts/operations/campaign-resource-guard.mjs",
+      "sha256": "218aea74551b7c9e59b173787bb3b0c1409b44256a0acb5b6cbc33136b5b756b",
+      "bytes": 22217
+    },
+    {
+      "path": "campaign-resource-guard.test.mjs",
+      "target": "scripts/operations/campaign-resource-guard.test.mjs",
+      "sha256": "36e80bdfdc8285562dc46115228de49346ea311bce4864a1fb8073d1fe01f0fd",
+      "bytes": 6853
+    },
+    {
+      "path": "README.md",
+      "target": null,
+      "sha256": "1d7710e2b32d20ccc9bc45c39bea32721b92c4e06a6e1a4e4b159d8e39e21df5",
+      "bytes": 8926
+    }
+  ],
+  "payloadBytes": 37996,
+  "expectedPureTests": 8,
+  "authorExecutedTests": false,
+  "authorExecutedProbes": false,
+  "campaignAuthorizedByThisPackage": false,
+  "codeAdmissionsChanged": false,
+  "productionQualified": false,
+  "reviewedExistingSources": [
+    "tests/multihost/run.mjs",
+    "tests/multihost/resource-summary.mjs",
+    "tests/multihost/monitor.mjs",
+    "tests/multihost/lifecycle-owner.mjs"
+  ],
+  "rootSelectedTestBounds": {
+    "startupDiskGiB": 4,
+    "runningDiskGiB": 2,
+    "startupMemoryGiB": 3,
+    "runningMemoryGiB": 1,
+    "intervalMs": 10000,
+    "sampleTimeoutMs": 5000,
+    "maximumCampaignMs": 25200000,
+    "launcherCleanupGraceMs": 1800000,
+    "samplerCleanupMs": 15000
+  }
+}

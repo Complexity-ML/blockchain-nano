@@ -1,0 +1,90 @@
+{
+  "format": "nano-root-resource-guard-qualification-v1",
+  "sourceBaseRevision": "aa09f7f683e9e14d18a7af7c38ba0d5c91ee7ce0",
+  "effectiveCppSourceRevision": "bd11bd9f9dedf3f003b707d1c38fb1ecbabae91d",
+  "passed": true,
+  "sourceManifest": {
+    "sha256": "e516b65a3e64178bb6066777ed1f69ee1a759547b1c1daa1bc78c22b8f3969df",
+    "bytes": 1535
+  },
+  "sourcePins": {
+    "scripts/operations/campaign-resource-guard.mjs": {
+      "sha256": "218aea74551b7c9e59b173787bb3b0c1409b44256a0acb5b6cbc33136b5b756b",
+      "bytes": 22217
+    },
+    "scripts/operations/campaign-resource-guard.test.mjs": {
+      "sha256": "36e80bdfdc8285562dc46115228de49346ea311bce4864a1fb8073d1fe01f0fd",
+      "bytes": 6853
+    }
+  },
+  "pureTestsPassed": 8,
+  "actualStartupSamples": 3,
+  "minimumSampledCapacity": {
+    "macHost": {
+      "diskBytes": "317926850560",
+      "memoryBytes": "7736000512",
+      "memoryMetric": "mac-free-inactive-speculative-estimate"
+    },
+    "macDockerVm": {
+      "diskBytes": "911776034816",
+      "memoryBytes": "7694680064",
+      "memoryMetric": "linux-MemAvailable"
+    },
+    "vpsHost": {
+      "diskBytes": "6908792832",
+      "memoryBytes": "7197163520",
+      "memoryMetric": "linux-MemAvailable"
+    }
+  },
+  "sampleElapsedMs": [
+    932.4571659999999,
+    661.7693340000005,
+    1348.5778750000027
+  ],
+  "temporarySamplerCreatedAndRemoved": true,
+  "independentPostProbeSamplerContainerCount": 0,
+  "existingVolumeNameDriverLabelsUnchanged": true,
+  "readOnlyExistingVolumeMount": true,
+  "dataFilesReadFromVolume": false,
+  "privateConfigTransferredToVps": false,
+  "vpsCommandScope": "Fixed read-only df and MemAvailable over authorized SSH",
+  "campaignLauncherStarted": false,
+  "campaignOutputCreated": false,
+  "newSeedOrKeyCreated": false,
+  "realSignalsToCampaignProcesses": 0,
+  "signalPolicyTestsUseInjectedChildren": true,
+  "privateCampaignAuthorized": false,
+  "longRunningResourceQualification": false,
+  "virtualDiskCapacityBoundedByMacHostCapacity": true,
+  "productionQualified": false,
+  "payloadPins": {
+    "pure-tests.tap": {
+      "sha256": "dcbe23beaab7a251ad8b5aa769f57f7a0cdfd33ff10099d49a59c65b2fdb9d29",
+      "bytes": 888
+    },
+    "probe-result-public.json": {
+      "sha256": "3d1c46002ac9f6ad565120496b5ab937456650074c25092f54a12b439b8fa01a",
+      "bytes": 321
+    },
+    "resources.public.jsonl": {
+      "sha256": "b11fa6508c238127b94dd404d9f7c33bac62d08a79b1f88bfc149d59a6c9c9c1",
+      "bytes": 2101
+    },
+    "probe-stdout.public.log": {
+      "sha256": "3d1c46002ac9f6ad565120496b5ab937456650074c25092f54a12b439b8fa01a",
+      "bytes": 321
+    },
+    "probe-stderr.public.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "guard-source-manifest.json": {
+      "sha256": "e516b65a3e64178bb6066777ed1f69ee1a759547b1c1daa1bc78c22b8f3969df",
+      "bytes": 1535
+    },
+    "guard-source-README.md": {
+      "sha256": "1d7710e2b32d20ccc9bc45c39bea32721b92c4e06a6e1a4e4b159d8e39e21df5",
+      "bytes": 8926
+    }
+  }
+}

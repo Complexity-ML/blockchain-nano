@@ -32,11 +32,23 @@ are not a deployment. Output creation is exclusive to avoid overwriting an earli
 review. Any change to time/parameters produces a new review and requires review again.
 No private key or RPC URL is recorded.
 
-With `BASE_RPC_URL`, the adapter checks chain 8453, deployed module bytecode and
-native USDC decimals, then simulates and estimates gas from the creator at a single
-block number, checking its hash again. Only chain/block/code/call/estimate RPC methods
-are allowed. Module hashes are recorded observations, not comparison to an audited
-allowlist. A rejected preflight/simulation is saved as `simulation-rejected` and the
+With `BASE_RPC_URL`, the adapter snapshots the reviewed terms and reference header,
+checks chain 8453, deployed module bytecode and native USDC decimals, then simulates
+from the creator. Every code/call request uses `{blockHash, requireCanonical:true}`.
+Gas estimation requires the SAME hash selector as a provider extension; unlike
+`eth_getCode`/`eth_call`, this extension is not standardized by EIP-1898. Unsupported
+providers are rejected without a block-number/latest fallback. Only a complete
+successful pass followed by the header fence sets `referenceHashPinned:true`.
+This does not prove cryptographic finality or future transaction execution. Only
+chain/block/code/call/estimate RPC methods are allowed. Module hashes are recorded
+observations, not comparison to an audited allowlist. The shared bounded transport
+uses the fixed five-method `createLaunchRpc` factory; `createSourceRpc` retains
+its original four observer methods. HTTPS (HTTP loopback only), no redirects or
+retries, matching JSON-RPC IDs and exactly one result/error are required. Each
+request defaults to 10 seconds including its body and 1 MiB actual response bytes.
+Rejection diagnostics retain only method, safe-integer code and revert hex up to
+4 KiB, without provider messages or endpoint URLs. No wallet/sign/send method is
+available. These are per-request limits, not a whole-preview deadline. A rejected preflight/simulation is saved as `simulation-rejected` and the
 CLI exits 1. Offline encoding and mocked RPC tests do not prove on-chain acceptance.
 The synthetic fixture reverted on Base during the first real read-only attempt;
 no transaction was sent. The rejection was decoded as `InvalidGamma` (0x248d3d6a). The SDK automatic
@@ -44,6 +56,9 @@ value 120 failed the on-chain constructor; an explicit synthetic value 20040
 passed creation simulation and gas estimation on Base (10,912,762 gas). Token
 and hook return addresses match SDK predictions. Both failed and successful
 review artifacts are retained under `docs/qualification/doppler-unsigned-preview-20261004`.
+Those historical simulations used height selectors and do not qualify the new
+strict hash-estimation extension on a current Base provider; its actual support
+remains unqualified until a separately authorized read-only probe succeeds.
 Real economic terms still need configuration and qualification.
 
 Supported governance choices are explicit `noOp`/`launchpad`; migration choices are

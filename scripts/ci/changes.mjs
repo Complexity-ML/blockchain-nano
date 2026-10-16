@@ -4,11 +4,11 @@ import {pathToFileURL} from 'node:url';
 const sha=value=>typeof value==='string'&&/^[0-9a-f]{40}$/.test(value);
 export function coreRequired(paths){
  if(!Array.isArray(paths)||paths.some(p=>typeof p!=='string'||!p||p.startsWith('/')||p.includes('\0')||p.split('/').includes('..')))throw Error('Invalid change paths');
- return paths.some(p=>/^(src|include|network|cmake|third_party|genesis)\//.test(p)||/^tests\/(fixtures\/|.*\.(cpp|hpp|h)$)/.test(p)||['CMakeLists.txt','Dockerfile','dependencies.lock.json','scripts/ci/core.sh'].includes(p)||p.startsWith('.github/workflows/'));
+ return paths.some(p=>/^(src|include|network|cmake|third_party|genesis)\//.test(p)||/^tests\/(fixtures\/|.*\.(cpp|hpp|h)$)/.test(p)||['CMakeLists.txt','Dockerfile','dependencies.lock.json','scripts/ci/core.sh'].includes(p)||(p.startsWith('.github/workflows/')&&p!=='.github/workflows/doppler-review.yml'));
 }
 export function networkRequired(paths){
  coreRequired(paths); // Apply the same path validation before classifying.
- return paths.some(p=>/^(src|include|network|cmake)\//.test(p)||p==='third_party/json.hpp'||['scripts/build-libp2p.sh','scripts/ci/network.sh','scripts/ci/check-network.cmake','scripts/ci/changes.mjs','dependencies.lock.json','Dockerfile'].includes(p)||p.startsWith('.github/workflows/'));
+ return paths.some(p=>/^(src|include|network|cmake)\//.test(p)||p==='third_party/json.hpp'||['scripts/build-libp2p.sh','scripts/ci/network.sh','scripts/ci/check-network.cmake','scripts/ci/changes.mjs','dependencies.lock.json','Dockerfile'].includes(p)||(p.startsWith('.github/workflows/')&&p!=='.github/workflows/doppler-review.yml'));
 }
 export function selectChanges(event,eventName,head,git=args=>execFileSync('git',args,{encoding:'utf8',maxBuffer:16*1024*1024})){
  if(!sha(head)||git(['rev-parse','HEAD']).trim()!==head)throw Error('Unbound checkout revision');

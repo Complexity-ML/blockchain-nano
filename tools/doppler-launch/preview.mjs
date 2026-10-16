@@ -1,8 +1,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { DopplerSDK, getAddresses, airlockAbi } from '@whetstone-research/doppler-sdk/evm';
-import { createPublicClient, custom, encodeFunctionData, getAddress, keccak256, zeroAddress } from 'viem';
+import { createPublicClient, custom, encodeFunctionData, getAddress, keccak256, zeroAddress, decodeFunctionResult } from 'viem';
 import { base } from 'viem/chains';
+import {createLaunchRpc} from '../bridge-source/rpc.mjs';
 
 export const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const integer = (x, name) => {
@@ -65,19 +66,14 @@ export function parameters(c) {
 }
 
 export async function preview(c, rpc) {
+  // Capture the reviewed terms before SDK/RPC awaits can observe caller reloads.
+  c = structuredClone(c);
   const params = parameters(c);
   const rpcErrors=[];
-  const allowed = new Set(['eth_chainId','eth_getBlockByNumber','eth_getCode','eth_call','eth_estimateGas']);
+  const launchRpc = rpc ? createLaunchRpc(rpc,{onRpcError:diagnostic=>rpcErrors.push(diagnostic)}) : null;
   const client = createPublicClient({chain:base, transport:custom({request:async ({method,params:args}) => {
-    if (!rpc || !allowed.has(method)) throw new Error(`RPC disabled: ${method}`);
-    const response = await fetch(rpc,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params:args}),signal:AbortSignal.timeout(30000)});
-    if (!response.ok) throw new Error(`RPC HTTP ${response.status}`);
-    const body=await response.json();
-    if (body.error) {
-      rpcErrors.push({method,code:body.error.code,message:body.error.message,data:body.error.data});
-      throw new Error(`RPC ${method}: ${body.error.message}`);
-    }
-    return body.result;
+    if (!launchRpc) throw new Error(`RPC disabled: ${method}`);
+    return launchRpc.request({method,params:args??[]});
   }},{retryCount:0})});
   const sdk = new DopplerSDK({publicClient:client,chainId:8453});
   const {createParams,tokenAddress,hookAddress} = await sdk.factory.encodeCreateDynamicAuctionParams(params);
@@ -87,25 +83,34 @@ export async function preview(c, rpc) {
   if (rpc) {
     try {
     if (await client.getChainId() !== 8453) throw new Error('RPC chain mismatch');
-    const block=await client.getBlock({blockTag:'latest'});
+    const observed=await client.getBlock({blockTag:'latest'});
+    // Do not keep a provider/cache header object across the following awaits.
+    const block={number:observed.number,hash:observed.hash,timestamp:observed.timestamp};
+    if (typeof block.number!=='bigint' || block.number<0n || typeof block.timestamp!=='bigint' || !/^0x[0-9a-f]{64}$/i.test(block.hash ?? '')) throw new Error('Invalid reference block');
+    const selector={blockHash:block.hash,requireCanonical:true};
     if (BigInt(params.blockTimestamp + params.startTimeOffset) <= block.timestamp) throw new Error('Launch start is not in the future; refresh referenceTimestamp and review new calldata');
     const modules = {};
     for (const [name,address] of Object.entries({airlock:to,numeraire:USDC,tokenFactory:createParams.tokenFactory,governanceFactory:createParams.governanceFactory,poolInitializer:createParams.poolInitializer,liquidityMigrator:createParams.liquidityMigrator})) {
-      const code=await client.getCode({address,blockNumber:block.number});
+      const code=await client.request({method:'eth_getCode',params:[address,selector]});
       if (!code || code==='0x') throw new Error(`Missing deployed code: ${name}`);
       modules[name]={address,codeHash:keccak256(code)};
     }
-    const decimals = await client.call({to:USDC,data:'0x313ce567',blockNumber:block.number});
-    if (!decimals.data || BigInt(decimals.data)!==6n) throw new Error('Unexpected USDC decimals');
-    result.simulation={performed:true,success:false,blockNumber:block.number,blockHash:block.hash,modules};
-    const simulated=await client.simulateContract({address:to,abi:airlockAbi,functionName:'create',args:[createParams],account:params.userAddress,blockNumber:block.number});
-    if (getAddress(simulated.result[0]) !== getAddress(tokenAddress) || getAddress(simulated.result[1]) !== getAddress(hookAddress)) throw new Error('Simulated token/hook differ from SDK predictions');
-    const gas=await client.estimateGas({account:params.userAddress,to,data,blockNumber:block.number});
-    if ((await client.getBlock({blockNumber:block.number})).hash !== block.hash) throw new Error('Reference block changed');
-    result.simulation={performed:true,success:true,blockNumber:block.number,blockHash:block.hash,gas,modules,returnedAddresses:simulated.result};
+    const decimals = await client.request({method:'eth_call',params:[{to:USDC,data:'0x313ce567'},selector]});
+    if (!decimals || BigInt(decimals)!==6n) throw new Error('Unexpected USDC decimals');
+    result.simulation={performed:true,success:false,referenceHashPinned:false,gasEstimateHashExtensionRequired:true,blockNumber:block.number,blockHash:block.hash,modules};
+    const call={from:params.userAddress,to,data,value:'0x0'};
+    const simulated=decodeFunctionResult({abi:airlockAbi,functionName:'create',data:await client.request({method:'eth_call',params:[call,selector]})});
+    if (getAddress(simulated[0]) !== getAddress(tokenAddress) || getAddress(simulated[1]) !== getAddress(hookAddress)) throw new Error('Simulated token/hook differ from SDK predictions');
+    // Hash selection for estimateGas is a required provider extension, not EIP-1898.
+    // Refuse unsupported providers; never fall back to a height or latest state.
+    const estimate=await client.request({method:'eth_estimateGas',params:[call,selector]});
+    if (typeof estimate!=='string' || !/^0x[1-9a-f][0-9a-f]{0,63}$/i.test(estimate)) throw new Error('Invalid gas estimate');
+    const gas=BigInt(estimate),after=await client.getBlock({blockNumber:block.number});
+    if (after.number!==block.number || after.hash!==block.hash) throw new Error('Reference block changed');
+    result.simulation={performed:true,success:true,referenceHashPinned:true,gasEstimateHashExtensionRequired:true,gasEstimateHashExtensionAccepted:true,blockNumber:block.number,blockHash:block.hash,gas,modules,returnedAddresses:simulated};
     } catch(e) {
       result.status='simulation-rejected';
-      result.simulation={...result.simulation,performed:true,success:false,error:e.shortMessage ?? e.message.split('\n')[0],rpcErrors};
+      result.simulation={...result.simulation,performed:true,success:false,referenceHashPinned:false,error:e.shortMessage ?? e.message.split('\n')[0],rpcErrors};
     }
   }
   return result;

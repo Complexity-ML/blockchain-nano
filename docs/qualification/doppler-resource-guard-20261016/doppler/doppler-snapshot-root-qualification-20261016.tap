@@ -1,0 +1,51 @@
+✔ source transport binds distinct concurrent IDs and permits null result (28.168125ms)
+✔ source transport refuses wrong ID (3.960042ms)
+✔ source transport refuses wrong version (1.486625ms)
+✔ source transport refuses result and error (1.299917ms)
+✔ source transport refuses neither result nor error (1.362125ms)
+✔ source transport refuses batch (1.765625ms)
+✔ source transport refuses null envelope (1.239875ms)
+✔ source transport rejects provider errors without exposing their message (1.867834ms)
+✔ source transport bounds chunked bytes without content-length (2.280041ms)
+✔ source transport rejects excessive declared length (3.656292ms)
+✔ source transport deadline also covers a stalled body (101.278417ms)
+✔ source transport never follows a redirect or retries (1.150666ms)
+✔ source transport refuses HTTP failures (0.648167ms)
+✔ source transport refuses invalid JSON and invalid UTF-8 (1.150167ms)
+✔ source transport rejects unsafe endpoints, budgets, writes and oversized requests (0.243791ms)
+✔ all financial reads use the canonical receipt hash, never a height-only selector (5.581292ms)
+✔ receipt from a replaced block is rejected before state reads (0.298709ms)
+✔ reorg at the end of verification invalidates the complete financial proof (0.786125ms)
+✔ canonical hash unavailable during state reads is never retried by height (0.192208ms)
+✔ removed or cross-transaction/block logs and swapped event arguments are refused (0.566542ms)
+✔ offline preview snapshots reviewed terms before SDK awaits without freezing caller data (85.18725ms)
+✔ mutable provider receipt cannot hide a canonical A to B reorg during migration reads (1.702125ms)
+✔ successful preview pins all code, call and gas-extension reads to one canonical hash (161.826834ms)
+✔ preview refuses an ABA canonical oscillation instead of accepting height-only state B (73.78325ms)
+✖ unsupported hash selectors reject without height/latest fallback or diagnostic secrets (71.115083ms)
+✔ final header change rejects even after all hash-bound requests succeed (70.118917ms)
+✔ launch transport refuses mismatched IDs, ambiguous envelopes, oversized and truncated bodies (0.576084ms)
+✔ both factories keep fixed read-only method sets and bounded revert diagnostics (0.290125ms)
+✔ official SDK calldata decodes to explicit supply, USDC and migration (156.832792ms)
+✔ reject ambiguous monetary units, absent inflation, wrong network and reserve exhaustion (0.32975ms)
+✔ wrapper and SDK reject incompatible Dynamic tick direction and spacing (0.2885ms)
+✔ simulation uses creator, a single pinned block and read-only RPC (164.478125ms)
+✔ failed chain preflight is retained as rejection, never a successful simulation (75.754958ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 32
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 806.144667
+
+✖ failing tests:
+
+test at tools/doppler-launch/review-snapshot.test.mjs:100:1
+✖ unsupported hash selectors reject without height/latest fallback or diagnostic secrets (71.115083ms)
+  TypeError: Do not know how to serialize a BigInt
+      at JSON.stringify (<anonymous>)
+      at TestContext.<anonymous> (file:///Users/boris/Dev/blockchain-nano/tools/doppler-launch/review-snapshot.test.mjs:105:108)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7)
