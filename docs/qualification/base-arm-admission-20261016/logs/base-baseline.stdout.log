@@ -1,0 +1,63 @@
+▶ advanced finalized responses stay fixed across the final canonical-header await
+  ✖ advanced finalized: advanced-header (1.646625ms)
+  ✖ advanced finalized: second-receipt (0.169ms)
+  ✖ advanced finalized: parallel-fulfillment (2.21475ms)
+✖ advanced finalized responses stay fixed across the final canonical-header await (4.777167ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 0
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 70.707166
+
+✖ failing tests:
+
+test at finality.test.mjs:88:90
+✖ advanced finalized: advanced-header (1.646625ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/base-finality-snapshot-qualification-root-20261016-01/baseline/finality.test.mjs:117:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/base-finality-snapshot-qualification-root-20261016-01/baseline/finality.test.mjs:88:82)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Advanced finalized source checkpoint is not canonical/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at finality.test.mjs:88:90
+✖ advanced finalized: second-receipt (0.169ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/base-finality-snapshot-qualification-root-20261016-01/baseline/finality.test.mjs:117:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/base-finality-snapshot-qualification-root-20261016-01/baseline/finality.test.mjs:88:82)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Source receipt changed during observation/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at finality.test.mjs:88:90
+✖ advanced finalized: parallel-fulfillment (2.21475ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/base-finality-snapshot-qualification-root-20261016-01/baseline/finality.test.mjs:117:3)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/base-finality-snapshot-qualification-root-20261016-01/baseline/finality.test.mjs:88:82)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /Advanced finalized source checkpoint is not canonical/,
+    operator: 'rejects',
+    diff: 'simple'
+  }

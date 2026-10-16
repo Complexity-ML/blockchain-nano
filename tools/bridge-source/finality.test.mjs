@@ -82,3 +82,43 @@ test('shared header cache cannot rewrite the saved finalized checkpoint',async()
  });
  await assert.rejects(observeBaseFinalizedReceipt(rpc,{transactionHash:tx,event}),/checkpoint changed/);
 });
+
+// New dedicated regression: the old observer accepts all three inconsistencies.
+test('advanced finalized responses stay fixed across the final canonical-header await',async t=>{
+ for(const attack of ['advanced-header','second-receipt','parallel-fulfillment'])await t.test(`advanced finalized: ${attack}`,async()=>{
+  let advanced,second,canonicalReads=0,deferredMutations=0;
+  const {rpc,calls}=fixture(o=>{
+   if(o.method==='eth_getBlockByNumber'&&o.params[0]==='finalized'&&o.nth===2){
+    advanced={number:'0xc',hash:attack==='parallel-fulfillment'?block:final};return advanced;
+   }
+   if(o.method==='eth_getTransactionReceipt'&&o.nth===2){
+    second=o.value;
+    if(attack==='second-receipt')second.logs[0].data='0x5678';
+    return second;
+   }
+   if(o.method==='eth_chainId'&&o.nth===2&&attack==='parallel-fulfillment'){
+    // This response remains pending after finalized has fulfilled. A later cache
+    // refresh must not erase that already-received noncanonical finalized hash.
+    return new Promise(resolve=>setImmediate(()=>{++deferredMutations;advanced.hash=final;resolve('0x2105');}));
+   }
+   if(o.method==='eth_getBlockByNumber'&&o.params[0]==='0xc'){
+    ++canonicalReads;
+    if(attack==='advanced-header'){
+     // Cache overwrites the earlier finalized response to match a different hash.
+     advanced.hash=block;return {number:'0xc',hash:block};
+    }
+    if(attack==='second-receipt'){
+     // Cache erases an event discrepancy present in the second receipt.
+     second.logs[0].data='0x1234';
+    }
+    return {number:'0xc',hash:final};
+   }
+  });
+  await assert.rejects(observeBaseFinalizedReceipt(rpc,{transactionHash:tx,event}),
+   attack==='second-receipt'?/Source receipt changed during observation/:/Advanced finalized source checkpoint is not canonical/);
+  assert.equal(canonicalReads,1);
+  assert.equal(deferredMutations,attack==='parallel-fulfillment'?1:0);
+  assert.equal(calls.filter(c=>c.method==='eth_getTransactionReceipt').length,2);
+  assert.ok(calls.every(c=>!/^eth_(send|sign)/.test(c.method)));
+ });
+});

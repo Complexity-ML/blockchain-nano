@@ -1,0 +1,197 @@
+TAP version 13
+# Subtest: finalized canonical event is observed with explicit mint prohibition
+ok 1 - finalized canonical event is observed with explicit mint prohibition
+  ---
+  duration_ms: 1.845083
+  type: 'test'
+  ...
+# Subtest: source gate rejects wrongChain
+ok 2 - source gate rejects wrongChain
+  ---
+  duration_ms: 0.152583
+  type: 'test'
+  ...
+# Subtest: source gate rejects chainChanged
+ok 3 - source gate rejects chainChanged
+  ---
+  duration_ms: 0.130084
+  type: 'test'
+  ...
+# Subtest: source gate rejects notFinalized
+ok 4 - source gate rejects notFinalized
+  ---
+  duration_ms: 0.091166
+  type: 'test'
+  ...
+# Subtest: source gate rejects wrongTransaction
+ok 5 - source gate rejects wrongTransaction
+  ---
+  duration_ms: 0.062
+  type: 'test'
+  ...
+# Subtest: source gate rejects failedReceipt
+ok 6 - source gate rejects failedReceipt
+  ---
+  duration_ms: 0.078
+  type: 'test'
+  ...
+# Subtest: source gate rejects removedLog
+ok 7 - source gate rejects removedLog
+  ---
+  duration_ms: 0.067083
+  type: 'test'
+  ...
+# Subtest: source gate rejects logBlockMismatch
+ok 8 - source gate rejects logBlockMismatch
+  ---
+  duration_ms: 0.053083
+  type: 'test'
+  ...
+# Subtest: source gate rejects duplicatedLog
+ok 9 - source gate rejects duplicatedLog
+  ---
+  duration_ms: 0.079917
+  type: 'test'
+  ...
+# Subtest: source gate rejects wrongEmitter
+ok 10 - source gate rejects wrongEmitter
+  ---
+  duration_ms: 0.105625
+  type: 'test'
+  ...
+# Subtest: source gate rejects wrongPayload
+ok 11 - source gate rejects wrongPayload
+  ---
+  duration_ms: 0.065958
+  type: 'test'
+  ...
+# Subtest: source gate rejects wrongTopic
+ok 12 - source gate rejects wrongTopic
+  ---
+  duration_ms: 0.065917
+  type: 'test'
+  ...
+# Subtest: source gate rejects noncanonicalQuantity
+ok 13 - source gate rejects noncanonicalQuantity
+  ---
+  duration_ms: 0.042542
+  type: 'test'
+  ...
+# Subtest: source gate rejects missingCode
+ok 14 - source gate rejects missingCode
+  ---
+  duration_ms: 0.046
+  type: 'test'
+  ...
+# Subtest: source gate rejects changedCode
+ok 15 - source gate rejects changedCode
+  ---
+  duration_ms: 0.051917
+  type: 'test'
+  ...
+# Subtest: source gate rejects receiptReorg
+ok 16 - source gate rejects receiptReorg
+  ---
+  duration_ms: 0.08275
+  type: 'test'
+  ...
+# Subtest: source gate rejects finalizedReorg
+ok 17 - source gate rejects finalizedReorg
+  ---
+  duration_ms: 0.077375
+  type: 'test'
+  ...
+# Subtest: source gate rejects finalizedRegression
+ok 18 - source gate rejects finalizedRegression
+  ---
+  duration_ms: 0.086833
+  type: 'test'
+  ...
+# Subtest: source gate rejects receiptChanged
+ok 19 - source gate rejects receiptChanged
+  ---
+  duration_ms: 0.074
+  type: 'test'
+  ...
+# Subtest: source gate rejects excessiveLogs
+ok 20 - source gate rejects excessiveLogs
+  ---
+  duration_ms: 0.039083
+  type: 'test'
+  ...
+# Subtest: unsupported EIP-1898 is fatal without a block-number fallback
+ok 21 - unsupported EIP-1898 is fatal without a block-number fallback
+  ---
+  duration_ms: 0.131292
+  type: 'test'
+  ...
+# Subtest: invalid reviewed event is rejected before RPC access
+ok 22 - invalid reviewed event is rejected before RPC access
+  ---
+  duration_ms: 0.159625
+  type: 'test'
+  ...
+# Subtest: finalized hash replacement at the same height is rejected
+ok 23 - finalized hash replacement at the same height is rejected
+  ---
+  duration_ms: 0.428125
+  type: 'test'
+  ...
+# Subtest: advancing finalized head is accepted only with its matching canonical header
+ok 24 - advancing finalized head is accepted only with its matching canonical header
+  ---
+  duration_ms: 0.163541
+  type: 'test'
+  ...
+# Subtest: reviewed event remains fixed when the caller changes its configuration during RPC
+ok 25 - reviewed event remains fixed when the caller changes its configuration during RPC
+  ---
+  duration_ms: 0.084125
+  type: 'test'
+  ...
+# Subtest: shared receipt cache cannot erase evidence of a changed event
+ok 26 - shared receipt cache cannot erase evidence of a changed event
+  ---
+  duration_ms: 0.09075
+  type: 'test'
+  ...
+# Subtest: shared header cache cannot rewrite the saved finalized checkpoint
+ok 27 - shared header cache cannot rewrite the saved finalized checkpoint
+  ---
+  duration_ms: 0.067625
+  type: 'test'
+  ...
+# Subtest: advanced finalized responses stay fixed across the final canonical-header await
+    # Subtest: advanced finalized: advanced-header
+    ok 1 - advanced finalized: advanced-header
+      ---
+      duration_ms: 0.1405
+      type: 'test'
+      ...
+    # Subtest: advanced finalized: second-receipt
+    ok 2 - advanced finalized: second-receipt
+      ---
+      duration_ms: 0.06425
+      type: 'test'
+      ...
+    # Subtest: advanced finalized: parallel-fulfillment
+    ok 3 - advanced finalized: parallel-fulfillment
+      ---
+      duration_ms: 3.022166
+      type: 'test'
+      ...
+    1..3
+ok 28 - advanced finalized responses stay fixed across the final canonical-header await
+  ---
+  duration_ms: 3.378459
+  type: 'test'
+  ...
+1..28
+# tests 31
+# suites 0
+# pass 31
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 66.55

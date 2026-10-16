@@ -29,13 +29,16 @@ export async function observeBaseFinalizedReceipt(rpc,{transactionHash,event}={}
  // A configuration reload must not change the reviewed event during awaits.
  event={emitter:event.emitter,topics:[...event.topics],data:event.data,logIndex:event.logIndex,codeSha256:event.codeSha256};
  const request=(method,params)=>rpc.request({method,params});
+ // Project each response as it arrives, before any subsequent RPC await.
+ const requestHeader=tag=>Promise.resolve(request('eth_getBlockByNumber',[tag,false])).then(header);
+ const requestReceipt=()=>Promise.resolve(request('eth_getTransactionReceipt',[transactionHash])).then(value=>receipt(value,transactionHash));
  check(await request('eth_chainId',[])==='0x2105','Base mainnet chain ID required');
  // Base finalized is derived from L1 finality; never substitute safe/latest
  // or a fixed number of sequencer confirmations.
- const finalized=header(await request('eth_getBlockByNumber',['finalized',false]));
- const first=receipt(await request('eth_getTransactionReceipt',[transactionHash]),transactionHash);
+ const finalized=await requestHeader('finalized');
+ const first=await requestReceipt();
  check(quantity(first.blockNumber)<=quantity(finalized.number),'Receipt is newer than finalized source head');
- const canonical=header(await request('eth_getBlockByNumber',[first.blockNumber,false]));
+ const canonical=await requestHeader(first.blockNumber);
  check(canonical.number===first.blockNumber&&canonical.hash===first.blockHash,'Source receipt block is not canonical');
  const candidates=first.logs.filter(l=>l.logIndex===event.logIndex);
  check(candidates.length===1,'Exactly one selected source log required');
@@ -44,17 +47,17 @@ export async function observeBaseFinalizedReceipt(rpc,{transactionHash,event}={}
  check(data(code)&&code!=='0x','Source emitter code unavailable at canonical receipt hash');
  const digest=createHash('sha256').update(Buffer.from(code.slice(2),'hex')).digest('hex');check(digest===event.codeSha256,'Source emitter code SHA-256 differs');
  const [after,finalizedAtHeight,latestFinalized,second,chain]=await Promise.all([
-  request('eth_getBlockByNumber',[first.blockNumber,false]),
-  request('eth_getBlockByNumber',[finalized.number,false]),
-  request('eth_getBlockByNumber',['finalized',false]),
-  request('eth_getTransactionReceipt',[transactionHash]),request('eth_chainId',[])
+  requestHeader(first.blockNumber),
+  requestHeader(finalized.number),
+  requestHeader('finalized'),
+  requestReceipt(),request('eth_chainId',[])
  ]);
  check(chain==='0x2105','Source chain ID changed during observation');
- check(header(after).number===first.blockNumber&&after.hash===first.blockHash,'Canonical source block changed during observation');
- check(header(finalizedAtHeight).number===finalized.number&&finalizedAtHeight.hash===finalized.hash,'Finalized source checkpoint changed during observation');
- check(quantity(header(latestFinalized).number)>=quantity(finalized.number),'Finalized source height regressed');
+ check(after.number===first.blockNumber&&after.hash===first.blockHash,'Canonical source block changed during observation');
+ check(finalizedAtHeight.number===finalized.number&&finalizedAtHeight.hash===finalized.hash,'Finalized source checkpoint changed during observation');
+ check(quantity(latestFinalized.number)>=quantity(finalized.number),'Finalized source height regressed');
  if(latestFinalized.number===finalized.number)check(latestFinalized.hash===finalized.hash,'Finalized source hash changed at same height');
- else{const currentCanonical=header(await request('eth_getBlockByNumber',[latestFinalized.number,false]));check(currentCanonical.number===latestFinalized.number&&currentCanonical.hash===latestFinalized.hash,'Advanced finalized source checkpoint is not canonical');}
- check(projection(receipt(second,transactionHash))===projection(first),'Source receipt changed during observation');
+ else{const currentCanonical=await requestHeader(latestFinalized.number);check(currentCanonical.number===latestFinalized.number&&currentCanonical.hash===latestFinalized.hash,'Advanced finalized source checkpoint is not canonical');}
+ check(projection(second)===projection(first),'Source receipt changed during observation');
  return {format:'nanobees-base-source-observation-v1',chainId:8453,transactionHash,blockNumber:first.blockNumber,blockHash:first.blockHash,sourceEventKey:`8453:${transactionHash}:${selected.logIndex}`,event:selected,emitterCodeSha256:digest,finalizedNumber:finalized.number,finalizedHash:finalized.hash,rpcFinalizedObservation:true,canonicalHashPinned:true,cryptographicFinalityVerified:false,eligibleForMint:false,sourceTrust:'RPC chain/canonicality/finality assertions only; no authenticated L1 derivation or receipt inclusion proof',productionQualified:false};
 }
