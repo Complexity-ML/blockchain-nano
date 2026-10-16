@@ -125,5 +125,49 @@ void handoff_lifetime(const Fixture& f,const fs::path& inputs){
  }
  emit("startup-deadline-handoff-and-retained-callback-lifetime",{{"retainedCheckSafeAfterScope",true},{"deadlineInactiveBeforeWorkers",true},{"realTimePastStartupBudget",true},{"legacyAndBudgetedRuntimeReturnsObserved",2},{"coldReadAfterHandoff",true}});
 }
+// Dedicated startup-policy refusals; the historical deadline suite is not run.
+int maintenance_flags_self_test(){
+ Temp inputs;const auto f=fixture(inputs.path);Temp t;const auto primary=t.path/"primary",witness=t.path/"witness",absent_profile=t.path/"absent-profile";
+ {Blockchain initialize(primary,f.genesis);}const auto original=rows(primary);
+ size_t refusals=0,clock_reads=0;const char* fields[]={"automaticPruning","historicalStatePruning","fragmentCheckpointMigration"};
+ const auto started=std::chrono::steady_clock::now();
+ {
+  Blockchain owner(primary,f.genesis,ChainStore::OpenMode::ReadWriteExisting);
+  auto configuration=[&]{return fresh_config(f,inputs.path,witness);};
+  auto unchanged=[&]{require(!fs::exists(witness)&&!owner.store().fork_checkpoint(f.genesis.chain_id,f.genesis.block.header.hash(),f.limits.envelope_bytes),"maintenance refusal created witness or execution checkpoint");};
+  auto now=[&]()->uint64_t{++clock_reads;throw std::runtime_error("maintenance refusal reached the runtime clock");};
+  auto expect=[&](const Json& cfg,const std::string& message){
+   bool rejected=false;try{auto unused=start_capella_runtime(owner,cfg,checkpoint,now);}
+   catch(const std::invalid_argument& error){rejected=error.what()==message;}
+   require(rejected,"maintenance flag refusal lost its exact error or precedence");++refusals;unchanged();
+  };
+  // With a valid public bootstrap authority, the old late checks can create
+  // WITNESS/PRIMARY before throwing the very same boolean error.
+  const Json invalids=Json::array({nullptr,0,0.5,"true",Json::array(),Json::object()});
+  for(const auto* field:fields)for(const auto& invalid:invalids){auto cfg=configuration();cfg[field]=invalid;expect(cfg,std::string("Capella ")+field+" must be boolean");}
+  require(refusals==18,"maintenance type refusal count");
+  emit("maintenance-flags-before-public-bootstrap-io",{{"expectedRefusals",refusals},{"invalidJsonTypesPerFlag",6},{"witnessCreated",false},{"executionCheckpointPublished",false}});
+  for(const auto* field:fields){auto cfg=configuration();cfg[field]="true";cfg["profile"]["file"]=absent_profile.string();expect(cfg,std::string("Capella ")+field+" must be boolean");}
+  // Keep the old relative order of the three policy diagnostics.
+  auto invalid_order=configuration();invalid_order["profile"]["file"]=absent_profile.string();for(const auto* field:fields)invalid_order[field]=0;
+  for(const auto* field:fields){expect(invalid_order,std::string("Capella ")+field+" must be boolean");invalid_order[field]=false;}
+  for(const auto* field:fields){
+   auto cfg=configuration();cfg[field]="true";cfg["profile"]["file"]=absent_profile.string();size_t callbacks=0;
+   require(refused_as<CallerCancelled>([&]{auto unused=start_capella_runtime(owner,cfg,[&]{++callbacks;throw CallerCancelled{};},now);}),"maintenance preflight replaced initial caller cancellation");
+   require(callbacks==1,"maintenance cancellation callback priority");++refusals;unchanged();
+  }
+  require(refusals==27,"maintenance precedence refusal count");
+  emit("maintenance-flags-profile-and-cancellation-precedence",{{"expectedRefusals",refusals},{"missingProfileMaskedByFlag",3},{"orderedFlagDiagnostics",3},{"callerCancellationTypePreserved",3}});
+  // Absent/false/true are valid policies. A missing profile must still fail
+  // normally, without starting a runtime just to observe successful parsing.
+  for(unsigned mode=0;mode<3;++mode){auto cfg=configuration();for(const auto* field:fields){cfg.erase(field);if(mode)cfg[field]=(mode==2);}cfg["profile"]["file"]=absent_profile.string();expect(cfg,"Capella input size/type");}
+  auto bad_commitment=configuration();bad_commitment["profile"]["sha256"]=hex(Bytes(32));expect(bad_commitment,"Capella profile size or commitment mismatch");
+  require(refusals==31&&clock_reads==0&&completed_test_runtime_starts==0,"maintenance preflight coverage or runtime boundary");
+  emit("maintenance-flags-accepted-types-preserve-profile-validation",{{"expectedRefusals",refusals},{"validAbsentFalseTruePolicies",3},{"badPublicProfileCommitmentRefused",true},{"clockSourceCalls",clock_reads}});
+ }
+ require(rows(primary)==original,"maintenance refusals changed original primary logical content");checkpoint();
+ const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count();
+ std::cout<<Json{{"format","nano-capella-maintenance-startup-validation-v1"},{"scenario","capella-maintenance-flags-self-test"},{"result","PASS"},{"groups",3},{"expectedRefusals",refusals},{"elapsedMs",elapsed},{"maxRssKiB",rss()},{"originalPrimaryLogicalRowsUnchanged",true},{"freshWitnessCreated",false},{"completedTestRuntimeStarts",completed_test_runtime_starts},{"clockSourceCalls",clock_reads},{"legacySuiteExecuted",false},{"publicFixturesOnly",true},{"newSignaturesCreated",0},{"privateInputsRead",false},{"networkUsed",false},{"runtimeUTCQualified",false},{"runtimeDutiesResumed",false},{"productionQualified",false}}.dump()<<std::endl;return 0;
 }
-int main(int argc,char** argv){try{require(argc==2&&std::string(argv[1])=="--self-test","usage --self-test");Temp input;const auto f=fixture(input.path);boundaries(f);inputs_and_categories(f,input.path);actual_runtime_expiration(f,input.path);durable_prefix(f,input.path);handoff_lifetime(f,input.path);checkpoint();const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began).count();std::cout<<Json{{"scenario","capella-startup-deadline-self-test"},{"result","PASS"},{"groups",5},{"elapsedMs",elapsed},{"maxRssKiB",rss()},{"completedTestRuntimeStarts",completed_test_runtime_starts},{"newSignaturesCreated",0},{"runtimeUTCQualified",false},{"runtimeDutiesResumed",false},{"privateInputsRead",false},{"networkUsed",false},{"powerLossQualified",false},{"productionQualified",false}}.dump()<<std::endl;return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+}
+int main(int argc,char** argv){try{if(argc==2&&std::string(argv[1])=="--maintenance-flags-self-test")return maintenance_flags_self_test();require(argc==2&&std::string(argv[1])=="--self-test","usage --self-test");Temp input;const auto f=fixture(input.path);boundaries(f);inputs_and_categories(f,input.path);actual_runtime_expiration(f,input.path);durable_prefix(f,input.path);handoff_lifetime(f,input.path);checkpoint();const auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-began).count();std::cout<<Json{{"scenario","capella-startup-deadline-self-test"},{"result","PASS"},{"groups",5},{"elapsedMs",elapsed},{"maxRssKiB",rss()},{"completedTestRuntimeStarts",completed_test_runtime_starts},{"newSignaturesCreated",0},{"runtimeUTCQualified",false},{"runtimeDutiesResumed",false},{"privateInputsRead",false},{"networkUsed",false},{"powerLossQualified",false},{"productionQualified",false}}.dump()<<std::endl;return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

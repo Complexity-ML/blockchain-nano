@@ -66,6 +66,13 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
  };
  stage("validate-input");
  if(startup_check)startup_check();auto base=config;base.erase("validator");base.erase("admission");base.erase("catalogs");base.erase("recoveryWitness");base.erase("recoveryCommitment");base.erase("automaticRecovery");base.erase("bootstrapArchive");base.erase("bootstrapArchiveRecovery");base.erase("network");base.erase("automaticPruning");base.erase("historicalStatePruning");base.erase("fragmentCheckpointMigration");base.erase("coldCheckpoint");shape(base,{"profile","limits","initial","restart","clock"});
+ // Validate maintenance policy before any profile/witness/recovery I/O.
+ if(config.contains("automaticPruning")&&!config.at("automaticPruning").is_boolean())throw std::invalid_argument("Capella automaticPruning must be boolean");
+ const bool automatic_pruning=config.value("automaticPruning",true);
+ if(config.contains("historicalStatePruning")&&!config.at("historicalStatePruning").is_boolean())throw std::invalid_argument("Capella historicalStatePruning must be boolean");
+ const bool historical_state_pruning=config.value("historicalStatePruning",false);
+ if(config.contains("fragmentCheckpointMigration")&&!config.at("fragmentCheckpointMigration").is_boolean())throw std::invalid_argument("Capella fragmentCheckpointMigration must be boolean");
+ const bool fragment_checkpoint_migration=config.value("fragmentCheckpointMigration",false);
  const auto& genesis=chain.genesis();
  if(genesis.consensus!="beacon"||genesis.evm_revision!=EvmRevision::Shanghai)throw std::invalid_argument("Capella runtime requires Beacon Shanghai chain");
  const auto& p=config.at("profile");shape(p,{"file","sha256","maximumBytes"});const auto maximum=number(p.at("maximumBytes"));
@@ -173,12 +180,9 @@ CapellaRuntime start_capella_runtime(Blockchain& chain,const Json& config_input,
   }else owner->reactor=std::make_unique<CapellaDurableReactor>(chain,rules,limits,std::move(initial),startup_check,owner->witness.get());
  }
  stage("checkpoint-migration");
- if(config.contains("automaticPruning")&&!config.at("automaticPruning").is_boolean())throw std::invalid_argument("Capella automaticPruning must be boolean");
- owner->reactor->set_automatic_pruning(config.value("automaticPruning",true));
- if(config.contains("historicalStatePruning")&&!config.at("historicalStatePruning").is_boolean())throw std::invalid_argument("Capella historicalStatePruning must be boolean");
- owner->reactor->set_historical_state_pruning(config.value("historicalStatePruning",false));
- if(config.contains("fragmentCheckpointMigration")&&!config.at("fragmentCheckpointMigration").is_boolean())throw std::invalid_argument("Capella fragmentCheckpointMigration must be boolean");
- if(config.value("fragmentCheckpointMigration",false))owner->reactor->migrate_fragment_checkpoint(startup_check);
+ owner->reactor->set_automatic_pruning(automatic_pruning);
+ owner->reactor->set_historical_state_pruning(historical_state_pruning);
+ if(fragment_checkpoint_migration)owner->reactor->migrate_fragment_checkpoint(startup_check);
  if(cold_checkpoint)owner->reactor->migrate_reference_checkpoint(*cold_checkpoint,startup_check);
  if(wall_drift){
   auto time=std::make_shared<LocalMonotonicTime>(*wall_drift,std::move(now));
