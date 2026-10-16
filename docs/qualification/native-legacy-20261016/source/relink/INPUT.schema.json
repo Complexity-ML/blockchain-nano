@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ROOT-only Native legacy relink input9",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "controller", "nativeInput", "firstSoftwareAdmission", "nativeTerminal", "currentSourceRoot", "sourceRepository", "gitTool", "outputRoot"],
+  "properties": {
+    "format": {"const": "nano-native-legacy-relink-input-v1"},
+    "controller": {"$ref": "#/$defs/artifact"},
+    "nativeInput": {"$ref": "#/$defs/artifact"},
+    "firstSoftwareAdmission": {"$ref": "#/$defs/artifact"},
+    "nativeTerminal": {"$ref": "#/$defs/artifact"},
+    "currentSourceRoot": {"type": "string", "minLength": 2},
+    "sourceRepository": {"type": "string", "minLength": 2},
+    "gitTool": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "bytes", "material"],
+      "properties": {
+        "path": {"const": "/usr/bin/git"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "bytes": {"type": "integer", "minimum": 0, "maximum": 268435456},
+        "material": {"$ref": "#/$defs/regularMaterial"}
+      }
+    },
+    "outputRoot": {"type": "string", "minLength": 2, "description": "Existing empty physical UID501 mode0700 NEW directory; no files are overwritten."}
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": {"type": "string", "minLength": 2},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "bytes": {"type": "integer", "minimum": 0, "maximum": 268435456}
+      }
+    },
+    "regularMaterial": {
+      "type": "object", "additionalProperties": false,
+      "required": ["st_dev", "st_ino", "st_mode", "st_nlink", "st_uid", "st_gid", "st_size", "st_mtime_ns", "st_ctime_ns", "sha256"],
+      "properties": {
+        "st_dev": {"type": "integer"}, "st_ino": {"type": "integer"},
+        "st_mode": {"type": "integer"}, "st_nlink": {"type": "integer", "minimum": 1},
+        "st_uid": {"type": "integer"}, "st_gid": {"type": "integer"},
+        "st_size": {"type": "integer", "minimum": 0, "maximum": 268435456},
+        "st_mtime_ns": {"type": "integer"}, "st_ctime_ns": {"type": "integer"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}
