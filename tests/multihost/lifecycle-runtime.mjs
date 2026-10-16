@@ -78,6 +78,19 @@ export function projectLifecycleStoppedCapture(value,{campaignId}){
  const result={owner:name,campaignId:capture.campaignId,artifactStorage:name==='vps-docker'?'vps-local':'mac-local',firstCaptureSha256:value.firstCaptureSha256,stopReceipt:stop,capture:capsule,primaryWitnessPairs:capture.primaryWitnessPairs,readOnlyDatabaseRoles:capture.databasesReadOnly,headSlot:capture.headSlot,finalized,clockHealthy:receipt.clockHealthy,validator:{healthy:receipt.validator?.healthy,failure:receipt.validator?.failure,...Object.fromEntries(stoppedCaptureCounters.map(k=>[k,receipt.validator?.[k]]))},...Object.fromEntries([...stoppedCaptureFlags,...stoppedCaptureFalseFlags].map(k=>[k,capture[k]])),signerCallbacksInvoked:capture.signerCallbacksInvoked,newSignaturesCreated:capture.newSignaturesCreated,rawCapsuleIncluded:false,snapshotBytesIncluded:false,privatePathsIncluded:false,sessionIncluded:false};
  return copy(validateStoppedCapturePublic(result,campaignId));
 }
+export async function publishLifecycleStoppedCapture(value,{campaignId,publish}){
+ need(typeof publish==='function','individual stopped capture publication callback');const receipt=projectLifecycleStoppedCapture(value,{campaignId});await publish(copy(receipt));return receipt;
+}
+// A successful stop remains usable only for the SAME owner roots and until
+// the next resume attempt. It never derives authority from a copied database.
+export function createLifecycleStopReceipts(){
+ const stopped=new Map(),owner=name=>need(stoppedCaptureOwners.includes(name),'stopped owner identity'),binding=value=>need(typeof value==='string'&&value.length>0&&value.length<=65536,'stopped owner root binding');
+ return {
+  stopped(name,receipt,rootBinding){owner(name);binding(rootBinding);need(receipt?.event==='capella-runtime-stopped'&&receipt.clockHealthy===true&&receipt.validator?.healthy===true&&receipt.validator.failure===null,'actual healthy stopped receipt');need(!stopped.has(name),'owner already has an unconsumed stopped receipt');stopped.set(name,{receipt:copy(receipt),rootBinding});},
+  resuming(name){owner(name);stopped.delete(name);},
+  collect(rootBindings){exact(rootBindings,stoppedCaptureOwners,'current owner root bindings');const result=[];for(const name of stoppedCaptureOwners){binding(rootBindings[name]);const entry=stopped.get(name);if(entry){need(entry.rootBinding===rootBindings[name],'stopped owner roots changed');result.push({name,receipt:copy(entry.receipt)});}}return result;}
+ };
+}
 export function lifecycleStoppedCapturesReceipt(captures,{campaignId}){
  need(Array.isArray(captures)&&captures.length===3,'exactly three actual stopped captures required');const byOwner=new Map();for(const row of captures){validateStoppedCapturePublic(row,campaignId);need(!byOwner.has(row.owner),'duplicate stopped capture owner');byOwner.set(row.owner,row);}need(stoppedCaptureOwners.every(name=>byOwner.has(name)),'missing stopped capture owner');
  return {format:'nano-fresh-lifecycle-stopped-captures-public-v1',campaignId,owners:stoppedCaptureOwners.map(name=>copy(byOwner.get(name))),ownersCaptured:3,validatorPrimaryWitnessPairs:65,readOnlyDatabaseRoles:136,captureOnly:true,lifecycleClosingExecutedAtPublication:false,lifecycleTerminalQualified:false,restorationSigningAuthorized:false,rawCapsulesIncluded:false,snapshotBytesIncluded:false,privatePathsIncluded:false,sessionIncluded:false,productionQualified:false};

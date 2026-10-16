@@ -115,3 +115,13 @@ EIP-1898 et refuse un changement de header, sans fallback par hauteur. Cela rest
 une assertion RPC, pas une preuve cryptographique de finalité ou de bridge.
 Le scénario Anvil fixe ses timestamps pour que le devis et l'exécution ne
 franchissent pas une époque ; la sortie minimale reste 99 % du devis.
+
+Migration LP verification (historical Base V2 only): the bound receipt must show
+an ordered, unambiguous mint to the configured migrator and a positive transfer
+to its beneficiary. All beneficiary debits in the receipt reduce the attributable
+credit; pre-existing balances, unrelated donations and self-transfers do not
+substitute for it. Malformed pair Transfer logs are rejected. The six canonical
+hash reads and header fences remain unchanged. The scoped 29-test result, causal
+baseline and earlier refusals are recorded in
+[the qualification report](../../docs/qualification/doppler-lp-attribution-20261016/README.md).
+This does not qualify real Base migrations, other migrators, Nano or a bridge.

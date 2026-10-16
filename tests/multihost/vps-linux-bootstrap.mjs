@@ -67,19 +67,22 @@ export function knownUstar(entries){
  chunks.push(Buffer.alloc(1024));return Buffer.concat(chunks,total);
 }
 
-export function buildVpsLinuxTransport({selection,readerBytes,configuration,planBytes}){
- const names=['genesis.json','profile.json','initial.json','isolated-domain.json','node.json','fixture.env'];need(Array.isArray(configuration)&&configuration.length===6&&configuration.every(x=>names.includes(x.name)&&Buffer.isBuffer(x.bytes)&&x.bytes.length>0)&&new Set(configuration.map(x=>x.name)).size===6,'only six owner-scoped configuration files');
+export function buildVpsLinuxTransport({selection,readerBytes,configuration,planBytes,lifecycle=false}){
+ need(typeof lifecycle==='boolean','explicit lifecycle transport mode');
+ const names=['genesis.json','profile.json','initial.json','isolated-domain.json','node.json','fixture.env',...(lifecycle?['genesis-state.ssz','genesis-validators.ssz']:[])];need(Array.isArray(configuration)&&configuration.length===names.length&&configuration.every(x=>names.includes(x.name)&&Buffer.isBuffer(x.bytes)&&x.bytes.length>0)&&new Set(configuration.map(x=>x.name)).size===names.length,'exact owner-scoped configuration files');
  const env=configuration.find(x=>x.name==='fixture.env').bytes.toString('utf8'),lines=env.split('\n');need(lines.pop()===''&&lines.length===33,'exact VPS environment');for(let i=0;i<33;++i)need(new RegExp('^NANO_TEST_CAPELLA_NETWORK_KEY_'+(32+i)+'=0x[0-9a-f]{64}$').test(lines[i]),'no Mac owner environment transferred');
  const plan=parsed(planBytes);need(plan.campaignNamespace===selection.namespace&&plan.owners?.[2]?.owner==='vps-docker'&&plan.owners[2].keys.length===33&&plan.owners[2].keys.every((k,i)=>k.publicKeyIndex===32+i),'original plan VPS assignment');const manifestBytes=configuration.find(x=>x.name==='isolated-domain.json').bytes;need(sha(manifestBytes)===plan.inputEvidencePins.manifest,'original manifest pin');
+ if(lifecycle){const manifest=parsed(manifestBytes);exact(manifest.files,['genesisValidators','genesisState','genesis','profile','initial']);for(const [kind,name]of [['genesisState','genesis-state.ssz'],['genesisValidators','genesis-validators.ssz'],['genesis','genesis.json'],['profile','profile.json'],['initial','initial.json']]){const pin=manifest.files[kind],file=configuration.find(x=>x.name===name);exact(pin,['path','sha256','bytes']);need(pin.path===name&&typeof pin.sha256==='string'&&/^[0-9a-f]{64}$/.test(pin.sha256)&&Number.isSafeInteger(pin.bytes)&&pin.bytes>0&&pin.bytes<=maximumArchive&&file.bytes.length===pin.bytes&&sha(file.bytes)===pin.sha256,'lifecycle stage file matches held public manifest');}}
  const anchors=Buffer.from(JSON.stringify({format:'nano-isolated-bootstrap-physical-audit-anchors-v1',fixtureManifestSha256:plan.inputEvidencePins.manifest,planDocumentSha256:sha(planBytes),planSha256:plan.planSha256,sourceInventorySha256:selection.inventorySha256})+'\n');
  const files=verifiedVpsLinuxFiles(selection,readerBytes),directories=selection.rows.filter(x=>x.entry.kind==='directory').map(x=>({path:x.archivePath,mode:448,bytes:null}));
  const config=knownUstar([...configuration.map(x=>({path:x.name,mode:384,bytes:x.bytes})),...directories,...files]),proof=knownUstar([{path:'plan.json',mode:384,bytes:planBytes},{path:'anchors.json',mode:384,bytes:anchors},{path:'source-inventory.json',mode:384,bytes:selection.inventoryBytes}]);
  return {archives:[{name:'config',bytes:config},{name:'proof',bytes:proof}],expected:{campaignId:plan.campaignId,manifestSha256:plan.inputEvidencePins.manifest,planDocumentSha256:sha(planBytes),planSha256:plan.planSha256,anchorsSha256:sha(anchors),sourceInventorySha256:selection.inventorySha256,keys:plan.owners[2].keys},publicScope:{format:'nano-vps-linux-bootstrap-transport-v1',sourceOwner:'mac-docker',sourceDatabaseFormat:'existing-linux-import',primaryWitnessPairs:33,sourceFiles:files.length,sourceInventorySha256:selection.inventorySha256,nativeSstFilesTransferred:false,macOwnerPrivateKeysTransferred:false,nativeEvidenceReplaced:false,sourceAuthorityRebased:false,newSignaturesCreated:0,runtimeStarted:false,productionQualified:false}};
 }
 
-export async function exportVpsLinuxBootstrap({selection,configuration,planBytes,read,fenceSource,verifyAll}){
+export async function exportVpsLinuxBootstrap({selection,configuration,planBytes,read,fenceSource,verifyAll,lifecycle=false}){
+ need(typeof lifecycle==='boolean','explicit lifecycle transport mode');
  need(typeof read==='function'&&typeof fenceSource==='function'&&typeof verifyAll==='function','mandatory original-source fences');await fenceSource();await verifyAll();let readerBytes;
  try{readerBytes=await read(vpsLinuxReadControl(selection));}
  finally{try{await fenceSource();}finally{await verifyAll();}}
- return buildVpsLinuxTransport({selection,readerBytes,configuration,planBytes});
+ return buildVpsLinuxTransport({selection,readerBytes,configuration,planBytes,lifecycle});
 }

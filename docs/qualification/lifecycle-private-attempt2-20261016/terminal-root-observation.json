@@ -1,0 +1,113 @@
+{
+  "format": "nano-second-private-lifecycle-terminal-root-observation-v1",
+  "recordedAt": "2026-10-16T19:34:37.413793+00:00",
+  "status": "FAILED_PRESERVED",
+  "sourceRevision": "e05ea5b9ff5bc8282a9fc120c079bdbddc29f7e6",
+  "unifiedExecSession": 11687,
+  "launcherJoined": true,
+  "launcherExitCode": 1,
+  "guardSigintSent": false,
+  "guardSamples": 381,
+  "runtimeUuid": "7fe81a7b-4023-4e65-adc1-9837cc3f42c6",
+  "campaignId": "ba9c10f951633fdab725bbd3aba2c39af3c7dde8ea922c3d1d415b0e5a63b0c4",
+  "observedRuntimeProgress": {
+    "initialCommonEpochs": [
+      0,
+      2,
+      3
+    ],
+    "activationEpoch": 17,
+    "activationCommonEpochs": [
+      3,
+      15,
+      16,
+      17
+    ],
+    "firstRestoreCommonEpochs": [
+      20,
+      24,
+      25,
+      26
+    ],
+    "firstRestoreSourceFiles": 746,
+    "firstRestorePayloadBytes": 47240521,
+    "vpsLastStoppedFinalizedEpoch": 79,
+    "vpsLastStoppedDuties": {
+      "localKeys": 33,
+      "awaitingRegistration": 0,
+      "proposalsAdmitted": 220,
+      "attestationsAdmitted": 1909,
+      "syncMessagesAdmitted": 7342
+    }
+  },
+  "primaryFailure": {
+    "stage": "lifecycleControl voluntary_exit stage",
+    "class": "FileNotFoundError",
+    "missingPublicFile": "config/genesis-state.ssz",
+    "source": "lifecycleOwnerProjection mode stage read(source)",
+    "errorLogSha256": "a5b4266690bbf1ad015d42b98e879eda599e86c1ec81801116ca7f261e307398",
+    "errorLogBytes": 255,
+    "frames": [
+      {
+        "file": "<string>",
+        "line": 55,
+        "function": "<module>"
+      },
+      {
+        "file": "<string>",
+        "line": 13,
+        "function": "read"
+      }
+    ]
+  },
+  "secondaryRefusal": {
+    "stage": "terminal-capture-and-recovery-audit",
+    "message": "All three terminal signer receipts required"
+  },
+  "currentAbsenceVerified": {
+    "macDockerCampaignRunningContainers": 0,
+    "vpsDockerCampaignRunningContainers": 0,
+    "nativeProcessAbsent": true,
+    "tunnelProcessAbsent": true
+  },
+  "proofs": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261016-02/result.json",
+      "sha256": "8540f45a732fec6a99265b6077864cfdc80df04c8bd0993f98c2139e4532613f",
+      "bytes": 830
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-guard-20261016-02/result-public.json",
+      "sha256": "74c40e2afc3184623d4c0b2fc872ff9264e72afc392b29513ea3a2ad21e9432c",
+      "bytes": 405
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261016-02/initial-finality.json",
+      "sha256": "26315ff11b22a6e6c130415ea8d56ecb82dc278c33b16c7fb3f66c1d283adc2d",
+      "bytes": 1685
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261016-02/lifecycle-activation-finality.json",
+      "sha256": "6e8589c4dafea1b600973193e216f5fb16a8141fd548b48a5379fbb6dfae8c58",
+      "bytes": 1838
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261016-02/lifecycle-after-first-restore-finality.json",
+      "sha256": "51baa93a31b4e9d56c717ccd965ba19dec93945f41167e5091f6dfc7628dffe6",
+      "bytes": 1841
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261016-02/lifecycle-voluntary-exit-2-runtime-stop-public.json",
+      "sha256": "1e78533b54fdb3935dafb39be736bd866f7af68f4da5208936455edeb3d2e80a",
+      "bytes": 6577
+    }
+  ],
+  "fullLifecycleQualified": false,
+  "withdrawalsOrControlledSlashingQualified": false,
+  "oldDomainReset": false,
+  "keysOrCapsulesExportedForDiagnosis": false,
+  "goalStatus": "active",
+  "classification": "progress",
+  "consecutiveBlockingConditionTurns": 0,
+  "productionQualified": false
+}

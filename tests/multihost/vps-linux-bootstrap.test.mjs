@@ -33,3 +33,33 @@ test('every reader refusal and success fences original Linux sources before any 
   if(mode==='pass')assert.equal((await exportVpsLinuxBootstrap(context)).expected.keys.length,33);else await assert.rejects(exportVpsLinuxBootstrap(context));assert.deepEqual(calls,['source','all','read','source','all']);
  }
 });
+
+
+// The lifecycle stage reads these exact manifest paths from remoteRoot/config.
+// Inspect actual archive bytes, including a large public SSZ kept out of argv.
+function lifecycleFixture(){
+ const f=fixture(),ssz=[['genesis-state.ssz',Buffer.alloc(200000,0x53)],['genesis-validators.ssz',Buffer.from('PUBLIC opaque validator SSZ')]];f.configuration.push(...ssz.map(([name,bytes])=>({name,bytes})));
+ const files=Object.fromEntries([['genesisState','genesis-state.ssz'],['genesisValidators','genesis-validators.ssz'],['genesis','genesis.json'],['profile','profile.json'],['initial','initial.json']].map(([kind,name])=>{const bytes=f.configuration.find(x=>x.name===name).bytes;return [kind,{path:name,sha256:sha(bytes),bytes:bytes.length}];}));
+ const manifest=JSON.parse(f.configuration.find(x=>x.name==='isolated-domain.json').bytes);manifest.files=files;rebindManifest(f,manifest);f.lifecycle=true;return f;
+}
+function rebindManifest(f,manifest){
+ const bytes=encode(manifest);f.configuration.find(x=>x.name==='isolated-domain.json').bytes=bytes;const plan=JSON.parse(f.planBytes);plan.inputEvidencePins.manifest=sha(bytes);f.planBytes=encode(plan);
+}
+test('lifecycle USTAR supplies every manifest path used by remote control staging',()=>{
+ const f=lifecycleFixture(),before=f.configuration.map(x=>[x.name,sha(x.bytes)]),bundle=buildVpsLinuxTransport(f),archive=untar(bundle.archives[0].bytes),manifest=JSON.parse(archive.get('isolated-domain.json').bytes);
+ const stageNames=['isolated-domain.json',...Object.values(manifest.files).map(x=>x.path),'node.json'];assert.equal(stageNames.length,7);
+ for(const name of stageNames){const entry=archive.get(name),known=f.configuration.find(x=>x.name===name);assert(entry,'Actual remote config source for '+name+' must exist');assert.equal(entry.kind,'0');assert.equal(entry.mode,0o600);assert(entry.bytes.equals(known.bytes));}
+ for(const pin of Object.values(manifest.files)){const bytes=archive.get(pin.path).bytes;assert.equal(bytes.length,pin.bytes);assert.equal(sha(bytes),pin.sha256);}
+ assert.equal(archive.get('genesis-state.ssz').bytes.length,200000);assert.deepEqual(f.configuration.map(x=>[x.name,sha(x.bytes)]),before);assert.equal(bundle.publicScope.macOwnerPrivateKeysTransferred,false);assert.equal(bundle.publicScope.nativeSstFilesTransferred,false);
+});
+test('lifecycle transport refuses missing, corrupt or misbound stage inputs without widening ordinary transport',()=>{
+ for(const name of ['genesis-state.ssz','genesis-validators.ssz']){const f=lifecycleFixture();f.configuration=f.configuration.filter(x=>x.name!==name);assert.throws(()=>buildVpsLinuxTransport(f));}
+ const ordinary=fixture();assert.throws(()=>buildVpsLinuxTransport({...ordinary,lifecycle:true}));assert.equal(buildVpsLinuxTransport(ordinary).archives.length,2);
+ for(const change of [f=>f.configuration.push(f.configuration[0]),f=>f.lifecycle=false,f=>f.lifecycle='true',f=>f.configuration.find(x=>x.name==='genesis-state.ssz').bytes[0]^=1]){const f=lifecycleFixture();change(f);assert.throws(()=>buildVpsLinuxTransport(f));}
+ for(const kind of ['genesisState','genesisValidators','genesis','profile','initial'])for(const change of [p=>p.path='../'+p.path,p=>p.sha256='0'.repeat(64),p=>p.bytes+=1,p=>p.bytes=String(p.bytes)]){const f=lifecycleFixture(),manifest=JSON.parse(f.configuration.find(x=>x.name==='isolated-domain.json').bytes);change(manifest.files[kind]);rebindManifest(f,manifest);assert.throws(()=>buildVpsLinuxTransport(f));}
+ const f=lifecycleFixture(),manifest=JSON.parse(f.configuration.find(x=>x.name==='isolated-domain.json').bytes);delete manifest.files.genesisState;rebindManifest(f,manifest);assert.throws(()=>buildVpsLinuxTransport(f));
+});
+test('lifecycle export forwards explicit mode and retains the original before/after source fences',async()=>{
+ const f=lifecycleFixture(),calls=[],bundle=await exportVpsLinuxBootstrap({...f,fenceSource:async()=>calls.push('source'),verifyAll:async()=>calls.push('all'),read:async()=>{calls.push('read');return f.readerBytes;}});assert(untar(bundle.archives[0].bytes).has('genesis-state.ssz'));assert.deepEqual(calls,['source','all','read','source','all']);
+ calls.length=0;await assert.rejects(exportVpsLinuxBootstrap({...f,lifecycle:1,fenceSource:async()=>calls.push('source'),verifyAll:async()=>calls.push('all'),read:async()=>calls.push('read')}));assert.deepEqual(calls,[]);
+});

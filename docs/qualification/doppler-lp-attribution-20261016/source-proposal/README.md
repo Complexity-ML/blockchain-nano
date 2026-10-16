@@ -1,0 +1,22 @@
+# LP V2 : relier la réception à la transaction de migration
+
+Proposition source uniquement, non exécutée par son auteur. Deux overlays JS, leur diff et cette note ; aucun Rwrite, installation, SDK système, RPC, fork, portefeuille ou transaction. La campagne consensus privée en cours et sa révision figée ne sont pas modifiées.
+
+`verify-migration.mjs` vérifiait un solde LP positif à la fin du bloc de migration. Ce solde peut être ancien : la fixture positive précédente ne contenait qu'un événement Airlock `Migrate`, sans création ni crédit LP. Cela démontre une lacune de la preuve JS ; aucune exploitation du contrat n'est alléguée.
+
+La sémantique du module historique est vérifiée dans le dépôt officiel : le registre Base épingle `0x5F3bA43D44375286296Cb85F1EA2EBfa25dde731` à `9b23399ae862b04ac372515bf773ea0094dbfe48`. Son [migrateur V2](https://github.com/whetstoneresearch/doppler/blob/9b23399ae862b04ac372515bf773ea0094dbfe48/src/UniswapV2Migrator.sol#L133) crée les LP au migrateur puis en transfère au bénéficiaire et au locker. Un mint directement au bénéficiaire serait un oracle incorrect. Source lue par l'API GitHub officielle : Git blob `8d692a10434dd993d23eeb2a140555836994d3ac`, SHA256 `5c4c18ee6d23643df585ae16e715940c9a72847c692a0987b512ed71c8006a44`, 5903 octets. [Registre historique officiel](https://github.com/whetstoneresearch/doppler/blob/5754c7ee01f1bdbd6f07c62be721e1223b725ecd/legacy/Deployments.md). Il s'agit de cette ancienne intégration déjà présente ; ce correctif n'adopte pas ce module pour un nouveau lancement.
+
+Le candidat exige, dans le reçu réussi et lié à la transaction/bloc déjà contrôlés :
+
+- la paire exacte `asset[6]`, le migrateur historique `asset[3]` et le bénéficiaire existant `asset[1]` ; `asset[5]` est le pool initial ;
+- des indices de logs entiers, présents et uniques, puis une seule séquence ordonnée création zéro→migrateur et crédit migrateur→bénéficiaire avant `Migrate` ; le crédit est positif, n'est pas un self-transfer et ne dépasse pas la création sélectionnée ;
+- un crédit attribuable encore positif : le seul crédit migrateur→bénéficiaire sélectionné, moins **tous** les débits bénéficiaire→tiers de la paire dans ce reçu, même après `Migrate`. Les entrées étrangères ne compensent pas ces débits pour cette preuve. Une donation de 1 après annulation du crédit de 950 ne suffit pas ;
+- le refus d'un événement portant la signature `Transfer` de cette paire avec données/topics malformés. Les autres événements, dont `Mint` et `Sync`, ne sont pas interprétés comme des transferts.
+
+Le mint minimal zéro→zéro ne compte pas. Des séquences multiples ambiguës sont refusées plutôt que fusionnées. Le candidat n'impose aucun taux de split : un crédit synthétique de 7 sur un mint de 1000 reste accepté. Il ne qualifie pas le locker, son propriétaire, sa durée ou les autres variantes migrateur/Split.
+
+Les six lectures financières existantes restent au même sélecteur EIP-1898 `{blockHash, requireCanonical:true}` et les fences de headers/reorgs restent en place. Il n'y a pas de lecture RPC additionnelle. Le résultat conserve `beneficiaryLP` comme **solde de fin de bloc** et ajoute `lpAttribution` : migrateur, LP créés, crédit sélectionné, net total de cette transaction, net attribuable conservateur et trois indices. Ce dernier n'identifie pas des unités fongibles particulières ni leur détention ultérieure. L'ancien champ `event` garde sa forme décodée.
+
+Qualification ciblée proposée à Root, pas exécutée ici : le nouveau test « a pre-existing positive LP balance… » doit échouer avec l'ancien vérificateur qui accepte ce reçu, puis passer avec le candidat qui le refuse. Le fichier entier prévoit huit groupes de premier niveau et vingt-et-un sous-tests, soit vingt-neuf tests attendus. Les ajouts couvrent vingt-deux refus (vieux solde seul plus vingt-et-une variantes) et un positif à split non imposé. Les cinq groupes existants conservent leurs objectifs hash/reorg/liaisons ; la fixture reçoit uniquement les événements LP synthétiques et leurs indices nécessaires au nouveau contrat. Root peut exécuter cette seule suite locale avec ses dépendances déjà admises ; aucun nouveau fork ni rejeu de transaction n'est requis.
+
+Limites inchangées : Anvil privé uniquement, observation RPC et non finalité cryptographique, ni audit bytecode des contrats déployés, pool économiquement sûr, bridge Base–Nano, backing canonique, fonds réels ou qualification production. SDK et lockfile restent inchangés. Les résultats historiques restent historiques et ne sont pas réécrits.

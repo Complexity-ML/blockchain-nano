@@ -11,15 +11,15 @@ import {spawnSync} from 'node:child_process';
 import {performance} from 'node:perf_hooks';
 const message='Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required';
 const sourcePins={
- "vps-linux-bootstrap.mjs": "318fcc6fcf0f74c9fb00b4a669a315737973c51a73e352f6ef2cfb23e5583cd9",
- "run.mjs": "80142dc13c8ba261154e33232f0a28339ef5f849db316d825e55e91e29f52ede",
+ "vps-linux-bootstrap.mjs": "8a5b020e44c678b66c344baaa8b5769b816fd207c4a73ee53cd72a2e8787cf0f",
+ "run.mjs": "18e4b72ff387bccbae9ab39499873694a6898c87c35a3f322572852fc383fdb2",
   "native-runtime-env.mjs": "e5c988c7013b0a8b86af10f0f5d51edb46123cc3e73329167bbab6b5f4869119",
  "prepare.mjs": "8cffaff8a204ec276832f96c5a283747de835ca2913bc5ebb37fadb3d3da0b21",
  "program-locators.mjs": "afb6fd53db3930389e2c5adfd6a1c9cb0d59369f5926bc33476c9c7de2829c33",
- "linux-owned-files.mjs": "44b451c7123126181c19bda000a5e688c901a4b8f3f72d4e047a1f7d93f4b869",
+ "linux-owned-files.mjs": "70d44d56d9a9ebc6704cf6acd02e29615d21ecc61b0c29c0d095531d76628119",
  "harness-manifest.mjs": "b01e069ade274ac38e612f9f8eefa7ce17e204b4764593d0371891047374c09d",
  "lifecycle.mjs": "16ceccd02e7487d4424285554d210753aa70943b39714819b32f9c158a2f4a23",
- "lifecycle-runtime.mjs": "376669bf088a20e85281b30651c0ca979b3ebd1581c28da8c27c29ac1eff081f",
+ "lifecycle-runtime.mjs": "c19c6b48bd18deb206e71fa0db51f649962ed46889f84b9842befdc36176a42f",
  "lifecycle-owner.mjs": "ab92d7136b88b528912275fe017778608c7ad0a2c43c4252bcc74e1cb862f216",
  "../../docs/qualification/local-supervisor-linux-20261015/source/known-files.pl": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
  "../../docs/qualification/local-supervisor-linux-20261015/source/copy-bootstrap-pairs.pl": "9fcd47d3bee3530c163e00e8b6a8dd475645336ba48579db45bdc9e20bb3bdf3"

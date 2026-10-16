@@ -1,0 +1,140 @@
+--- a/tools/doppler-launch/verify-migration.mjs
++++ b/tools/doppler-launch/verify-migration.mjs
+@@ -2,6 +2,10 @@
+ import {airlockAbi,getAddresses} from '@whetstone-research/doppler-sdk/evm';
+ import {readFile,writeFile} from 'node:fs/promises';
+ import {pathToFileURL} from 'node:url';
++// Historical Base V2 module used by the private fork; do not infer Split semantics.
++const V2_MIGRATOR='0x5F3bA43D44375286296Cb85F1EA2EBfa25dde731';
++const TRANSFER_TOPIC='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
++const lpTransferAbi=parseAbi(['event Transfer(address indexed from,address indexed to,uint256 value)']);
+ export async function verifyMigration(rpc,{tokenAddress,numeraire,migrationHash,governanceType}) {
+  const assert=(v,m)=>{if(!v)throw new Error(m);};
+  assert(await rpc.getChainId()===31337,'Private Anvil chain required');
+@@ -14,15 +18,37 @@
+  assert(sameHash(receipt.transactionHash,migrationHash),'Receipt transaction mismatch');
+  const canonical=await rpc.getBlock({blockNumber:receipt.blockNumber});
+  assert(canonical.number===receipt.blockNumber&&sameHash(canonical.hash,receipt.blockHash),'Receipt block is not canonical');
+- for(const log of receipt.logs)assert(!log.removed&&log.blockNumber===receipt.blockNumber&&sameHash(log.blockHash,receipt.blockHash)&&sameHash(log.transactionHash,migrationHash),'Receipt log binding mismatch');
++ const logIndices=new Set();
++ for(const log of receipt.logs){
++  assert(!log.removed&&log.blockNumber===receipt.blockNumber&&sameHash(log.blockHash,receipt.blockHash)&&sameHash(log.transactionHash,migrationHash),'Receipt log binding mismatch');
++  assert(Number.isSafeInteger(log.logIndex)&&log.logIndex>=0&&!logIndices.has(log.logIndex),'Receipt log index missing or duplicated');logIndices.add(log.logIndex);
++ }
+  // EIP-1898 pins each state read to this exact canonical hash, including during reorgs.
+  const pinnedRead=async(address,abi,functionName,args=[])=>decodeFunctionResult({abi,functionName,data:await rpc.request({method:'eth_call',params:[{to:address,data:encodeFunctionData({abi,functionName,args})},{blockHash:receipt.blockHash,requireCanonical:true}]})});
+  const asset=await pinnedRead(airlock,airlockAbi,'getAssetData',[tokenAddress]);
+- const events=receipt.logs.filter(l=>l.address.toLowerCase()===airlock.toLowerCase()).flatMap(l=>{try{return [decodeEventLog({abi:airlockAbi,data:l.data,topics:l.topics})];}catch{return [];}}).filter(e=>e.eventName==='Migrate');
++ const events=receipt.logs.filter(l=>l.address.toLowerCase()===airlock.toLowerCase()).flatMap(l=>{try{return [{event:decodeEventLog({abi:airlockAbi,data:l.data,topics:l.topics}),log:l}];}catch{return [];}}).filter(e=>e.event.eventName==='Migrate');
+  assert(events.length===1,'Exactly one canonical Airlock Migrate event required');
+  const pair=asset[6];assert(getAddress(pair)!==zeroAddress,'Migration pair missing');
+- assert(getAddress(events[0].args.asset)===getAddress(tokenAddress),'Migration event wrong token');
+- assert(getAddress(events[0].args.pool)===getAddress(pair),'Migration event wrong pool');
++ assert(getAddress(events[0].event.args.asset)===getAddress(tokenAddress),'Migration event wrong token');
++ assert(getAddress(events[0].event.args.pool)===getAddress(pair),'Migration event wrong pool');
++ const migrator=getAddress(asset[3]),beneficiary=getAddress(asset[1]);
++ assert(migrator===getAddress(V2_MIGRATOR),'Historical V2 migration module required');
++ const transfers=receipt.logs.filter(l=>l.address.toLowerCase()===pair.toLowerCase()&&l.topics?.[0]?.toLowerCase()===TRANSFER_TOPIC).map(log=>{
++  assert(log.topics.length===3&&log.topics.slice(1).every(t=>/^0x0{24}[0-9a-f]{40}$/i.test(t))&&/^0x[0-9a-f]{64}$/i.test(log.data),'Malformed LP Transfer event');
++  let event;try{event=decodeEventLog({abi:lpTransferAbi,data:log.data,topics:log.topics,strict:true});}catch{throw new Error('Malformed LP Transfer event');}
++  return {from:getAddress(event.args.from),to:getAddress(event.args.to),value:event.args.value,logIndex:log.logIndex};
++ });
++ const mints=transfers.filter(t=>t.from===zeroAddress&&t.to===migrator&&t.value>0n);
++ const credits=transfers.filter(t=>t.from===migrator&&t.to===beneficiary&&t.from!==t.to&&t.value>0n);
++ let attribution,attributionCount=0;
++ for(const mint of mints)for(const credit of credits)if(mint.logIndex<credit.logIndex&&credit.logIndex<events[0].log.logIndex&&credit.value<=mint.value){
++  attributionCount++;if(attributionCount===1)attribution={mint,credit};
++ }
++ assert(attributionCount===1,'Exactly one transaction-bound V2 LP attribution required');
++ const beneficiaryLpNetCredit=transfers.reduce((sum,t)=>sum+(t.to===beneficiary?t.value:0n)-(t.from===beneficiary?t.value:0n),0n);
++ const beneficiaryLpDebits=transfers.reduce((sum,t)=>sum+(t.from===beneficiary&&t.to!==beneficiary?t.value:0n),0n);
++ const beneficiaryLpAttributedNetCredit=attribution.credit.value-beneficiaryLpDebits;
++ assert(beneficiaryLpAttributedNetCredit>0n,'Transaction LP beneficiary attribution was cancelled');
+  const abi=parseAbi(['function token0() view returns(address)','function token1() view returns(address)','function getReserves() view returns(uint112,uint112,uint32)','function totalSupply() view returns(uint256)','function balanceOf(address) view returns(uint256)']);
+  const read=(functionName,args=[])=>pinnedRead(pair,abi,functionName,args);
+  const [token0,token1,reserves,totalSupply,beneficiaryLP]=await Promise.all([read('token0'),read('token1'),read('getReserves'),read('totalSupply'),read('balanceOf',[asset[1]])]);
+@@ -32,7 +58,7 @@
+  if(governanceType==='noOp')assert(asset[1].toLowerCase()==='0x000000000000000000000000000000000000dead','NoOp beneficiary changed');
+  const after=await rpc.getBlock({blockNumber:receipt.blockNumber});
+  assert(after.number===receipt.blockNumber&&sameHash(after.hash,receipt.blockHash),'Canonical migration block changed during verification');
+- return {canonicalBlockHashPinned:true,sourceTrust:'RPC canonicality assertion; not a cryptographic finality proof',receiptStatus:receipt.status,blockNumber:receipt.blockNumber,blockHash:receipt.blockHash,migrationHash,airlock,pair,token0,token1,reserves,totalSupply,beneficiary:asset[1],beneficiaryLP,asset,event:events[0],publicDeployment:false,nativeNanoTested:false};
++ return {canonicalBlockHashPinned:true,sourceTrust:'RPC canonicality assertion; not a cryptographic finality proof',receiptStatus:receipt.status,blockNumber:receipt.blockNumber,blockHash:receipt.blockHash,migrationHash,airlock,pair,token0,token1,reserves,totalSupply,beneficiary:asset[1],beneficiaryLP,lpAttribution:{migrator,mintedLP:attribution.mint.value,beneficiaryLpCredit:attribution.credit.value,beneficiaryLpNetCredit,beneficiaryLpAttributedNetCredit,mintLogIndex:attribution.mint.logIndex,creditLogIndex:attribution.credit.logIndex,migrateLogIndex:events[0].log.logIndex},asset,event:events[0].event,publicDeployment:false,nativeNanoTested:false};
+ }
+ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
+  const [input,output]=process.argv.slice(2);
+--- a/tools/doppler-launch/migration.test.mjs
++++ b/tools/doppler-launch/migration.test.mjs
+@@ -1,16 +1,22 @@
+ import test from 'node:test';
+ import assert from 'node:assert/strict';
+ import {readFile} from 'node:fs/promises';
+-import {encodeEventTopics,decodeFunctionData,encodeFunctionResult} from 'viem';
++import {encodeEventTopics,decodeFunctionData,encodeFunctionResult,encodeAbiParameters,parseAbi,zeroAddress} from 'viem';
+ import {airlockAbi} from '@whetstone-research/doppler-sdk/evm';
+ import {verifyMigration} from './verify-migration.mjs';
+ const report=JSON.parse(await readFile(new URL('../../docs/qualification/doppler-adversarial-lifecycle-20261004/attempt-b.json',import.meta.url)));
+ const proof=report.steps.find(x=>x.name==='migration-state');
+ const hash=proof.blockHash,other='0x'+'99'.repeat(32),number=BigInt(proof.blockNumber);
+ const params={tokenAddress:report.predicted.tokenAddress,numeraire:report.configuration.numeraire,migrationHash:proof.migrationHash,governanceType:'noOp'};
++const migrator=proof.asset[3],beneficiary=proof.asset[1],otherAddress='0x'+'11'.repeat(20),locker='0x'+'22'.repeat(20);
++const lpAbi=parseAbi(['event Transfer(address indexed from,address indexed to,uint256 value)']);
++function transfer(from,to,value,logIndex,extra={}) {
++ return {address:proof.pair,blockNumber:number,blockHash:hash,transactionHash:params.migrationHash,removed:false,logIndex,data:encodeAbiParameters([{type:'uint256'}],[value]),topics:encodeEventTopics({abi:lpAbi,eventName:'Transfer',args:{from,to}}),...extra};
++}
++function replaceTransfer(r,index,from,to,value,extra={}){r.logs[r.logs.findIndex(l=>l.logIndex===index)]=transfer(from,to,value,index,extra);}
+ function fixture(change={}) {
+  let headers=0;const calls=[];
+- const receipt={status:'success',transactionHash:params.migrationHash,blockNumber:number,blockHash:hash,logs:[{address:proof.airlock,blockNumber:number,blockHash:hash,transactionHash:params.migrationHash,removed:false,data:'0x',topics:encodeEventTopics({abi:airlockAbi,eventName:'Migrate',args:{asset:params.tokenAddress,pool:proof.pair}})}]};
++ const receipt={status:'success',transactionHash:params.migrationHash,blockNumber:number,blockHash:hash,logs:[{address:proof.airlock,blockNumber:number,blockHash:hash,transactionHash:params.migrationHash,removed:false,logIndex:4,data:'0x',topics:encodeEventTopics({abi:airlockAbi,eventName:'Migrate',args:{asset:params.tokenAddress,pool:proof.pair}})},transfer(zeroAddress,zeroAddress,1000n,0),transfer(zeroAddress,migrator,1000n,1),transfer(migrator,beneficiary,950n,2),transfer(migrator,locker,50n,3)]};
+  change.receipt?.(receipt);
+  const rpc={getChainId:async()=>31337,getTransactionReceipt:async()=>receipt,getBlock:async()=>({number,hash:change.header?.(++headers)??hash}),request:async(q)=>{
+   if(q.method==='web3_clientVersion')return 'anvil/test';
+@@ -18,7 +24,7 @@
+   assert.deepEqual(q.params[1],{blockHash:hash,requireCanonical:true});
+   if(change.rejectCall)throw new Error('Canonical block unavailable');
+   let abi,value;
+-  if(q.params[0].to.toLowerCase()===proof.airlock.toLowerCase()){abi=airlockAbi;value=proof.asset;}
++  if(q.params[0].to.toLowerCase()===proof.airlock.toLowerCase()){abi=airlockAbi;value=change.asset??proof.asset;}
+   else {
+    abi=[{type:'function',name:'token0',inputs:[],outputs:[{type:'address'}]},{type:'function',name:'token1',inputs:[],outputs:[{type:'address'}]},{type:'function',name:'getReserves',inputs:[],outputs:[{type:'uint112'},{type:'uint112'},{type:'uint32'}]},{type:'function',name:'totalSupply',inputs:[],outputs:[{type:'uint256'}]},{type:'function',name:'balanceOf',inputs:[{type:'address'}],outputs:[{type:'uint256'}]}];
+    const {functionName}=decodeFunctionData({abi,data:q.params[0].data});value={token0:proof.token0,token1:proof.token1,getReserves:proof.reserves,totalSupply:proof.totalSupply,balanceOf:proof.beneficiaryLP}[functionName];
+@@ -36,3 +42,39 @@
+   const f=fixture({receipt:mutate});await assert.rejects(verifyMigration(f.rpc,params));
+  }
+ });
++test('a pre-existing positive LP balance cannot replace a credit in this migration transaction',async()=>{
++ const f=fixture({receipt:r=>{r.logs=r.logs.slice(0,1);}});
++ await assert.rejects(verifyMigration(f.rpc,params),/transaction-bound V2 LP attribution/);
++});
++test('V2 attribution accepts mint to migrator then beneficiary credit, without imposing a split',async()=>{
++ const f=fixture({receipt:r=>{replaceTransfer(r,2,migrator,beneficiary,7n);replaceTransfer(r,3,migrator,locker,993n);r.logs.reverse();}});
++ const r=await verifyMigration(f.rpc,params);
++ assert.equal(f.calls.length,6);assert.equal(r.beneficiaryLP,BigInt(proof.beneficiaryLP));
++ assert.deepEqual(r.lpAttribution,{migrator,mintedLP:1000n,beneficiaryLpCredit:7n,beneficiaryLpNetCredit:7n,beneficiaryLpAttributedNetCredit:7n,mintLogIndex:1,creditLogIndex:2,migrateLogIndex:4});
++});
++test('LP attribution rejects wrong identities, amounts, order, cancellation and malformed evidence',async(t)=>{
++ const cases=[
++  ['another pair mint',r=>replaceTransfer(r,1,zeroAddress,migrator,1000n,{address:otherAddress})],
++  ['another pair credit',r=>replaceTransfer(r,2,migrator,beneficiary,950n,{address:otherAddress})],
++  ['another beneficiary',r=>replaceTransfer(r,2,migrator,otherAddress,950n)],
++  ['pool is not migrator',r=>replaceTransfer(r,1,zeroAddress,proof.asset[5],1000n)],
++  ['credit from a different account',r=>replaceTransfer(r,2,otherAddress,beneficiary,950n)],
++  ['direct mint is not the V2 route',r=>{replaceTransfer(r,1,zeroAddress,beneficiary,1000n);r.logs=r.logs.filter(l=>l.logIndex!==2);}],
++  ['zero credit',r=>replaceTransfer(r,2,migrator,beneficiary,0n)],
++  ['credit exceeds this mint',r=>replaceTransfer(r,2,migrator,beneficiary,1001n)],
++  ['credit precedes mint',r=>{r.logs[1].logIndex=6;replaceTransfer(r,2,migrator,beneficiary,950n,{logIndex:0});}],
++  ['credit follows Migrate',r=>replaceTransfer(r,2,migrator,beneficiary,950n,{logIndex:5})],
++  ['credit cancelled after Migrate',r=>r.logs.push(transfer(beneficiary,otherAddress,950n,5))],
++  ['foreign donation cannot mask cancellation',r=>r.logs.push(transfer(beneficiary,otherAddress,950n,5),transfer(otherAddress,beneficiary,1n,6))],
++  ['ambiguous mints',r=>{r.logs[1].logIndex=6;r.logs.push(transfer(zeroAddress,migrator,2000n,0));}],
++  ['duplicate log index',r=>{r.logs[1].logIndex=2;}],
++  ['missing log index',r=>{delete r.logs[2].logIndex;}],
++  ['other transaction credit',r=>replaceTransfer(r,2,migrator,beneficiary,950n,{transactionHash:other})],
++  ['malformed debit cannot disappear',r=>r.logs.push(transfer(beneficiary,otherAddress,950n,5,{data:'0x01'}))],
++  ['noncanonical address topic',r=>{r.logs[3].topics[1]='0x'+'01'.repeat(32);}],
++  ['extra Transfer topic',r=>{r.logs[3].topics.push('0x'+'00'.repeat(32));}],
++ ];
++ for(const [name,mutate] of cases)await t.test(name,async()=>{const f=fixture({receipt:mutate});await assert.rejects(verifyMigration(f.rpc,params));});
++ await t.test('unsupported migration module is not interpreted as V2',async()=>{const asset=[...proof.asset];asset[3]=otherAddress;const f=fixture({asset});await assert.rejects(verifyMigration(f.rpc,params),/Historical V2 migration module/);});
++ await t.test('a migrator self-transfer is not a beneficiary credit',async()=>{const asset=[...proof.asset];asset[1]=migrator;const f=fixture({asset,receipt:r=>replaceTransfer(r,2,migrator,migrator,950n)});await assert.rejects(verifyMigration(f.rpc,{...params,governanceType:'launchpad'}),/transaction-bound V2 LP attribution/);});
++});

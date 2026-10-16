@@ -1,0 +1,28 @@
+TAP version 13
+# Subtest: lifecycle USTAR supplies every manifest path used by remote control staging
+not ok 1 - lifecycle USTAR supplies every manifest path used by remote control staging
+  ---
+  duration_ms: 4.171416
+  type: 'test'
+  location: '/tmp/nano-lifecycle-unit-nh3g9a/baseline/tests/multihost/vps-linux-bootstrap.test.mjs:48:1'
+  failureType: 'testCodeFailure'
+  error: 'VPS Linux bootstrap: only six owner-scoped configuration files'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    need (file:///tmp/nano-lifecycle-unit-nh3g9a/baseline/tests/multihost/vps-linux-bootstrap.mjs:4:32)
+    buildVpsLinuxTransport (file:///tmp/nano-lifecycle-unit-nh3g9a/baseline/tests/multihost/vps-linux-bootstrap.mjs:71:110)
+    TestContext.<anonymous> (file:///tmp/nano-lifecycle-unit-nh3g9a/baseline/tests/multihost/vps-linux-bootstrap.test.mjs:49:89)
+    Test.runInAsyncScope (node:async_hooks:226:14)
+    Test.run (node:internal/test_runner/test:1201:25)
+    Test.start (node:internal/test_runner/test:1096:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 47.717041

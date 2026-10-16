@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import {writeFile,readFile,readdir,symlink,link,unlink,rm,mkdir,chmod,lstat} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import {validateRotationCopySummary} from './rotation-owned-copy.mjs';
-import {requireLifecycleRuntimeAuthority,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleCheckpoint,lifecycleRollingFinalityWindow,lifecycleOperationDigest,lifecyclePrivateDirectory,writeLifecycleKnownFile,readLifecycleKnownFile,admitLifecycleKnownFiles,projectLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,publishLifecycleStoppedCapturesBeforeClosing} from './lifecycle-runtime.mjs';
+import {requireLifecycleRuntimeAuthority,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleCheckpoint,lifecycleRollingFinalityWindow,lifecycleOperationDigest,lifecyclePrivateDirectory,writeLifecycleKnownFile,readLifecycleKnownFile,admitLifecycleKnownFiles,projectLifecycleStoppedCapture,publishLifecycleStoppedCapture,createLifecycleStopReceipts,lifecycleStoppedCapturesReceipt,publishLifecycleStoppedCapturesBeforeClosing} from './lifecycle-runtime.mjs';
 import {lifecycleWholeCopyProgram,lifecycleLinuxStatx} from './lifecycle-owner.mjs';
 const q=n=>'0x'+BigInt(n).toString(16),root=n=>'0x'+String(n).padStart(64,'0'),pub=n=>'0x'+String(n).padStart(96,'0'),digest=b=>createHash('sha256').update(b).digest('hex');
 const names=['mac-native','mac-docker','vps-docker'];
@@ -89,6 +89,31 @@ test('stopped capture receipt publication refusal prevents closing and missing c
  await assert.rejects(publishLifecycleStoppedCapturesBeforeClosing(projected(),{campaignId,publish:async()=>{++publishes;throw failure;},close:async()=>{++closes;}}),error=>error===failure);assert.equal(publishes,1);assert.equal(closes,0);
  await assert.rejects(publishLifecycleStoppedCapturesBeforeClosing(projected().slice(0,2),{campaignId,publish:async()=>{++publishes;},close:async()=>{++closes;}}));assert.equal(publishes,1);assert.equal(closes,0);
  const result=await publishLifecycleStoppedCapturesBeforeClosing(projected(),{campaignId,publish:async()=>{++publishes;},close:async()=>{++closes;return 'actual closing result';}});assert.equal(result,'actual closing result');assert.equal(closes,1);
+});
+test('each actual stopped capture commitment is awaited before return or a failed next stage',async()=>{
+ for(const name of names){const events=[],original=captured(name),before=JSON.stringify(original);let release,committed,returned=false;const gate=new Promise(resolve=>{release=resolve;}),pending=publishLifecycleStoppedCapture(original,{campaignId,publish:async receipt=>{events.push('publish-start');committed=structuredClone(receipt);await gate;receipt.capture.sha256='f'.repeat(64);events.push('published');}});pending.then(()=>{returned=true;});await Promise.resolve();assert.equal(returned,false);assert.deepEqual(events,['publish-start']);release();const projection=await pending;events.push('returned');assert.equal(projection.capture.sha256,'c'.repeat(64));assert.equal(JSON.stringify(original),before);assert.equal(committed.owner,name);assert.equal(committed.artifactStorage,name==='vps-docker'?'vps-local':'mac-local');assert.equal(JSON.stringify(committed).includes('RAW-PRIVATE-'),false);
+  const failure=Error('next control stage refused');await assert.rejects(async()=>{assert(committed);events.push('stage');throw failure;},error=>error===failure);assert.deepEqual(events,['publish-start','published','returned','stage']);assert.equal(committed.rawCapsuleIncluded,false);assert.equal(committed.productionQualified,false);
+ }
+ let stages=0;const failure=Error('capture publication refused');await assert.rejects(async()=>{await publishLifecycleStoppedCapture(captured('vps-docker'),{campaignId,publish:async()=>{throw failure;}});++stages;},error=>error===failure);assert.equal(stages,0);
+});
+test('retained stopped owner survives stage failure and all three captures publish before failed closing',async()=>{
+ const tracker=createLifecycleStopReceipts(),bindings=Object.fromEntries(names.map(name=>[name,'original roots '+name])),stageFailure=Error('public genesis-state.ssz absent during stage'),closingFailure=Error('live lifecycle stages missing');let firstFailure,committed;const events=[];
+ try{tracker.stopped('vps-docker',captured('vps-docker').receipt,bindings['vps-docker']);events.push('vps-stopped');throw stageFailure;}catch(error){firstFailure=error;}
+ for(const name of ['mac-native','mac-docker'])tracker.stopped(name,captured(name).receipt,bindings[name]);const terminal=tracker.collect(bindings);assert.deepEqual(terminal.map(x=>x.name),names);
+ const captures=terminal.map(({name,receipt})=>projectLifecycleStoppedCapture({...captured(name),receipt},{campaignId}));
+ try{await publishLifecycleStoppedCapturesBeforeClosing(captures,{campaignId,publish:async value=>{await Promise.resolve();committed=value;events.push('captures-published');},close:async()=>{events.push('closing');throw closingFailure;}});}catch(error){firstFailure??=error;assert.equal(error,closingFailure);}
+ assert.equal(firstFailure,stageFailure);assert.deepEqual(events,['vps-stopped','captures-published','closing']);assert.equal(committed.ownersCaptured,3);assert.equal(committed.validatorPrimaryWitnessPairs,65);assert.equal(committed.readOnlyDatabaseRoles,136);assert.equal(committed.captureOnly,true);assert.equal(committed.lifecycleTerminalQualified,false);assert.equal(committed.productionQualified,false);assert.equal(JSON.stringify(committed).includes('RAW-PRIVATE-'),false);
+});
+test('resuming invalidates the old stop before a new writer and cannot publish an incomplete terminal set',async()=>{
+ const tracker=createLifecycleStopReceipts(),bindings=Object.fromEntries(names.map(name=>[name,'original roots '+name]));for(const name of names)tracker.stopped(name,captured(name).receipt,bindings[name]);
+ tracker.resuming('vps-docker');const afterResume=tracker.collect(bindings);assert.deepEqual(afterResume.map(x=>x.name),['mac-native','mac-docker']);let publishes=0,closes=0;
+ await assert.rejects(publishLifecycleStoppedCapturesBeforeClosing(afterResume.map(({name,receipt})=>projectLifecycleStoppedCapture({...captured(name),receipt},{campaignId})),{campaignId,publish:async()=>{++publishes;},close:async()=>{++closes;}}));assert.equal(publishes,0);assert.equal(closes,0);
+ bindings['vps-docker']='new restored roots vps-docker';const receipt=captured('vps-docker').receipt;tracker.stopped('vps-docker',receipt,bindings['vps-docker']);receipt.validator.healthy=false;const terminal=tracker.collect(bindings);assert.equal(terminal.length,3);assert.equal(terminal[2].receipt.validator.healthy,true);terminal[2].receipt.validator.healthy=false;assert.equal(tracker.collect(bindings)[2].receipt.validator.healthy,true);
+});
+test('retained stopped receipt refuses changed roots, duplicate or unhealthy owner authority',()=>{
+ const tracker=createLifecycleStopReceipts(),bindings=Object.fromEntries(names.map(name=>[name,'original roots '+name]));tracker.stopped('vps-docker',captured('vps-docker').receipt,bindings['vps-docker']);
+ assert.throws(()=>tracker.collect({...bindings,'vps-docker':'different roots without resume'}));assert.throws(()=>tracker.stopped('vps-docker',captured('vps-docker').receipt,bindings['vps-docker']));assert.throws(()=>tracker.stopped('other',captured('vps-docker').receipt,'roots'));assert.throws(()=>tracker.resuming('other'));assert.throws(()=>tracker.collect({'vps-docker':bindings['vps-docker']}));
+ tracker.resuming('vps-docker');for(const change of [r=>r.event='other',r=>r.clockHealthy=false,r=>r.validator.healthy=false,r=>r.validator.failure='failed']){const receipt=captured('vps-docker').receipt;change(receipt);assert.throws(()=>tracker.stopped('vps-docker',receipt,bindings['vps-docker']));}assert.throws(()=>tracker.stopped('vps-docker',captured('vps-docker').receipt,''));assert.equal(tracker.collect(bindings).length,0);
 });
 }
 
