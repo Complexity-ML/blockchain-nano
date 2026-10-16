@@ -1,0 +1,898 @@
+{
+  "format": "nano-rpc-context-geth-oracle-v1",
+  "passed": false,
+  "completed": false,
+  "compared": 258,
+  "expectedCases": 258,
+  "forks": [
+    {
+      "fork": "Paris",
+      "clientVersion": "Geth/v1.16.0-stable-57f8971b/linux-arm64/go1.24.4",
+      "chainId": "1337",
+      "blockNumber": "0x0",
+      "difficulty": "0x0",
+      "baseFeePerGas": "0x3b9aca00",
+      "gasLimit": "0x1c9c380",
+      "genesisHeader": {
+        "baseFeePerGas": "0x3b9aca00",
+        "difficulty": "0x0",
+        "extraData": "0x",
+        "gasLimit": "0x1c9c380",
+        "gasUsed": "0x0",
+        "hash": "0x576c23e3bf9929729003df7118997db0a9f3595bfee898ae0fba956d4f1800e7",
+        "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "miner": "0x0000000000000000000000000000000000000000",
+        "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "nonce": "0x0000000000000000",
+        "number": "0x0",
+        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+        "size": "0x1fe",
+        "stateRoot": "0x98b358fa01613f7d9e087ad43393339eb96346b496133b03558358e827b2b9ca",
+        "timestamp": "0x0",
+        "transactions": [],
+        "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "uncles": []
+      },
+      "allocationsVerified": 6,
+      "nanoFixtureDifficulty": "0x1",
+      "difficultyAdaptedForPostMergeContext": true,
+      "p2pDisabledByConfiguration": true,
+      "devOrMiningEnabled": false,
+      "cases": 129,
+      "headerUnchanged": true,
+      "allocatedAccountsUnchanged": true
+    },
+    {
+      "fork": "Shanghai",
+      "clientVersion": "Geth/v1.16.0-stable-57f8971b/linux-arm64/go1.24.4",
+      "chainId": "1337",
+      "blockNumber": "0x0",
+      "difficulty": "0x0",
+      "baseFeePerGas": "0x3b9aca00",
+      "gasLimit": "0x1c9c380",
+      "genesisHeader": {
+        "baseFeePerGas": "0x3b9aca00",
+        "difficulty": "0x0",
+        "extraData": "0x",
+        "gasLimit": "0x1c9c380",
+        "gasUsed": "0x0",
+        "hash": "0xd08bc715a967174c1fe58c98978d10b47ed4217bf0bf96fc9c4007d3b231fa2f",
+        "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "miner": "0x0000000000000000000000000000000000000000",
+        "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "nonce": "0x0000000000000000",
+        "number": "0x0",
+        "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+        "size": "0x220",
+        "stateRoot": "0x98b358fa01613f7d9e087ad43393339eb96346b496133b03558358e827b2b9ca",
+        "timestamp": "0x0",
+        "transactions": [],
+        "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "uncles": [],
+        "withdrawals": [],
+        "withdrawalsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
+      },
+      "allocationsVerified": 6,
+      "nanoFixtureDifficulty": "0x1",
+      "difficultyAdaptedForPostMergeContext": true,
+      "p2pDisabledByConfiguration": true,
+      "devOrMiningEnabled": false,
+      "cases": 129,
+      "headerUnchanged": true,
+      "allocatedAccountsUnchanged": true
+    }
+  ],
+  "readinessObservations": [
+    {
+      "fork": "Paris",
+      "observedClientVersion": "Geth/v1.16.0-stable-57f8971b/linux-arm64/go1.24.4",
+      "lastReadinessError": "fetch failed",
+      "attempts": 4,
+      "ready": true
+    },
+    {
+      "fork": "Shanghai",
+      "observedClientVersion": "Geth/v1.16.0-stable-57f8971b/linux-arm64/go1.24.4",
+      "lastReadinessError": "fetch failed",
+      "attempts": 4,
+      "ready": true
+    }
+  ],
+  "unexpectedComparisons": 50,
+  "documentedAccessListZeroFeePolicyComparisons": 0,
+  "estimateQuoteDifferences": 18,
+  "exactAllComparedValuesEqual": false,
+  "differences": [
+    {
+      "index": 1,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 4,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 7,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 10,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 13,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 51,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xdaa4",
+        "geth": "0xdaa3"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 55,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xdaa4",
+        "geth": "0xdaa3"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 59,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xe891",
+        "geth": "0xebc4"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 62,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "accessList",
+      "detail": {
+        "candidate": [],
+        "geth": [
+          {
+            "address": "0x247a03675aa36ef0f6e33caf38aee8fc51c6623d",
+            "storageKeys": []
+          }
+        ]
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 62,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "accessListGasUsed",
+      "detail": {
+        "candidate": "0xe905",
+        "geth": "0xf265"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 64,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xe891",
+        "geth": "0xebc4"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 96,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 97,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 98,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 99,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 100,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 101,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 102,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 103,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 104,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 105,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 106,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 107,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 108,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 109,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 110,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 111,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 112,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 113,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 114,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 115,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 116,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 117,
+      "fork": "Paris",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 118,
+      "fork": "Paris",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 119,
+      "fork": "Paris",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 130,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 133,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 136,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 139,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 142,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xa87d",
+        "geth": "0xa9f5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 180,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xdaa6",
+        "geth": "0xdaa5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 184,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xdaa6",
+        "geth": "0xdaa5"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 188,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xe893",
+        "geth": "0xebc6"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 191,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "accessList",
+      "detail": {
+        "candidate": [],
+        "geth": [
+          {
+            "address": "0x247a03675aa36ef0f6e33caf38aee8fc51c6623d",
+            "storageKeys": []
+          }
+        ]
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 191,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "accessListGasUsed",
+      "detail": {
+        "candidate": "0xe907",
+        "geth": "0xf267"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 193,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "estimateGasQuote",
+      "detail": {
+        "candidate": "0xe893",
+        "geth": "0xebc6"
+      },
+      "affectsQualitativeComparison": false
+    },
+    {
+      "index": 225,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 226,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 227,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 228,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 229,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 230,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 231,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 232,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 233,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 234,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 235,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 236,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 237,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 238,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 239,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 240,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 241,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 242,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "unclassifiedRpcError"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 243,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 244,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 245,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 246,
+      "fork": "Shanghai",
+      "method": "eth_call",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 247,
+      "fork": "Shanghai",
+      "method": "eth_estimateGas",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    },
+    {
+      "index": 248,
+      "fork": "Shanghai",
+      "method": "eth_createAccessList",
+      "kind": "resultClass",
+      "detail": {
+        "candidate": "invalidParameters",
+        "geth": "success"
+      },
+      "affectsQualitativeComparison": true
+    }
+  ],
+  "firstFailure": "input/program final fence: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    '43',\n    '41',\n    '33152',\n    '1',\n...\n    '1792189345550158109',\n+   '1792189345709756056'\n-   '1792189345550158109'\n  ]\n",
+  "cleanupErrors": [],
+  "elapsedMs": 618,
+  "maximumRunMs": 180000,
+  "productionQualified": false,
+  "globalSdkQualified": false,
+  "authorExecuted": false
+}
