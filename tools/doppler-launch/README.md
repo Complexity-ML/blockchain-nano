@@ -56,10 +56,18 @@ value 120 failed the on-chain constructor; an explicit synthetic value 20040
 passed creation simulation and gas estimation on Base (10,912,762 gas). Token
 and hook return addresses match SDK predictions. Both failed and successful
 review artifacts are retained under `docs/qualification/doppler-unsigned-preview-20261004`.
-Those historical simulations used height selectors and do not qualify the new
-strict hash-estimation extension on a current Base provider; its actual support
-remains unqualified until a separately authorized read-only probe succeeds.
-Real economic terms still need configuration and qualification.
+Those historical simulations used height selectors. On 2026-10-16, ten bounded
+public reads on mainnet.base.org observed getCode/call/estimateGas using the same
+canonical-hash selector, with unknown hashes refused and the reference fence
+matching. One fresh public synthetic fixture then passed the current strict
+creation simulation and estimation: 12 read-only requests, matching predicted
+token/hook addresses, 10,912,762 gas. Only its reference timestamp was refreshed.
+Root's evidence wrapper subsequently exited 1 on its final BigInt console output;
+the successful reports were validated separately without replay. See the
+[scoped report and retained failure](../../docs/qualification/pruning-base-hash-20261016/README.md).
+This does not qualify arbitrary historical state, a known orphan during a real
+reorg, the bridge or actual launch terms. Hash estimation remains a provider
+extension outside EIP-1898. Real economic terms still need configuration and qualification.
 
 Supported governance choices are explicit `noOp`/`launchpad`; migration choices are
 V2/V4. V4 requires explicit fee beneficiaries and lock duration. Other SDK modes,

@@ -1,0 +1,207 @@
+{
+  "format": "nano-doppler-public-strict-hash-simulation-v1",
+  "startedAt": "2026-10-16T13:38:59.504Z",
+  "sourceRevision": "583c58952efde5ccbc033750a06d5a6f7ae056bc",
+  "sourcePins": {
+    "tools/doppler-launch/preview.mjs": {
+      "sha256": "4799ace32712390254066366acf6c287ab029bd354869afd122cae1eda58ab2c",
+      "bytes": 10746
+    },
+    "tools/doppler-launch/example.synthetic.json": {
+      "sha256": "f240e2822cbea0aea5e5b95cef1bd47814c2f4c73011864be6eeb446ef347bb7",
+      "bytes": 965
+    },
+    "tools/doppler-launch/package-lock.json": {
+      "sha256": "3c24823625c8ca5ff1b205c00f13c7e7309c8c1ffd45b45172a924e4428f102c",
+      "bytes": 48068
+    },
+    "tools/bridge-source/rpc.mjs": {
+      "sha256": "c94674fdebd4d947badc3ac770c9c955cbc28d3721cba104e4d8d681cffeae06",
+      "bytes": 4446
+    }
+  },
+  "calls": [
+    {
+      "index": 1,
+      "method": "eth_chainId",
+      "params": []
+    },
+    {
+      "index": 2,
+      "method": "eth_getBlockByNumber",
+      "params": [
+        "latest",
+        false
+      ]
+    },
+    {
+      "index": 3,
+      "method": "eth_getCode",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      }
+    },
+    {
+      "index": 4,
+      "method": "eth_getCode",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      }
+    },
+    {
+      "index": 5,
+      "method": "eth_getCode",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      }
+    },
+    {
+      "index": 6,
+      "method": "eth_getCode",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      }
+    },
+    {
+      "index": 7,
+      "method": "eth_getCode",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      }
+    },
+    {
+      "index": 8,
+      "method": "eth_getCode",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      }
+    },
+    {
+      "index": 9,
+      "method": "eth_call",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      },
+      "call": {
+        "to": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "dataBytes": 4,
+        "dataSha256": "14c70f2432d9477dfd6d6e248a2e21da83c5bd31917f6f726e25762c6fe61689"
+      }
+    },
+    {
+      "index": 10,
+      "method": "eth_call",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      },
+      "call": {
+        "from": "0x1111111111111111111111111111111111111111",
+        "to": "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12",
+        "value": "0x0",
+        "dataBytes": 1476,
+        "dataSha256": "522ee818337eeadf3373a5a57b8d78994226e210d04be6478ddd216e5f359c5f"
+      }
+    },
+    {
+      "index": 11,
+      "method": "eth_estimateGas",
+      "selector": {
+        "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+        "requireCanonical": true
+      },
+      "call": {
+        "from": "0x1111111111111111111111111111111111111111",
+        "to": "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12",
+        "value": "0x0",
+        "dataBytes": 1476,
+        "dataSha256": "522ee818337eeadf3373a5a57b8d78994226e210d04be6478ddd216e5f359c5f"
+      }
+    },
+    {
+      "index": 12,
+      "method": "eth_getBlockByNumber",
+      "params": [
+        "0x323e609",
+        false
+      ]
+    }
+  ],
+  "maximumRequests": 12,
+  "deadlineMs": 120000,
+  "syntheticTermsOnly": true,
+  "fixtureChanges": {
+    "referenceTimestamp": {
+      "before": 1791136800,
+      "after": 1792157939
+    }
+  },
+  "originalFilesAndHistoricalArtifactsModified": false,
+  "walletUsed": false,
+  "signatureRequested": false,
+  "transactionSent": false,
+  "realLaunchTermsQualified": false,
+  "bridgeQualified": false,
+  "productionQualified": false,
+  "status": "unsigned-preview",
+  "simulation": {
+    "performed": true,
+    "success": true,
+    "referenceHashPinned": true,
+    "gasEstimateHashExtensionRequired": true,
+    "gasEstimateHashExtensionAccepted": true,
+    "blockNumber": "52684297",
+    "blockHash": "0x144663969563319f0f8e20a73e57dae788c953df76a52935dcc39a780cca4b97",
+    "gas": "10912762",
+    "modules": {
+      "airlock": {
+        "address": "0x660eAaEdEBc968f8f3694354FA8EC0b4c5Ba8D12",
+        "codeHash": "0x5f38c6f76f62855999df836052fccdc14befc7c067105e727f26ee3f42543acc"
+      },
+      "numeraire": {
+        "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "codeHash": "0xa6705a10bb756b5dea144591118be77d7af0c3eee3bf2dfe2583dcb0364fefab"
+      },
+      "tokenFactory": {
+        "address": "0xf0B5141dD9096254B2ca624dff26024f46087229",
+        "codeHash": "0x25548e44d73f73291918fcfe43aacbb9391ece9e64ec3bec3ca5079d5f67dd0c"
+      },
+      "governanceFactory": {
+        "address": "0xe7dfbd5b0A2C3B4464653A9beCdc489229eF090E",
+        "codeHash": "0xadf50a4c431ba240b63c495438ea9c03638a37c48467a290db647e22f6c96f3d"
+      },
+      "poolInitializer": {
+        "address": "0xFDFD7D27089f306eEF279b5DA6BFe878250cB6bb",
+        "codeHash": "0xf478377f1b91e750c80655d3df97462c1323933ccb8840d3389e771f4c7c9b95"
+      },
+      "liquidityMigrator": {
+        "address": "0x5F3bA43D44375286296Cb85F1EA2EBfa25dde731",
+        "codeHash": "0x6aebbc6c454e549f09e6fcc8dce345f3ff149433e70fc9e63065115e728463bc"
+      }
+    },
+    "returnedAddresses": [
+      "0x41193D7Ad9B2C25309778CaFc3A9fFFDCF39c815",
+      "0x8995141d736CbfCc5c54CBB33c7a45Da98a138e0",
+      "0x000000000000000000000000000000000000dEaD",
+      "0x000000000000000000000000000000000000dEaD",
+      "0xef12532c1252d4cec81E53F44ef2f85Eb3162d62"
+    ]
+  },
+  "calldataHash": "0x70f5e1d5fdb6dd8c7e7b45bcc313f4f50d1d154d44e141f42839df30994e0403",
+  "predicted": {
+    "tokenAddress": "0x41193D7Ad9B2C25309778CaFc3A9fFFDCF39c815",
+    "hookAddress": "0x8995141d736CbfCc5c54CBB33c7a45Da98a138e0"
+  },
+  "passed": true,
+  "durationMs": 3148,
+  "completedAt": "2026-10-16T13:39:02.652Z",
+  "requestCount": 12,
+  "sourceBytesUnchanged": true
+}

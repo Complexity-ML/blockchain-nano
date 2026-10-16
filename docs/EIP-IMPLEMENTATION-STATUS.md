@@ -1,3 +1,10 @@
+> **16 octobre 2026 — rétention RPC et chemin Doppler par hash : preuves ciblées.**
+> [Rapport et artefacts](qualification/pruning-base-hash-20261016/README.md).
+> Docker ARM : nouveau mode dédié, 3 scénarios, 112 vérifications et 20 refus attendus ; vraie rétention before3→5/ancre6, simulation concurrente, réouverture et engagements externes. Un M/CXX/lien/loader ; Core bd11 inchangé, aucune image construite ni ancien groupe rejoué. Nouveau test du commit 583c5895 ; Mac natif/AMD non rejoués pour ce mode.
+> Base public : 10 lectures qualifient la surface observée des sélecteurs par hash ; puis une création Doppler synthétique via le wrapper strict réussit en 12 lectures, adresses concordantes, gas 10 912 762. Aucun wallet, signature, transaction envoyée ou fonds. L'estimation par hash reste une extension hors EIP-1898.
+> Le wrapper de preuve termine ensuite exit1 sur JSON.stringify(BigInt), après sauvegarde des rapports réussis : échec console conservé, contenu vérifié séparément, aucun rejeu. Les termes réels, le bridge, l'exécution historique arbitraire/reorg réelle et la production ne sont pas qualifiés.
+> Pruning opérationnel/reclaim SST, campagne privée à trois propriétaires, duties/finalité commune, consensus/WAN/charge, CI complète et revue de sécurité externe restent ouverts. L'accord d'audit antérieur n'autorise pas la nouvelle campagne. Tout l'historique ci-dessous est conservé.
+
 ## Test RPC courant qualifié sur les trois environnements — 16 octobre 2026
 
 La variante courante RocksDB du test RPC (`3f3dc2bc…`) passe maintenant Linux ARM64 et AMD64 : chaque essai réalise une M indépendante, une compilation, un lien au Core conservé, un `ldd` et le seul sélecteur ciblé ; cinq groupes, 120 checks et 58 refus attendus passent par environnement (M=MD : 463/461 dépendances). La réussite Native antérieure est réutilisée sans la rejouer. Les Core à 143 membres, les sept arbres source de base `bd11…`, le manifeste `d30e…` et les trois admissions de code restent conservés.

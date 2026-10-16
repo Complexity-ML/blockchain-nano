@@ -1,0 +1,193 @@
+{
+  "format": "nano-base-public-hash-selector-observation-v1",
+  "startedAt": "2026-10-16T13:26:12.576Z",
+  "endpoint": "https://mainnet.base.org",
+  "sourceRevision": "92b5edf385682b51517ea3a6e008a99831e7016c",
+  "transport": {
+    "sha256": "c94674fdebd4d947badc3ac770c9c955cbc28d3721cba104e4d8d681cffeae06",
+    "bytes": 4446
+  },
+  "budgets": {
+    "maximumRequests": 10,
+    "perRequestTimeoutMs": 10000,
+    "perResponseBytes": 1048576,
+    "retries": 0
+  },
+  "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+  "requestedReferenceTag": "finalized",
+  "rows": [
+    {
+      "index": 1,
+      "label": "identity",
+      "method": "eth_chainId",
+      "startedAt": "2026-10-16T13:26:12.581Z",
+      "outcome": "result",
+      "result": "0x2105",
+      "durationMs": 193
+    },
+    {
+      "index": 2,
+      "label": "reference",
+      "method": "eth_getBlockByNumber",
+      "selector": false,
+      "startedAt": "2026-10-16T13:26:12.773Z",
+      "outcome": "result",
+      "result": {
+        "number": "0x323e2a7",
+        "hash": "0x69e6e2ad12fb951c3824599a276bab5253fd1d51eda93d8053a4a99433206de6",
+        "timestamp": "0x6ad22231"
+      },
+      "durationMs": 1133
+    },
+    {
+      "index": 3,
+      "label": "known-hash-code",
+      "method": "eth_getCode",
+      "selector": {
+        "blockHash": "0x69e6e2ad12fb951c3824599a276bab5253fd1d51eda93d8053a4a99433206de6",
+        "requireCanonical": true
+      },
+      "startedAt": "2026-10-16T13:26:13.907Z",
+      "outcome": "result",
+      "result": {
+        "bytes": 1852,
+        "sha256": "98d785fcb1bf847f287adc2310759fd94cc13e754b974bc72131382e8266f607"
+      },
+      "durationMs": 95
+    },
+    {
+      "index": 4,
+      "label": "known-hash-call",
+      "method": "eth_call",
+      "selector": {
+        "blockHash": "0x69e6e2ad12fb951c3824599a276bab5253fd1d51eda93d8053a4a99433206de6",
+        "requireCanonical": true
+      },
+      "startedAt": "2026-10-16T13:26:14.002Z",
+      "outcome": "result",
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000006",
+      "durationMs": 95
+    },
+    {
+      "index": 5,
+      "label": "known-hash-estimate",
+      "method": "eth_estimateGas",
+      "selector": {
+        "blockHash": "0x69e6e2ad12fb951c3824599a276bab5253fd1d51eda93d8053a4a99433206de6",
+        "requireCanonical": true
+      },
+      "startedAt": "2026-10-16T13:26:14.097Z",
+      "outcome": "result",
+      "result": "0x78ee",
+      "durationMs": 101
+    },
+    {
+      "index": 6,
+      "label": "unknown-hash-code",
+      "method": "eth_getCode",
+      "selector": {
+        "blockHash": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "requireCanonical": true
+      },
+      "startedAt": "2026-10-16T13:26:14.198Z",
+      "outcome": "rpc-error",
+      "error": "Source RPC error",
+      "diagnostic": {
+        "method": "eth_getCode",
+        "code": -32001
+      },
+      "durationMs": 101
+    },
+    {
+      "index": 7,
+      "label": "unknown-hash-call",
+      "method": "eth_call",
+      "selector": {
+        "blockHash": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "requireCanonical": true
+      },
+      "startedAt": "2026-10-16T13:26:14.300Z",
+      "outcome": "rpc-error",
+      "error": "Source RPC error",
+      "diagnostic": {
+        "method": "eth_call",
+        "code": -32001
+      },
+      "durationMs": 92
+    },
+    {
+      "index": 8,
+      "label": "unknown-hash-estimate",
+      "method": "eth_estimateGas",
+      "selector": {
+        "blockHash": "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "requireCanonical": true
+      },
+      "startedAt": "2026-10-16T13:26:14.391Z",
+      "outcome": "rpc-error",
+      "error": "Source RPC error",
+      "diagnostic": {
+        "method": "eth_estimateGas",
+        "code": -32001
+      },
+      "durationMs": 96
+    },
+    {
+      "index": 9,
+      "label": "future-height-call",
+      "method": "eth_call",
+      "selector": {
+        "blockNumber": "0x10323e2a7"
+      },
+      "startedAt": "2026-10-16T13:26:14.487Z",
+      "outcome": "rpc-error",
+      "error": "Source RPC error",
+      "diagnostic": {
+        "method": "eth_call",
+        "code": -32001
+      },
+      "durationMs": 102
+    },
+    {
+      "index": 10,
+      "label": "reference-fence",
+      "method": "eth_getBlockByNumber",
+      "selector": false,
+      "startedAt": "2026-10-16T13:26:14.589Z",
+      "outcome": "result",
+      "result": {
+        "number": "0x323e2a7",
+        "hash": "0x69e6e2ad12fb951c3824599a276bab5253fd1d51eda93d8053a4a99433206de6",
+        "timestamp": "0x6ad22231"
+      },
+      "durationMs": 171
+    }
+  ],
+  "walletUsed": false,
+  "launchTermsRead": false,
+  "transactionSent": false,
+  "historicalExecutionProven": false,
+  "noncanonicalHashTested": false,
+  "cryptographicFinalityProven": false,
+  "dopplerCreateSimulated": false,
+  "productionQualified": false,
+  "reference": {
+    "number": "0x323e2a7",
+    "hash": "0x69e6e2ad12fb951c3824599a276bab5253fd1d51eda93d8053a4a99433206de6",
+    "timestamp": "0x6ad22231"
+  },
+  "observed": {
+    "chainIdentity": true,
+    "nonemptyCodeAtKnownHash": true,
+    "usdcDecimalsAtKnownHash": true,
+    "gasQuantityAtKnownHash": true,
+    "unknownHashesRejected": true,
+    "futureHeightRejected": true,
+    "referenceFence": true,
+    "requiredSelectorSurfaceAccepted": true
+  },
+  "completedAt": "2026-10-16T13:26:14.760Z",
+  "durationMs": 2184,
+  "requestCount": 10,
+  "transportUnchanged": true
+}
