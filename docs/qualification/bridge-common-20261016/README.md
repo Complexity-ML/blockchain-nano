@@ -1,0 +1,25 @@
+# Bridge commun — cycle synthétique qualifié
+
+16 octobre 2026. Sources à partir de `d32ef9e70905aa4ecc830500d5b142b952af9ef7`, Core C++ inchangé à `68d64a5330d16c971dd603b56e0f14c88c1459c8`. **153 cas réussis sur chacun des deux moteurs**, dont 77 refus attendus. Aucun fonds réel, bridge activé, nouvelle identité de consensus ou réseau public.
+
+| Exécution réelle | Résultat et portée |
+| --- | --- |
+| Anvil 1.5.1, Paris, deux chaînes locales 31337/31338 | 153 cas ; 276 reçus réels : 199 succès et 77 échecs, dont sept CREATE. Les appels négatifs exigent le statut échec, aucun log survivant et le rollback des projections du bridge/token. |
+| Nano `ExecutionEngine`, Paris, deux `State` indépendants | Mêmes 153 cas et mêmes 276 résultats. Le helper C++ signe les fixtures publiques 1/2/3, utilise les nonces réels de l’état et des headers synthétiques. EOF, sortie 0, 3195 requêtes. Aucun serveur RPC Nano, RocksDB, consensus ou P2P n’est démarré. |
+| Comparaison | Même liste de cas, mêmes 77 refus, même comptabilité avant corruption : réserve 113 = offre 110 + locks en attente 3 + burns en attente 0 ; solde réel 114, dont un don sans droit d’émission. Ceci ne qualifie pas toute l’EVM. |
+
+Le lot exerce dépôt/émission/destruction/restitution, portes fermées sur les quatre opérations, altération des 14 champs, mauvaise route même approuvée par le mock, preuve absente/altérée/trop longue, doublons/autre caller/autre preuve, deux payloads approuvés du même nonce source, perte et reconstruction de l’index, livraison 2→1, plafond exact puis dépassement, don, retours ERC-20 false/vides, taxes/débits incorrects, mint/burn incorrects, callbacks réentrants et retry du même message après rollback. La corruption finale de l’offre par un minter de test bloque mint/burn ; elle demeure visible, sans prétendre réparer l’actif ou maintenir sa disponibilité.
+
+Les cinq contrôles de reload natifs effectuent un vrai roundtrip JSON avec égalité du contenu complet et de la racine. Les cinq étapes Anvil minent seulement un bloc, explicitement marquées comme telles. L’index natif de reçus est en mémoire. Aucune reprise de processus, WAL, crash ou finalité interchaînes n’est qualifiée ici. L’absence d’entrée `refund` est vérifiée ; aucun délai réel de remboursement n’est testé.
+
+## Provenance, clôture et échecs conservés
+
+Docker Linux ARM64, image existante, réseau `none`, aucun port publié ; 2 CPU, 3 Go. Un seul nouveau helper est compilé et lié au Core retenu ; une compilation Solidity 0.8.28, cible Paris, optimizer 200, OZ 5.0.2, ethers 6.16.0. Deux avertissements de noms homonymes sont conservés, aucune erreur de compilation. Pas de build d’image/Core, d’installation npm ni de rejeu des anciennes suites. Le batch compile puis exécute les deux moteurs en 11,302 secondes.
+
+La première prévalidation s’arrête avant Docker/compilation/test : le contrôleur cherche la clé absolue du binaire Node dans une table qui emploie la clé `node`. La deuxième tentative exécute le lot entier avec sortie 0 et toutes les entrées hôte intactes. Son contrôleur termine toutefois en échec sur une comparaison sensible à la casse : Docker répond `error: no such object`, le contrôleur attend `No such object`. **Ce terminal original n’est pas réécrit.** Une réconciliation en lecture seule confirme ensuite l’absence du conteneur par `docker container inspect`, la clôture des enfants, les résultats complets et les 1056 entrées contre les mêmes neuf métadonnées + SHA. Aucun test n’est rejoué. La première réconciliation a elle-même refusé avant Docker sur une longueur de nom incorrecte ; son échec reste conservé, puis le contrôle est corrigé en motif exact. Aucune ancienne autorité n’est rafraîchie.
+
+[Logiciel et sources](reports/software.json), [compilation](reports/compiler-inputs.json), [diagnostics](reports/compiler-diagnostics.json), [résultat Anvil](reports/anvil.json), [résultat Nano](reports/native.json), [différentiel](reports/differential.json), [reçus bruts](reports/transactions.jsonl), [terminal du runner](reports/runner-terminal.json), [fence hôte](reports/host-input-fence.json), [réconciliation](reports/reconciliation.json), [échec hôte original](history/original-host-terminal.json), [prévalidation](history/preflight-failure.json), [première réconciliation](history/reconciliation-name-failure.json).
+
+## Restant pour une route réelle
+
+`contracts/bridge` fournit des endpoints **abstraits** ; vérificateur et activation de production restent absents. Les mocks ne prouvent ni inclusion/finalité source, ni résistance à la compromission de l’autorité, ni reorg interchaînes. Actif canonique, domaines autorisés/checkpoints, relation token Base–actif Nano, conversion, gouvernance et récupération restent à décider et qualifier. Pour USDC, les contrats/proxy officiels Circle et leur procédure restent à intégrer ; aucun token de ce test n’est USDC. `WrappedNano` est inchangé. Aucun fork/EIP, cycle des validateurs, RPC/P2P, production ou revue indépendante n’est promu par ces résultats.

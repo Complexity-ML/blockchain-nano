@@ -60,6 +60,9 @@ add_executable(nano-process-backpressure-tests tests/test_process_backpressure.c
 target_link_libraries(nano-process-backpressure-tests PRIVATE nano_core)
 add_test(NAME process_trace_backpressure COMMAND nano-process-backpressure-tests)
 set_tests_properties(process_trace_backpressure PROPERTIES TIMEOUT 20)
+add_executable(nano-bridge-execution-runner EXCLUDE_FROM_ALL tests/bridge_execution_runner.cpp)
+target_link_libraries(nano-bridge-execution-runner PRIVATE nano_core)
+
 add_executable(nano-tests tests/test_core.cpp)
 target_link_libraries(nano-tests PRIVATE nano_core)
 add_test(NAME core COMMAND nano-tests)

@@ -1,3 +1,5 @@
+> Bridge ERC-20 commun : voir [bridge/README.md](bridge/README.md). Endpoints abstraits seulement ; les routes/authentificateurs de production restent absents.
+
 # NanoStaking
 
 Ce guide concerne le profil PoS historique (`consensus=pos`). Le profil Beacon

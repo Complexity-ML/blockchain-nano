@@ -1,0 +1,44 @@
+[
+  {
+    "component": "general",
+    "errorCode": "8760",
+    "formattedMessage": "Warning: This declaration has the same name as another declaration.\n   --> contracts/bridge/BaseBridgeEndpoint.sol:104:79:\n    |\n104 |         internal returns (BridgeTypes.Message memory message, bytes32 digest, bytes32 sourceKey)\n    |                                                                               ^^^^^^^^^^^^^^^^^\nNote: The other declaration is here:\n  --> contracts/bridge/BaseBridgeEndpoint.sol:89:5:\n   |\n89 |     function sourceKey(BridgeTypes.Message calldata message) external pure returns (bytes32) {\n   |     ^ (Relevant source part starts here and spans across multiple lines).\n\n",
+    "message": "This declaration has the same name as another declaration.",
+    "secondarySourceLocations": [
+      {
+        "end": 4108,
+        "file": "contracts/bridge/BaseBridgeEndpoint.sol",
+        "message": "The other declaration is here:",
+        "start": 3965
+      }
+    ],
+    "severity": "warning",
+    "sourceLocation": {
+      "end": 4636,
+      "file": "contracts/bridge/BaseBridgeEndpoint.sol",
+      "start": 4619
+    },
+    "type": "Warning"
+  },
+  {
+    "component": "general",
+    "errorCode": "8760",
+    "formattedMessage": "Warning: This declaration has the same name as another declaration.\n   --> contracts/bridge/BaseBridgeEndpoint.sol:133:74:\n    |\n133 |         BridgeTypes.Kind expectedKind) internal returns (bytes32 digest, bytes32 sourceKey)\n    |                                                                          ^^^^^^^^^^^^^^^^^\nNote: The other declaration is here:\n  --> contracts/bridge/BaseBridgeEndpoint.sol:89:5:\n   |\n89 |     function sourceKey(BridgeTypes.Message calldata message) external pure returns (bytes32) {\n   |     ^ (Relevant source part starts here and spans across multiple lines).\n\n",
+    "message": "This declaration has the same name as another declaration.",
+    "secondarySourceLocations": [
+      {
+        "end": 4108,
+        "file": "contracts/bridge/BaseBridgeEndpoint.sol",
+        "message": "The other declaration is here:",
+        "start": 3965
+      }
+    ],
+    "severity": "warning",
+    "sourceLocation": {
+      "end": 5816,
+      "file": "contracts/bridge/BaseBridgeEndpoint.sol",
+      "start": 5799
+    },
+    "type": "Warning"
+  }
+]

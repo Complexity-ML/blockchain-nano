@@ -1,0 +1,90 @@
+{
+  "format": "nano-bridge-common-contracts-source-proposal-v1",
+  "status": "FROZEN_SOURCE_ONLY_AWAITING_ROOT_QUALIFICATION",
+  "sourceBaseRevisionReportedByRoot": "d6b6fee3",
+  "payloads": [
+    {
+      "path": "source/contracts/bridge/API.sol",
+      "sha256": "1df87015db8f008845b05d66451072d7e698376d8679494ba2dc6f743fa7cf3e",
+      "bytes": 2878,
+      "target": "contracts/bridge/API.sol"
+    },
+    {
+      "path": "source/contracts/bridge/BaseBridgeEndpoint.sol",
+      "sha256": "8329f02ccd7a5ad9a532547cc433886714c246dbfae2592b7090d96798acedb2",
+      "bytes": 7074,
+      "target": "contracts/bridge/BaseBridgeEndpoint.sol"
+    },
+    {
+      "path": "source/contracts/bridge/CanonicalEscrow.sol",
+      "sha256": "db0f7de0d14c65203ac257ad7c5778cf5f061656f77a2ade1e43806716f10017",
+      "bytes": 2861,
+      "target": "contracts/bridge/CanonicalEscrow.sol"
+    },
+    {
+      "path": "source/contracts/bridge/MintBurnGateway.sol",
+      "sha256": "5d88bf15f9058e0ec048e4751d2787774654cca6f4c141c63cad873a0a0c0bea",
+      "bytes": 3446,
+      "target": "contracts/bridge/MintBurnGateway.sol"
+    },
+    {
+      "path": "README.md",
+      "sha256": "e9a2197d2c78ca15dc19e499cd6f6ea2d66374a46739834bbe0c99096317b2df",
+      "bytes": 9228
+    }
+  ],
+  "payloadBytes": 25487,
+  "compilerRequested": "solc 0.8.28; not invoked by author",
+  "openzeppelinRequested": "5.0.2; public source imports only",
+  "api": {
+    "canonicalDefinitionsFile": "source/contracts/bridge/API.sol",
+    "messageTypeName": "NanoBridgeMessageV1",
+    "messageFields": 14,
+    "endpointConfigFields": 12,
+    "firstOutboundNonce": 1,
+    "kinds": {
+      "LOCK": 0,
+      "BURN": 1
+    },
+    "sourceKeyIncludes": [
+      "kind",
+      "sourceChainId",
+      "sourceDomain",
+      "sourceEndpoint",
+      "nonce"
+    ],
+    "sourceKeyExcludesPaymentPayload": true,
+    "verifierSignature": "verifyMessage(bytes32,bytes) external view returns (bool)",
+    "tokenSignatures": [
+      "mint(address,uint256) external returns (bool)",
+      "burn(uint256) external"
+    ]
+  },
+  "scope": {
+    "abstractEndpointContracts": 3,
+    "concreteEndpointContracts": 0,
+    "realProofVerifierImplemented": false,
+    "syntheticTokensIncluded": false,
+    "activationImplementationIncluded": false,
+    "proxyImplementationIncluded": false,
+    "trustModelChosen": false,
+    "economicRatioChosen": false,
+    "nativeCurrencyEscrowImplemented": false,
+    "wrappedNanoModified": false,
+    "usdcStandardComplianceClaimed": false,
+    "productionQualified": false,
+    "gatewaySupplyEqualsOutstandingRequired": true,
+    "initialRepresentationSupplyRequired": 0
+  },
+  "authorActions": {
+    "sourceOnly": true,
+    "compilations": 0,
+    "projectProgramsExecuted": 0,
+    "testsExecuted": 0,
+    "privateInputsRead": 0,
+    "sdkReads": 0,
+    "nodeModulesReads": 0,
+    "rWrites": 0,
+    "operations": 0
+  }
+}

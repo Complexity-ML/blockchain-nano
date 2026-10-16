@@ -1,0 +1,684 @@
+{
+  "format": "nano-bridge-common-synthetic-scenario-v1",
+  "passed": true,
+  "cases": [
+    {
+      "name": "deploy two isolated domain pairs with equal numeric endpoint addresses",
+      "passed": true
+    },
+    {
+      "name": "closed route rejects lock",
+      "passed": true
+    },
+    {
+      "name": "closed route rejects mint",
+      "passed": true
+    },
+    {
+      "name": "closed route rejects burn",
+      "passed": true
+    },
+    {
+      "name": "closed route rejects release",
+      "passed": true
+    },
+    {
+      "name": "constructor refuses invalid localChainId",
+      "passed": true
+    },
+    {
+      "name": "constructor refuses invalid localDomain",
+      "passed": true
+    },
+    {
+      "name": "constructor refuses invalid remoteDomain",
+      "passed": true
+    },
+    {
+      "name": "constructor refuses invalid maxProofBytes",
+      "passed": true
+    },
+    {
+      "name": "constructor refuses invalid maxOutstanding",
+      "passed": true
+    },
+    {
+      "name": "constructor refuses invalid localToken",
+      "passed": true
+    },
+    {
+      "name": "constructor refuses invalid verifier",
+      "passed": true
+    },
+    {
+      "name": "actual lock creates reserve and pending mint",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered kind",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered sourceChainId",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered sourceDomain",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered sourceEndpoint",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered destinationChainId",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered destinationDomain",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered destinationEndpoint",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered sourceToken",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered destinationToken",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered nonce",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered sender",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered recipient",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered amount",
+      "passed": true
+    },
+    {
+      "name": "unchanged proof refuses tampered verifierDomain",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route kind",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route sourceChainId",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route sourceDomain",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route sourceEndpoint",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route destinationChainId",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route destinationDomain",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route destinationEndpoint",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route sourceToken",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route destinationToken",
+      "passed": true
+    },
+    {
+      "name": "even approved proof refuses wrong route verifierDomain",
+      "passed": true
+    },
+    {
+      "name": "approved message refuses invalid amount 0",
+      "passed": true
+    },
+    {
+      "name": "approved message refuses invalid sender 0x0000000000000000000000000000000000000000",
+      "passed": true
+    },
+    {
+      "name": "approved message refuses invalid recipient 0x0000000000000000000000000000000000000000",
+      "passed": true
+    },
+    {
+      "name": "approved message refuses invalid recipient 0xde09e74d4888bc4e65f589e8c13bce9f71ddf4c7",
+      "passed": true
+    },
+    {
+      "name": "approved message refuses invalid nonce 0",
+      "passed": true
+    },
+    {
+      "name": "empty proof refuses mint",
+      "passed": true
+    },
+    {
+      "name": "oversize proof refuses mint",
+      "passed": true
+    },
+    {
+      "name": "altered proof refuses mint",
+      "passed": true
+    },
+    {
+      "name": "mint consumes actual lock exactly once",
+      "passed": true
+    },
+    {
+      "name": "same caller cannot replay lock",
+      "passed": true
+    },
+    {
+      "name": "other caller cannot replay lock",
+      "passed": true
+    },
+    {
+      "name": "alternate valid proof cannot replay lock",
+      "passed": true
+    },
+    {
+      "name": "approved contradictory payload cannot consume source nonce twice",
+      "passed": true
+    },
+    {
+      "name": "lost relayer index reconstructs event and persisted replay refusal",
+      "passed": true
+    },
+    {
+      "name": "reconstructed index does not reset consumed lock",
+      "passed": true
+    },
+    {
+      "name": "burn creates pending release without moving reserve",
+      "passed": true
+    },
+    {
+      "name": "release consumes burn and pays canonical asset",
+      "passed": true
+    },
+    {
+      "name": "burn release cannot replay for another caller",
+      "passed": true
+    },
+    {
+      "name": "unsolicited canonical donation does not create reserve or outbox credit",
+      "passed": true
+    },
+    {
+      "name": "escrow accepts exact outstanding cap",
+      "passed": true
+    },
+    {
+      "name": "gateway accepts exact outstanding cap",
+      "passed": true
+    },
+    {
+      "name": "escrow rejects one base unit over cap",
+      "passed": true
+    },
+    {
+      "name": "gateway rejects approved message one unit over cap",
+      "passed": true
+    },
+    {
+      "name": "burn frees capped outstanding",
+      "passed": true
+    },
+    {
+      "name": "release frees canonical cap",
+      "passed": true
+    },
+    {
+      "name": "outbound lock rejects remote endpoint recipient",
+      "passed": true
+    },
+    {
+      "name": "outbound burn rejects remote endpoint recipient",
+      "passed": true
+    },
+    {
+      "name": "outbound lock refuses zero amount",
+      "passed": true
+    },
+    {
+      "name": "outbound lock refuses uint256 maximum over cap",
+      "passed": true
+    },
+    {
+      "name": "lock transferFrom mode 1 rollback",
+      "passed": true
+    },
+    {
+      "name": "lock retry after transferFrom mode 1",
+      "passed": true
+    },
+    {
+      "name": "mint corresponding retried lock 1",
+      "passed": true
+    },
+    {
+      "name": "lock transferFrom mode 2 rollback",
+      "passed": true
+    },
+    {
+      "name": "lock retry after transferFrom mode 2",
+      "passed": true
+    },
+    {
+      "name": "mint corresponding retried lock 2",
+      "passed": true
+    },
+    {
+      "name": "lock transferFrom mode 3 rollback",
+      "passed": true
+    },
+    {
+      "name": "lock retry after transferFrom mode 3",
+      "passed": true
+    },
+    {
+      "name": "mint corresponding retried lock 3",
+      "passed": true
+    },
+    {
+      "name": "lock transferFrom mode 4 rollback",
+      "passed": true
+    },
+    {
+      "name": "lock retry after transferFrom mode 4",
+      "passed": true
+    },
+    {
+      "name": "mint corresponding retried lock 4",
+      "passed": true
+    },
+    {
+      "name": "empty-return canonical transferFrom succeeds exactly",
+      "passed": true
+    },
+    {
+      "name": "mint empty-return lock",
+      "passed": true
+    },
+    {
+      "name": "lock for failing mint mode 1",
+      "passed": true
+    },
+    {
+      "name": "mint mode 1 rollback and unconsumed source",
+      "passed": true
+    },
+    {
+      "name": "same source retry after mint mode 1",
+      "passed": true
+    },
+    {
+      "name": "lock for failing mint mode 2",
+      "passed": true
+    },
+    {
+      "name": "mint mode 2 rollback and unconsumed source",
+      "passed": true
+    },
+    {
+      "name": "same source retry after mint mode 2",
+      "passed": true
+    },
+    {
+      "name": "lock for failing mint mode 3",
+      "passed": true
+    },
+    {
+      "name": "mint mode 3 rollback and unconsumed source",
+      "passed": true
+    },
+    {
+      "name": "same source retry after mint mode 3",
+      "passed": true
+    },
+    {
+      "name": "burn pull transferFrom mode 1 rollback",
+      "passed": true
+    },
+    {
+      "name": "burn retry after transferFrom mode 1",
+      "passed": true
+    },
+    {
+      "name": "release retried burn pull 1",
+      "passed": true
+    },
+    {
+      "name": "burn pull transferFrom mode 2 rollback",
+      "passed": true
+    },
+    {
+      "name": "burn retry after transferFrom mode 2",
+      "passed": true
+    },
+    {
+      "name": "release retried burn pull 2",
+      "passed": true
+    },
+    {
+      "name": "burn pull transferFrom mode 3 rollback",
+      "passed": true
+    },
+    {
+      "name": "burn retry after transferFrom mode 3",
+      "passed": true
+    },
+    {
+      "name": "release retried burn pull 3",
+      "passed": true
+    },
+    {
+      "name": "burn pull transferFrom mode 4 rollback",
+      "passed": true
+    },
+    {
+      "name": "burn retry after transferFrom mode 4",
+      "passed": true
+    },
+    {
+      "name": "release retried burn pull 4",
+      "passed": true
+    },
+    {
+      "name": "empty-return representation pull succeeds exactly",
+      "passed": true
+    },
+    {
+      "name": "release empty-return burn",
+      "passed": true
+    },
+    {
+      "name": "burn mode 1 rollback",
+      "passed": true
+    },
+    {
+      "name": "burn retry after burn mode 1",
+      "passed": true
+    },
+    {
+      "name": "release retried burn mode 1",
+      "passed": true
+    },
+    {
+      "name": "burn mode 2 rollback",
+      "passed": true
+    },
+    {
+      "name": "burn retry after burn mode 2",
+      "passed": true
+    },
+    {
+      "name": "release retried burn mode 2",
+      "passed": true
+    },
+    {
+      "name": "burn mode 3 rollback",
+      "passed": true
+    },
+    {
+      "name": "burn retry after burn mode 3",
+      "passed": true
+    },
+    {
+      "name": "release retried burn mode 3",
+      "passed": true
+    },
+    {
+      "name": "burn for release transfer mode 1",
+      "passed": true
+    },
+    {
+      "name": "release transfer mode 1 rollback",
+      "passed": true
+    },
+    {
+      "name": "same burn retry after release transfer mode 1",
+      "passed": true
+    },
+    {
+      "name": "burn for release transfer mode 2",
+      "passed": true
+    },
+    {
+      "name": "release transfer mode 2 rollback",
+      "passed": true
+    },
+    {
+      "name": "same burn retry after release transfer mode 2",
+      "passed": true
+    },
+    {
+      "name": "burn for release transfer mode 3",
+      "passed": true
+    },
+    {
+      "name": "release transfer mode 3 rollback",
+      "passed": true
+    },
+    {
+      "name": "same burn retry after release transfer mode 3",
+      "passed": true
+    },
+    {
+      "name": "burn for release transfer mode 4",
+      "passed": true
+    },
+    {
+      "name": "release transfer mode 4 rollback",
+      "passed": true
+    },
+    {
+      "name": "same burn retry after release transfer mode 4",
+      "passed": true
+    },
+    {
+      "name": "burn for empty-return release",
+      "passed": true
+    },
+    {
+      "name": "empty-return canonical release succeeds exactly",
+      "passed": true
+    },
+    {
+      "name": "outbound for recipient cross-function callback chain 0",
+      "passed": true
+    },
+    {
+      "name": "successful outer call blocks cross-function callback chain 0",
+      "passed": true
+    },
+    {
+      "name": "outbound for recipient refusal chain 0",
+      "passed": true
+    },
+    {
+      "name": "recipient revert rolls back callback and bridge chain 0",
+      "passed": true
+    },
+    {
+      "name": "same source retry after recipient refusal chain 0",
+      "passed": true
+    },
+    {
+      "name": "outbound for recipient cross-function callback chain 1",
+      "passed": true
+    },
+    {
+      "name": "successful outer call blocks cross-function callback chain 1",
+      "passed": true
+    },
+    {
+      "name": "outbound for recipient refusal chain 1",
+      "passed": true
+    },
+    {
+      "name": "recipient revert rolls back callback and bridge chain 1",
+      "passed": true
+    },
+    {
+      "name": "same source retry after recipient refusal chain 1",
+      "passed": true
+    },
+    {
+      "name": "lock for verifier callback",
+      "passed": true
+    },
+    {
+      "name": "successful mint proves verifier static reentry was guard-refused",
+      "passed": true
+    },
+    {
+      "name": "burn for verifier callback",
+      "passed": true
+    },
+    {
+      "name": "successful release proves verifier static reentry was guard-refused",
+      "passed": true
+    },
+    {
+      "name": "first independent lock remains pending",
+      "passed": true
+    },
+    {
+      "name": "second independent lock remains pending",
+      "passed": true
+    },
+    {
+      "name": "pending obligations persist without a timeout refund entry point",
+      "passed": true
+    },
+    {
+      "name": "deliver second independent lock before first",
+      "passed": true
+    },
+    {
+      "name": "deliver first independent lock after second",
+      "passed": true
+    },
+    {
+      "name": "first independent burn remains pending",
+      "passed": true
+    },
+    {
+      "name": "second independent burn remains pending",
+      "passed": true
+    },
+    {
+      "name": "deliver second independent burn before first",
+      "passed": true
+    },
+    {
+      "name": "deliver first independent burn after second",
+      "passed": true
+    },
+    {
+      "name": "reload readback retains completed reserve and replay keys",
+      "passed": true
+    },
+    {
+      "name": "last real pending lock before deliberate issuer corruption",
+      "passed": true
+    },
+    {
+      "name": "external supply corruption freezes mint without consuming lock",
+      "passed": true
+    },
+    {
+      "name": "external supply corruption freezes counterfeit burn before pull",
+      "passed": true
+    }
+  ],
+  "expectedRefusals": 77,
+  "backendCalls": {
+    "deploy": 15,
+    "read": 2613,
+    "send": 261,
+    "events": 301,
+    "reload": 5
+  },
+  "gasUsed": "17407113",
+  "chainIds": [
+    "31337",
+    "31338"
+  ],
+  "conservedBeforeCorruption": {
+    "reserve": "113",
+    "supply": "110",
+    "pendingLocks": "3",
+    "pendingBurns": "0",
+    "actualEscrowBalance": "114"
+  },
+  "conservationClaimAfterDeliberateCorruption": false,
+  "supplyCorruptionPersists": true,
+  "mintAndBurnFrozenAfterCorruption": true,
+  "reverseOrderLockAndBurnDeliveryChecked": true,
+  "timeoutRefundEntryPointPresent": false,
+  "elapsedTimeoutQualified": false,
+  "reloadChecks": [
+    {
+      "chainIndex": 1,
+      "stateReload": true,
+      "backendSentinelOnly": false
+    },
+    {
+      "chainIndex": 0,
+      "stateReload": true,
+      "backendSentinelOnly": false
+    },
+    {
+      "chainIndex": 1,
+      "stateReload": true,
+      "backendSentinelOnly": false
+    },
+    {
+      "chainIndex": 0,
+      "stateReload": true,
+      "backendSentinelOnly": false
+    },
+    {
+      "chainIndex": 1,
+      "stateReload": true,
+      "backendSentinelOnly": false
+    }
+  ],
+  "reloadScope": "backend-declared State reload or explicitly labelled sentinel plus application readback; no WAL/process recovery claim",
+  "proofModel": "owner-approved synthetic digest; no source inclusion or finality proof",
+  "sourceFinalityAuthenticated": false,
+  "cryptographicFinalityVerified": false,
+  "realUsdcUsed": false,
+  "wrappedNanoModified": false,
+  "economicConversionQualified": false,
+  "consensusQualified": false,
+  "productionQualified": false,
+  "runner": {
+    "exitCode": 0,
+    "requests": 3195
+  }
+}

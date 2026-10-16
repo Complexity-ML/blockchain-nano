@@ -1,0 +1,118 @@
+{
+  "format": "nano-bridge-native-execution-runner-source-v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_QUALIFICATION",
+  "payloads": [
+    {
+      "path": "source/tests/bridge_execution_runner.cpp",
+      "sha256": "a2879beddab1f0c7862b22123dbf97b1feb59549b290f734475c82e4c03e9ab6",
+      "bytes": 15091
+    },
+    {
+      "path": "README.md",
+      "sha256": "0179d77ac3cf09169726ca2243f6e6265d060776fabce1f78726515b02cad00e",
+      "bytes": 3306
+    }
+  ],
+  "payloadBytes": 18397,
+  "readOnlyCoreApiReferences": [
+    {
+      "path": "include/nano/engine.hpp",
+      "sha256": "8c45fe3543d79600dbdf5f823014ed3822d4e2b2ca21f85210aad89bd61d9ed0",
+      "bytes": 2090
+    },
+    {
+      "path": "include/nano/evm.hpp",
+      "sha256": "2db1c4fbdbdd3f6bee4ea99f19cec9ffd69b31720c3a65f31236a6607b1cf919",
+      "bytes": 5926
+    },
+    {
+      "path": "include/nano/core.hpp",
+      "sha256": "a8307cf554e4a677e72c6dc5e8e4623305411bc6d370e657af54ca194a6b1c7b",
+      "bytes": 4324
+    },
+    {
+      "path": "include/nano/crypto.hpp",
+      "sha256": "b877ee813f117f55dfd5275b0e897e6e4a77cec36cdafd482f56e7a490739ccc",
+      "bytes": 766
+    },
+    {
+      "path": "include/nano/types.hpp",
+      "sha256": "241e544a45e6a1532ecd925f8979cfa806c7ddee49c6a43a4e0edd2a9460c0e8",
+      "bytes": 927
+    },
+    {
+      "path": "include/nano/receipt.hpp",
+      "sha256": "1c902729e552d889e85b7fc6eda7e1450b33ecda1a4337784faff7c7294fe192",
+      "bytes": 518
+    },
+    {
+      "path": "src/engine.cpp",
+      "sha256": "06946f93dc5a7c2b8107058d3a67f46ad9bef965c88a2fe0ada69a9e99ee215b",
+      "bytes": 17441
+    },
+    {
+      "path": "src/state.cpp",
+      "sha256": "461cb243ba999d8920b6f2d57f1cec87c3fcf24ba858eaa9f0b645629b8a6c81",
+      "bytes": 3404
+    },
+    {
+      "path": "src/receipt.cpp",
+      "sha256": "8a3f59461e1b7b64bcfe82a93f4a1c47157e4eb07a65157812da7aab8e423254",
+      "bytes": 2875
+    }
+  ],
+  "input": {
+    "maximumLineBytes": 2097152,
+    "maximumRequests": 5000,
+    "maximumGas": 30000000,
+    "actions": [
+      "send",
+      "call",
+      "reload",
+      "root",
+      "events"
+    ],
+    "chainIds": [
+      31337,
+      31338
+    ],
+    "knownPublicFixturePrivateKeys": [
+      1,
+      2,
+      3
+    ],
+    "initialBalanceBaseUnits": "1000000000000000000000000",
+    "argc": 1,
+    "fromRestrictedToFixtureAddresses": true,
+    "optionalSendToNullMeansDeployment": true,
+    "optionalEventsAddressFilter": true,
+    "invalidRequestContinuesButFinalExitNonzero": true,
+    "oversizeOrCountOverflowStops": true
+  },
+  "execution": {
+    "revision": "Paris",
+    "syntheticHeaderBaseFee": "0",
+    "legacyGasPrice": "1",
+    "coinbase": "0x0000000000000000000000000000000000009999",
+    "timestamp": "1700000000 + 12 * syntheticNumber",
+    "engine": "ExecutionEngine.apply_transaction",
+    "simulation": "EVM.execute on a value-funded isolated State copy, discarded",
+    "reload": "State.to_json().dump -> Json.parse -> State.from_json, full equality and root check",
+    "eventIndex": "actual execution receipts/logs retained in memory; not durable history or authenticated inclusion",
+    "solcTargetRequired": "paris",
+    "coreOrCmakeModified": false,
+    "compiledOrExecutedByAuthor": false
+  },
+  "scope": {
+    "testHelperOnly": true,
+    "privateMaterialLoaded": false,
+    "sdkRead": false,
+    "newConsensusIdentities": 0,
+    "blockchainOrDbCreated": false,
+    "realChainOrConsensusQualified": false,
+    "bridgeOrInterchainAuthenticationQualified": false,
+    "productionQualified": false,
+    "rWrites": 0,
+    "operations": 0
+  }
+}

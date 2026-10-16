@@ -1,0 +1,79 @@
+{
+  "format": "nano-bridge-common-scenario-source-proposal-v1",
+  "status": "FROZEN_SOURCE_ONLY_AWAITING_ROOT_EXECUTION",
+  "payloads": [
+    {
+      "path": "source/tests/hardhat/bridge/scenario.mjs",
+      "sha256": "dcf0d7217085d8b0cf9423568bcad77a9121e54b8b18a471d8ba17895480dd66",
+      "bytes": 31857,
+      "target": "tests/hardhat/bridge/scenario.mjs"
+    },
+    {
+      "path": "README.md",
+      "sha256": "b511092e8e618405c2c0d5560e1f17b51febc9a6e76682ce9dcca6db9e194311",
+      "bytes": 6765
+    }
+  ],
+  "payloadBytes": 38622,
+  "sourceDependencies": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bridge-common-contracts-proposal-20261016/manifest.json",
+      "sha256": "9e51671adc111f31e0e5b80156cae8a69a6d4a75bfbb294e9abfddfb40ac9943",
+      "bytes": 2882,
+      "statusAtRead": "FROZEN_SOURCE_ONLY_AWAITING_ROOT_QUALIFICATION"
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/bridge-common-mocks-proposal-20261016/manifest.json",
+      "sha256": "3079bae2d8c38ab79f1d459e216eb60214dce8b7cf3170eb6073854175fa6734",
+      "bytes": 1976,
+      "statusAtRead": "FROZEN_SOURCE_ONLY_PENDING_ROOT_COMPILATION"
+    }
+  ],
+  "staticExpectedCounts": {
+    "cases": 153,
+    "expectedRefusals": 77,
+    "failedCreateReceipts": 7,
+    "failedSendReceipts": 70,
+    "caseLimitExclusive": 160,
+    "readCallsLimitExclusive": 4800,
+    "allBackendCallsLimitExclusive": 5000,
+    "notObservedResults": true
+  },
+  "backendConventions": {
+    "chainIndices": [
+      0,
+      1
+    ],
+    "chainIds": [
+      "31337",
+      "31338"
+    ],
+    "readScalar": "decoded ethers Result [0]",
+    "gasUsed": "canonical decimal string normalized by Root backend",
+    "constructorFailure": "constructorReverted true only for actual CREATE status false",
+    "anvilReload": "sameRoot false; notStateReload true; sentinel only",
+    "nativeReload": "sameRoot true; isolated State JSON roundtrip"
+  },
+  "scope": {
+    "syntheticFixturesOnly": true,
+    "realProofVerifierImplemented": false,
+    "sourceFinalityAuthenticated": false,
+    "timeoutRefundEntryPointPresent": false,
+    "elapsedTimeoutQualified": false,
+    "conservationAfterDeliberateSupplyCorruptionClaimed": false,
+    "realUsdcUsed": false,
+    "economicConversionQualified": false,
+    "consensusQualified": false,
+    "productionQualified": false
+  },
+  "authorActions": {
+    "sourceOnly": true,
+    "compilations": 0,
+    "projectProgramsExecuted": 0,
+    "testsExecuted": 0,
+    "privateInputsRead": 0,
+    "sdkReads": 0,
+    "rWrites": 0,
+    "operations": 0
+  }
+}
