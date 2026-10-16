@@ -64,3 +64,50 @@ test('same loopback port is distinct only for distinct containers/hosts',()=>{co
 test('container and SSH identities cannot inject commands',()=>{for(const container of ['x;evil','$(evil)','-option'])assert.throws(()=>configuration({...c,nodes:[{...c.nodes[0],kind:'docker',container}]}));assert.throws(()=>configuration({...c,nodes:[{...c.nodes[0],kind:'ssh-docker',container:'nano-a',ssh:'x;evil'}]}));});
 test('Docker reader uses argv and validates HTTP status/body budget',async()=>{const n={name:'a',kind:'docker',container:'nano-a',url:'http://127.0.0.1:8545'};let calls=0;const adapter=transportRequest(n,c,async(bin,args,limits)=>{++calls;assert.equal(bin,'docker');assert.deepEqual(args.slice(0,3),['exec','nano-a','curl']);assert.equal(limits.maxBuffer,c.maximumResponseBytes+64);return {stdout:'{"ok":true}\n200'};});assert.deepEqual(await (await adapter(n.url+'/path')).json(),{ok:true});assert.equal(calls,1);await assert.rejects(adapter('http://example.com/'));});
 test('SSH reader quotes each remote argument including POST data',async()=>{const n={name:'a',kind:'ssh-docker',container:'nano-a',ssh:'ubuntu@145.239.199.166',url:'http://127.0.0.1:8545'};const adapter=transportRequest(n,c,async(bin,args)=>{assert.equal(bin,'ssh');assert.ok(args.includes(n.ssh));assert.ok(args.at(-1).includes("'sudo' '-n' 'docker' 'exec' 'nano-a'"));assert.ok(args.at(-1).includes("'\\''"));return {stdout:'{}\n200'};});await adapter(n.url+'/',{method:'POST',body:JSON.stringify({text:"can't"})});});
+
+
+// Injected adapters only: no HTTP server, Docker, SSH or alert delivery.
+test('HTTP monitor rejects cross-origin redirects at every read phase',async t=>{
+ for(let phase=1;phase<=6;++phase)await t.test('read '+phase,async()=>{
+  let reads=0,externalReads=0;const direct=request();
+  const observed=await sample(c,c.nodes[0],async(url,options)=>{
+   if(++reads===phase){
+    // Model fetch's redirect policy; never perform the redirected request.
+    if(options.redirect==='error')throw new TypeError('Synthetic redirect refused');
+    ++externalReads;
+   }
+   return direct(url,options);
+  });
+  assert.ok(observed.error,'a redirect must not yield an accepted monitor sample');
+  assert.equal(externalReads,0,'the request policy must prevent redirect following');
+  assert.equal(reads,phase,'sampling must stop at the refused read');
+ });
+ await t.test('valid pinned observations stay accepted',async()=>{
+  let reads=0;const direct=request();
+  const observed=await sample(c,c.nodes[0],async(url,options)=>{++reads;return direct(url,options);});
+  assert.deepEqual(observed,{name:'a',epoch:'2',root:a,headRoot:a,stateRoot:b,peers:1});
+  assert.equal(reads,6);
+ });
+});
+
+test('monitor rejects an already-redirected response even from an injected adapter',async t=>{
+ for(let phase=1;phase<=6;++phase)await t.test('read '+phase,async()=>{
+  let reads=0;const direct=request();
+  const observed=await sample(c,c.nodes[0],async(url,options)=>{
+   const response=await direct(url,options);
+   if(++reads===phase)Object.defineProperty(response,'redirected',{value:true});
+   return response;
+  });
+  assert.match(observed.error??'',/Redirected monitor response rejected/);
+  assert.equal(reads,phase);
+ });
+});
+
+test('monitor rejects result and falsy error in the same RPC envelope',async t=>{
+ for(const error of [null,false,0,''])await t.test('error '+JSON.stringify(error),async()=>{
+  let reads=0;const direct=request(data=>{if(data.jsonrpc)data.error=error;});
+  const observed=await sample(c,c.nodes[0],async(url,options)=>{++reads;return direct(url,options);});
+  assert.match(observed.error??'',/RPC response rejected/);
+  assert.equal(reads,1,'malformed chain reply must stop before later reads');
+ });
+});

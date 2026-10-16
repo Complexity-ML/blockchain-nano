@@ -63,12 +63,13 @@ export async function sample(config,node,request){
  if(!endpoint||new URL(node.url).origin!==endpoint.url)throw Error('Unconfigured monitor endpoint');
  request??=endpoint.kind==='http'?fetch:transportRequest(endpoint,c);
  const read=async(path,options={})=>{
-  const signal=AbortSignal.timeout(c.timeoutMs),r=await request(endpoint.url+path,{...options,signal,headers:{Accept:'application/json',...options.headers}});
+  const signal=AbortSignal.timeout(c.timeoutMs),r=await request(endpoint.url+path,{...options,redirect:'error',signal,headers:{Accept:'application/json',...options.headers}});
+  if(r.redirected)throw Error('Redirected monitor response rejected');
   if(!r.ok)throw Error('HTTP '+r.status);const chunks=[];let bytes=0;
   for await(const chunk of r.body){bytes+=chunk.length;if(bytes>c.maximumResponseBytes)throw Error('Response budget exceeded');chunks.push(chunk);}
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
  };
- const rpc=async(method,params=[])=>{const r=await read('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});if(r.error||r.id!==1||r.jsonrpc!=='2.0'||!Object.hasOwn(r,'result'))throw Error('RPC response rejected');return r.result;};
+ const rpc=async(method,params=[])=>{const r=await read('',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});if(!r||typeof r!=='object'||Array.isArray(r)||Object.hasOwn(r,'error')||r.id!==1||r.jsonrpc!=='2.0'||!Object.hasOwn(r,'result'))throw Error('RPC response rejected');return r.result;};
  try{
   const chain=await rpc('eth_chainId'),genesis=await rpc('eth_getBlockByNumber',['0x0',false]);
   if(integer(chain).toString()!==c.chainId||genesis?.hash!==c.genesisHash)throw Error('Chain/genesis mismatch');
