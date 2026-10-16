@@ -1,0 +1,147 @@
+{
+  "format": "nano-selected-cmake-source-fragments-v1",
+  "sourceBaseRevisionReportedByRoot": "bd11bd9f9dedf3f003b707d1c38fb1ecbabae91d",
+  "files": [
+    {
+      "path": "CMakeLists.txt",
+      "sha256": "21131c9b019452fb327a13cb4b8758b805921789c2484a0a92177fb8ef131df8",
+      "bytes": 174949
+    },
+    {
+      "path": "network/CMakeLists.txt",
+      "sha256": "95fc4952f691506f4d5874318c1a7018c70a6ae65243202c9864b5a11ea46130",
+      "bytes": 25054
+    },
+    {
+      "path": "cmake/NanoSecp256k1.cmake",
+      "sha256": "6a84c9325ffc0c01805103d9a831a06c26d0694142ddf06f681d7f73ededb176",
+      "bytes": 771
+    },
+    {
+      "path": "third_party/ckzg/CMakeLists.txt",
+      "sha256": "1a8d36fb1979c8e27f7260a8f6dd8b20e2133b02020ffd7fa7afc0b051b05e3e",
+      "bytes": 2217
+    },
+    {
+      "path": "third_party/mcl/CMakeLists.txt",
+      "sha256": "31870cbcc5e3c04e04624c20c817e4feea0b88920b056409d64d3d30f22429a5",
+      "bytes": 19141
+    }
+  ],
+  "fragments": [
+    {
+      "scope": "core-language-and-direct-dependencies",
+      "path": "CMakeLists.txt",
+      "firstLine": 1,
+      "lastLine": 32,
+      "sha256": "2fd7c698b61fb8af62b38b46f28552668153024915a4f6792fe209def0bf681b",
+      "bytes": 1518,
+      "text": "cmake_minimum_required(VERSION 3.20)\nproject(blockchain_nano VERSION 0.1.0 LANGUAGES C CXX ASM)\nset(CMAKE_CXX_STANDARD 20)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\nfind_package(OpenSSL 3.0 REQUIRED)\nfind_package(Threads REQUIRED)\n# Homebrew keeps ICU keg-only on macOS; retain normal system discovery elsewhere.\nif(APPLE AND NOT ICU_ROOT)\n foreach(ICU_PREFIX /opt/homebrew/opt/icu4c /usr/local/opt/icu4c)\n  if(EXISTS \"${ICU_PREFIX}/include/unicode/unorm2.h\")\n   set(ICU_ROOT \"${ICU_PREFIX}\")\n   break()\n  endif()\n endforeach()\nendif()\nfind_package(ICU REQUIRED COMPONENTS uc)\nfind_path(BOOST_INCLUDE_DIR boost/beast.hpp REQUIRED)\nfind_path(ROCKSDB_INCLUDE_DIR rocksdb/db.h REQUIRED)\nfind_library(ROCKSDB_LIBRARY rocksdb REQUIRED)\nfind_path(GMP_INCLUDE_DIR gmpxx.h REQUIRED)\nfind_library(GMP_LIBRARY gmp REQUIRED)\nfind_library(GMPXX_LIBRARY gmpxx REQUIRED)\nfile(GLOB NANO_SOURCES CONFIGURE_DEPENDS src/*.cpp)\nlist(FILTER NANO_SOURCES EXCLUDE REGEX \"/main.cpp$\")\nadd_subdirectory(third_party/ckzg)\ninclude(cmake/NanoSecp256k1.cmake)\nadd_library(nano_core ${NANO_SOURCES})\ntarget_link_libraries(nano_core PRIVATE nano_ckzg secp256k1)\ntarget_include_directories(nano_core PUBLIC include third_party)\ntarget_include_directories(nano_core SYSTEM PUBLIC ${GMP_INCLUDE_DIR} ${ROCKSDB_INCLUDE_DIR} ${BOOST_INCLUDE_DIR})\ntarget_link_libraries(nano_core PUBLIC ${GMPXX_LIBRARY} ${GMP_LIBRARY} OpenSSL::SSL OpenSSL::Crypto ICU::uc ${ROCKSDB_LIBRARY} Threads::Threads)\ntarget_compile_options(nano_core PRIVATE -Wall -Wextra -Wpedantic)\n"
+    },
+    {
+      "scope": "portable-mcl-branch",
+      "path": "CMakeLists.txt",
+      "firstLine": 40,
+      "lastLine": 50,
+      "sha256": "2feafc2737888da66ab5d66145c9f7c592feef4c408426c38a0c0056e5597682",
+      "bytes": 508,
+      "text": "add_executable(nano-capella-duty-readiness tools/storage-maintenance/duty-readiness.cpp)\ntarget_link_libraries(nano-capella-duty-readiness PRIVATE nano_core)\n\nset(CMAKE_EXPORT_NO_PACKAGE_REGISTRY ON)\nset(NANO_MCL_PORTABLE_DEFAULT OFF)\nif(UNIX)\n set(NANO_MCL_PORTABLE_DEFAULT ON)\nendif()\noption(MCL_PORTABLE \"Use portable LLVM BN128 arithmetic without an ADX/JIT requirement\" ${NANO_MCL_PORTABLE_DEFAULT})\nadd_subdirectory(third_party/mcl EXCLUDE_FROM_ALL)\ntarget_link_libraries(nano_core PUBLIC mcl::mcl_st)\n"
+    },
+    {
+      "scope": "nano",
+      "path": "CMakeLists.txt",
+      "firstLine": 69,
+      "lastLine": 70,
+      "sha256": "4d6eace853b9b106db313153b90ff38646b853acda815384383a0d536a2f4302",
+      "bytes": 80,
+      "text": "add_executable(nano src/main.cpp)\ntarget_link_libraries(nano PRIVATE nano_core)\n"
+    },
+    {
+      "scope": "bootstrapAudit",
+      "path": "CMakeLists.txt",
+      "firstLine": 78,
+      "lastLine": 79,
+      "sha256": "4e23225af97ac7436ef95a2f4f48b30d7f2110950974c825ec7c74dd4e87fd16",
+      "bytes": 176,
+      "text": "add_executable(nano-capella-isolated-bootstrap-audit tests/capella/isolated_bootstrap_audit.cpp)\ntarget_link_libraries(nano-capella-isolated-bootstrap-audit PRIVATE nano_core)\n"
+    },
+    {
+      "scope": "bootstrapImport",
+      "path": "CMakeLists.txt",
+      "firstLine": 81,
+      "lastLine": 83,
+      "sha256": "544bf90505090d378787a7e05f3c1bb280041a2d12452cef981531f33475f91f",
+      "bytes": 315,
+      "text": "add_executable(nano-capella-isolated-bootstrap-import tests/capella/isolated_bootstrap_import.cpp)\ntarget_link_libraries(nano-capella-isolated-bootstrap-import PRIVATE nano_core)\ntarget_include_directories(nano-capella-isolated-bootstrap-import PRIVATE \"${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings\")\n"
+    },
+    {
+      "scope": "stoppedCapture",
+      "path": "CMakeLists.txt",
+      "firstLine": 84,
+      "lastLine": 85,
+      "sha256": "3a32e882b9d64bb8952393b46eaef7ed0af249fdf3ddb7f9398ddf6802bd5924",
+      "bytes": 176,
+      "text": "add_executable(nano-capella-isolated-stopped-capture tests/capella/isolated_stopped_capture.cpp)\ntarget_link_libraries(nano-capella-isolated-stopped-capture PRIVATE nano_core)\n"
+    },
+    {
+      "scope": "lifecycleTool",
+      "path": "CMakeLists.txt",
+      "firstLine": 105,
+      "lastLine": 107,
+      "sha256": "ba8375c70d0aed025dc9a574db384f6a563854d01aa8b62d85345ac4639610c6",
+      "bytes": 253,
+      "text": "add_executable(nano-capella-deposit-audit tests/capella/deposit_audit.cpp)\ntarget_link_libraries(nano-capella-deposit-audit PRIVATE nano_core)\ntarget_compile_definitions(nano-capella-deposit-audit PRIVATE NANO_TEST_SOURCE=\"${CMAKE_CURRENT_SOURCE_DIR}\")\n"
+    },
+    {
+      "scope": "lifecycleTool-blst-include",
+      "path": "CMakeLists.txt",
+      "firstLine": 114,
+      "lastLine": 114,
+      "sha256": "4d52452b9db39e244ce5ba8a0aeccfbe75e1cc4dda4f6dbb8d56b20bf42830ed",
+      "bytes": 124,
+      "text": "target_include_directories(nano-capella-deposit-audit PRIVATE \"${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings\")\n"
+    },
+    {
+      "scope": "lifecycleSubmit",
+      "path": "CMakeLists.txt",
+      "firstLine": 123,
+      "lastLine": 124,
+      "sha256": "a10209a8c6dade2105e2936d0e39872e0d935a2f732852bf95ce8880321a7543",
+      "bytes": 154,
+      "text": "add_executable(nano-capella-lifecycle-submit tests/multihost/lifecycle_submit.cpp)\ntarget_link_libraries(nano-capella-lifecycle-submit PRIVATE nano_core)\n"
+    },
+    {
+      "scope": "sync-fault-platform-selection",
+      "path": "CMakeLists.txt",
+      "firstLine": 423,
+      "lastLine": 430,
+      "sha256": "25b5f1c008985475126179ac4a1117696e3e0138789868233855c3b8c2947390",
+      "bytes": 290,
+      "text": "if(CMAKE_SYSTEM_NAME STREQUAL \"Linux\")\n add_library(nano-test-sync-fault SHARED tests/support/sync_fault_linux.cpp)\n target_link_libraries(nano-test-sync-fault PRIVATE ${CMAKE_DL_LIBS})\nendif()\n\nif(APPLE)\n add_library(nano-test-sync-fault SHARED tests/support/sync_fault_macos.cpp)\nendif()\n"
+    },
+    {
+      "scope": "exporter",
+      "path": "CMakeLists.txt",
+      "firstLine": 1716,
+      "lastLine": 1728,
+      "sha256": "9b8144f6ad37a48058e2c896af4d7d6898e92504e84c25fd35df9ac72d1a428d",
+      "bytes": 1176,
+      "text": "add_executable(nano-capella-transition-tests tests/test_capella_transition.cpp)\ntarget_link_libraries(nano-capella-transition-tests PRIVATE nano_core nano_ckzg)\nif(TARGET nano-test-sync-fault)\n target_link_libraries(nano-capella-transition-tests PRIVATE nano-test-sync-fault)\n target_compile_definitions(nano-capella-transition-tests PRIVATE NANO_SYNC_FAULT=1)\n add_test(NAME consensus_capella_queued_exit_sync COMMAND nano-capella-transition-tests --queued-exit-sync)\n set_tests_properties(consensus_capella_queued_exit_sync PROPERTIES TIMEOUT 120 LABELS \"qualification_consensus_recovery\")\n add_test(NAME consensus_capella_queued_bls_sync COMMAND nano-capella-transition-tests --queued-bls-sync)\n set_tests_properties(consensus_capella_queued_bls_sync PROPERTIES TIMEOUT 120 LABELS \"qualification_consensus_recovery\")\n add_test(NAME consensus_capella_reactor_sync_failure COMMAND nano-capella-transition-tests --reactor-sync)\n set_tests_properties(consensus_capella_reactor_sync_failure PROPERTIES TIMEOUT 120 LABELS \"qualification_consensus_ethereum\")\nendif()\ntarget_compile_definitions(nano-capella-transition-tests PRIVATE NANO_TEST_SOURCE=\"${CMAKE_CURRENT_SOURCE_DIR}\")\n"
+    },
+    {
+      "scope": "independent-p2p-consumer",
+      "path": "network/CMakeLists.txt",
+      "firstLine": 173,
+      "lastLine": 176,
+      "sha256": "d603ca32162b9a8b80d743a81fe8118bfa9156830bec1fb629abb2ab6a3fba3a",
+      "bytes": 203,
+      "text": "add_executable(nano-p2p main.cpp)\ntarget_include_directories(nano-p2p PRIVATE ../third_party)\ntarget_compile_definitions(nano-p2p PRIVATE FMT_CONSTEVAL=)\ntarget_link_libraries(nano-p2p PRIVATE p2p::p2p)\n"
+    }
+  ],
+  "sourceTextOnly": true,
+  "actualConfigureExecutedByAuthor": false,
+  "actualRecipeFlagsReadByAuthor": false,
+  "canonicalCmakeQualifiedByThisFile": false,
+  "wholeProducerDagQualified": false,
+  "productionQualified": false
+}

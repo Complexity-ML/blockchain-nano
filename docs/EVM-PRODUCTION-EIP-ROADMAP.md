@@ -1,3 +1,9 @@
+## 16 octobre 2026 — Helpers courants reliés ; campagne et production non qualifiées
+
+Les cinq helpers Native, cinq ARM et quatre AMD passent : 14 M indépendants, 6 CXX, 14 liens et 14 refus d’arité attendus, plus neuf ldd Linux ; sans Core/image rebuild ni anciennes suites rejouées. Les comparaisons canoniques/remappées restent distinctes de l’égalité littérale MD. Native vérifie les huit programmes/Core143, 3731 fichiers, vingt fixtures Git et six aliases loader prospectifs ; historique absent non récupéré, dépendances directes seulement. Les refus de collecteur, démarrage, stabilité de nouvelles copies et aliases sont conservés.
+
+Source bd11 sans overlay ; bundles Linux prêts et trois admissions de code émises pour 24 actifs (9 Native, 8 ARM, 7 AMD), structures/locateurs validés. Manifeste de sources antérieur d30e inchangé ; prérequis logiciels clos par reçu séparé, sans circularité. Spec complet non validé, campagne non autorisée. Les nouvelles clés synthétiques/transferts privés attendent une autorisation dédiée. Aucune campagne, DB, signature, reprise de duties ou finalité commune n’est exécutée ; les vrais 33 P/W/66 réouvertures, rollback, cycle complet, journaux Mac/NAS refusé, V37 échoué, CI bloquée par facturation et revue de sécurité indépendante restent ouverts. Aucun EIP/fork ni qualification globale SDK/DAG/CMake/loader/production n’est promu. [Sources et preuves](qualification/current-runtime-assemblies-20261016/README.md).
+
 ## 16 octobre 2026 — Acteurs publics avant réservation et préparation Linux des journaux VPS
 
 La preview unsigned Native passe sur un seed PUBLIC : 1 TU, M=MD 2539 et Core 143 inchangé ; 65 identités validateurs + 64 retraits comparés au vrai genesis non réservé, 3 refus et 0 signature. Le P2P Native courant est réutilisé après rapprochement sélectionné, sans compilation/lien/exécution ni qualification du SDK/DAG entier.

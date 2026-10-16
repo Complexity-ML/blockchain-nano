@@ -1,0 +1,40 @@
+# Current AMD selected helper host
+
+Root-only source proposal. The author read public controller/source texts only, never the referenced receipts, old SDK tables, source admissions, binaries, private logs or programs, and ran no Git, Docker, compiler, Perl or project command. The implementation is a standalone adaptation of the public `qualify-complete-nano-amd-root-20261016.py` route. It embeds the exact reviewed worker `44c7294e0e26a30149a9142ace83a1014dcbb3477ce414e5920d021c9c8cd134` / 25,229 bytes from worker manifest `712bbe8165ea6a6cede026f20f8ac507b74c7e79ded604c26c57ba04f80f8032` / 3,069 bytes.
+
+Root runs it on the VPS as UID/GID 1000 with one argument, `--output-root /home/ubuntu/<owned-parent>/current-amd-helpers-<new-nonce>`. The physical parent must be owned by 1000; the leaf must be absent and outside the Git checkout, the original candidate build, and the qualified RPC Core output namespace. No writes are enabled until this invocation creates it as 0700. Existing attempts are preserved. Root's outer invocation must pin and fence this controller before execution and return only its typed public files; host logs and private receipts remain on the VPS. The author does not invoke it.
+
+## Selected authority route
+
+The controller opens exactly the four original fixed receipts named by the previous AMD Nano controller under `/home/ubuntu/nano-candidate-e37f349c-5b37-444a-901c-7b7a8747c63a/control06`:
+
+- new-artifacts-first-admission, `4e9ff3b48b05c78e3fec34ac3f02f6c2088ae73d4b20e5a5ea493c496749f906` / 4,945 bytes;
+- actual-consumer-links, `55ff7525510d2bad38cddd387157d3e9f4eeb1397e66f1712bde4e718a8b5b53` / 654,679 bytes;
+- actual-linked-new-archives, `3a4f182a5e882a4f3713122ac79b781d94dbb8b87fd1a93cf90f14bfa18af5fb` / 6,182,185 bytes;
+- portable-llvm-producers, `ccc3bd6d6450ab0da86cc9d8afd991d1366f1b90898383872374daf4c6e212a1` / 3,273 bytes.
+
+Only Audit, Capture, Tool and Submit consumer rows are selected. Their seven-key shape is the actual shape confirmed by Root, with compile/object/MD/executable/link recipe/local dependency/image dependency fields. The private image dependency entries are not read as historical SDK authority and no file named there is read on the host. The current container independently observes its actual compiler dependencies. There is no whole old SDK/source-admission table read or historical metadata refresh.
+
+Original object, MD, non-Core static archives, portable LLVM objects and any selected generated headers are opened with FD/path full-nine plus SHA compared to their exact contained old rows. The six shared library/object binds are deduplicated: four non-Core static archives and bint64.o/base64.o. Their order is preserved separately for each actual consumer recipe. Link argv comes from the fixed producer receipt; this proposal does not attempt to recover an absent historical full-nine for its raw link.txt. The actual executable row must join the fixed artifact receipt. No executable from the old build is run.
+
+## Current source and Core
+
+The Git checkout must be clean at `bd11bd9f9dedf3f003b707d1c38fb1ecbabae91d` before and after the job. Seven tree OIDs are checked against the public Root source-manifest proposal. A bounded Git archive projects include/src/network/third_party/tests/support/tests/capella and lifecycle_submit.cpp, plus the root CMakeLists. Every extracted ordinary file must match its independently listed Git blob OID; links, path traversal, extra/missing files and oversized files refuse. The archive is streamed to disk with a 1 GiB hard limit, not read into a whole-archive memory buffer.
+
+The root CMake must equal `21131c9b019452fb327a13cb4b8758b805921789c2484a0a92177fb8ef131df8` / 174,949 bytes. The four executable declarations and Core bindings are checked, plus the Tool's current `NANO_TEST_SOURCE` target definition. An effective-source-joins receipt records the seven tree entries, exact current CMake and selected source/link joins. This is a scoped source derivation, not a whole CMake configure or campaign source admission. The earlier public manifest proposal `9180f4812342f5bb0ad80ab17d422790cda1be9378ac9c70026d0dae30539849` / 19,782 bytes is explicitly only provenance for those public tree observations.
+
+Recorded project dependency byte pins must equal current Git for Audit (10), Capture (65), Submit (8), and Tool (97) except the single known Tool header before `07993c65...` / 24,334 to after `6681926f...` / 24,376. That header delta forces the one Tool CXX. Audit/Capture/Submit reuse their original object/MD authority with only `/outputs/third_party` to `/old/third_party` as an explicit dependency comparison map. The physical Git projection keeps all three vendor `.emptydir` markers, but exactly `/work/third_party/mcl/{bin,lib,obj}/.emptydir` are excluded from the worker's positive-size expected-pin map. M reaching one still refuses. No other empty source leaf is silently accepted.
+
+The current Core `e49483a58f71b9b66f83a88b7c5631f6657d77fcae3c85bc57424fbe6bcbed92` / 40,819,792 bytes is read from the fixed Root-qualified RPC Core output, copied once into a new file at mode 0400, and admitted with at least three equal full-nine/SHA observations over at least two seconds. The old source file gets only a present-time known-byte fence; `historicalSourceFullNineRecovered` remains false. No old authority is replaced. Core is never rebuilt or archived.
+
+## Execution, cleanup and results
+
+Root's Docker/sudo/Git utilities receive a new present-time full-nine/SHA admission. Git policies/config/hooks/signing are left configured; only benign optional-lock/replacement controls and a filtered environment are set. The container must use the existing exact fd9b image, amd64/Linux, with no pull/build, network none, root FS read-only, all capabilities dropped, no-new-privileges, UID1000, 2 CPUs, 3 GiB, 128 PIDs and a bounded tmpfs. Source, Core, controls, selected old objects/MD/archives/LLVM/generated files are mounted read-only; only the new host `/outputs` directory is writable. There is no volume, Docker cp or output tar transport.
+
+After controls are primed through the same container, new controls receive three equal full-nine/SHA samples over at least two seconds. The exact worker performs four independent M commands, one Tool CXX with real MD, four current-Core links, four ELF/ldd checks and four fixed early no-argument exit-1 refusals. Its normalized/remapped dependency comparisons remain distinct from literal equality. No old functional suite, seed, key, fixture command, import/export, database, signature, runtime, duty, finality or campaign is started.
+
+Worker stdout must equal its saved result JSON. Target/SHA/bytes for each of the four products and the new software-admission descriptor SHA/bytes are checked against the actual host output files. Each executable is already 0500 before the worker's admission, and the host independently stabilizes the four qualified products without chmodding them. These new product rows are retained for downstream Root use. The Core/source/control/original selected file fences remain strict through final checks.
+
+Host commands have owned process groups, bounded TERM/KILL, hard stream/file bounds and a global monotonic 1,100-second budget. Cleanup has a separate maximum 60 seconds and uses only strictly fenced Docker/sudo tools so an unrelated source drift cannot prevent owned-container removal. Removal requires exact full ID, name, label, configured image and actual image; it then verifies absence. Cleanup failure cannot convert the earlier exception into success. The output-created flag prevents writing final notes into a pre-existing namespace. All failures and files are retained in the new directory.
+
+The public result adds only scoped source/producer joins and counts to the worker's typed result. Full SDK/loader DAG, lazy symbols, full CMake equivalence, runtime fixtures, all-role campaign admission, duties/finality and production remain unqualified. This proposal has not been executed or syntax-checked with Perl; Python AST/JSON/text hashes alone were checked by the author.

@@ -1,0 +1,406 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Root-staged Linux selected helper controls; source-only proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "owner",
+    "uid",
+    "gid",
+    "imageId",
+    "elfMachine",
+    "programs"
+  ],
+  "properties": {
+    "format": {
+      "const": "nano-current-linux-selected-helpers-recipes-v1"
+    },
+    "owner": {
+      "enum": [
+        "mac-docker",
+        "vps-docker"
+      ]
+    },
+    "uid": {
+      "enum": [
+        501,
+        1000
+      ]
+    },
+    "gid": {
+      "enum": [
+        20,
+        1000
+      ]
+    },
+    "imageId": {
+      "enum": [
+        "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+        "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14"
+      ]
+    },
+    "elfMachine": {
+      "enum": [
+        183,
+        62
+      ]
+    },
+    "programs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": {
+        "$ref": "#/$defs/program"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "owner": {
+            "const": "mac-docker"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "uid": {
+            "const": 501
+          },
+          "gid": {
+            "const": 20
+          },
+          "elfMachine": {
+            "const": 183
+          },
+          "imageId": {
+            "const": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "uid": {
+            "const": 1000
+          },
+          "gid": {
+            "const": 1000
+          },
+          "elfMachine": {
+            "const": 62
+          },
+          "imageId": {
+            "const": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14"
+          },
+          "programs": {
+            "maxItems": 4,
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/program"
+                },
+                {
+                  "properties": {
+                    "role": {
+                      "not": {
+                        "const": "bootstrapImport"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "sourceExpected": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 20000,
+      "propertyNames": {
+        "pattern": "^/(work|old)/[^\\r\\n\\u0000]+$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/corePin"
+      }
+    },
+    "corePin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        }
+      }
+    },
+    "compilerArgv": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "prefixItems": [
+        {
+          "const": "/usr/bin/clang++"
+        }
+      ],
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 8192,
+        "pattern": "^[^\\r\\n\\u0000]+$"
+      }
+    },
+    "retainedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/inputs/[^\\r\\n\\u0000]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        }
+      }
+    },
+    "dependencyPrefixMap": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to"
+            ],
+            "properties": {
+              "from": {
+                "const": "/overlay"
+              },
+              "to": {
+                "const": "/work"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to"
+            ],
+            "properties": {
+              "from": {
+                "const": "/outputs/third_party"
+              },
+              "to": {
+                "const": "/old/third_party"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "program": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "source",
+        "compileFlags",
+        "linkPrefix",
+        "linkTail",
+        "reuse"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "bootstrapImport",
+            "bootstrapAudit",
+            "stoppedCapture",
+            "lifecycleTool",
+            "lifecycleSubmit"
+          ]
+        },
+        "source": {
+          "enum": [
+            "/work/tests/capella/isolated_bootstrap_import.cpp",
+            "/work/tests/capella/isolated_bootstrap_audit.cpp",
+            "/work/tests/capella/isolated_stopped_capture.cpp",
+            "/work/tests/capella/deposit_audit.cpp",
+            "/work/tests/multihost/lifecycle_submit.cpp"
+          ]
+        },
+        "compileFlags": {
+          "$ref": "#/$defs/compilerArgv"
+        },
+        "linkPrefix": {
+          "$ref": "#/$defs/compilerArgv"
+        },
+        "linkTail": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^\\r\\n\\u0000]+$"
+          }
+        },
+        "reuse": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "object",
+                "md",
+                "dependencyPrefixMap"
+              ],
+              "properties": {
+                "object": {
+                  "$ref": "#/$defs/retainedArtifact"
+                },
+                "md": {
+                  "$ref": "#/$defs/retainedArtifact"
+                },
+                "dependencyPrefixMap": {
+                  "$ref": "#/$defs/dependencyPrefixMap"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "bootstrapImport"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "const": "/work/tests/capella/isolated_bootstrap_import.cpp"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "bootstrapAudit"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "const": "/work/tests/capella/isolated_bootstrap_audit.cpp"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "stoppedCapture"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "const": "/work/tests/capella/isolated_stopped_capture.cpp"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "lifecycleTool"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "const": "/work/tests/capella/deposit_audit.cpp"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "lifecycleSubmit"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "const": "/work/tests/multihost/lifecycle_submit.cpp"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "x-controlFiles": {
+    "/controls/recipes.json": "this schema",
+    "/controls/source-expected.private.json": "#/$defs/sourceExpected",
+    "/controls/core-pin.json": "#/$defs/corePin",
+    "/controls/worker.pl": "exact frozen worker bytes, pinned by Root"
+  },
+  "x-additionalRuntimeChecks": [
+    "roles unique; role/source exact; owner/image/ELF tuple exact",
+    "paths normalized and physical for sourceExpected",
+    "all /work and /old inputs require sourceExpected hash and byte size",
+    "compileFlags/linkPrefix include the absolute canonical compiler at argv[0]",
+    "dependency/output/response and known side-effect flags refused in compileFlags/linkPrefix",
+    "linkTail Core occurrence exactly one; ordered tail preserved",
+    "lifecycleTool requires exactly -DNANO_TEST_SOURCE=\"/work\"; other roles do not",
+    "reuse old MD bytes are never rewritten; only two exact optional prefix maps allowed",
+    "Root externally verifies actual image ID, Git source bindings and original host full-nine authority"
+  ]
+}
