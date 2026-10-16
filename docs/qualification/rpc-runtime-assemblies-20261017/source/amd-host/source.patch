@@ -1,0 +1,145 @@
+--- a/host.py
++++ b/host.py
+@@ -1,22 +1,22 @@
+ #!/usr/bin/env python3
+-"""Root-only AMD current-Core relink; author performs source work only."""
++"""Root-only AMD RPC-Core runtime relink; source work only by the author."""
+ import argparse, calendar, datetime, hashlib, json, os, pathlib, re, signal, stat, sys, tarfile, time, types, uuid
+ REPOSITORY=pathlib.Path('/home/ubuntu/blockchain-nano-git')
+ ADAPTER=REPOSITORY/'docs/qualification/current-runtime-assemblies-20261016/source/amd-host/qualify-current-amd-helpers-root.py'
+ ADAPTER_PIN={'sha256':'f28ae7a55fadc9fc9bfe04a70c18f991e7440d4c4ab1c4d860fd7aca872fc350','bytes':52822}
+-WORKER_PIN={'sha256':'db0e026bffce0407e89c89951a14e208b0a7c714d49113a8874d0bac3f177526','bytes':27007}
+-SOURCE_REV='68d64a5330d16c971dd603b56e0f14c88c1459c8'
+-SRC_TREE='3f6ba355df5c3fc8694b4c1d04d2e2893b402047'
+-PRUNING=pathlib.Path('/home/ubuntu/current-amd-pruning-operation-20261016-01')
+-PRUNING_RESULT_PIN={'sha256':'77af36bfdb27c49bb49b66c1b1430a9cf62ce5fa81969bba3f568aaaa9385911','bytes':7612}
+-CORE=PRUNING/'outputs/libnano_core.a'
+-CORE_PIN={'sha256':'1687f1876ea784006b0d687db0f94e3a49b01f8edaa3a599fdf942a9fc4d1525','bytes':40820160}
+-CORE_HOST_PIN={'sha256':'d0d7ddbcfbc79dbc5276eb3bd5ef2083da72f88596f8a0fd15a391fff6c3ed96','bytes':6806}
++WORKER_PIN={'sha256':'f60a63c70d5d2fab65647917458d9829f6966df840275c2d778291aaef8b3154','bytes':27010}
++SOURCE_REV='d26e4744416d033dad5a2519cc2ab8899b838faf'
++SRC_TREE='7c82858ec741c7076a4f89ca336dee574e11244d'
++RPC_ROOT=pathlib.Path('/home/ubuntu/rpc-context-amd-root-20261016-01')
++RPC_RESULT_PIN={'sha256':'ad0fd6a977b3450932532fd962c42718e8ed52cb2a8720bb9f64b88baec08a00','bytes':2188}
++CORE=RPC_ROOT/'outputs/libnano_core.a'
++CORE_PIN={'sha256':'2678b628528295dd7d729e8917572d3076a1068399e58b12f97fa3849bb497bd','bytes':40805844}
++CORE_BINDING_PIN={'sha256':'f1202685a2880c62ad81b3d007938a64df1960ec6ddb7cbdd87e89604cb40ed0','bytes':805044}
+ HELPERS=pathlib.Path('/home/ubuntu/nano-current-helper-amd-dbf51ad9cfd14c82a0aaaae635a7e14e/current-amd-helpers-dbf51ad9cfd14c82a0aaaae635a7e14e')
+ HELPER_BINDING_PIN={'sha256':'cfe9dc36c2dddb9f14cef7f1047d7ab3054d3ebed082baccdd374c01d3934d49','bytes':234863}
+ MAIN_ROOT=pathlib.Path('/home/ubuntu/nano-complete-nano-amd-38d46c8fa8684530a2669bd8c8922895/attempt01')
+ MAIN_BINDING_PIN={'sha256':'38016b85f9a36522e2a745cf5eef13e48df98fa73695b64d10ba0193e2db0afb','bytes':134243}
+-CMAKE={'sha256':'e052228d297d828cee82b283069624035e6db2e06b4321da8500f0099508a532','bytes':175698}
++CMAKE={'sha256':'20b4b7c666777c389d401dd31b79755673a4aa4fac684800f6ee9a586b28f69f','bytes':176250}
+ F=('st_dev','st_ino','st_mode','st_nlink','st_uid','st_gid','st_size','st_mtime_ns','st_ctime_ns')
+ 
+ def need(ok):
+@@ -58,8 +58,8 @@
+  p=argparse.ArgumentParser();p.add_argument('--output-root',required=True);p.add_argument('--worker',required=True);a=p.parse_args()
+  m.need(sys.platform.startswith('linux') and os.getuid()==os.getgid()==1000)
+  candidate=pathlib.Path(a.output_root);worker=pathlib.Path(a.worker)
+- m.need(candidate.is_absolute() and candidate.parent.resolve()==candidate.parent and candidate.parent.is_dir() and re.fullmatch('current-amd-runtime-relink-[a-z0-9-]{1,100}',candidate.name) and not candidate.exists() and not candidate.is_symlink())
+- m.need(candidate.parent.stat().st_uid==1000 and not candidate.is_relative_to(m.R) and not candidate.is_relative_to(m.BASE) and all(not candidate.is_relative_to(q) and not q.is_relative_to(candidate) for q in (PRUNING,HELPERS,MAIN_ROOT)) and not candidate.is_relative_to(m.CORE_SOURCE.parent))
++ m.need(candidate.is_absolute() and candidate.parent.resolve()==candidate.parent and candidate.parent.is_dir() and re.fullmatch('current-amd-rpc-runtime-relink-[a-z0-9-]{1,100}',candidate.name) and not candidate.exists() and not candidate.is_symlink())
++ m.need(candidate.parent.stat().st_uid==1000 and not candidate.is_relative_to(m.R) and not candidate.is_relative_to(m.BASE) and all(not candidate.is_relative_to(q) and not q.is_relative_to(candidate) for q in (RPC_ROOT,HELPERS,MAIN_ROOT)) and not candidate.is_relative_to(m.CORE_SOURCE.parent))
+  m.need(worker.is_absolute() and worker.resolve()==worker and not worker.is_relative_to(candidate))
+  candidate.mkdir(mode=0o700);m.OUT=candidate;m.OUT_CREATED=True
+  for leaf in ('source','controls','outputs','baseline','docker-client'):(m.OUT/leaf).mkdir(mode=0o700)
+@@ -68,25 +68,28 @@
+  worker_raw=m.hold(worker,WORKER_PIN,65536)
+  HEAD=m.git('git-head',['rev-parse','HEAD']).decode().strip();m.need(re.fullmatch('[0-9a-f]{40}',HEAD) and m.git('git-clean',['status','--porcelain'])==b'')
+  m.git('qualified-source-ancestor',['merge-base','--is-ancestor',SOURCE_REV,HEAD])
++ cpp_trees={k:v for k,v in m.TREES.items() if k!='tests/multihost'};m.need(len(cpp_trees)==6)
+  found={}
+- for entry in m.git('git-selected-trees',['ls-tree','-z',HEAD,'--',*m.TREES]).split(b'\0'):
++ for entry in m.git('git-selected-trees',['ls-tree','-z',HEAD,'--',*cpp_trees]).split(b'\0'):
+   if not entry:continue
+   meta,path=entry.split(b'\t',1);mode,kind,oid=meta.decode().split();key=path.decode();m.need(mode=='040000' and kind=='tree' and key not in found);found[key]=oid
+- wanted_trees=dict(m.TREES,src=SRC_TREE);m.need(found==wanted_trees)
+- m.need(m.git('source-core-delta',['diff','--name-only',m.REV,HEAD,'--','src','include']).decode().splitlines()==['src/consensus_capella_runtime.cpp'])
++ wanted_trees=dict(cpp_trees,src=SRC_TREE);m.need(found==wanted_trees)
++ m.need(m.git('source-core-delta',['diff','--name-only',m.REV,HEAD,'--','src','include']).decode().splitlines()==['src/consensus_capella_runtime.cpp','src/rpc.cpp'])
+ 
+  docs={key:json.loads(m.hold(m.BASE/rel,{'sha256':sha,'bytes':size},16777216)) for key,(rel,sha,size) in m.REFS.items()}
+- proof=json.loads(m.hold(PRUNING/'result-public.json',PRUNING_RESULT_PIN,16384));m.need(proof['passed'] is True and proof['newCoreSha256']==CORE_PIN['sha256'] and proof['newCoreBytes']==CORE_PIN['bytes'] and proof['coreArchiveMembers']==143 and proof['otherCoreMembersByteExact']==142)
+- producer_pin={'sha256':proof['softwareAdmissionSha256'],'bytes':proof['softwareAdmissionBytes']}
+- binding=json.loads(m.hold(PRUNING/'outputs/software-admission.private.json',producer_pin,16777216));m.need(binding['format']=='nano-linux-pruning-operation-software-binding-v1' and binding['owner']=='vps-docker' and binding['imageId']==m.IMAGE and binding['sourceRevisionDeclared']==SOURCE_REV)
+- history=json.loads(m.hold(PRUNING/'qualified-host-products-first-admission.private.json',CORE_HOST_PIN,16384));core_row=history['observations'][-1]['table'][str(CORE)]
+- m.need(set(core_row)==set(F)|{'sha256'} and core_row==guest_row(binding['newCore']) and core_row['sha256']==CORE_PIN['sha256'] and core_row['st_size']==CORE_PIN['bytes'])
++ # This external producer pin already binds the retained output's original
++ # Linux GNU-nine row. Root RPC01 proved host/guest equality; do not refresh it.
++ proof=json.loads(m.hold(RPC_ROOT/'result-public.json',RPC_RESULT_PIN,16384));m.need(proof['passed'] is True and proof['format']=='nano-rpc-simulation-context-qualification-v1' and proof['architecture']=='linux-amd64' and proof['image']==m.IMAGE and proof['coreMembers']==143 and proof['unchangedCoreMembers']==142 and proof['replacedCoreMembers']==['rpc.cpp.o'] and proof['rootNewHostOutputsMatchedOriginalGuestRows'] is True and proof['oldAuthoritiesRefreshed'] is False)
++ producer_pin={'sha256':proof['softwareAdmissionSha256'],'bytes':proof['softwareAdmissionBytes']};m.need(producer_pin==CORE_BINDING_PIN)
++ binding=json.loads(m.hold(RPC_ROOT/'outputs/software-admission.private.json',producer_pin,16777216));m.need(binding['format']=='nano-rpc-simulation-context-software-v1' and binding['oldAuthoritiesRefreshed'] is False and binding['guestMaterials']['/outputs/libnano_core.a']==proof['newCore'])
++ core_row=guest_row(binding['guestMaterials']['/outputs/libnano_core.a'])
++ m.need(set(core_row)==set(F)|{'sha256'} and core_row['sha256']==CORE_PIN['sha256'] and core_row['st_size']==CORE_PIN['bytes'])
+  core_raw=m.hold(CORE,core_row);core=m.OUT/'baseline/libnano_core.a';m.write_new(core,core_raw,0o400);m.stable_new('current-core-copy',{core:CORE_PIN})
+  helper=json.loads(m.hold(HELPERS/'outputs/software-admission.private.json',HELPER_BINDING_PIN,16777216));m.need(helper['format']=='nano-current-linux-selected-helper-software-binding-v1' and helper['owner']=='vps-docker' and helper['imageId']==m.IMAGE)
+  tool=[q for q in helper['programs'] if q['role']=='lifecycleTool'];m.need(len(tool)==1);tool=tool[0];m.need(tool['source']=='/work/tests/capella/deposit_audit.cpp' and tool['target']=='nano-capella-deposit-audit' and tool['objectReused'] is False)
+  main_binding=json.loads(m.hold(MAIN_ROOT/'outputs/software-admission.private.json',MAIN_BINDING_PIN,16777216));m.need(main_binding['format']=='nano-current-core-linux-software-binding-v1' and main_binding['mainReused'] is True)
+  m.need(os.statvfs(m.OUT).f_bavail*os.statvfs(m.OUT).f_frsize>=3*1024**3)
+- selected=[*m.TREES,'CMakeLists.txt'];wanted={}
++ selected=[*cpp_trees,'tests/multihost/lifecycle_submit.cpp','CMakeLists.txt'];wanted={}
+  for entry in m.git('git-selected-blobs',['ls-tree','-r','-z',HEAD,'--',*selected]).split(b'\0'):
+   if not entry:continue
+   meta,path=entry.split(b'\t',1);mode,kind,oid=meta.decode().split();key=path.decode();rel=pathlib.PurePosixPath(key);m.need(kind=='blob' and mode in ('100644','100755') and not rel.is_absolute() and '..'not in rel.parts and key not in wanted);wanted[key]=oid
+@@ -159,10 +162,10 @@
+  controls={'recipes.json':(json.dumps(recipes,sort_keys=True)+'\n').encode(),'source-expected.private.json':(json.dumps(expected,sort_keys=True)+'\n').encode(),'core-pin.json':(json.dumps(CORE_PIN,sort_keys=True)+'\n').encode(),'worker.pl':worker_raw}
+  for leaf,raw in controls.items():m.write_new(m.OUT/'controls'/leaf,raw,0o444)
+  os.chmod(m.OUT/'controls',0o555);os.chmod(m.OUT/'baseline',0o555)
+- m.save('runtime-relink-source-joins.private.json',{'head':HEAD,'effectiveSourceBase':SOURCE_REV,'treeEntries':found,'selectedCmake':CMAKE,'roleSourceJoins':joins,'linkOrders':orders,'toolCurrentProducer':HELPER_BINDING_PIN,'mainCurrentProducer':MAIN_BINDING_PIN,'coreCurrentProducer':producer_pin,'oldImageDependenciesUsedAsHistoricalAuthority':False,'fullCmakeConfigureExecuted':False})
++ m.save('runtime-relink-source-joins.private.json',{'head':HEAD,'effectiveSourceBase':SOURCE_REV,'treeEntries':found,'submitSourceBlob':wanted['tests/multihost/lifecycle_submit.cpp'],'wholeMultihostTreeQualified':False,'selectedCmake':CMAKE,'roleSourceJoins':joins,'linkOrders':orders,'toolCurrentProducer':HELPER_BINDING_PIN,'mainCurrentProducer':MAIN_BINDING_PIN,'coreCurrentProducer':producer_pin,'oldImageDependenciesUsedAsHistoricalAuthority':False,'fullCmakeConfigureExecuted':False})
+  docker=['/usr/bin/sudo','-n','/usr/bin/docker','--host','unix:///var/run/docker.sock','--config',str(m.OUT/'docker-client')]
+  def dk(name,args,seconds=30,expected=0,cleanup=False):return m.run(name,docker+args,seconds,expected,cleanup=cleanup)
+- name='nano-runtime-relink-amd-'+uuid.uuid4().hex;labelkey='nano.runtime.relink.amd';cid=None;attempted=False;first_error=None;result=None
++ name='nano-rpc-runtime-relink-amd-'+uuid.uuid4().hex;labelkey='nano.rpc.runtime.relink.amd';cid=None;attempted=False;first_error=None;result=None
+  try:
+   raw,err,_=dk('image-inspect',['image','inspect',m.IMAGE,'--format','{{json .}}']);image=json.loads(raw);m.need(not err and image['Id']==m.IMAGE and image['Architecture']=='amd64' and image['Os']=='linux')
+   raw,err,_=dk('name-absent',['ps','-a','--no-trunc','--filter','name=^/'+name+'$','--format','{{.ID}}']);m.need(not raw.strip() and not err)
+@@ -182,7 +185,12 @@
+   for path in sorted((m.OUT/'outputs').iterdir()):
+    st=path.lstat();m.need(path.name not in ('.','..') and re.fullmatch('[A-Za-z0-9_.-]+',path.name) and stat.S_ISREG(st.st_mode) and st.st_nlink==1 and st.st_size<67108864);total+=st.st_size;m.need(total<=268435456);observed.append({'name':path.name,'bytes':st.st_size})
+   m.need(len(observed)<=128);m.save('worker-output-inventory.private.json',{'observationalOnly':True,'workerExitCode':code,'files':observed,'totalBytes':total,'noSuccessArtifactRequiredForCollection':True})
+-  m.need(code==0 and not err);body=m.material(m.OUT/'outputs/result-public.json',16777216)[1];result=json.loads(body);m.need(json.loads(raw)==result)
++  m.need(code==0 and not err);stdout_result=json.loads(raw)
++  # These two JSON files are newly produced, never historical rows. Stabilize
++  # their known bytes/SHA BEFORE first hold, without rebasing any old HELD row.
++  json_pins={m.OUT/'outputs/result-public.json':m.digest(raw),m.OUT/'outputs/software-admission.private.json':{'sha256':stdout_result['softwareAdmissionSha256'],'bytes':stdout_result['softwareAdmissionBytes']}}
++  m.stable_new('worker-json-products',json_pins)
++  body=m.material(m.OUT/'outputs/result-public.json',16777216)[1];result=json.loads(body);m.need(stdout_result==result)
+   m.need(result['format']=='nano-current-linux-runtime-relink-qualification-v1' and result['passed'] is True and result['owner']=='vps-docker' and result['uid']==result['gid']==1000 and result['imageId']==m.IMAGE and result['sourceRevisionDeclared']==HEAD)
+   m.need(result['selectedPrograms']==5 and result['compiledTranslationUnits']==0 and result['archiveUpdates']==0 and result['coreCompilations']==0 and all(result[k]==5 for k in ('independentMCommands','linkCommands','loaderCommands','argumentRefusals')) and result['helpCommands']==1 and result['smokeCommands']==6)
+   m.need(all(result[k]==0 for k in ('p2pMCommands','p2pLinks','p2pProgramRuns')) and result['databaseOpened'] is False and result['coreArchiveMutated'] is False and result['coreMembersRequalified'] is False and result['productionQualified'] is False and {'sha256':result['coreSha256'],'bytes':result['coreBytes']}==CORE_PIN)
+@@ -206,10 +214,11 @@
+     raw,err,_=dk('cleanup-absence',['ps','-a','--no-trunc','--filter','name=^/'+name+'$','--format','{{.ID}}'],10,cleanup=True);m.need(not raw.strip() and not err)
+    m.save('cleanup-public.json',{'ownedContainerAbsent':True,'creationAttempted':attempted,'ownedOutputsRetained':True,'oldSdkMapsRead':False})
+   except BaseException as error:
+-   m.save('cleanup-failure-public.json',{'passed':False,'firstFailurePreserved':first_error is not None,'errorType':type(error).__name__})
++   try:m.save('cleanup-failure-public.json',{'passed':False,'firstFailurePreserved':first_error is not None,'errorType':type(error).__name__})
++   except BaseException:pass
+    if first_error is None:raise
+  m.fence();m.need(result is not None and m.git('final-git-head',['rev-parse','HEAD']).decode().strip()==HEAD and m.git('final-git-clean',['status','--porcelain'])==b'')
+- result.update({'rootHead':HEAD,'rootEffectiveSourceBase':SOURCE_REV,'rootSevenSelectedTreesMatchCurrentCoreSource':True,'rootOnlyRuntimeDeltaSinceBd11':True,'rootCurrentMainAndToolProducerBound':True,'rootCurrentCoreProducerAndHostRowJoined':True,'rootSelectedTargetCmakeAsserted':True,'rootSelectedOriginalRowsFullNineAndShaUnchanged':True,'rootOwnedContainerAbsent':True,'rootPerlSyntaxPassed':True,'fixedProducerReceiptsRead':4,'oldSdkMapsRead':False,'oldSourceAdmissionRead':False,'oldAuthoritiesRefreshed':False,'p2pBoundByThisHost':False,'campaignAdmission':False,'productionQualified':False})
++ result.update({'rootHead':HEAD,'rootEffectiveSourceBase':SOURCE_REV,'rootSixSelectedCppTreesMatchCurrentCoreSource':True,'rootSubmitSourcePinnedToOriginalRetainedObject':True,'rootWholeMultihostTreeQualified':False,'rootOnlyRuntimeAndRpcDeltaSinceBd11':True,'rootCurrentMainAndToolProducerBound':True,'rootCurrentCoreProducerAndHostRowJoined':True,'rootSelectedTargetCmakeAsserted':True,'rootSelectedOriginalRowsFullNineAndShaUnchanged':True,'rootOwnedContainerAbsent':True,'rootPerlSyntaxPassed':True,'fixedProducerReceiptsRead':4,'oldSdkMapsRead':False,'oldSourceAdmissionRead':False,'oldAuthoritiesRefreshed':False,'p2pBoundByThisHost':False,'campaignAdmission':False,'productionQualified':False})
+  m.save('result-public.json',result);print(json.dumps(result,sort_keys=True),flush=True)
+ 
+ if __name__=='__main__':
+@@ -217,7 +226,9 @@
+  try:m=load_adapter();main(m)
+  except BaseException:
+   failed=True
+-  if m is not None and m.OUT_CREATED:m.save('failure-public.json',{'passed':False,'oldSdkMapsRead':False,'oldSourceAdmissionRead':False,'oldAuthoritiesRefreshed':False,'compilerOrTestSuccessClaimed':False,'rawErrorDetailsExported':False})
++  if m is not None and m.OUT_CREATED:
++   try:m.save('failure-public.json',{'passed':False,'oldSdkMapsRead':False,'oldSourceAdmissionRead':False,'oldAuthoritiesRefreshed':False,'compilerOrTestSuccessClaimed':False,'rawErrorDetailsExported':False})
++   except BaseException:pass
+   print('current AMD runtime relink adapter refused',file=sys.stderr);sys.exit(1)
+  finally:
+   if m is not None:
+@@ -226,5 +237,7 @@
+     m.fence()
+     if m.OUT_CREATED:m.save('originals-final-fence-public.json',{'passed':True,'heldSelectedFiles':len(m.HELD),'firstFailurePreserved':failed,'oldAuthoritiesRefreshed':False})
+    except BaseException as error:
+-    if m.OUT_CREATED:m.save('originals-final-fence-failure-public.json',{'passed':False,'firstFailurePreserved':failed,'errorType':type(error).__name__})
++    if m.OUT_CREATED:
++     try:m.save('originals-final-fence-failure-public.json',{'passed':False,'firstFailurePreserved':failed,'errorType':type(error).__name__})
++     except BaseException:pass
+     if not failed:raise

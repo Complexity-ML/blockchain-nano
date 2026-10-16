@@ -1,0 +1,362 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Recipes for --current-core-runtime-relink; see README for controls and Root authority obligations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "owner",
+    "uid",
+    "gid",
+    "imageId",
+    "elfMachine",
+    "sourceRevision",
+    "programs"
+  ],
+  "properties": {
+    "format": {
+      "const": "nano-current-linux-runtime-relink-recipes-v1"
+    },
+    "owner": {
+      "enum": [
+        "mac-docker",
+        "vps-docker"
+      ]
+    },
+    "uid": {
+      "type": "integer"
+    },
+    "gid": {
+      "type": "integer"
+    },
+    "imageId": {
+      "type": "string"
+    },
+    "elfMachine": {
+      "type": "integer"
+    },
+    "sourceRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "programs": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "source",
+          "compileFlags",
+          "linkPrefix",
+          "linkTail",
+          "reuse"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "nano",
+              "bootstrapImport",
+              "bootstrapAudit",
+              "stoppedCapture",
+              "lifecycleTool",
+              "lifecycleSubmit"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "compileFlags": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 512,
+            "prefixItems": [
+              {
+                "const": "/usr/bin/clang++"
+              }
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 8192
+            }
+          },
+          "linkPrefix": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 512,
+            "prefixItems": [
+              {
+                "const": "/usr/bin/clang++"
+              }
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 8192
+            }
+          },
+          "linkTail": {
+            "type": "array",
+            "minItems": 7,
+            "maxItems": 256,
+            "items": {
+              "type": "string"
+            }
+          },
+          "reuse": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "object",
+              "md",
+              "dependencyPrefixMap"
+            ],
+            "properties": {
+              "object": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256",
+                  "bytes"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^/inputs/"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 536870912
+                  }
+                }
+              },
+              "md": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256",
+                  "bytes"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^/inputs/"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 536870912
+                  }
+                }
+              },
+              "dependencyPrefixMap": {
+                "type": "array",
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "from",
+                    "to"
+                  ],
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "from": {
+                          "const": "/overlay"
+                        },
+                        "to": {
+                          "const": "/work"
+                        }
+                      }
+                    },
+                    {
+                      "properties": {
+                        "from": {
+                          "const": "/outputs/third_party"
+                        },
+                        "to": {
+                          "const": "/old/third_party"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "nano"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/src/main.cpp"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "bootstrapImport"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/tests/capella/isolated_bootstrap_import.cpp"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "bootstrapAudit"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/tests/capella/isolated_bootstrap_audit.cpp"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "stoppedCapture"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/tests/capella/isolated_stopped_capture.cpp"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "lifecycleTool"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/tests/capella/deposit_audit.cpp"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "lifecycleSubmit"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "source": {
+                  "const": "/work/tests/multihost/lifecycle_submit.cpp"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "owner": {
+            "const": "mac-docker"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "uid": {
+            "const": 501
+          },
+          "gid": {
+            "const": 20
+          },
+          "elfMachine": {
+            "const": 183
+          },
+          "imageId": {
+            "const": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb"
+          },
+          "programs": {
+            "minItems": 6,
+            "maxItems": 6
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "owner": {
+            "const": "vps-docker"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "uid": {
+            "const": 1000
+          },
+          "gid": {
+            "const": 1000
+          },
+          "elfMachine": {
+            "const": 62
+          },
+          "imageId": {
+            "const": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14"
+          },
+          "programs": {
+            "minItems": 5,
+            "maxItems": 5
+          }
+        }
+      }
+    }
+  ]
+}

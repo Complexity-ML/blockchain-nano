@@ -1,0 +1,18 @@
+--- a/worker.pl
++++ b/worker.pl
+@@ -1,5 +1,5 @@
+ #!/usr/bin/perl
+-# Root-only source proposal. The author has not run Perl or any project program.
++# Root-only RPC-Core relink proposal. No Perl or project program run by the author.
+ use strict;
+ use warnings;
+ use Fcntl qw(:DEFAULT :mode);
+@@ -246,7 +246,7 @@
+  my ($uid,$gid)=@{$recipe}{qw(uid gid)};
+  my $arm=$recipe->{owner} eq 'mac-docker';my $amd=$recipe->{owner} eq 'vps-docker';need($arm||$amd);
+  need($arm?($uid==501&&$gid==20&&$recipe->{elfMachine}==183&&$recipe->{imageId} eq 'sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb'):($uid==1000&&$gid==1000&&$recipe->{elfMachine}==62&&$recipe->{imageId} eq 'sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14'));
+- my $known_core=$arm?{sha256=>'35779b74ff3894d8857d06732caa801cb340381f4cf6dc5801074c7e372dbdf6',bytes=>41053984}:{sha256=>'1687f1876ea784006b0d687db0f94e3a49b01f8edaa3a599fdf942a9fc4d1525',bytes=>40820160};need($core_pin->{sha256} eq $known_core->{sha256}&&$core_pin->{bytes}==$known_core->{bytes});
++ my $known_core=$arm?{sha256=>'43b6b8ee60f7b614117dc46c79f80eb3cdf930202d2d32c35bc24983aa8f49f5',bytes=>41040028}:{sha256=>'2678b628528295dd7d729e8917572d3076a1068399e58b12f97fa3849bb497bd',bytes=>40805844};need($core_pin->{sha256} eq $known_core->{sha256}&&$core_pin->{bytes}==$known_core->{bytes});
+  need($>==$uid&&$<==$uid&&abs_path($out) eq $out);my @s=lstat($out);need(@s&&S_ISDIR($s[2])&&($s[2]&07777)==0700&&$s[4]==$uid&&$s[5]==$gid);
+  opendir(my $dir,$out) or die "Selected helpers worker refused\n";my @existing=grep {$_ ne '.'&&$_ ne '..'} readdir($dir);closedir($dir);need(!@existing);$output_admitted=1;
+  need(ref($recipe->{programs}) eq 'ARRAY'&&@{$recipe->{programs}}==($arm?6:5));

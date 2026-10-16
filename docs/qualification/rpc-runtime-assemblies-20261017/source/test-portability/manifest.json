@@ -1,0 +1,33 @@
+{
+  "format": "nano-rpc-context-test-portability-source-proposal-v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_EXECUTION",
+  "baseline": {
+    "path": "/Users/boris/Dev/blockchain-nano/tests/test_rpc_simulation_context.cpp",
+    "sha256": "1790fd79cca93cc807ef8539e1138d06eeacd53a8760cbc5be95ac30a0377b6c",
+    "bytes": 18497
+  },
+  "change": "Only add #include <unistd.h>; inverse removal restores the baseline byte-for-byte.",
+  "payloads": [
+    {
+      "path": "source/tests/test_rpc_simulation_context.cpp",
+      "sha256": "3aafab4910258d635ebc41d5290f5cda430a20d588ccf22e33b59f0f1de69073",
+      "bytes": 18517
+    },
+    {
+      "path": "source.patch",
+      "sha256": "fdbcecd9fcbebdefbb258035918ba32dc4722ec72d20fa7b5d54ab6f3823fea8",
+      "bytes": 220
+    },
+    {
+      "path": "README.md",
+      "sha256": "60642b2a91231818431b176cfe1dc7b5c2132468cf6012e5d7a7fa8bde969bb1",
+      "bytes": 1177
+    }
+  ],
+  "totalPayloadBytes": 19914,
+  "authorExecutedPrograms": false,
+  "repositoryModified": false,
+  "sdkRead": false,
+  "privateInputsRead": false,
+  "productionQualified": false
+}
