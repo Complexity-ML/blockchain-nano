@@ -1,0 +1,132 @@
+{
+  "D09ArchiveCountFailurePreserved": true,
+  "allHeldInputsAndProductsUnchanged": true,
+  "archiveObjects": 143,
+  "campaign03Activated": false,
+  "coreSha256": "3401bf777c09f98b2ce4c035c336176dcdbe3097926c232f524670cff697fc37",
+  "events": [
+    {
+      "elapsedMs": 75,
+      "exitCode": 0,
+      "phase": "link"
+    },
+    {
+      "elapsedMs": 14602,
+      "exitCode": 0,
+      "phase": "causal"
+    },
+    {
+      "elapsedMs": 15001,
+      "exitCode": 0,
+      "phase": "deferred"
+    }
+  ],
+  "format": "nano-exit-reanchor-native-candidate-v1",
+  "newCoreCompilations": 0,
+  "newLinks": 1,
+  "passed": true,
+  "productionQualified": false,
+  "reactorOverlaySha256": "386492227e72291ceedc326ac2d06a7f134ee69b8a167623a8404d73d56b4fce",
+  "replacedObject": "consensus_capella_reactor.cpp.o",
+  "results": [
+    {
+      "passed": true,
+      "records": [
+        {
+          "branchAImportedBlocks": 16,
+          "branchBBlocks": 2,
+          "exitEpoch": 4,
+          "finalizedEpoch": 2,
+          "finalizedStateEpoch": 2,
+          "headStateEpoch": 4,
+          "liveVoteRows": 0,
+          "newTestOnlySignaturesCreated": 287,
+          "noExitIncluded": true,
+          "oldAdmissionRootWillBeRemoved": true,
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "proposalSlotsDisjoint": true,
+          "result": "PASS",
+          "runtimeDutiesAuthorized": false,
+          "sameValidatorIdentity": true,
+          "scenario": "exit-reorg-prune-preconditions"
+        },
+        {
+          "exitWireSha256": "0x12a8bff716787a002ed6c83d8bcde98ade2e4680ac5fd9fe919bc95e48ea38c1",
+          "headUnchanged": true,
+          "oldAdmissionRootRemoved": true,
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "queueAfter": 1,
+          "queueBefore": 1,
+          "result": "PRESERVED",
+          "scenario": "exit-reorg-prune-observation"
+        },
+        {
+          "acceptedExitBytesPreserved": true,
+          "actualNetworkTransport": false,
+          "actualPruningAndClosedOwnerReopen": true,
+          "duplicateIdempotent": true,
+          "finalityAdvancedAfterAcknowledgement": true,
+          "genuineDelayedBranchImport": true,
+          "newTestOnlySignaturesCreated": 289,
+          "normalBlockReinclusion": true,
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesAuthorized": false,
+          "scenario": "exit-reorg-prune-summary",
+          "semanticGroups": 1,
+          "syntheticFixtureOnly": true
+        }
+      ],
+      "selector": "--exit-reorg-prune-self-test"
+    },
+    {
+      "passed": true,
+      "records": [
+        {
+          "branchAImportedBlocks": 16,
+          "branchBBlocks": 2,
+          "exitEpoch": 5,
+          "finalizedEpoch": 2,
+          "finalizedStateEpoch": 2,
+          "headStateEpoch": 4,
+          "liveVoteRows": 0,
+          "newTestOnlySignaturesCreated": 287,
+          "noExitIncluded": true,
+          "oldAdmissionRootWillBeRemoved": true,
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "proposalSlotsDisjoint": true,
+          "result": "PASS",
+          "runtimeDutiesAuthorized": false,
+          "sameValidatorIdentity": true,
+          "scenario": "exit-reorg-prune-deferred-preconditions"
+        },
+        {
+          "acceptedExitBytesPreserved": true,
+          "actualNetworkTransport": false,
+          "automaticTickPublishedWithoutPruning": true,
+          "closedOwnerReopen": true,
+          "genuineDelayedBranchImport": true,
+          "manualPruningDeferredWithoutMutation": true,
+          "newTestOnlySignaturesCreated": 287,
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "retainedPostStatesBeforeExitEpoch": true,
+          "runtimeDutiesAuthorized": false,
+          "scenario": "exit-reorg-prune-deferred-summary",
+          "semanticGroups": 1,
+          "syntheticFixtureOnly": true
+        }
+      ],
+      "selector": "--exit-reorg-prune-deferred-self-test"
+    }
+  ],
+  "reusedCompletedD09Builds": true,
+  "sourceBaseRevision": "00154f57d4b6e1515d60edeae4e0ab38c42da28a",
+  "testOverlaySha256": "a5c6c42c4cfa908da23ecc8eb203071073cbb03848d8b66f062a7ad01336ec7c",
+  "unchangedObjects": 142
+}

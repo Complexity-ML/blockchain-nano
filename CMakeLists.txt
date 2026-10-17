@@ -2232,6 +2232,10 @@ target_link_libraries(nano-capella-proposer-slashing-tests PRIVATE nano_core)
 target_compile_definitions(nano-capella-proposer-slashing-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME consensus_capella_proposer_slashing_complete COMMAND nano-capella-proposer-slashing-tests --self-test)
 set_tests_properties(consensus_capella_proposer_slashing_complete PROPERTIES TIMEOUT 190)
+add_test(NAME consensus_capella_exit_reorg_prune COMMAND nano-capella-proposer-slashing-tests --exit-reorg-prune-self-test)
+set_tests_properties(consensus_capella_exit_reorg_prune PROPERTIES TIMEOUT 190 LABELS qualification_consensus_recovery)
+add_test(NAME consensus_capella_exit_reorg_prune_deferred COMMAND nano-capella-proposer-slashing-tests --exit-reorg-prune-deferred-self-test)
+set_tests_properties(consensus_capella_exit_reorg_prune_deferred PROPERTIES TIMEOUT 190 LABELS qualification_consensus_recovery)
 
 # Read-only current duty observation on public fixtures, including CLI refusal.
 if(NANO_CONFIGURED_JOURNAL_IO_PUBLIC_TESTS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")

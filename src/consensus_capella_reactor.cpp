@@ -62,6 +62,42 @@ std::optional<std::array<uint8_t,48>> exit_key(const CapellaForkStore& store,con
  if(!verify_consensus_bls(member->second.public_key,consensus_signing_root(consensus_voluntary_exit_root(exit.epoch,exit.validator_index),consensus_domain({4,0,0,0},version,context.genesis_root)),exit.signature))return std::nullopt;
  return member->second.public_key;
 }
+// Retire only finalized operations, then keep every remaining admission on a
+// retained post-state that passes the original exit authentication unchanged.
+// Callers work on a copy: false defers pruning without changing durable state.
+bool reconcile_exit_admission_roots(const CapellaForkStore& candidate,CapellaPendingExits& exits,const CapellaForkBlockRules& rules,const std::function<void()>& check){
+ if(exits.empty())return true;
+ {
+  const auto finalized=candidate.blocks.at(candidate.timed.view.finalized.root).lease(check);const auto& t=rules.transition;
+  const auto context=capella_fork_block_context(finalized->state,finalized->header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
+  for(auto it=exits.begin();it!=exits.end();){if(check)check();const auto operation=decode_consensus_voluntary_exit_ssz(it->second.wire,check);if(!operation)throw std::logic_error("Invalid retained Capella exit");
+   const auto member=context.registry.validators.find(operation->validator_index);
+   if(member!=context.registry.validators.end()&&(member->second.public_key!=it->second.public_key||member->second.exit_epoch!=UINT64_MAX))it=exits.erase(it);else ++it;
+  }
+ }
+ std::optional<ConsensusRoot> head;
+ for(auto& [_,record]:exits){
+  if(check)check();if(candidate.blocks.contains(record.admission_root))continue;
+  const auto operation=decode_consensus_voluntary_exit_ssz(record.wire,check);if(!operation)throw std::logic_error("Invalid retained Capella exit");
+  std::set<ConsensusRoot> examined;std::optional<ConsensusRoot> replacement;
+  auto examine=[&](const ConsensusRoot& root){
+   if(check)check();if(!examined.insert(root).second)return false;
+   const auto key=exit_key(candidate,root,*operation,rules,check);if(!key||*key!=record.public_key)return false;
+   replacement=root;return true;
+  };
+  if(!examine(candidate.timed.view.finalized.root)){
+   if(!head)head=consensus_beacon_header_root(capella_fork_head(candidate,rules,check)->header);
+   auto at=*head;
+   for(size_t remaining=candidate.blocks.size();remaining;--remaining){
+    if(examine(at))break;if(at==candidate.timed.view.anchor)break;at=candidate.blocks.at(at).header().parent_root;
+   }
+   if(!replacement)for(const auto& [root,block]:candidate.blocks){if(examine(root))break;}
+  }
+  if(!replacement)return false;
+  record.admission_root=*replacement;
+ }
+ return true;
+}
 // Authentication is anchored to a retained signed post-state, with bounded
 // epoch projection when admission happens after that state's epoch. Headers
 // need not describe a canonical block or the selected proposer at their slot.
@@ -275,17 +311,8 @@ void CapellaDurableReactor::publish_impl(CapellaForkStore candidate,const std::f
   }
  }
  if(!exits)exits=exits_;
- if(!exits->empty()){
-  const auto root=candidate.timed.view.finalized.root;const auto finalized_pin=candidate.blocks.at(root).lease(check);const auto& finalized=*finalized_pin;const auto& t=rules_.transition;
-  const auto context=capella_fork_block_context(finalized.state,finalized.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
-  for(auto it=exits->begin();it!=exits->end();){if(check)check();const auto operation=decode_consensus_voluntary_exit_ssz(it->second.wire,check);if(!operation)throw std::logic_error("Invalid retained Capella exit");
-   const auto member=context.registry.validators.find(operation->validator_index);
-   // Only finalized membership or scheduling retires an operation. A head reorg does not.
-   if(member!=context.registry.validators.end()&&(member->second.public_key!=it->second.public_key||member->second.exit_epoch!=UINT64_MAX)){it=exits->erase(it);continue;}
-   if(!candidate.blocks.contains(it->second.admission_root)){const auto key=exit_key(candidate,root,*operation,rules_,check);if(!key||*key!=it->second.public_key){it=exits->erase(it);continue;}it->second.admission_root=root;}
-   ++it;
-  }
- }
+ // Never silently erase an accepted exit merely because its old root was pruned.
+ if(!reconcile_exit_admission_roots(candidate,*exits,rules_,check))throw std::invalid_argument("Capella exit cannot be safely reanchored");
  if(!proposers)proposers=proposer_slashings_;
  if(!proposers->empty()){
   const auto root=candidate.timed.view.finalized.root;const auto finalized=candidate.blocks.at(root).lease(check);const auto& t=rules_.transition;
@@ -1100,9 +1127,10 @@ bool CapellaDurableReactor::prune_finalized(const std::function<void()>& check){
  const auto anchor=state_->timed.view.finalized.root;
  if(anchor==state_->timed.view.anchor)return false;
  auto candidate=prepare_capella_pruned_store(*state_,anchor,rules_,check);
- // publish reconciles pending BLS admission roots and verifies all retained
- // signed votes/proofs in the exact new envelope before committing it.
- publish(std::move(candidate),check);return true;
+ // No retained state may authenticate an exit already included only on an
+ // unfinalized head. Preserve its old admission root by deferring this pruning.
+ auto exits=exits_;if(!reconcile_exit_admission_roots(candidate,exits,rules_,check))return false;
+ publish(std::move(candidate),check,{},std::nullopt,std::nullopt,std::nullopt,std::move(exits));return true;
 }
 }
 
@@ -1120,7 +1148,8 @@ void CapellaDurableReactor::prune_if_ready_locked(const std::function<void()>& c
  // A recent vote on another branch can still be needed for authenticated replay.
  // Wait for normal epoch expiry rather than silently discarding signed evidence.
  for(const auto& [id,wire]:votes_){if(check)check();const auto vote=decode_consensus_attestation_ssz(wire,rules_.transition.consensus.body.validators_per_committee,check);if(!vote)throw std::logic_error("invalid retained Capella vote");if(!candidate.blocks.contains(vote->data.target.root)||!candidate.blocks.contains(vote->data.beacon_block_root))return;}
- publish(std::move(candidate),check);
+ auto exits=exits_;if(!reconcile_exit_admission_roots(candidate,exits,rules_,check))return;
+ publish(std::move(candidate),check,{},std::nullopt,std::nullopt,std::nullopt,std::move(exits));
 }
 }
 

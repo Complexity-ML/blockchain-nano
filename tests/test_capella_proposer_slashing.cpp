@@ -10,6 +10,7 @@
 #include "nano/checkpoint_blob_gc.hpp"
 #include "ckzg/blst/bindings/blst.h"
 #include "../network/capella_consensus_service.hpp"
+#include "support/rocksdb_fixture.hpp"
 #include <openssl/crypto.h>
 #include <algorithm>
 #include <array>
@@ -70,9 +71,9 @@ ConsensusRoot test_registry_root(const Bytes& data,uint64_t limit){
 }
 CapellaExecutionPayload test_payload(const Block& b){const auto& h=b.header;CapellaExecutionPayload p;test_copy(p.parent_hash,h.parent_hash);test_copy(p.fee_recipient,unhex(h.coinbase));test_copy(p.state_root,h.state_root);test_copy(p.receipts_root,h.receipts_root);test_copy(p.logs_bloom,h.logs_bloom);test_copy(p.prev_randao,h.mix_hash);test_copy(p.block_hash,h.hash());check(h.base_fee.has_value(),"synthetic base fee");auto fee=bytes(*h.base_fee,32);std::reverse(fee.begin(),fee.end());test_copy(p.base_fee_per_gas,fee);p.block_number=u64(h.number);p.gas_limit=u64(h.gas_limit);p.gas_used=u64(h.gas_used);p.timestamp=u64(h.timestamp);p.extra_data=h.extra_data;return p;}
 Bytes test_body(const CapellaSlotState& state,const CapellaTransitionRules& r,const Bytes& reveal,const CapellaExecutionPayload& p){const auto& l=r.consensus.state;const size_t hist=176+64*l.slots_per_historical_root,sync=(l.sync_committee_size+7)/8+96,fixed=228+sync;auto payload=encode_capella_execution_payload(p,r.execution,r.withdrawals.maximum_per_payload,r.consensus.maximum_block_bytes);Bytes b(fixed,0);check(reveal.size()==96,"synthetic RANDAO width");std::copy(reveal.begin(),reveal.end(),b.begin());std::copy_n(state.ssz.begin()+hist+4,72,b.begin()+96);b[220+(l.sync_committee_size+7)/8]=0xc0;for(size_t at:{size_t(200),size_t(204),size_t(208),size_t(212),size_t(216),220+sync})test_put(b,at,fixed,4);test_put(b,224+sync,fixed+payload.size(),4);b.insert(b.end(),payload.begin(),payload.end());return b;}
-Fixture fixture(){
+Fixture fixture(bool short_exit_tenure=false){
  const auto root=fs::path(NANO_TEST_SOURCE)/"tests/fixtures/capella-bootstrap-anchor-cb532";const auto text=read(root/"manifest.json");check(hex(sha256(bytes_of(text)))=="0xec150c28c8c187e6728cea7ef717acc6383e0b75242302b0a481fc2a9c425fc6","public input literal pin");const auto manifest=Json::parse(text);auto input=[&](const char* kind,const char* name){const auto& pin=manifest.at("files").at(kind);auto b=read(root/name);check(pin.at("path")==name&&pin.at("bytes").get<size_t>()==b.size()&&pin.at("sha256").get<std::string>()==hex(sha256(bytes_of(b))).substr(2),"public input bytes pin");return b;};
- const auto profile=input("profile","profile.json");auto rules=load_capella_fork_profile(profile,sha256(bytes_of(profile)),1024*1024);auto pre=CapellaSlotState{bytes_of(input("genesisState","genesis-state.ssz")),std::nullopt};const auto& r=rules.transition;const auto& l=r.consensus.state;
+ const auto profile=input("profile","profile.json");auto rules=load_capella_fork_profile(profile,sha256(bytes_of(profile)),1024*1024);if(short_exit_tenure)rules.transition.consensus.exit.shard_committee_period=1;auto pre=CapellaSlotState{bytes_of(input("genesisState","genesis-state.ssz")),std::nullopt};const auto& r=rules.transition;const auto& l=r.consensus.state;
  const size_t hist=176+64*l.slots_per_historical_root,random=hist+96,previous=random+32*l.epochs_per_historical_vector+8*l.epochs_per_slashings_vector,field=previous+229+96*l.sync_committee_size;const size_t validators=test_little(pre.ssz,hist+88,4),balances=test_little(pre.ssz,hist+92,4);check((balances-validators)/121==64,"synthetic registry size");
  std::set<Bytes> excluded,generated;for(const auto* kind:{"publicKeys","withdrawalPublicKeys"})for(const auto& row:manifest.at(kind))excluded.insert(unhex(row.at("publicKey").get<std::string>()));const auto official_text=read(fs::path(NANO_TEST_SOURCE)/"tests/fixtures/consensus-capella-slots-official/slots_1/pre.ssz");check(hex(sha256(bytes_of(official_text)))=="0xf5a464175565a8ed6a74790a60b84477c16a5b1bf71ece55736f192142cbca3d","literal official/V37 public registry bytes");const auto official=bytes_of(official_text);const size_t legacy_start=test_little(official,hist+88,4),legacy_end=test_little(official,hist+92,4);check(legacy_end>=legacy_start&&(legacy_end-legacy_start)/121==64&&legacy_end<=official.size(),"official public registry bounds");for(size_t i=0;i<64;++i)excluded.emplace(official.begin()+legacy_start+121*i,official.begin()+legacy_start+121*i+48);std::map<Bytes,Bytes> remap;
  for(size_t i=0;i<64;++i){checkpoint();const size_t at=validators+121*i;Bytes old(pre.ssz.begin()+at,pre.ssz.begin()+at+48);TestKey key(i),withdrawal(10000+i);check(!excluded.contains(key.public_key)&&!excluded.contains(withdrawal.public_key)&&generated.insert(key.public_key).second&&generated.insert(withdrawal.public_key).second,"new test keys must be disjoint from public campaign roles");remap.emplace(old,key.public_key);std::copy(key.public_key.begin(),key.public_key.end(),pre.ssz.begin()+at);auto credential=sha256(withdrawal.public_key);credential[0]=0;std::copy(credential.begin(),credential.end(),pre.ssz.begin()+at+48);test_put(pre.ssz,at+80,32000000000);pre.ssz[at+88]=0;test_put(pre.ssz,at+89,0);test_put(pre.ssz,at+97,0);test_put(pre.ssz,at+105,UINT64_MAX);test_put(pre.ssz,at+113,UINT64_MAX);test_put(pre.ssz,balances+8*i,32000000000);}
@@ -146,7 +147,7 @@ std::optional<Bytes> local_wire(Pair& pair,uint64_t slot,Bytes* body_out=nullptr
  const auto current=pair.node->current();const auto parent=capella_fork_head(*current.state,f.rules,checkpoint);const auto& r=f.rules.transition;const auto ctx=capella_fork_block_context(parent->state,parent->header,{r.consensus.epoch,r.execution,r.maximum_state_bytes},r.consensus.state,checkpoint);const auto epoch=slot/r.consensus.epoch.ffg.slots_per_epoch;const auto version=epoch<ctx.fork.epoch?ctx.fork.previous_version:ctx.fork.current_version;ConsensusRoot epoch_root{};for(size_t i=0;i<8;++i)epoch_root[i]=uint8_t(epoch>>(8*i));TestKey key(*proposer);const auto reveal=key.sign(consensus_signing_root(epoch_root,consensus_domain({2,0,0,0},version,ctx.genesis_root)));
  auto body=pair.node->prepare_local_body_from_pool(*proposer,slot,reveal,f.genesis.block.header.coinbase,pair.node->current().token,1,64,checkpoint);check(bool(body),"normal local proposal body");if(body_out)*body_out=*body;return signed_candidate(current,*parent,slot,*proposer,*body,f);
 }
-Bytes without_proposer(Bytes body,const Fixture& f){const auto start=test_little(body,200,4),end=test_little(body,204,4);check(end-start==416,"local body must include exact proposer SSZ");body.erase(body.begin()+start,body.begin()+end);const auto sync=(f.rules.transition.consensus.state.sync_committee_size+7)/8+96;for(size_t at:{size_t(204),size_t(208),size_t(212),size_t(216),220+sync,224+sync})test_put(body,at,test_little(body,at,4)-416,4);return body;}
+Bytes without_proposer(Bytes body,const Fixture& f){const auto start=test_little(body,200,4),end=test_little(body,204,4);check(end-start==416,"local body must include exact proposer SSZ");body.erase(body.begin()+start,body.begin()+end);const size_t sync=(f.rules.transition.consensus.state.sync_committee_size+7)/8+96;for(size_t at:{size_t(204),size_t(208),size_t(212),size_t(216),220+sync,224+sync})test_put(body,at,test_little(body,at,4)-416,4);return body;}
 void vote_for(Pair& pair,uint64_t slot,const ConsensusRoot& head){
  pair.node->tick(pair.f.initial.timed.clock.genesis_time_ms+slot*pair.f.rules.slot_duration_ms+pair.f.rules.attestation_due_ms,checkpoint);const auto current=pair.node->current();auto duties=prepare_capella_attestation_duties(*current.state,pair.f.rules,slot,pair.f.limits.replay_slots,pair.f.limits.sync_trials,checkpoint);check(!duties.empty(),"real committee duties available");
  for(auto& [index,duty]:duties){duty.attestation.data.beacon_block_root=head;TestKey key(index);duty.attestation.signature=key.sign(consensus_signing_root(consensus_attestation_root(duty.attestation.data),consensus_domain({1,0,0,0},duty.fork_version,duty.genesis_root)));check(pair.node->vote(duty.attestation,checkpoint),"fully signed committee vote admission");}
@@ -167,9 +168,119 @@ void capacity_case(const Fixture& f,const std::pair<SignedConsensusBeaconHeader,
  // A forged queue with a freshly recomputed envelope digest must still fail
  // full cryptographic restoration. This is an owned closed synthetic DB only.
  auto corrupt=Json::parse(pair.primary().snapshot);auto forged=unhex(corrupt.at("proposerSlashings")[0][3].get<std::string>());forged[112]^=1;corrupt["proposerSlashings"][0][0]=hex(sha256(forged));corrupt["proposerSlashings"][0][3]=hex(forged);const auto bad_snapshot=corrupt.dump();const ForkCheckpointToken bad_pin{first.token.sequence,sha256(bytes_of(bad_snapshot))};const auto original_execution_tip=hex(pair.owner->tip().header.hash());pair.close();
- {rocksdb::Options options;apply_chain_store_memory_policy(options);options.create_if_missing=false;rocksdb::DB* raw=nullptr;check(rocksdb::DB::Open(options,(t.path/"primary").string(),&raw).ok(),"closed owned corruption fixture");std::unique_ptr<rocksdb::DB> db(raw);std::string original_marker_text;check(db->Get(rocksdb::ReadOptions{},"execution-checkpoint/v1",&original_marker_text).ok(),"original execution marker exists");auto marker=Json::parse(original_marker_text);check(marker.is_object()&&marker.size()==2&&marker.at("digest").is_string()&&marker.at("tip").is_string()&&marker.at("digest").get<std::string>()==hex(first.token.digest)&&marker.at("tip").get<std::string>()==original_execution_tip,"original exact execution marker binding");marker["digest"]=hex(bad_pin.digest);rocksdb::WriteBatch batch;batch.Put("execution-checkpoint/v1",marker.dump());batch.Put("fork-checkpoint/v1/payload",bad_snapshot);batch.Put("fork-checkpoint/v1/token",Json{{"sequence",quantity(Int(std::to_string(bad_pin.sequence)))},{"digest",hex(bad_pin.digest)}}.dump());rocksdb::WriteOptions write;write.sync=true;check(db->Write(write,&batch).ok(),"owned corrupt envelope installed");}
+ {rocksdb::Options options;apply_chain_store_memory_policy(options);options.create_if_missing=false;auto db=test::open_owned_fixture(options,(t.path/"primary").string());std::string original_marker_text;check(db->Get(rocksdb::ReadOptions{},"execution-checkpoint/v1",&original_marker_text).ok(),"original execution marker exists");auto marker=Json::parse(original_marker_text);check(marker.is_object()&&marker.size()==2&&marker.at("digest").is_string()&&marker.at("tip").is_string()&&marker.at("digest").get<std::string>()==hex(first.token.digest)&&marker.at("tip").get<std::string>()==original_execution_tip,"original exact execution marker binding");marker["digest"]=hex(bad_pin.digest);rocksdb::WriteBatch batch;batch.Put("execution-checkpoint/v1",marker.dump());batch.Put("fork-checkpoint/v1/payload",bad_snapshot);batch.Put("fork-checkpoint/v1/token",Json{{"sequence",quantity(Int(std::to_string(bad_pin.sequence)))},{"digest",hex(bad_pin.digest)}}.dump());rocksdb::WriteOptions write;write.sync=true;check(db->Write(write,&batch).ok(),"owned corrupt envelope installed");}
  {Blockchain owner(t.path/"primary",bounded.genesis);const auto before=owner.store().fork_checkpoint(bounded.genesis.chain_id,bounded.genesis.block.header.hash(),bounded.limits.envelope_bytes,bad_pin);check(before&&before->snapshot==bad_snapshot,"corrupt envelope itself has a valid digest");bool refused=false;try{CapellaDurableReactor invalid(owner,bounded.rules,bounded.limits,bad_pin,checkpoint);}catch(const std::invalid_argument&){refused=true;}check(refused,"forged signature restored from v5 queue");const auto after=owner.store().fork_checkpoint(bounded.genesis.chain_id,bounded.genesis.block.header.hash(),bounded.limits.envelope_bytes,bad_pin);check(after&&after->snapshot==bad_snapshot&&after->token==bad_pin,"failed full restoration cannot repair or rewrite corrupted checkpoint");}
  emit("proposer-slashing-bounded-pool-refusals",{{"configuredEquivocationQuota",1},{"secondOffenderRefusedWithoutPartialState",true},{"perOperationWireBytes",416},{"noImplicitQuotaIncrease",true}});
 }
+// A delayed honest branch must not turn an accepted exit into disposable metadata.
+// Even/odd proposal slots avoid signing conflicting proposals at one slot; only A votes.
+void exit_reorg_prune_case(const Fixture& f,bool defer=false){
+ check(f.rules.transition.consensus.exit.shard_committee_period==1,"exit fixture tenure must be explicit");
+ Temp directory;Pair producer(f,directory.path/"producer",true),follower(f,directory.path/"follower",true);
+ const auto& r=f.rules.transition;const auto slots=r.consensus.epoch.ffg.slots_per_epoch;
+ const CapellaEpochRules epochs{r.consensus.epoch,r.execution,r.maximum_state_bytes};
+ const uint64_t exit_epoch=defer?5:4,admission_slot=exit_epoch*slots+1,last_a_slot=4*slots;
+ check(slots==8&&admission_slot==(defer?41:33),"finite minimal exit fixture slots");
+ const auto initial_root=follower.node->current().state->timed.view.finalized.root;
+ std::vector<Bytes> a_wires;std::set<uint64_t> a_slots,b_slots;size_t imported=0;
+ for(uint64_t slot=2;slot<=last_a_slot;++slot){
+  checkpoint();test_slot=slot;test_stage="exit-prune-build-branch-a";
+  if(slot%2==0){
+   auto wire=local_wire(producer,slot);check(bool(wire),"branch A assigned proposer missing");
+   check(producer.node->block_admission(*wire,checkpoint)==CapellaBlockAdmission::accepted,"branch A signed block refused");
+   check(a_slots.insert(test_little(*wire,100)).second,"branch A duplicate proposal slot");a_wires.push_back(std::move(*wire));
+  }
+  const auto head=consensus_beacon_header_root(capella_fork_head(*producer.node->current().state,f.rules,checkpoint)->header);
+  vote_for(producer,slot,head);
+ }
+ ConsensusRoot expected_head{};
+ {const auto a_current=producer.node->current();expected_head=consensus_beacon_header_root(capella_fork_head(*a_current.state,f.rules,checkpoint)->header);
+ check(a_current.state->timed.view.finalized.root!=initial_root&&a_current.state->timed.view.finalized.epoch<exit_epoch,"branch A must genuinely finalize an older competing checkpoint");}
+ // Only signed wires and scalar commitments are needed from A during import.
+ producer.close();
+ for(uint64_t slot:std::array<uint64_t,2>{3,admission_slot}){
+  checkpoint();test_slot=slot;test_stage="exit-prune-build-branch-b";
+  follower.node->tick(f.initial.timed.clock.genesis_time_ms+slot*f.rules.slot_duration_ms,checkpoint);
+  bool ready=false;for(unsigned trial=0;trial<8&&!ready;++trial)ready=follower.node->prepare_current_duties(slot,checkpoint);
+  check(ready,"bounded normal B duty preparation continuation");
+  auto wire=local_wire(follower,slot);check(bool(wire),"branch B assigned proposer missing");
+  check(!a_slots.contains(test_little(*wire,100))&&b_slots.insert(test_little(*wire,100)).second,"two proposals signed at one slot");
+  check(follower.node->block_admission(*wire,checkpoint)==CapellaBlockAdmission::accepted,"branch B signed block refused");
+ }
+ ConsensusRoot admission_root{};std::array<uint8_t,48> admitted_key{};Bytes exit_wire;
+ {test_stage="exit-prune-admit-on-b";const auto admitted_on=follower.node->current();
+ check(admitted_on.state->timed.view.finalized.root==initial_root,"B was built under an already conflicting finalized checkpoint");
+ const auto b_head=capella_fork_head(*admitted_on.state,f.rules,checkpoint);admission_root=consensus_beacon_header_root(b_head->header);
+ const auto b_context=capella_fork_block_context(b_head->state,b_head->header,epochs,r.consensus.state,checkpoint);
+ const auto validator_before=b_context.registry.validators.at(0);admitted_key=validator_before.public_key;check(validator_before.activation_epoch==0&&validator_before.exit_epoch==UINT64_MAX&&!validator_before.slashed,"genesis exit actor not active and unscheduled");
+ SignedConsensusVoluntaryExit operation{exit_epoch,0,{}};const auto version=exit_epoch<b_context.fork.epoch?b_context.fork.previous_version:b_context.fork.current_version;
+ TestKey actor(0);operation.signature=actor.sign(consensus_signing_root(consensus_voluntary_exit_root(exit_epoch,0),consensus_domain({4,0,0,0},version,b_context.genesis_root)));
+ exit_wire=encode_consensus_voluntary_exit_ssz(operation);
+ check(follower.node->voluntary_exit_ssz(exit_wire,checkpoint),"valid B exit was not acknowledged");}
+ auto archive=[&](){return Json::parse(follower.primary().snapshot).value("signedExits",Json::array());};
+ auto assert_queue=[&](const char* message){const auto rows=archive();check(rows.size()==1&&rows[0][0]==hex(sha256(exit_wire))&&rows[0][2]==hex(exit_wire),message);};
+ assert_queue("acknowledged B exit not durably recorded");{const auto acknowledged=follower.observation();follower.close();follower.open(false);check(follower.observation()==acknowledged,"acknowledged B exit changed on closed-owner reopen");}
+ check(follower.node->current().state->timed.view.finalized.root==initial_root,"A finality leaked into B before signed import");
+ test_stage="exit-prune-delayed-branch-import";
+ for(const auto& wire:a_wires){check(follower.node->block_admission(wire,checkpoint)==CapellaBlockAdmission::accepted,"genuine delayed A block refused");++imported;}
+ {const auto switched=follower.node->current();
+ check(consensus_beacon_header_root(capella_fork_head(*switched.state,f.rules,checkpoint)->header)==expected_head,"delayed signed chain did not select head A");
+ check(switched.state->timed.view.finalized.root!=initial_root&&switched.state->timed.view.finalized.epoch<exit_epoch,"real import did not establish F older than exit");
+ check(switched.state->blocks.contains(admission_root),"B admission root disappeared before pruning");assert_queue("reorg alone lost accepted exit");}
+ // Only normal ticking expires live votes. No fabricated finalized root or registry mutation.
+ const auto expiry_slot=(exit_epoch+2)*slots;test_slot=expiry_slot;test_stage="exit-prune-normal-vote-expiry";
+ follower.node->tick(f.initial.timed.clock.genesis_time_ms+expiry_slot*f.rules.slot_duration_ms,checkpoint);
+ {const auto current=follower.node->current();const auto finalized=current.state->timed.view.finalized;
+ check(finalized.root!=initial_root&&finalized.epoch<exit_epoch,"tick must not manufacture the required older finality");
+ const auto head=capella_fork_head(*current.state,f.rules,checkpoint),final=current.state->blocks.at(finalized.root).lease(checkpoint);
+ const auto head_context=capella_fork_block_context(head->state,head->header,epochs,r.consensus.state,checkpoint);
+ const auto final_context=capella_fork_block_context(final->state,final->header,epochs,r.consensus.state,checkpoint);
+ check((defer?head_context.registry.epoch<exit_epoch:head_context.registry.epoch>=exit_epoch)&&final_context.registry.epoch<exit_epoch,"head/older final-state epoch relation missing");
+ for(const auto* context:{&head_context,&final_context}){const auto& v=context->registry.validators.at(0);check(v.public_key==admitted_key&&v.activation_epoch==0&&v.exit_epoch==UINT64_MAX&&!v.slashed,"identity or finalized scheduling changed");}
+ check(consensus_beacon_header_root(head->header)==expected_head,"normal tick changed selected A head");
+ const auto pruned=prepare_capella_pruned_store(*current.state,finalized.root,f.rules,checkpoint);
+ check(!pruned.blocks.contains(admission_root)&&pruned.blocks.contains(finalized.root)&&consensus_beacon_header_root(capella_fork_head(pruned,f.rules,checkpoint)->header)==expected_head,"real pruning must remove B without changing head A");
+ if(defer)for(const auto& [_,block]:pruned.blocks){checkpoint();check(block.header().slot/slots<exit_epoch,"deferred pruning must have no retained exit-eligible post-state");}
+ for(const auto& [_,wire]:follower.node->signed_votes()){const auto vote=decode_consensus_attestation_ssz(wire,r.consensus.body.validators_per_committee,checkpoint);check(vote&&pruned.blocks.contains(vote->data.target.root)&&pruned.blocks.contains(vote->data.beacon_block_root),"recent off-branch vote still prevents this pruning");}
+ assert_queue("exit lost before real pruning call");
+ emit(defer?"exit-reorg-prune-deferred-preconditions":"exit-reorg-prune-preconditions",{{"exitEpoch",exit_epoch},{"finalizedEpoch",finalized.epoch},{"finalizedStateEpoch",final_context.registry.epoch},{"headStateEpoch",head_context.registry.epoch},{"branchAImportedBlocks",imported},{"branchBBlocks",b_slots.size()},{"proposalSlotsDisjoint",true},{"sameValidatorIdentity",true},{"noExitIncluded",true},{"oldAdmissionRootWillBeRemoved",true},{"liveVoteRows",follower.node->signed_votes().size()}});}
+ if(defer){
+  test_stage="exit-prune-manual-deferral";
+  {const auto before=follower.observation();
+   check(!follower.node->prune_finalized(checkpoint),"pruning without an eligible retained exit anchor must defer");
+   check(follower.observation()==before,"deferred manual pruning changed exact primary/witness/store/queue");assert_queue("deferred manual pruning lost exit bytes");
+  }
+  const auto old_anchor=follower.node->current().state->timed.view.anchor;const auto before_tick=follower.node->current().token;
+  follower.node->set_automatic_pruning(true);test_stage="exit-prune-automatic-deferral";test_slot=expiry_slot+1;
+  const auto expected_time=f.initial.timed.clock.genesis_time_ms+test_slot*f.rules.slot_duration_ms;
+  follower.node->tick(expected_time,checkpoint);
+  {const auto after=follower.node->current();
+   check(after.state->timed.clock.time_ms==expected_time&&after.token.sequence==before_tick.sequence+1,"automatic deferral must preserve exactly the normal tick publication");
+   check(after.state->timed.view.anchor==old_anchor&&after.state->blocks.contains(admission_root),"automatic deferral published a partial pruning");
+   check(consensus_beacon_header_root(capella_fork_head(*after.state,f.rules,checkpoint)->header)==expected_head,"automatic deferral changed head");assert_queue("automatic deferral lost accepted exit");
+  }
+  {const auto stable=follower.observation();follower.close();follower.open(false);check(follower.observation()==stable,"deferred exit/witness checkpoint changed on reopen");assert_queue("deferred exit lost on reopen");}
+  emit("exit-reorg-prune-deferred-summary",{{"semanticGroups",1},{"genuineDelayedBranchImport",true},{"retainedPostStatesBeforeExitEpoch",true},{"manualPruningDeferredWithoutMutation",true},{"automaticTickPublishedWithoutPruning",true},{"acceptedExitBytesPreserved",true},{"closedOwnerReopen",true},{"syntheticFixtureOnly",true},{"actualNetworkTransport",false}});return;
+ }
+ test_stage="exit-prune-accepted-operation-invariant";
+ check(follower.node->prune_finalized(checkpoint),"real pruning failed before the accepted-operation invariant");
+ {const auto after=follower.node->current();const auto rows=archive();
+ std::cout<<Json{{"scenario","exit-reorg-prune-observation"},{"result",rows.size()==1?"PRESERVED":"LOST"},{"queueBefore",1},{"queueAfter",rows.size()},{"exitWireSha256",hex(sha256(exit_wire))},{"oldAdmissionRootRemoved",!after.state->blocks.contains(admission_root)},{"headUnchanged",consensus_beacon_header_root(capella_fork_head(*after.state,f.rules,checkpoint)->header)==expected_head},{"privateInputsRead",false},{"productionQualified",false}}.dump()<<std::endl;
+ assert_queue("accepted signed exit lost when pruning orphan admission root against an older finalized state");
+ check(follower.node->pending_exits().size()==1,"preserved exit no longer selectable on eligible head A");}
+ const auto token=follower.node->current().token;
+ {const auto stable=follower.observation();follower.close();follower.open(false);
+ check(follower.node->current().token==token&&follower.observation()==stable,"pruned exit/witness checkpoint changed on reopen");assert_queue("reopen lost preserved exit bytes");}
+ check(follower.node->voluntary_exit_ssz(exit_wire,checkpoint)&&follower.node->current().token==token,"duplicate accepted exit rewrote checkpoint after pruning");
+ test_stage="exit-prune-single-reinclusion";test_slot=expiry_slot+1;
+ follower.node->tick(f.initial.timed.clock.genesis_time_ms+test_slot*f.rules.slot_duration_ms,checkpoint);
+ bool ready=false;for(unsigned trial=0;trial<8&&!ready;++trial)ready=follower.node->prepare_current_duties(test_slot,checkpoint);
+ check(ready,"bounded normal reinclusion duty preparation continuation");
+ auto included=local_wire(follower,expiry_slot+1);check(bool(included),"normal proposal after pruning missing");
+ check(follower.node->block_admission(*included,checkpoint)==CapellaBlockAdmission::accepted,"normal proposal failed to include preserved exit");
+ const auto selected=capella_fork_head(*follower.node->current().state,f.rules,checkpoint);const auto included_context=capella_fork_block_context(selected->state,selected->header,epochs,r.consensus.state,checkpoint);
+ check(included_context.registry.validators.at(0).exit_epoch!=UINT64_MAX&&follower.node->pending_exits().empty(),"exit not scheduled exactly once by normal block transition");assert_queue("unfinalized inclusion prematurely retired exit archive");
+ emit("exit-reorg-prune-summary",{{"semanticGroups",1},{"genuineDelayedBranchImport",true},{"finalityAdvancedAfterAcknowledgement",true},{"actualPruningAndClosedOwnerReopen",true},{"acceptedExitBytesPreserved",true},{"duplicateIdempotent",true},{"normalBlockReinclusion",true},{"syntheticFixtureOnly",true},{"actualNetworkTransport",false}});
+}
 } // namespace
-int main(int argc,char** argv){try{check(argc==2&&std::string(argv[1])=="--self-test","proposer test selector");ScopedChainStoreMemoryPolicy memory({4*1024*1024,2,16*1024*1024,0});auto f=fixture();auto p=proof(f,0);test_stage="codec";codec_case(f,p);test_stage="admission";admission_case(f,p);test_stage="formats";formats_case(f,p);test_stage="inclusion-reorg-reinclusion";inclusion_reorg_finality_case(f,p);test_stage="capacity";test_slot=0;capacity_case(f,p);test_stage="summary";checkpoint();emit("proposer-slashing-summary",{{"semanticGroups",6},{"actualPeakRssKiB",public_peak_rss_kib()},{"maximumRssKiB",131072},{"blockCacheBytes",0},{"fourMiBStrictCacheResourceQualification",false},{"syntheticFixtureOnly",true},{"fixtureValidators",64},{"signatureCeiling",1024},{"actualNetworkTransport",false},{"physicalPowerLossQualified",false},{"historicalSnapshotsAltered",false},{"completeProductionQualification",false}});return 0;}catch(const std::exception& e){std::cerr<<Json{{"diagnostic","proposer-slashing-test-failure-v1"},{"stage",test_stage},{"syntheticSlot",test_slot},{"actualPeakRssKiB",public_peak_rss_kib()},{"maximumRssKiB",131072},{"blockCacheBytes",0},{"privateInputsRead",false},{"runtimeDutiesAuthorized",false},{"productionQualified",false}}.dump()<<std::endl;std::cerr<<e.what()<<std::endl;return 1;}}
+int main(int argc,char** argv){try{const bool defer_case=argc==2&&std::string(argv[1])=="--exit-reorg-prune-deferred-self-test";const bool exit_case=argc==2&&(defer_case||std::string(argv[1])=="--exit-reorg-prune-self-test");check(argc==2&&(exit_case||std::string(argv[1])=="--self-test"),"proposer test selector");ScopedChainStoreMemoryPolicy memory({4*1024*1024,2,16*1024*1024,0});auto f=fixture(exit_case);if(exit_case){test_stage="exit-reorg-prune";exit_reorg_prune_case(f,defer_case);return 0;}auto p=proof(f,0);test_stage="codec";codec_case(f,p);test_stage="admission";admission_case(f,p);test_stage="formats";formats_case(f,p);test_stage="inclusion-reorg-reinclusion";inclusion_reorg_finality_case(f,p);test_stage="capacity";test_slot=0;capacity_case(f,p);test_stage="summary";checkpoint();emit("proposer-slashing-summary",{{"semanticGroups",6},{"actualPeakRssKiB",public_peak_rss_kib()},{"maximumRssKiB",131072},{"blockCacheBytes",0},{"fourMiBStrictCacheResourceQualification",false},{"syntheticFixtureOnly",true},{"fixtureValidators",64},{"signatureCeiling",1024},{"actualNetworkTransport",false},{"physicalPowerLossQualified",false},{"historicalSnapshotsAltered",false},{"completeProductionQualification",false}});return 0;}catch(const std::exception& e){std::cerr<<Json{{"diagnostic","proposer-slashing-test-failure-v1"},{"stage",test_stage},{"syntheticSlot",test_slot},{"actualPeakRssKiB",public_peak_rss_kib()},{"maximumRssKiB",131072},{"blockCacheBytes",0},{"privateInputsRead",false},{"runtimeDutiesAuthorized",false},{"productionQualified",false}}.dump()<<std::endl;std::cerr<<e.what()<<std::endl;return 1;}}
