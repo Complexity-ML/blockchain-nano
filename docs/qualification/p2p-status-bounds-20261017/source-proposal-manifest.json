@@ -1,0 +1,90 @@
+{
+  "format": "nano-p2p-status-bounds-source-v1",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_QUALIFICATION",
+  "announcedRepositoryRevision": "6139576b",
+  "baselines": [
+    {
+      "path": "network/json_stream.hpp",
+      "sha256": "c46dc8102a90f66d7bb04a5ddef5d196eed598a1ed970d9ab4bd573b29ee01f4",
+      "bytes": 4069
+    },
+    {
+      "path": "network/main.cpp",
+      "sha256": "7ff135825cd5eb3b80711225830b8dce95a369efa30888a7c1d7b186e42b89b9",
+      "bytes": 58991
+    },
+    {
+      "path": "network/peer_status.hpp",
+      "sha256": "9ec10b9aa74fe516e51c0cf66758d8c0ef84ec512fd33496bdb3dcac176be73b",
+      "bytes": 1223
+    },
+    {
+      "path": "network/test_json_stream.cpp",
+      "sha256": "da6b828ffd84c8edc1618162a9d9021eace93c9988c971c7f9da5f75cd1f64da",
+      "bytes": 4815
+    },
+    {
+      "path": "network/test_peer_status.cpp",
+      "sha256": "f0262835206081e6b56e9bc12fa481f8f1dcdd79a1b3d60f3f337549405a5233",
+      "bytes": 4079
+    }
+  ],
+  "unchangedBound": {
+    "path": "network/json_frame.hpp",
+    "sha256": "24819103557d9a4e0f3df71b40809b75b563e6206f47a1b2ec2fa70e6de2bda6",
+    "bytes": 1476,
+    "maximumDataFrameBytes": 16777216
+  },
+  "payloads": [
+    {
+      "path": "source/network/json_stream.hpp",
+      "sha256": "c4f0780f3150fbd4642eb9ddbb91ea8aae6db5cf128e242dcf6ad7ebdbe8950c",
+      "bytes": 4243
+    },
+    {
+      "path": "source/network/main.cpp",
+      "sha256": "da64d4a50389f3d80fa0bd243e1eb881edea35a61a54edbc43b3d5e393d51f59",
+      "bytes": 59304
+    },
+    {
+      "path": "source/network/peer_status.hpp",
+      "sha256": "73c65afdc70b75866945bf0e7007ea39692abf8138cfd42e43a9bc166aa03d1c",
+      "bytes": 2313
+    },
+    {
+      "path": "source/network/test_json_stream.cpp",
+      "sha256": "baa9ae3ae6b6d9dc67f95bb063d5f6590fb6a067258d36735b3a5cfad735aa4f",
+      "bytes": 7103
+    },
+    {
+      "path": "source/network/test_peer_status.cpp",
+      "sha256": "91f6b9afdf22812eecebc97118c04616b8a97d669fd9a2fa5aeffe69b11dfd3d",
+      "bytes": 6964
+    },
+    {
+      "path": "source.patch",
+      "sha256": "3a36336c5b7f1f7011202bf46ded6c989cf35939773c2bc6bc014b179a10f558",
+      "bytes": 23769
+    },
+    {
+      "path": "README.md",
+      "sha256": "a24ed87372db7db644bf285842dd4f9d3ace84bb14b8a39cb8addb03af1892aa",
+      "bytes": 6139
+    }
+  ],
+  "totalPayloadBytes": 109835,
+  "statusFrameBytes": 4096,
+  "existingTestTargets": [
+    "nano-peer-status-tests",
+    "nano-json-stream-tests"
+  ],
+  "targetedSelector": "--status-bounds-self-test",
+  "newTestGroups": 2,
+  "legacyTestBodiesByteExact": true,
+  "cppCoreModified": false,
+  "cmakeModified": false,
+  "sdkReadByAuthor": false,
+  "authorExecutedTests": false,
+  "repositoryModifiedByAuthor": false,
+  "productionQualified": false
+}

@@ -30,7 +30,37 @@ public:
  outcome::result<libp2p::multi::Multiaddress> remoteMultiaddr()const override{return std::make_error_code(std::errc::not_supported);}
 };
 void check(bool ok,const char* text){if(!ok)throw std::runtime_error(text);}
-int main(){try{
+
+// Use the existing parent reader when its bounded overload is absent. This
+// makes the oversized-status case a runtime causal refusal test on both trees.
+template<class Callback> void read_status_frame(asio::io_context& io,Stream stream,Callback reply){
+ if constexpr(requires { read_json(io,stream,reply,size_t(4096)); })read_json(io,std::move(stream),reply,4096);
+ else read_json(io,std::move(stream),reply);
+}
+void status_frame_cases(){
+ // Exact status boundary, fragmented/mono-chunk oversize, and unchanged
+ // generic/bulk allowance. No live socket, process, filesystem or signing.
+ for(unsigned mode=0;mode<4;++mode){
+  asio::io_context io;auto stream=std::make_shared<DelayedStream>(io);unsigned callbacks=0;Json result;
+  const auto count=mode==0?4096:4097;const std::string wire="{\"padding\":\""+std::string(count-14,'a')+"\"}";
+  check(wire.size()==size_t(count),"status frame fixture size");
+  auto reply=[&](Json value){++callbacks;result=std::move(value);};
+  if(mode==3)read_json(io,stream,Reply(reply));else read_status_frame(io,stream,reply);
+  if(mode<2){stream->complete_read(wire.substr(0,4095));io.poll();io.restart();stream->complete_read(wire.substr(4095));}
+  else stream->complete_read(wire);
+  io.run();check(callbacks==1,"status frame completion duplicated");
+  if(mode==1||mode==2)check(result.is_null()&&stream->resets==1,"oversized status accepted or stream not reset");
+  else check(result.is_object()&&stream->resets==0,"exact status boundary or generic bulk rejected");
+ }
+ // The existing writer must reject a control frame exceeding its explicit cap.
+ asio::io_context io;auto stream=std::make_shared<DelayedStream>(io);unsigned writes=0;
+ auto writer=std::make_shared<JsonWrite>(io,stream,Json{{"padding",std::string(4096,'x')}},[&](bool ok){++writes;check(!ok,"oversized status write accepted");},4096);
+ writer->start();io.run();check(writes==1&&stream->resets==1,"bounded writer did not refuse before write");
+ std::cout<<Json{{"scenario","status-frame-boundaries"},{"passed",true},{"cases",5},{"bulkFrameCap",JsonFrame::maximum_size}}.dump()<<'\n';
+}
+int main(int argc,char** argv){try{
+ if(argc==2&&std::string(argv[1])=="--status-bounds-self-test"){status_frame_cases();return 0;}
+ check(argc==1,"unknown JSON stream test selector");
  asio::io_context io;auto stream=std::make_shared<DelayedStream>(io);unsigned reads=0,writes=0;
  auto reader=std::make_shared<JsonRead>(io,stream,[&](Json value){++reads;check(value.is_null(),"timed out read must fail");});
  reader->start(std::chrono::milliseconds(1));io.run();
@@ -53,4 +83,5 @@ int main(){try{
   test.run();check(completed==1&&reused->resets==0,"already queued timeout reset completed reusable stream");
  }
  std::cout<<"Real JSON operations complete once across timeout and deferred reset callbacks\n";
+ status_frame_cases();
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
