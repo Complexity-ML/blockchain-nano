@@ -1,23 +1,73 @@
 {
   "format": "nano-exit-reorg-prune-public-delivery-v1",
-  "status": "ROOT_REVIEWED_NATIVE_AND_ARM_SCOPED",
-  "qualificationScope": "two new scenarios PASS Native and Docker Linux ARM64; two existing regressions PASS Native only; Linux regressions and AMD pending; baseline LOST and preparation failures preserved",
+  "status": "DRAFT_PUBLIC_PENDING_ROOT_REVIEW",
+  "qualificationScope": "two new scenarios PASS in Native macOS ARM64 and Docker Linux ARM64/AMD64; two existing regressions PASS Native only; runtime products/index unchanged and campaign inactive; all historical failures preserved",
   "sourceBaseRevision": "00154f57d4b6e1515d60edeae4e0ab38c42da28a",
   "payloads": [
     {
       "path": "DOC-APPEND.md",
-      "sha256": "08a101fca819ec178fe8a20c0edd608afe2406e9e484a337b99eb75df62c1931",
-      "bytes": 919
+      "sha256": "c36c20d371e4a9491cff9c3dc152dd284dd60a3c0a8c9333dd683dddc21fc77a",
+      "bytes": 951
     },
     {
       "path": "FOURDOCAPPENDS.json",
-      "sha256": "4864ab0ca8a3bbf2ac0076cf9b7fab97e53ed7367c5445c943a78dc18612a0a9",
-      "bytes": 2151
+      "sha256": "df93e80fdc5dce51f465cf8eece80573e9ff917fc2c7d51f434b88ab3c999c77",
+      "bytes": 2271
     },
     {
       "path": "README.md",
-      "sha256": "77fe5a6f51312d7e11fcc5a90c9b61d1a07bdad51eb909c6fb1fe19fdbcd97fb",
-      "bytes": 8398
+      "sha256": "ec841f95ad335fee6be0c93b8a0309f70a626da69decd3c49e0398a5c85470f1",
+      "bytes": 6554
+    },
+    {
+      "path": "evidence/AMD01/outputs/causal.exit.json",
+      "sha256": "dfb48ae6f677ba5f9005f649b5163f8d9f37dc0a1b72bd3bba62028317e5e13e",
+      "bytes": 63
+    },
+    {
+      "path": "evidence/AMD01/outputs/causal.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/AMD01/outputs/causal.stdout.log",
+      "sha256": "bd481f77a031d11a8ce7686a45262219183e3f799107c75d173290fa87c48f4d",
+      "bytes": 1191
+    },
+    {
+      "path": "evidence/AMD01/outputs/core-member-proof.json",
+      "sha256": "e1313fb39b1bf5874dadf9663bec7900dc6cf10ffe2e1bb57a5618fb0db4e63e",
+      "bytes": 728
+    },
+    {
+      "path": "evidence/AMD01/outputs/deferred.exit.json",
+      "sha256": "87def1504b47d579d7f943b41b1b7cacc7e86ee3bc73dede9e1e5444126efcd3",
+      "bytes": 65
+    },
+    {
+      "path": "evidence/AMD01/outputs/deferred.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/AMD01/outputs/deferred.stdout.log",
+      "sha256": "557442269c87fd8ff1b00f794e572259226a45b1a799cfb0c12d7e0ec7d16b7c",
+      "bytes": 933
+    },
+    {
+      "path": "evidence/AMD01/outputs/result-public.json",
+      "sha256": "e4a9aa67947308c034b1f2ca3b7d1c07c0ee8c39bdf9c23a9ea800db0d1a94ef",
+      "bytes": 11346
+    },
+    {
+      "path": "evidence/AMD01/prepared-public.json",
+      "sha256": "7f7eeb4d5ce2a206b46b48c05f47d1c20b885b304631645f74231a2ff1d2a0f2",
+      "bytes": 882
+    },
+    {
+      "path": "evidence/AMD01/result-public.json",
+      "sha256": "086e7d72b489f78dd7d8f4354bc2e20e3d251209de6aced3566620519bdba13c",
+      "bytes": 922
     },
     {
       "path": "evidence/ARM01/result-public.json",
@@ -223,10 +273,15 @@
       "path": "evidence/D13/result-public.json",
       "sha256": "4ac9f67b3b6dfe0b97c08b71f26492479732834a995572a2355426ed9272bdd5",
       "bytes": 946
+    },
+    {
+      "path": "evidence/ci-1925eeea.json",
+      "sha256": "66604bcd92acfce9a76ed1b5fed474136efd4295d9b3675f506247ecf1189953",
+      "bytes": 1075
     }
   ],
-  "payloadCount": 44,
-  "payloadBytes": 40877,
+  "payloadCount": 55,
+  "payloadBytes": 56390,
   "publicOrigins": [
     {
       "path": "evidence/D07/result-public.json",
@@ -473,17 +528,83 @@
       "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reorg-prune-arm-root-20261017-02/outputs/deferred.exit.json",
       "sha256": "aaa8c701fc1f29c0ca4acd7e72c9dffd6746db4db29ec6ad117af57cd83bf9b8",
       "bytes": 64
+    },
+    {
+      "path": "evidence/AMD01/result-public.json",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/result-public.json",
+      "sha256": "086e7d72b489f78dd7d8f4354bc2e20e3d251209de6aced3566620519bdba13c",
+      "bytes": 922
+    },
+    {
+      "path": "evidence/AMD01/prepared-public.json",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/prepared-public.json",
+      "sha256": "7f7eeb4d5ce2a206b46b48c05f47d1c20b885b304631645f74231a2ff1d2a0f2",
+      "bytes": 882
+    },
+    {
+      "path": "evidence/AMD01/outputs/result-public.json",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/outputs/result-public.json",
+      "sha256": "e4a9aa67947308c034b1f2ca3b7d1c07c0ee8c39bdf9c23a9ea800db0d1a94ef",
+      "bytes": 11346
+    },
+    {
+      "path": "evidence/AMD01/outputs/core-member-proof.json",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/outputs/core-member-proof.json",
+      "sha256": "e1313fb39b1bf5874dadf9663bec7900dc6cf10ffe2e1bb57a5618fb0db4e63e",
+      "bytes": 728
+    },
+    {
+      "path": "evidence/AMD01/outputs/causal.stdout.log",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/outputs/causal.stdout.log",
+      "sha256": "bd481f77a031d11a8ce7686a45262219183e3f799107c75d173290fa87c48f4d",
+      "bytes": 1191
+    },
+    {
+      "path": "evidence/AMD01/outputs/causal.stderr.log",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/outputs/causal.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/AMD01/outputs/causal.exit.json",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/outputs/causal.exit.json",
+      "sha256": "dfb48ae6f677ba5f9005f649b5163f8d9f37dc0a1b72bd3bba62028317e5e13e",
+      "bytes": 63
+    },
+    {
+      "path": "evidence/AMD01/outputs/deferred.stdout.log",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/outputs/deferred.stdout.log",
+      "sha256": "557442269c87fd8ff1b00f794e572259226a45b1a799cfb0c12d7e0ec7d16b7c",
+      "bytes": 933
+    },
+    {
+      "path": "evidence/AMD01/outputs/deferred.stderr.log",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/outputs/deferred.stderr.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "evidence/AMD01/outputs/deferred.exit.json",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/outputs/deferred.exit.json",
+      "sha256": "87def1504b47d579d7f943b41b1b7cacc7e86ee3bc73dede9e1e5444126efcd3",
+      "bytes": 65
+    },
+    {
+      "path": "evidence/ci-1925eeea.json",
+      "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-ci-1925eeea-20261017.json",
+      "sha256": "66604bcd92acfce9a76ed1b5fed474136efd4295d9b3675f506247ecf1189953",
+      "bytes": 1075
     }
   ],
   "fourDocAppend": {
     "path": "DOC-APPEND.md",
-    "sha256": "08a101fca819ec178fe8a20c0edd608afe2406e9e484a337b99eb75df62c1931",
-    "bytes": 919
+    "sha256": "c36c20d371e4a9491cff9c3dc152dd284dd60a3c0a8c9333dd683dddc21fc77a",
+    "bytes": 951
   },
   "fourDocPlan": {
     "path": "FOURDOCAPPENDS.json",
-    "sha256": "4864ab0ca8a3bbf2ac0076cf9b7fab97e53ed7367c5445c943a78dc18612a0a9",
-    "bytes": 2151
+    "sha256": "df93e80fdc5dce51f465cf8eece80573e9ff917fc2c7d51f434b88ab3c999c77",
+    "bytes": 2271
   },
   "falseFlags": {
     "campaign03Activated": false,
@@ -491,7 +612,6 @@
     "commonFinalityQualified": false,
     "productionQualified": false,
     "linuxExistingRegressionsQualified": false,
-    "amdQualified": false,
     "completeRuntimeCandidateQualified": false
   },
   "repositoryWrites": 0,
@@ -506,8 +626,8 @@
     "result": "evidence/D13/result-public.json"
   },
   "previousProposal": {
-    "manifestSha256": "26ea8ac1e8c444f1c519022444ac0771546803d7f07be4961efac483750c8c80",
-    "bytes": 17628,
+    "manifestSha256": "2992010891394b08d17af33c17fe02854452567fd266ca883894676b8abbf8f5",
+    "bytes": 23539,
     "previousProposalUnchanged": true
   },
   "armNewScenarios": {
@@ -518,14 +638,28 @@
     "guestFdIdentityVerified": false,
     "linuxExistingRegressionsExecuted": false
   },
-  "sourceProposalManifestSha256": "2992010891394b08d17af33c17fe02854452567fd266ca883894676b8abbf8f5",
-  "rootReview": {
-    "nativeNewAndExistingSelectorsPassed": 4,
-    "dockerArmNewSelectorsPassed": 2,
-    "dockerArmExistingSelectorsExecuted": 0,
-    "amdQualified": false,
-    "campaign03Authorized": true,
-    "campaign03Activated": false,
-    "productionQualified": false
+  "sourceRevisionReportedByRoot": "1925eeeabc9f7d0aef41f2c3fe43c11c31f1f352",
+  "amdPublicReadbackManifest": {
+    "source": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/exit-reanchor-amd01-public-root-20261017/MANIFEST.json",
+    "sha256": "1d458447da83be7b1b4aba2fad9a17d3c3db48549ca9ece16d36a60f8fea3ce5",
+    "bytes": 1702,
+    "payloadCount": 10,
+    "allTenCopiesByteExact": true
+  },
+  "amdNewScenarios": {
+    "count": 2,
+    "passed": true,
+    "rootResult": "evidence/AMD01/result-public.json",
+    "workerResult": "evidence/AMD01/outputs/result-public.json",
+    "guestFdIdentityVerified": false,
+    "linuxExistingRegressionsExecuted": false
+  },
+  "runtimeIndexRetargeted": false,
+  "ci": {
+    "runId": 39054451069,
+    "localCopy": "evidence/ci-1925eeea.json",
+    "jobsStarted": false,
+    "qualifiedByThisRun": false,
+    "rerunsRequested": 0
   }
 }
