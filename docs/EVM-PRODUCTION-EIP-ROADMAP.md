@@ -5832,3 +5832,8 @@ sont pas qualifiés. La base de revue est main `e42288e6…` ; aucun EIP/fork, d
 consensus ou campagne n’est promu. Les anciens contenus restent des préfixes
 intacts. L’objectif intégral déjà présent reste actif ; sa recréation a été
 refusée car un objectif inachevé existe, sans clôture ni réussite fictive.
+
+
+### 17 octobre 2026 — observations ARM/runtime et vrai HTTP, échecs conservés
+
+Un [lot public distinct](qualification/runtime-main-http-arm-20261017/README.md) documente huit assemblages et neuf arités/aide ARM du candidat c6cdf780, puis douze requêtes du vrai Nano/HTTP sur une DB genesis Shanghai synthétique, deux démarrages/TERM joints exit0 et une réouverture. La continuation hôte reste FAILED : son manifeste source a changé après admission. Un audit Root séparé en lecture seule vérifie 1 256 autres inputs, 33 produits et 537 argv, sans rejeu ; ce n’est pas une requalification du lot global. Le smoke HTTP reste également FAILED pour résolution d’ethers ; une continuation hors ligne vérifie ensuite le même vecteur HTTP, sans nouveau RPC. Les refus préparatoires et Q02 restent conservés. Aucune source C++ candidate n’est importée par cet append, aucun index/admission n’est retargeté. Native/AMD/cohérence globale, duties, finalité et production ne sont pas qualifiés par ce lot.
