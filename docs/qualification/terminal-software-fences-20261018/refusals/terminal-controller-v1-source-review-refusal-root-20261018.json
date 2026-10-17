@@ -1,0 +1,35 @@
+{
+  "format": "nano-terminal-controller-source-review-refusal-v1",
+  "recordedAtUtc": "2026-10-17T23:02:47.097959+00:00",
+  "sourcePackage": "terminal-software-fence-controller-source-20261018",
+  "manifest": {
+    "sha256": "81f87330e02f429a070d24a275e143151dbc72697cd898dd37ef848809b5257c",
+    "bytes": 2200
+  },
+  "admitted": false,
+  "parserRun": false,
+  "testsRun": false,
+  "historicalFilesModified": false,
+  "sourceFindings": [
+    {
+      "kind": "synthetic-fixture",
+      "problem": "held fake pin lacks path while the actual extracted fence calls observe(z.path,z)"
+    },
+    {
+      "kind": "capture-prerequisite",
+      "problem": "childAbsent alone can permit capture after a refused forced join or exception after child closure; explicit successful joins required"
+    },
+    {
+      "kind": "terminal-boundary",
+      "problem": "original source/artifact/index/known fences precede late software probes and their cleanup"
+    },
+    {
+      "kind": "current-ci-regression",
+      "problem": "lifecycle-driver-guard.test.mjs pins current run.mjs; the updated software must also update its exact run pin and include the new imported module, retaining all refusal assertions"
+    }
+  ],
+  "nextSourcePackage": "terminal-software-fence-controller-source-v2-20261018",
+  "attempt03Reclassified": false,
+  "attempt04Authorized": false,
+  "productionQualified": false
+}

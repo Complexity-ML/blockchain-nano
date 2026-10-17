@@ -1,0 +1,29 @@
+{
+  "format": "nano-amd-candidate-dispatch-v1",
+  "argv": [
+    "/usr/bin/ssh",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "StrictHostKeyChecking=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "-o",
+    "ServerAliveInterval=30",
+    "-o",
+    "ServerAliveCountMax=3",
+    "ubuntu@145.239.199.166",
+    "/usr/bin/python3",
+    "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/host.py",
+    "/home/ubuntu/rpc-candidate-amd-control-root-20261018-01/control.private.json",
+    "ac2eeedf8406ae807043bb91ec56d135f8b9829b89e54665cd2d3c0e84e2d3d1",
+    "1178681"
+  ],
+  "startedAtUnix": 1792277204.380957,
+  "hostBudgetSeconds": 1980,
+  "cleanupBudgetSeconds": 60,
+  "localObservationTimeoutSeconds": 2400,
+  "privateControlTransferred": false,
+  "automaticRestart": false,
+  "imageBuild": false
+}

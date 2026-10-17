@@ -1,0 +1,334 @@
+--- a/tests/multihost/run.mjs
++++ b/tests/multihost/run.mjs
+@@ -1,7 +1,8 @@
+ #!/usr/bin/env node
+ import {nativeRuntimeEnvironment} from './native-runtime-env.mjs';
+ import {linuxSourceFiles,createMacLinuxFiles,linuxInventory,linuxBootstrapProof} from './linux-owned-files.mjs';
+-import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest,publishLifecycleStoppedCapture,publishLifecycleStoppedCapturesBeforeClosing,createLifecycleStopReceipts,admitNewLifecycleOutput} from './lifecycle-runtime.mjs';
++import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest,publishLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,createLifecycleStopReceipts,admitNewLifecycleOutput} from './lifecycle-runtime.mjs';
++import {createTerminalEvidenceSequence} from './terminal-evidence.mjs';
+ import {lifecycleWholeCopyProgram,lifecycleOwnerProjection} from './lifecycle-owner.mjs';
+ import {deriveLifecycleParameters,validateLifecycleDeposit} from './lifecycle.mjs';
+ import {freshSoftwareLocators,freshSoftwareFileMounts} from './program-locators.mjs';
+@@ -597,7 +598,7 @@
+   if(interrupted)throw interrupted;
+   return launchFreshInitialRuntime(input,()=>BigInt(Date.now()),proof=>{initialRuntimeClockChecks.set(name,proof);return launch();});
+  }
+- const started=new Set(),volumes=new Map(),originalVolumes=new Map(),lifecycleStopReceipts=createLifecycleStopReceipts();let native,tunnel,failure,manifest,plan,preparedManifest,remotePeer,restoreReceipt,restoreStopEnvelope,restoreAudit,restoredMounts;
++ const started=new Set(),volumes=new Map(),originalVolumes=new Map(),lifecycleStopReceipts=createLifecycleStopReceipts();let native,tunnel,failure,bodyFailureRecordError,manifest,plan,preparedManifest,remotePeer,restoreReceipt,restoreStopEnvelope,restoreAudit,restoredMounts;
+  let lifecycleNativeLog=join(output,'native.log');let interrupted;const onSignal=()=>{interrupted??=Error('Fresh campaign interrupted');};process.once('SIGINT',onSignal);process.once('SIGTERM',onSignal);
+  const lifecycleWholeTimer=spec.lifecycle?setTimeout(()=>{interrupted??=Error('Fresh lifecycle whole-run deadline');},spec.lifecycle.deadlines.maximumRunMs):null;
+  // Track close from spawn time: exitCode alone does not join stdio/handles.
+@@ -1099,8 +1100,9 @@
+   const last=terminal.find(z=>z.name==='vps-docker'),prefix=lifecyclePrefix('terminal'),captured=lifecycleTerminalCaptures.get('vps-docker'),core=await lifecycleCoreCopy('vps-docker',prefix+'-core'),control=await lifecycleControl('vps-docker',captured,prefix+'-control');
+   for(const admission of lifecycleRemoteIndexes)await lifecycleRemote({mode:'fence-index',admission},35000);await lifecycleRemote({mode:'fence-known',files:lifecycleRemoteFiles},35000);const observed=(await lifecycleTool('vps-docker',captured,core,control,{stage:'observe'})).result;need(observed.status==='OBSERVED_SCOPED_SEALED_HEAD'&&observed.completePrimaryWitnessClosuresVerified&&observed.externalCoreTokensMatched,'Final stopped sealed HEAD');const r=(await lifecycleTool('vps-docker',captured,core,control,{stage:'terminal',expectedHead:{root:observed.headRoot,stateRoot:observed.headStateRoot,slot:observed.headSlot},evidence:lifecyclePending.evidence})).result;
+   validateLifecycleTerminalProjection(r,{campaignId:manifest.campaignId,requiredFinalized:lifecyclePending.evidence.requiredFinalized});
+-  for(const z of lifecycleSourceFences){const result=await lifecycleRemote({mode:'original-source-fence',prefix:z.prefix+'-original-final-fence',argv:z.argv(z.pin)},195000);need(result.format==='nano-fresh-lifecycle-original-source-fence-v1'&&result.sourceNineFieldAndShaUnchanged===true&&result.sourceNamespaceUnchanged===true&&result.copyProofSha256===z.pin&&result.resumedCopiesExpectedToChange===true&&result.resumedCopiesRechecked===false&&result.rawInventoryExported===false&&result.productionQualified===false,'All prior source owner roots unchanged after independent resumed writers');}
+-  for(const {admission} of lifecycleArtifacts.values())if(admission)await admission.verify();await macLinux.verifyAll();for(const admission of lifecycleRemoteIndexes)await lifecycleRemote({mode:'fence-index',admission},35000);await lifecycleRemote({mode:'fence-known',files:lifecycleRemoteFiles},35000);await save(join(output,'lifecycle-terminal-public.json'),r);lifecycleQualified=true;
++  // Required source/index/artifact fences run independently in finally even if
++  // replay refuses. A successful replay alone cannot pass the campaign result.
++  await save(join(output,'lifecycle-terminal-public.json'),r);lifecycleQualified=true;
+  }
+  async function lifecycleBranch(initial,profileBytes){
+   const depositPath=join(assets,'deposit.json'),depositBytes=await observe(depositPath,null,true),depositDocument=JSON.parse(depositBytes);diagnosticPublicPaths.add(depositPath);
+@@ -1186,29 +1188,78 @@
+    await startDocker('vps-docker',restoredMounts);let resumedPeer;for(let i=0;i<60;i++){if(interrupted)throw interrupted;try{resumedPeer=(await rpc('vps-docker','nno_getNetworkInfo')).node?.peerId;if(resumedPeer)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}if(interrupted)throw interrupted;need(resumedPeer===remotePeer,'Restored peer identity changed');
+    await finality({epoch:BigInt(restoreReceipt.finalized.epoch).toString(),root:restoreReceipt.finalized.root},'restored',false);
+   }
+- }catch(e){failure=e;await record({event:'fresh-failed',message:e.stack,productionQualified:false});}
++ }catch(e){failure=e instanceof Error?e:Error('Fresh campaign threw a non-Error value',{cause:e});try{await record({event:'fresh-failed',message:failure.stack,productionQualified:false});}catch(recordError){bodyFailureRecordError=recordError instanceof Error?recordError:Error('Campaign failure recorder threw a non-Error value',{cause:recordError});}}
+  finally{
+-  const terminal=[];for(const name of [...started])try{const x=await stopped(name);if(!spec.lifecycle)terminal.push({name,receipt:x.receipt});}catch(e){failure??=e;await record({event:'fresh-clean-stop-failed',owner:name,message:e.message});}
+-  if(spec.lifecycle)try{terminal.push(...lifecycleStopReceipts.collect(Object.fromEntries(names.map(name=>[name,lifecycleStopRootBinding(name)]))));}catch(e){failure??=e;await record({event:'fresh-clean-stop-failed',owner:'lifecycle-stop-receipts',message:e.message});}
+-  // Also join a child spawned before it could be added to started.
+-  for(const [child,name,timeout] of [[native,'Native runtime',30000],[tunnel,'Tunnel',5000]])try{if(await terminateJoined(child,name,timeout))failure??=Error(name+' cleanup required SIGKILL');}catch(e){failure??=e;}
+-  publicCheckStage='terminal-capture-and-recovery-audit';
+-  try{need(childAbsent(native)&&childAbsent(tunnel),'Native runtime and tunnel must exit and close before stopped captures');need(terminal.length===3,'All three terminal signer receipts required');for(const z of terminal){if(spec.lifecycle)lifecycleTerminalCaptures.set(z.name,await lifecycleCapture(z.name,z.receipt,'terminal-'+z.name));else await capturePair(z.name,z.receipt,'terminal-'+z.name);}if(spec.partitionRotation)await auditFreshRotation(terminal);if(spec.lifecycle){publicCheckStage='terminal-stopped-captures-publication';await publishLifecycleStoppedCapturesBeforeClosing([...lifecycleTerminalCaptures.values()].map(x=>x.publicCapture),{campaignId:manifest.campaignId,publish:receipt=>save(join(output,'lifecycle-stopped-captures-public.json'),receipt),close:async()=>{publicCheckStage='lifecycle-closing';await lifecycleClosing(terminal);}});} for(const z of terminal)need(z.receipt.validator.healthy===true&&z.receipt.validator.failure===null&&z.receipt.validator.attestationsAdmitted>0,'Each owner must admit duties');if(spec.backupRestore){const restored=terminal.find(z=>z.name==='vps-docker')?.receipt,stable=JSON.parse(await readFile(join(output,'restored-finality.json'),'utf8')).result;validateRestoredFinality(restoreReceipt,stable,restored);
++  const closeout=createTerminalEvidenceSequence({firstFailure:failure??null,recordFailure:async({stage,error})=>record({event:'fresh-terminal-stage-failed',stage,message:error?.message??String(error),publicInputDiagnostic:error?.publicInputDiagnostic??null,productionQualified:false})});
++  const terminal=[],ownersRequiringStop=new Set(started),confirmedStops=new Set(),cleanJoins=new Set(),completedCaptures=new Set();let capturesPublished=false;
++  const terminalStage=async(stage,run)=>{publicCheckStage=stage;return closeout.attempt(stage,run);};
++  if(bodyFailureRecordError)await terminalStage('campaign-failure-record',async()=>{throw bodyFailureRecordError;});
++  for(const name of ownersRequiringStop)await terminalStage('stop-'+name,async()=>{const x=await stopped(name);confirmedStops.add(name);if(!spec.lifecycle)terminal.push({name,receipt:x.receipt});});
++  if(spec.lifecycle)await terminalStage('collect-stopped-receipts',async()=>{terminal.push(...lifecycleStopReceipts.collect(Object.fromEntries(names.map(name=>[name,lifecycleStopRootBinding(name)]))));});
++  // Join even a child spawned before started.add(). No capture can pass until
++  // both managed native handles are closed; a failed join does not skip fences.
++  for(const [child,stage,name,timeout] of [[native,'join-native-runtime','Native runtime',30000],[tunnel,'join-tunnel','Tunnel',5000]])await terminalStage(stage,async()=>{need(!(await terminateJoined(child,name,timeout)),name+' cleanup required SIGKILL');need(childAbsent(child),name+' exit and close join required');cleanJoins.add(stage);});
++  for(const name of names)await terminalStage('capture-'+name,async()=>{
++   need(cleanJoins.has('join-native-runtime')&&cleanJoins.has('join-tunnel')&&childAbsent(native)&&childAbsent(tunnel),'Both managed handles require successful clean joins before stopped captures');need(!ownersRequiringStop.has(name)||confirmedStops.has(name),'Owner clean stop must succeed before capture');const z=terminal.find(row=>row.name===name);need(z&&terminal.filter(row=>row.name===name).length===1,'One actual stopped signer receipt required per owner');if(name!=='mac-native')await ownedRuntime(name,false);
++   if(spec.lifecycle)lifecycleTerminalCaptures.set(name,await lifecycleCapture(name,z.receipt,'terminal-'+name));else await capturePair(name,z.receipt,'terminal-'+name);
++   completedCaptures.add(name);
++  });
++  if(spec.partitionRotation)await terminalStage('audit-partition-rotation',async()=>{need(completedCaptures.size===3,'Three stopped owner captures required before journal audit');await auditFreshRotation(terminal);});
++  if(spec.lifecycle){
++   await terminalStage('publish-stopped-captures',async()=>{need(completedCaptures.size===3,'Three current stopped captures required before commitment publication');const receipt=lifecycleStoppedCapturesReceipt([...lifecycleTerminalCaptures.values()].map(x=>x.publicCapture),{campaignId:manifest.campaignId});await save(join(output,'lifecycle-stopped-captures-public.json'),receipt);capturesPublished=true;});
++   await terminalStage('lifecycle-closing',async()=>{need(capturesPublished,'Complete stopped commitments must publish before closing');await lifecycleClosing(terminal);need(lifecycleQualified,'Only the complete terminal replay qualifies lifecycle closing');});
++  }
++  await terminalStage('terminal-validator-receipts',async()=>{need(terminal.length===3&&new Set(terminal.map(z=>z.name)).size===3,'Three distinct actual terminal receipts required');for(const z of terminal)need(z.receipt.validator.healthy===true&&z.receipt.validator.failure===null&&z.receipt.validator.attestationsAdmitted>0,'Each owner must admit duties');});
++  if(spec.backupRestore)await terminalStage('audit-restored-finality',async()=>{need(completedCaptures.size===3,'Three stopped owner captures required before journal audit');const restored=terminal.find(z=>z.name==='vps-docker')?.receipt,stable=JSON.parse(await readFile(join(output,'restored-finality.json'),'utf8')).result;validateRestoredFinality(restoreReceipt,stable,restored);
+     const original=JSON.parse(await readFile(join(prepared,'vps-docker','node.json'),'utf8')),request=restoredFinalityAuditRequest(original,restoreReceipt,stable,restored,preparedManifest.nodes[2].signerIdentities),requestPath=join(output,'restored-finalized-audit-request.json');await save(requestPath,request);await exec('scp',['-q',requestPath,target+':'+remoteRoot+'/restore/finalized-audit-request.json'],{timeout:10000});const a=owner('vps-docker');const auditName='nano-qualification-op-'+uuid+'-'+(++operation);ownedRuns.push({name:auditName,remote:true});const audit=await remotePublic({mode:'audit-run',prefix:'restored-finalized-audit',argv:['sudo','-n','docker','run','--name',auditName,'--label',label,'--rm',...safe('vps-docker'),...restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x),'--mount',`type=bind,src=${configAt('vps-docker')},dst=/config,readonly`,'--mount',`type=bind,src=${remoteRoot}/restore/finalized-audit-request.json,dst=/request.json,readonly`,'--entrypoint',a.programs.nano.path,a.image,'audit-capella','/config/genesis.json',rootFor('vps-docker','data')+'/chain','/request.json']});verifyRestoredFinalityAudit(request,restored,audit);await save(join(output,'restored-finalized-audit.json'),audit);
+-   }
+-   publicCheckStage='final-linux-fences';await macLinux.verifyAll();if(macBootstrap)await macBootstrap.fenceSource();publicCheckStage='final-software-read';const finalSoftware=await software();publicCheckStage='final-software-comparison';need(initialSoftware&&canonical(finalSoftware)===canonical(initialSoftware),'Exact public software changed');publicCheckStage='final-held-fence';await fence();publicCheckStage='final-new-output-fence';for(const [path,z] of newFiles)await observe(path,z,false,false);publicCheckStage='terminal-receipts-publication';await save(join(output,'terminal-receipts.json'),terminal);publicCheckStage='terminal-receipts-complete';
+-  }catch(e){failure??=e;await record({event:'fresh-final-fence-failed',stage:publicCheckStage,message:e.message,publicInputDiagnostic:e.publicInputDiagnostic??null});}
+-  for(const x of ownedRuns)try{const raw=await docker(['ps','-a','--filter','name=^/'+x.name+'$','--format','{{.Names}}'],x.remote);if(raw.trim()){const inspect=JSON.parse(await docker(['inspect',x.name,'--format','{{json .}}'],x.remote));need(inspect.Name==='/'+x.name&&inspect.Image===owner(x.remote?'vps-docker':'mac-docker').image&&inspect.Config.Labels?.['nano.fresh.campaign']===uuid,'Cleanup owner image/label mismatch');if(inspect.State.Running){await docker(['stop','--time','10',x.name],x.remote,20000);failure??=Error('Late owned container required cleanup');}}}catch(e){failure??=e;}
+-  try{if(macLinux){await macLinux.verifyAll();if(macBootstrap)await macBootstrap.fenceSource();}}catch(e){failure??=e;}
++  });
++  const linuxFence=async()=>{need(macLinux,'Initial Linux software admission required');await macLinux.verifyAll();};
++  const softwareFence=async()=>{need(initialSoftware,'Initial software admission required');const current=await software();need(canonical(current)===canonical(initialSoftware),'Exact public software changed');};
++  const outputsFence=async()=>{for(const [path,z] of newFiles)await observe(path,z,false,false);};
++  await terminalStage('pre-cleanup-linux-fence',linuxFence);
++  if(macBootstrap)await terminalStage('pre-cleanup-bootstrap-fence',()=>macBootstrap.fenceSource());
++  await terminalStage('pre-cleanup-software-fence',softwareFence);
++  await terminalStage('pre-cleanup-held-fence',fence);
++  await terminalStage('pre-cleanup-new-output-fence',outputsFence);
++  await terminalStage('publish-terminal-receipts',async()=>{need(completedCaptures.size===3&&terminal.length===3&&childAbsent(native)&&childAbsent(tunnel),'Three stopped captures/receipts and joined processes required');await save(join(output,'terminal-receipts.json'),terminal);});
++  // Capture the current list AFTER software() added its own bounded probes.
++  const earlierCleanupCount=ownedRuns.length;
++  for(const [i,x] of [...ownedRuns].entries())await terminalStage('owned-container-cleanup-'+i,async()=>{const raw=await docker(['ps','-a','--filter','name=^/'+x.name+'$','--format','{{.Names}}'],x.remote);if(raw.trim()){const inspect=JSON.parse(await docker(['inspect',x.name,'--format','{{json .}}'],x.remote));need(inspect.Name==='/'+x.name&&inspect.Image===owner(x.remote?'vps-docker':'mac-docker').image&&inspect.Config.Labels?.['nano.fresh.campaign']===uuid,'Cleanup owner image/label mismatch');if(inspect.State.Running){await docker(['stop','--time','10',x.name],x.remote,20000);throw Error('Late owned container required cleanup');}}});
+   // No pruning. Named volumes, stopped containers, private synthetic fixture
+   // and exact reports remain for ROOT's separate cold audit and next phase.
+-  for(const name of ['mac-docker','vps-docker'])try{const active=(await docker(['ps','--filter','label='+label,'--format','{{.Names}}'],name==='vps-docker')).trim();need(!active,'Owned campaign still has running container');}catch(e){failure??=e;}
+-  if(partitionNetworkCreated)try{
++  if(partitionNetworkCreated)await terminalStage('owned-partition-network-cleanup',async()=>{
+    const network=JSON.parse(await docker(['network','inspect',partitionNetwork,'--format','{{json .}}'],true));need(network.Name===partitionNetwork&&network.Labels?.['nano.fresh.campaign']===uuid,'Only owned fresh partition network may be cleaned');const found=(await docker(['ps','-a','--filter','name=^/'+containers['vps-docker']+'$','--format','{{.Names}}'],true)).trim();if(found){need(found===containers['vps-docker'],'Exact partition container');const state=JSON.parse(await docker(['inspect',found,'--format','{{json .}}'],true));need(state.State.Running===false,'Partition network cleanup requires stopped runtime');if(state.NetworkSettings.Networks[partitionNetwork])await docker(['network','disconnect',partitionNetwork,found],true);}await docker(['network','rm',partitionNetwork],true);const left=(await docker(['network','ls','--filter','label='+label,'--format','{{.Name}}'],true)).trim().split('\n');need(!left.includes(partitionNetwork),'Owned partition network remains');partitionNetworkAbsent=true;
+-  }catch(e){failure??=e;}
+-  const nativeProcessAbsent=childAbsent(native),tunnelProcessAbsent=childAbsent(tunnel);try{need(nativeProcessAbsent&&tunnelProcessAbsent,'Native runtime/tunnel exit and close join required at terminal');}catch(e){failure??=e;}
+-  if(interrupted)failure??=interrupted;process.removeListener('SIGINT',onSignal);process.removeListener('SIGTERM',onSignal);if(lifecycleWholeTimer)clearTimeout(lifecycleWholeTimer);
+-  await save(join(output,'result.json'),{format:'nano-fresh-capella-three-owner-result-v1',passed:!failure,sourceBaseRevision:revision,overlayManifestSha256:spec.overlayManifest.sha256,campaignId:manifest?.campaignId??null,runtimes:3,physicalHosts:2,registeredSyntheticKeys:64,pendingSyntheticKeys:1,backupRestoreRequested:spec.backupRestore,lifecycleRequested:Boolean(spec.lifecycle),freshSyntheticLifecycleQualified:Boolean(spec.lifecycle)&&lifecycleQualified&&!failure,partitionRotationRequested:Boolean(spec.partitionRotation),partitionRotationQualified:Boolean(spec.partitionRotation)&&!failure,partitionNetworkAbsent,nativeProcessAbsent,tunnelProcessAbsent,originalOperationalRecoveryQualified:false,networkProductionQualified:false,productionQualified:false});
++  });
++  await terminalStage('post-cleanup-linux-fence',linuxFence);
++  if(macBootstrap)await terminalStage('post-cleanup-bootstrap-fence',()=>macBootstrap.fenceSource());
++  await terminalStage('post-cleanup-software-fence',softwareFence);
++  // The software probe joins its own --rm operations. If it failed, inspect and
++  // stop only any newly owned late containers; never rebuild/prune or retry it.
++  for(const [i,x] of [...ownedRuns].entries())if(i>=earlierCleanupCount)await terminalStage('late-probe-cleanup-'+i,async()=>{const raw=await docker(['ps','-a','--filter','name=^/'+x.name+'$','--format','{{.Names}}'],x.remote);if(raw.trim()){const inspect=JSON.parse(await docker(['inspect',x.name,'--format','{{json .}}'],x.remote));need(inspect.Name==='/'+x.name&&inspect.Image===owner(x.remote?'vps-docker':'mac-docker').image&&inspect.Config.Labels?.['nano.fresh.campaign']===uuid,'Cleanup owner image/label mismatch');if(inspect.State.Running){await docker(['stop','--time','10',x.name],x.remote,20000);throw Error('Late owned software probe required cleanup');}}});
++  // Last original-source/artifact/index/known-file observations occur AFTER the
++  // last software probes and their cleanup, not before those later operations.
++  // These old-authority predicates/pins remain exact and independently attempted.
++  const readonlyFenceOperationStart=ownedRuns.length;
++  if(spec.lifecycle){
++   for(const [i,z] of lifecycleSourceFences.entries())await terminalStage('original-source-fence-'+i,async()=>{const result=await lifecycleRemote({mode:'original-source-fence',prefix:z.prefix+'-original-final-fence',argv:z.argv(z.pin)},195000);need(result.format==='nano-fresh-lifecycle-original-source-fence-v1'&&result.sourceNineFieldAndShaUnchanged===true&&result.sourceNamespaceUnchanged===true&&result.copyProofSha256===z.pin&&result.resumedCopiesExpectedToChange===true&&result.resumedCopiesRechecked===false&&result.rawInventoryExported===false&&result.productionQualified===false,'All prior source owner roots unchanged after independent resumed writers');});
++   for(const [i,{admission}] of [...lifecycleArtifacts.values()].entries())if(admission)await terminalStage('lifecycle-artifact-fence-'+i,()=>admission.verify());
++   for(const [i,admission] of lifecycleRemoteIndexes.entries())await terminalStage('lifecycle-index-fence-'+i,()=>lifecycleRemote({mode:'fence-index',admission},35000));
++   await terminalStage('lifecycle-known-files-fence',()=>lifecycleRemote({mode:'fence-known',files:lifecycleRemoteFiles},35000));
++  }
++  // Only newly owned readonly fence operations may be inspected/stopped here.
++  // A late stop is FAILED; do not rerun software or any previous qualification.
++  for(const [i,x] of [...ownedRuns].entries())if(i>=readonlyFenceOperationStart)await terminalStage('readonly-fence-cleanup-'+i,async()=>{const raw=await docker(['ps','-a','--filter','name=^/'+x.name+'$','--format','{{.Names}}'],x.remote);if(raw.trim()){const inspect=JSON.parse(await docker(['inspect',x.name,'--format','{{json .}}'],x.remote));need(inspect.Name==='/'+x.name&&inspect.Image===owner(x.remote?'vps-docker':'mac-docker').image&&inspect.Config.Labels?.['nano.fresh.campaign']===uuid,'Cleanup owner image/label mismatch');if(inspect.State.Running){await docker(['stop','--time','10',x.name],x.remote,20000);throw Error('Late owned readonly fence operation required cleanup');}}});
++  for(const name of ['mac-docker','vps-docker'])await terminalStage('post-cleanup-absence-'+name,async()=>{const active=(await docker(['ps','--filter','label='+label,'--format','{{.Names}}'],name==='vps-docker')).trim();need(!active,'Owned campaign still has running container');});
++  await terminalStage('post-cleanup-held-fence',fence);
++  await terminalStage('post-cleanup-new-output-fence',outputsFence);
++  const nativeProcessAbsent=childAbsent(native),tunnelProcessAbsent=childAbsent(tunnel);await terminalStage('post-cleanup-process-join',async()=>{need(nativeProcessAbsent&&tunnelProcessAbsent,'Native runtime/tunnel exit and close join required at terminal');});
++  if(interrupted)await terminalStage('terminal-interruption',async()=>{throw interrupted;});process.removeListener('SIGINT',onSignal);process.removeListener('SIGTERM',onSignal);if(lifecycleWholeTimer)clearTimeout(lifecycleWholeTimer);
++  await terminalStage('publish-terminal-stage-report',()=>save(join(output,'terminal-evidence-stages.json'),closeout.report()));
++  await terminalStage('published-terminal-report-fence',outputsFence);
++  // Publication is deliberately outside its own report, avoiding a circular
++  // admission. Its failure still preserves the original error and actual exit.
++  await terminalStage('campaign-result-publication',async()=>{failure=closeout.firstFailure;await save(join(output,'result.json'),{format:'nano-fresh-capella-three-owner-result-v1',passed:closeout.report().passed,sourceBaseRevision:revision,overlayManifestSha256:spec.overlayManifest.sha256,campaignId:manifest?.campaignId??null,runtimes:3,physicalHosts:2,registeredSyntheticKeys:64,pendingSyntheticKeys:1,backupRestoreRequested:spec.backupRestore,lifecycleRequested:Boolean(spec.lifecycle),freshSyntheticLifecycleQualified:Boolean(spec.lifecycle)&&lifecycleQualified&&closeout.report().passed,partitionRotationRequested:Boolean(spec.partitionRotation),partitionRotationQualified:Boolean(spec.partitionRotation)&&closeout.report().passed,partitionNetworkAbsent,nativeProcessAbsent,tunnelProcessAbsent,terminalEvidence:closeout.report(),originalOperationalRecoveryQualified:false,networkProductionQualified:false,productionQualified:false});});
++  failure=closeout.firstFailure;
+  }
+  if(failure)throw failure;
+ }
+--- /dev/null
++++ b/tests/multihost/terminal-evidence.mjs
+@@ -0,0 +1,33 @@
++// Serial terminal checks, not a campaign or signing authority. A failed check
++// cannot skip later cleanup/fences, replace the first error, or manufacture PASS.
++export function createTerminalEvidenceSequence({firstFailure=null,recordFailure=async()=>{}}={}){
++ const need=(ok,message)=>{if(!ok)throw Error('Terminal evidence sequence: '+message);};
++ need(typeof recordFailure==='function','failure recorder callback');
++ const retained=error=>error instanceof Error?error:Error('Terminal callback threw a non-Error value',{cause:error});
++ const stages=[],failures=[],seen=new Set();let first=firstFailure===null?null:retained(firstFailure),firstAt=firstFailure===null?null:{stage:'campaign-body',phase:'run'},active=false;
++ function failed(stage,phase,error){
++  error=retained(error);failures.push({stage,phase,error});stages.push({stage,phase,passed:false});
++  if(firstAt===null){first=error;firstAt={stage,phase};}
++ }
++ return {
++  async attempt(stage,run){
++   need(typeof stage==='string'&&/^[a-z][a-z0-9-]{0,95}$/.test(stage)&&!seen.has(stage),'unique fixed stage');
++   need(typeof run==='function'&&!active,'serial check callback');seen.add(stage);active=true;
++   try{
++    try{await run();stages.push({stage,phase:'run',passed:true});return true;}
++    catch(error){
++     failed(stage,'run',error);
++     try{await recordFailure({stage,error});}catch(recordError){failed(stage,'failure-record',recordError);}
++     return false;
++    }
++   }finally{active=false;}
++  },
++  get firstFailure(){return first;},
++  get failures(){return failures.map(row=>({...row}));},
++  report(){
++   return {format:'nano-terminal-evidence-stages-v1',passed:firstAt===null,
++    firstFailure:firstAt===null?null:{...firstAt},stages:stages.map(row=>({...row})),
++    productionQualified:false};
++  }
++ };
++}
+--- /dev/null
++++ b/tests/multihost/terminal-evidence.test.mjs
+@@ -0,0 +1,153 @@
++// New terminal-controller scenarios only. No run.mjs import, child process,
++// RPC, Nano, Docker, SSH, key, journal or private campaign input is exercised.
++import {test} from 'node:test';
++import assert from 'node:assert/strict';
++import {readFile} from 'node:fs/promises';
++import {join} from 'node:path';
++import {createTerminalEvidenceSequence} from './terminal-evidence.mjs';
++const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
++const source=await readFile(new URL('./run.mjs',import.meta.url),'utf8');
++const names=['mac-native','mac-docker','vps-docker'];
++function uniqueBetween(text,start,end){
++ assert.equal(text.split(start).length,2,'One exact source boundary');const offset=text.indexOf(start),until=text.indexOf(end,offset+start.length);assert(until>offset,'Exact source end boundary');return text.slice(offset,until);
++}
++// The complete actual fresh finally body, not a second model of its ordering.
++const terminalBody=uniqueBetween(source,'\n finally{\n  const closeout=','\n }\n if(failure)throw failure;\n}').replace(/^\n finally\{\n/,'');
++const fenceDeclaration=uniqueBetween(source,' async function fence(){','\n async function save(');
++const canonical=JSON.stringify;
++function terminalFixture(options={}){
++ const events=[],writes=new Map(),recorded=[],state={lifecycleQualified:false,softwareCalls:0,afterCleanup:false};
++ const error=options.bodyFailure??null,closingError=options.closingError??null;
++ const expectedSoftware=[{owner:'mac-native',role:'nano',sha256:'a'.repeat(64),bytes:1}],initialSoftware=options.noInitialSoftware?undefined:structuredClone(expectedSoftware);
++ const terminal=names.map(name=>({name,receipt:{owner:name,clockHealthy:true,validator:{healthy:true,failure:null,attestationsAdmitted:1,proposalsAdmitted:1}}}));
++ const native={joined:false},tunnel={joined:false},held=new Map([['/synthetic/source',{path:'/synthetic/source',sha256:'b'.repeat(64),bytes:1,material:['1','2','33152','501','20','1','1','100','200']}]]);
++ const newFiles=new Map([['/synthetic/output/old.json',{sha256:'c'.repeat(64),bytes:1,material:['1','3','33152','501','20','1','1','100','200']}]]),observed=new Map([...held,...newFiles].map(([path,row])=>[path,structuredClone(row)]));
++ const observe=async(path,pin)=>{events.push('observe:'+path);assert.deepEqual(observed.get(path),pin,'Retained full-nine/SHA authority must not refresh');};
++ const fence=new Function('held','observe',fenceDeclaration+';return fence;')(held,observe);
++ const need=(ok,message)=>{if(!ok)throw Error(message);};
++ async function save(path,value){
++  const leaf=path.split('/').at(-1);events.push('save:'+leaf);if(options.publicationFailure===leaf)throw options.publicationError;
++  assert.equal(writes.has(path),false,'Terminal outputs are exclusive');writes.set(path,structuredClone(value));
++  const pin={sha256:'d'.repeat(64),bytes:1};newFiles.set(path,pin);observed.set(path,structuredClone(pin));return Buffer.from('synthetic only');
++ }
++ const ownedRuns=[{name:'operation-a',remote:false},{name:'operation-b',remote:true}],uuid='synthetic-domain',label='nano.fresh.campaign='+uuid;let readonlyOperations=0;
++ const readonlyOperation=mode=>{if(options.addReadonlyOperations){const name='readonly-'+mode+'-'+readonlyOperations++;ownedRuns.push({name,remote:true});events.push('readonly-create:'+name);}};
++ async function docker(args,remote){
++  if(args[0]==='ps'&&args[1]==='-a'){
++   const name=args[3].slice('name=^/'.length,-1);events.push('cleanup:'+name);state.afterCleanup=true;if(name==='probe-2')state.lastProbeCleaned=true;
++   if(options.cleanupFailure&&name==='operation-a')throw options.cleanupFailure;
++   if(options.softwareMutation)state.softwareMutated=true;
++   if(options.heldMutation)observed.get('/synthetic/source').material[8]='201';
++   if(options.outputMutation)observed.get('/synthetic/output/old.json').material[8]='201';
++   return options.runningContainer===name?name:'';
++  }
++  if(args[0]==='inspect')return JSON.stringify({Name:'/'+args[1],Image:options.wrongCleanupImage?'foreign-image':'image-'+(remote?'vps-docker':'mac-docker'),Config:{Labels:{'nano.fresh.campaign':uuid}},State:{Running:true}});
++  if(args[0]==='stop'){events.push('container-stop:'+args.at(-1));return '';}
++  if(args[0]==='ps'){events.push('absence:'+(remote?'vps':'mac'));return options.activeAtEnd?'still-running':'';}
++  throw Error('Unexpected synthetic Docker adapter request');
++ }
++ const deps={
++  createTerminalEvidenceSequence,failure:error,bodyFailureRecordError:options.bodyFailureRecordError,
++  spec:{lifecycle:true,partitionRotation:options.partitionRequested??false,backupRestore:options.backupRequested??false,overlayManifest:{sha256:'e'.repeat(64)}},
++  started:new Set(names),names,stopped:async name=>{events.push('stop:'+name);if(options.stopFailure===name)throw Error('injected stop failure');return terminal.find(row=>row.name===name);},
++  lifecycleStopReceipts:{collect(){events.push('collect-stops');return terminal.filter(row=>options.staleStoppedReceipt||row.name!==options.stopFailure);}},lifecycleStopRootBinding:name=>'synthetic roots '+name,
++  native,tunnel,terminateJoined:async(child,name)=>{events.push('join:'+name);if(options.joinFailure===name)throw options.joinError;child.joined=true;if(options.throwAfterClose===name)throw options.joinError;return options.forcedJoin===name;},childAbsent:child=>!child||child.joined,need,
++  lifecycleTerminalCaptures:new Map(),lifecycleCapture:async(name)=>{
++   events.push('capture:'+name);assert(native.joined&&tunnel.joined,'Captures only after both actual join adapters');if(options.captureFailure===name)throw options.captureError;
++   await save('/synthetic/output/commitment-'+name+'.json',{owner:name,productionQualified:false});return {publicCapture:{owner:name,productionQualified:false}};
++  },capturePair:async()=>assert.fail('Lifecycle fixture cannot use legacy capture adapter'),auditFreshRotation:async()=>{events.push('journal-audit:rotation');assert.fail('No unsafe journal audit');},readFile:async()=>{events.push('journal-read:backup');assert.fail('No unsafe journal read');},
++  ownedRuntime:async(name,running)=>{events.push('owned-state:'+name);assert.equal(running,false);if(options.containerStillRunning===name)throw Error('Owner still running');return {State:{Running:false}};},
++  lifecycleStoppedCapturesReceipt(rows,{campaignId}){assert.equal(campaignId,'f'.repeat(64));assert.deepEqual(rows.map(row=>row.owner).sort(),[...names].sort(),'No missing/duplicate capture promoted');return {owners:rows,captureOnly:true,lifecycleTerminalQualified:false,productionQualified:false};},
++  manifest:{campaignId:'f'.repeat(64)},save,output:'/synthetic/output',join,
++  lifecycleSourceFences:[0,1].map(i=>({prefix:'source-'+i,pin:String(i).repeat(64),argv:pin=>['synthetic',pin]})),
++  lifecycleRemote:async request=>{
++   events.push('remote:'+request.mode+':'+(request.prefix??request.admission?.id??'known'));
++   readonlyOperation(request.mode);
++   if(request.mode==='original-source-fence')return {format:'nano-fresh-lifecycle-original-source-fence-v1',sourceNineFieldAndShaUnchanged:!((options.sourceMutation||options.sourceMutationAfterLateProbeCleanup&&state.lastProbeCleaned)&&request.prefix.startsWith('source-0')),sourceNamespaceUnchanged:true,copyProofSha256:request.argv[1],resumedCopiesExpectedToChange:true,resumedCopiesRechecked:false,rawInventoryExported:false,productionQualified:false};
++   if(request.mode==='fence-known'&&options.knownFilesMutationAfterProbe&&state.softwareCalls>=2)throw options.knownFilesError;
++   assert(['fence-index','fence-known'].includes(request.mode));return {passed:true};
++  },lifecycleArtifacts:new Map([[0,{admission:{verify:async()=>{events.push('artifact:0');readonlyOperation('artifact');}}}],[1,{admission:{verify:async()=>{events.push('artifact:1');readonlyOperation('artifact');}}}]]),lifecycleRemoteIndexes:[{id:0},{id:1}],lifecycleRemoteFiles:[],
++  macLinux:{verifyAll:async()=>{events.push('linux-fence');}},macBootstrap:{fenceSource:async()=>{events.push('bootstrap-fence');}},initialSoftware,
++  software:async()=>{++state.softwareCalls;events.push('software:'+state.softwareCalls);if(options.addProbeOperations)ownedRuns.push({name:'probe-'+state.softwareCalls,remote:false});return state.softwareMutated?[{...expectedSoftware[0],sha256:'0'.repeat(64)}]:structuredClone(expectedSoftware);},canonical,fence,newFiles,observe,ownedRuns,docker,
++  owner:name=>({image:'image-'+name}),uuid,label,partitionNetworkCreated:false,partitionNetworkAbsent:true,partitionNetwork:'unused-network',containers:{'vps-docker':'unused-vps'},
++  interrupted:options.interrupted,process:{removeListener:()=>{events.push('remove-listener');}},onSignal:()=>{},lifecycleWholeTimer:null,clearTimeout:()=>assert.fail('No timer created'),revision:'1'.repeat(40),
++  record:async row=>{events.push('record:'+row.stage);recorded.push(row);if(options.recordFailure)throw options.recordFailure;},state,
++  close:async()=>{events.push('closing');if(closingError)throw closingError;state.lifecycleQualified=!options.incompleteLifecycle;}
++ };
++ const execute=new AsyncFunction(...Object.keys(deps),"let publicCheckStage;let lifecycleQualified=false;const lifecycleClosing=async(...args)=>{await close(...args);lifecycleQualified=state.lifecycleQualified;};"+terminalBody+'\nreturn {failure,report:closeout.report(),failures:closeout.failures};');
++ return {events,writes,recorded,state,held,newFiles,observed,run:()=>execute(...Object.values(deps)),result:()=>writes.get('/synthetic/output/result.json')};
++}
++const failedStages=result=>result.report.stages.filter(row=>!row.passed&&row.phase==='run').map(row=>row.stage);
++
++test('terminal sequence preserves first error and separates recorder failures without skipping later checks',async()=>{
++ const first=Error('first'),second=Error('second'),recorder=Error('recorder'),events=[];
++ const sequence=createTerminalEvidenceSequence({firstFailure:first,recordFailure:async({stage,error})=>{events.push([stage,error]);throw recorder;}});
++ await sequence.attempt('closing',async()=>{throw second;});await sequence.attempt('final-fence',async()=>{events.push('final-fence');});
++ assert.equal(sequence.firstFailure,first);assert.deepEqual(sequence.failures.map(row=>row.error),[second,recorder]);assert.equal(sequence.report().passed,false);
++ assert.deepEqual(sequence.report().stages,[{stage:'closing',phase:'run',passed:false},{stage:'closing',phase:'failure-record',passed:false},{stage:'final-fence',phase:'run',passed:true}]);assert.equal(events.at(-1),'final-fence');
++ const copy=sequence.report();copy.firstFailure.stage='altered';copy.stages[0].passed=true;sequence.failures[0].stage='altered';assert.equal(sequence.report().firstFailure.stage,'campaign-body');assert.equal(sequence.report().stages[0].passed,false);assert.equal(sequence.failures[0].stage,'closing');assert.equal(JSON.stringify(sequence.report()).includes('recorder'),false);
++});
++test('terminal sequence refuses duplicate, invalid and concurrent stage execution before callback',async()=>{
++ const sequence=createTerminalEvidenceSequence();let release,forbidden=0;const waiting=sequence.attempt('join',()=>new Promise(resolve=>{release=resolve;}));
++ await assert.rejects(sequence.attempt('other',async()=>{++forbidden;}),/serial/);release();await waiting;
++ await assert.rejects(sequence.attempt('join',async()=>{++forbidden;}),/unique/);await assert.rejects(sequence.attempt('../private',async()=>{++forbidden;}),/unique/);assert.equal(forbidden,0);
++ const thrown=createTerminalEvidenceSequence();await thrown.attempt('falsey-throw',async()=>{throw null;});assert(thrown.firstFailure instanceof Error);assert.equal(thrown.firstFailure.cause,null);assert.equal(thrown.report().passed,false);
++});
++test('actual finally closes handles before captures, commits before replay, and fences after owned cleanup',async()=>{
++ const f=terminalFixture(),result=await f.run();assert.equal(result.failure,null);assert.equal(result.report.passed,true);assert.equal(f.result().freshSyntheticLifecycleQualified,true);assert.equal(f.result().productionQualified,false);
++ assert(f.events.indexOf('join:Tunnel')<f.events.indexOf('capture:mac-native'));assert(f.events.indexOf('save:lifecycle-stopped-captures-public.json')<f.events.indexOf('closing'));
++ assert(f.events.indexOf('cleanup:operation-b')<f.events.findIndex(x=>x.startsWith('remote:original-source-fence')));assert(f.events.indexOf('cleanup:operation-b')<f.events.indexOf('software:2'));assert(f.events.indexOf('software:2')<f.events.indexOf('absence:mac'));
++ assert.equal(f.state.softwareCalls,2);assert.equal(f.writes.get('/synthetic/output/lifecycle-stopped-captures-public.json').lifecycleTerminalQualified,false);assert(f.events.lastIndexOf('observe:/synthetic/output/terminal-evidence-stages.json')>f.events.indexOf('save:terminal-evidence-stages.json'));
++});
++test('actual finally records incomplete lifecycle independently while all terminal fences still execute',async()=>{
++ const first=Error('Completed live stages and three stopped owners'),f=terminalFixture({closingError:first}),result=await f.run();
++ assert.equal(result.failure,first);assert(failedStages(result).includes('lifecycle-closing'));assert.equal(f.state.softwareCalls,2);assert(f.events.includes('cleanup:operation-a'));assert(f.events.includes('remote:fence-index:1'));assert(f.events.includes('artifact:1'));assert(f.events.includes('absence:vps'));assert(f.result());assert.equal(f.result().passed,false);assert.equal(f.result().freshSyntheticLifecycleQualified,false);
++ const incomplete=terminalFixture({incompleteLifecycle:true}),refused=await incomplete.run();assert.match(refused.failure.message,/complete terminal replay/);assert.equal(incomplete.result().passed,false);
++});
++test('actual finally retains body error through secondary cleanup, software and recording failures',async()=>{
++ const first=Error('original body'),cleanup=Error('cleanup'),record=Error('recorder'),f=terminalFixture({bodyFailure:first,closingError:Error('incomplete stages'),cleanupFailure:cleanup,softwareMutation:true,recordFailure:record}),result=await f.run();
++ assert.equal(result.failure,first);assert(result.failures.some(row=>row.error===cleanup));assert(result.failures.some(row=>row.error===record&&row.phase==='failure-record'));assert(failedStages(result).includes('post-cleanup-software-fence'));assert(f.events.includes('cleanup:operation-b'));assert(f.events.includes('absence:vps'));assert.equal(f.result().passed,false);
++});
++test('actual finally never captures after an unjoined child and still attempts cleanup and fences',async()=>{
++ const first=Error('join refused'),f=terminalFixture({joinFailure:'Native runtime',joinError:first}),result=await f.run();assert.equal(result.failure,first);assert.equal(f.events.some(x=>x.startsWith('capture:')),false);assert.equal(f.events.includes('closing'),false);assert.equal(f.events.includes('cleanup:operation-b'),true);assert.equal(f.state.softwareCalls,2);assert(failedStages(result).includes('post-cleanup-process-join'));assert.equal(f.result().passed,false);
++});
++test('actual finally requires both successful clean joins even when a forced or throwing join already closed its child',async()=>{
++ for(const name of ['Native runtime','Tunnel'])for(const failure of ['forcedJoin','throwAfterClose']){
++  const joinError=Error('join failed after close'),f=terminalFixture({[failure]:name,joinError,partitionRequested:true,backupRequested:true}),result=await f.run();
++  assert.equal(f.events.some(x=>x.startsWith('capture:')),false);assert.equal(f.events.some(x=>x.startsWith('journal-')),false);assert.equal(f.events.includes('closing'),false);assert(failedStages(result).includes(name==='Tunnel'?'join-tunnel':'join-native-runtime'));if(failure==='throwAfterClose')assert.equal(result.failure,joinError);else assert.match(result.failure.message,/SIGKILL/);assert(f.events.includes('cleanup:operation-b'));assert.equal(f.state.softwareCalls,2);assert.equal(f.result().passed,false);assert.equal(f.result().freshSyntheticLifecycleQualified,false);
++ }
++});
++test('actual finally refuses stale stopped receipts and journal audits when an owner stop or stopped-state check fails',async()=>{
++ for(const selected of [{stopFailure:'vps-docker',staleStoppedReceipt:true},{containerStillRunning:'vps-docker'}]){
++  const f=terminalFixture({...selected,partitionRequested:true,backupRequested:true}),result=await f.run();assert.equal(f.events.includes('capture:vps-docker'),false);assert.equal(f.events.includes('closing'),false);assert(failedStages(result).includes('capture-vps-docker'));assert(failedStages(result).includes('audit-partition-rotation'));assert(failedStages(result).includes('audit-restored-finality'));assert(f.events.includes('cleanup:operation-b'));assert.equal(f.state.softwareCalls,2);assert.equal(f.result().passed,false);assert.equal(f.result().freshSyntheticLifecycleQualified,false);
++ }
++});
++test('actual finally fences original sources and all retained families after the final software probes and their cleanup',async()=>{
++ const f=terminalFixture({addProbeOperations:true,addReadonlyOperations:true}),result=await f.run();assert.equal(result.report.passed,true);const lastProbe=f.events.indexOf('cleanup:probe-2');assert(lastProbe>f.events.indexOf('software:2'));
++ for(const [i,event] of f.events.entries())if(event.startsWith('remote:')||event.startsWith('artifact:'))assert(i>lastProbe,'Every retained fence family follows the last software probe cleanup');
++ const lastFamily=Math.max(...f.events.map((event,i)=>event.startsWith('remote:')||event.startsWith('artifact:')?i:-1));const readonlyCleanups=f.events.filter(event=>event.startsWith('cleanup:readonly-'));assert.equal(readonlyCleanups.length,7);for(const event of readonlyCleanups)assert(f.events.indexOf(event)>lastFamily);assert.equal(f.state.softwareCalls,2,'No software replay after readonly fences');assert(f.events.indexOf('absence:mac')>f.events.lastIndexOf(readonlyCleanups.at(-1)));
++ const changed=terminalFixture({addProbeOperations:true,sourceMutationAfterLateProbeCleanup:true}),refused=await changed.run();assert(failedStages(refused).includes('original-source-fence-0'));assert.equal(changed.result().passed,false);
++ const knownFilesError=Error('known files changed by last probe'),known=terminalFixture({addProbeOperations:true,knownFilesMutationAfterProbe:true,knownFilesError}),k=await known.run();assert.equal(k.failure,knownFilesError);assert(failedStages(k).includes('lifecycle-known-files-fence'));
++});
++test('actual finally cleans only new readonly fence operations under owner guards and treats a late stop as failure',async()=>{
++ for(const wrongCleanupImage of [false,true]){
++  const firstName='readonly-original-source-fence-0',f=terminalFixture({addProbeOperations:true,addReadonlyOperations:true,runningContainer:firstName,wrongCleanupImage}),result=await f.run();assert.equal(f.result().passed,false);assert(failedStages(result).some(stage=>stage.startsWith('readonly-fence-cleanup-')));assert.equal(f.events.includes('container-stop:'+firstName),!wrongCleanupImage);assert(f.events.includes('cleanup:readonly-fence-known-6'));assert.equal(f.state.softwareCalls,2);assert.equal(f.events.filter(event=>event==='cleanup:operation-a').length,1,'Old operation must not be cleaned again in the readonly-only pass');assert(f.events.includes('absence:vps'));
++ }
++});
++test('actual finally keeps individual owner commitments if one capture fails, without closing an incomplete set',async()=>{
++ const first=Error('capture refused'),f=terminalFixture({captureFailure:'mac-native',captureError:first}),result=await f.run();assert.equal(result.failure,first);assert(f.writes.has('/synthetic/output/commitment-mac-docker.json'));assert(f.writes.has('/synthetic/output/commitment-vps-docker.json'));assert.equal(f.events.includes('closing'),false);assert(failedStages(result).includes('publish-stopped-captures'));assert.equal(f.state.softwareCalls,2);assert.equal(f.result().freshSyntheticLifecycleQualified,false);
++});
++test('actual finally refuses post-cleanup software, retained source and retained output mutation separately',async()=>{
++ for(const [option,stage] of [['softwareMutation','post-cleanup-software-fence'],['heldMutation','post-cleanup-held-fence'],['outputMutation','post-cleanup-new-output-fence'],['sourceMutation','original-source-fence-0']]){
++  const f=terminalFixture({[option]:true}),before=structuredClone([...f.held]),result=await f.run();assert(failedStages(result).includes(stage),option);assert.equal(f.result().passed,false);assert.deepEqual([...f.held],before,'Original authority remains immutable');assert(f.events.includes('remote:original-source-fence:source-1-original-final-fence'));assert(f.events.includes('artifact:1'));assert(f.events.includes('remote:fence-index:1'));assert(f.events.includes('absence:vps'));
++ }
++});
++test('actual finally refuses absent initial admission and enforces owned image before stopping a late container',async()=>{
++ const absent=terminalFixture({noInitialSoftware:true}),a=await absent.run();assert(failedStages(a).includes('pre-cleanup-software-fence'));assert(failedStages(a).includes('post-cleanup-software-fence'));assert.equal(absent.state.softwareCalls,0);
++ const foreign=terminalFixture({runningContainer:'operation-a',wrongCleanupImage:true}),b=await foreign.run();assert.match(b.failure.message,/owner image\/label/);assert.equal(foreign.events.some(x=>x.startsWith('container-stop:')),false);assert(foreign.events.includes('cleanup:operation-b'));assert.equal(foreign.result().passed,false);
++});
++test('actual finally retains original failure when terminal publication itself fails',async()=>{
++ for(const leaf of ['lifecycle-stopped-captures-public.json','terminal-evidence-stages.json','result.json']){
++  const first=Error('body failure'),publicationError=Error('publication '+leaf),f=terminalFixture({bodyFailure:first,publicationFailure:leaf,publicationError}),result=await f.run();assert.equal(result.failure,first);assert(result.failures.some(row=>row.error===publicationError));assert(f.events.includes('absence:vps'));if(leaf==='lifecycle-stopped-captures-public.json')assert.equal(f.events.includes('closing'),false);if(f.result())assert.equal(f.result().passed,false);
++ }
++});
+--- a/tests/multihost/lifecycle-driver-guard.test.mjs
++++ b/tests/multihost/lifecycle-driver-guard.test.mjs
+@@ -13,7 +13,8 @@
+ const message='Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required';
+ const sourcePins={
+  "vps-linux-bootstrap.mjs": "8a5b020e44c678b66c344baaa8b5769b816fd207c4a73ee53cd72a2e8787cf0f",
+- "run.mjs": "1af106a009206966b350866e1dd9fe7017ac5bd304b1a84aa58165754b685e5a",
++ "run.mjs": "4bd4d37b443dad9604bc80cdb16245f898148cd3677eb5c9c9330a8b0dc70725",
++ "terminal-evidence.mjs": "c252de8c6ba3d05714748ab9c65216d02a19c8790bf5e5c14c6a72ac7dbfc42c",
+   "native-runtime-env.mjs": "e5c988c7013b0a8b86af10f0f5d51edb46123cc3e73329167bbab6b5f4869119",
+  "prepare.mjs": "8cffaff8a204ec276832f96c5a283747de835ca2913bc5ebb37fadb3d3da0b21",
+  "program-locators.mjs": "afb6fd53db3930389e2c5adfd6a1c9cb0d59369f5926bc33476c9c7de2829c33",

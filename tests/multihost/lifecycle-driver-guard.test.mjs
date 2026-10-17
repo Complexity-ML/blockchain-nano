@@ -13,7 +13,8 @@ import * as lifecycleOutputAdmission from './lifecycle-runtime.mjs';
 const message='Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required';
 const sourcePins={
  "vps-linux-bootstrap.mjs": "8a5b020e44c678b66c344baaa8b5769b816fd207c4a73ee53cd72a2e8787cf0f",
- "run.mjs": "1af106a009206966b350866e1dd9fe7017ac5bd304b1a84aa58165754b685e5a",
+ "run.mjs": "4bd4d37b443dad9604bc80cdb16245f898148cd3677eb5c9c9330a8b0dc70725",
+ "terminal-evidence.mjs": "c252de8c6ba3d05714748ab9c65216d02a19c8790bf5e5c14c6a72ac7dbfc42c",
   "native-runtime-env.mjs": "e5c988c7013b0a8b86af10f0f5d51edb46123cc3e73329167bbab6b5f4869119",
  "prepare.mjs": "8cffaff8a204ec276832f96c5a283747de835ca2913bc5ebb37fadb3d3da0b21",
  "program-locators.mjs": "afb6fd53db3930389e2c5adfd6a1c9cb0d59369f5926bc33476c9c7de2829c33",

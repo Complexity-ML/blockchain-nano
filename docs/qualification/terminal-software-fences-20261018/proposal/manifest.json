@@ -1,0 +1,106 @@
+{
+  "format": "nano-public-source-proposal-v2",
+  "name": "terminal-software-fence-controller-source-v2-20261018",
+  "baseRevision": "6183a799df411edfaecd549bdca43bad20b51508",
+  "parentProposal": {
+    "directory": "terminal-software-fence-controller-source-20261018",
+    "manifest": {
+      "sha256": "81f87330e02f429a070d24a275e143151dbc72697cd898dd37ef848809b5257c",
+      "bytes": 2200
+    },
+    "sourceReviewRefused": true,
+    "parentExecuted": false,
+    "parentModified": false,
+    "issues": [
+      "synthetic-held-pin-missing-path",
+      "closed-handle-did-not-prove-clean-join-success",
+      "retained-fence-families-preceded-last-probes-and-cleanup",
+      "existing-driver-guard-still-pinned-old-run-source"
+    ]
+  },
+  "baseInputs": {
+    "tests/multihost/run.mjs": {
+      "sha256": "1af106a009206966b350866e1dd9fe7017ac5bd304b1a84aa58165754b685e5a",
+      "bytes": 192469,
+      "mode": "0644"
+    },
+    "tests/multihost/lifecycle-driver-guard.test.mjs": {
+      "sha256": "9dc24cae854e734d4f912976832f6352189daab1b4c0f65941a4fa93a4b1cc8c",
+      "bytes": 17094,
+      "mode": "0644"
+    },
+    "tests/multihost/lifecycle-runtime.mjs": {
+      "sha256": "5806bd7236b5314d2884c53e03a674d2fc2346558a7aa3b37db383e3d3db5fc0"
+    },
+    "tests/multihost/harness-manifest.mjs": {
+      "sha256": "b01e069ade274ac38e612f9f8eefa7ce17e204b4764593d0371891047374c09d"
+    }
+  },
+  "payloads": {
+    "source/tests/multihost/run.mjs": {
+      "sha256": "4bd4d37b443dad9604bc80cdb16245f898148cd3677eb5c9c9330a8b0dc70725",
+      "bytes": 198498,
+      "mode": "0644"
+    },
+    "source/tests/multihost/terminal-evidence.mjs": {
+      "sha256": "c252de8c6ba3d05714748ab9c65216d02a19c8790bf5e5c14c6a72ac7dbfc42c",
+      "bytes": 1776,
+      "mode": "0644"
+    },
+    "source/tests/multihost/terminal-evidence.test.mjs": {
+      "sha256": "bffdc1c247b24ea5efc68905bb8344559ae5371da911a4050e3ae8767ffe5c2f",
+      "bytes": 22221,
+      "mode": "0644"
+    },
+    "source/tests/multihost/lifecycle-driver-guard.test.mjs": {
+      "sha256": "ee4a410656d913136a3c877eebaae631cb2b608f01c31173bd9fe93ab87b896d",
+      "bytes": 17188,
+      "mode": "0644"
+    },
+    "source.patch": {
+      "sha256": "7c42ea6c0e9f02a7579ae5b8fd34a82ef433ea7e1f68e48a8d6cff134a6928a6",
+      "bytes": 50891,
+      "mode": "0644"
+    },
+    "delta.patch": {
+      "sha256": "6ff3d52ff922a7eb878517e2e77e6755bd0a8f9599361c8a5d206abd1c39842c",
+      "bytes": 43034,
+      "mode": "0644"
+    },
+    "README.md": {
+      "sha256": "606d184b42012c58cc1b520f57155865b297e6f3e74b90f7d4d61e81adefab64",
+      "bytes": 7684,
+      "mode": "0644"
+    },
+    "DELTA.md": {
+      "sha256": "d1a8b4b330cefeae3a6e7d6bcb5dcf5245bc62d8790b8666996240473b371f4e",
+      "bytes": 2084,
+      "mode": "0644"
+    }
+  },
+  "payloadCount": 8,
+  "payloadBytes": 343376,
+  "proposedSourceFiles": 4,
+  "newTargetedTerminalGroupsWritten": 14,
+  "affectedDriverGuardGroupsRetained": 6,
+  "qualification": {
+    "candidateExecuted": false,
+    "candidateImported": false,
+    "parserExecuted": false,
+    "testsExecuted": false,
+    "repositoryModified": false,
+    "gitMutated": false,
+    "sdkRead": false,
+    "privateInputsRead": false,
+    "dockerUsed": false,
+    "sshUsed": false,
+    "cppCompiled": false,
+    "imageBuilt": false,
+    "campaignStarted": false,
+    "keysReadOrCreated": false,
+    "signaturesCreated": false,
+    "historicalAttempt03Reclassified": false,
+    "attempt04Authorized": false,
+    "productionQualified": false
+  }
+}
