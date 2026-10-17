@@ -1,0 +1,18 @@
+# Images candidates des runtimes réancrés — 17 octobre 2026
+
+Les deux assemblages Root sont terminés avec `passed:true` : [ARM64](evidence/arm/result-public.json) et [AMD64](evidence/amd/result-public.json). Ils réutilisent les deux exécutables Nano/P2P déjà qualifiés et les bases runtime locales retenues. Chaque reçu compte neuf commandes Docker terminées avec un code de sortie nul, **zéro compilation et zéro téléchargement demandé**. Il s’agit d’un assemblage d’image et de ses contrôles, pas d’une nouvelle qualification du consensus.
+
+| Architecture | Identité immutable de l’image |
+| --- | --- |
+| ARM64 | `sha256:896aa13fa7ee3a5ad192825e4b17234eccd064d098803ba631c68b28682d6ea7` |
+| AMD64 | `sha256:4d608295b510cc666886d278448d1665f63f494b116e10bf403113a2f1eae9c5` |
+
+Les bases restent respectivement `sha256:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883` et `sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8`. Les images portent la même révision d’assemblage binaire `1925eeeabc9f7d0aef41f2c3fe43c11c31f1f352`. Le [reçu de préparation AMD](evidence/amd/prepared-public.json) et sa [preuve source](evidence/amd/source-evidence.public.json) distinguent ce producteur du HEAD d’exécution documentaire `85f6922fb5dd2516905f080230ba518d2d39f9d8`, avec égalité des chemins source sélectionnés. Le label commun ne prétend pas que les exécutables ont été recompilés pendant ce lot.
+
+Les contrôles du packager, rapportés par Root, vérifient l’architecture et les métadonnées attendues, les hashes des deux exécutables contenus, leur résolution par les chargeurs et l’aide utilisateur sous l’UID **10001**. Ils ne démarrent pas de validateur. Les reçus conservent `integrityVerified:true` et onze notices par image. Les deux exécutables ARM occupent respectivement 13 387 344 et 19 201 936 octets ; ceux d’AMD 13 914 616 et 18 969 392 octets. Le champ `artifactBytes` inclut aussi la preuve source : 32 590 516 octets ARM et 32 885 560 octets AMD, et ne doit donc pas être présenté comme la seule somme des deux binaires.
+
+Les clôtures des wrappers indiquent `originalNineAndShaPreserved:true`, sur douze inputs ARM et quatorze AMD, avec `controlOriginalHistoricalNineClaimed:false`. La [clôture de préparation AMD](evidence/amd/original-inputs-final-fence-public.json) porte séparément sur treize fichiers et interdit tout rafraîchissement d’ancienne autorité. La première admission du nouveau fichier IID a retenu trois observations stables pendant 2006 ms ARM et 2005 ms AMD ; ce mécanisme ne reconstitue aucune ancienne identité. Les contextes temporaires ont été retirés (`temporaryContextRemoved:true`). Le provider libatomic utilisé pour Node reste un outil de préparation, pas un troisième exécutable de l’image.
+
+Les refus historiques restent FAILED, sans suppression, réécriture ou qualification rétroactive. Ces succès ne permettent notamment pas d’attribuer une cause précise à un ancien écart d’identité non localisé. La [projection publique AMD](evidence/amd/MANIFEST.json) engage les fichiers de retour sélectionnés ; aucun contrôle opérateur ni témoin privé n’est publié dans ce rapport.
+
+Les deux reçus conservent `sourceProvenanceSemanticallyVerified:false` et `productionQualified:false`. Les hashes et les contrôles de chargement ne constituent pas une revue sémantique indépendante de la provenance, une fermeture SDK complète, une campagne, une reprise des duties ou une progression de finalité. Aucune production n’est déclarée prête. L’auteur de ce rapport a lu uniquement les six fichiers publics autorisés et n’a exécuté aucun Docker, SSH, compilateur ou programme.

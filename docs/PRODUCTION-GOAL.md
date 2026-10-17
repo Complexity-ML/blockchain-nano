@@ -5394,3 +5394,12 @@ Un nouveau consentement autorise la tentative privée suivante, sept heures/65 n
 
 
 > **17 octobre 2026 — reliages du Core reactor : trois environnements PASS.** Native 7, ARM 6 et AMD 5 consommateurs totalisent 18 M/18 liens/21 CLI, avec réemploi d’objets authentifiés, zéro CXX/archive modifiée/P2P/ancienne suite. Les 11 ldd Linux et les clôtures publiques passent ; remappages MD et identités historiques non récupérées restent explicitement bornés. Le refus ARM01 avant Docker reste FAILED. Ces contrôles ne démarrent aucun runtime/duty et ne requalifient ni SDK/CMake globaux ni fermeture loader complète. L’index 24/admissions globales et les images candidates restent des lots distincts ; aucune fabrication d’image déduite. Tentative 03 autorisée mais inactive ; reprise/finalité commune et production non qualifiées. Tous anciens corps et statuts EIP conservés. [Reliages et limites](qualification/runtime-reanchor-relinks-20261017/README.md).
+
+
+### Complément du 17 octobre 2026 — admissions courantes et images des deux architectures
+
+Le [lot des trois admissions de code](qualification/reactor-runtime-code-admissions-20261017/README.md) est terminé : 24 artefacts sélectionnés (9 Native, 8 ARM64, 7 AMD64), audit AMD et clôtures finales positifs, une validation pure des admissions/locateurs. Les anciennes admissions et tous les refus restent conservés ; aucune validation complète de campagne, clé nouvelle, signature, duty ou finalité réseau n’est déduite de ce lot.
+
+Les [images candidates ARM64 et AMD64](qualification/runtime-reanchor-images-20261017/README.md) sont assemblées et vérifiées à partir des exécutables retenus : neuf commandes Docker terminées par architecture, aucune compilation ni téléchargement demandé. La révision binaire reste 1925eee ; le HEAD documentaire d’exécution est 85f6922f. Aucun redémarrage de service ni déploiement public n’a été effectué. Ces images n’impliquent pas que les campagnes SDK utilisent désormais des images runtime à la place de leurs logiciels explicitement montés.
+
+La tentative privée 03 est déjà autorisée distinctement, mais demeure inactive à la clôture de ces deux lots. Restent requis : restauration physique entière avec journaux/témoins, engagements séparés, reprise effective des duties et finalité commune qui avance sur les trois environnements, écarts de consensus/EVM/opérations encore ouverts, bridge et conditions Doppler. La revue de sécurité indépendante reste ouverte ; la production n’est pas qualifiée.

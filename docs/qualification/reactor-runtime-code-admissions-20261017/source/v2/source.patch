@@ -1,0 +1,30 @@
+--- v1/emit.py
++++ v2/emit.py
+@@ -152,9 +152,15 @@
+ def fields(value,expected):
+     for k,v in expected.items():need(k in value and type(value[k]) is type(v) and value[k]==v,'result-'+k)
+ 
+-def completion(s,descriptor):
+-    need(set(descriptor)=={'artifact','checks'} and descriptor['checks'].get('passed') is True,'terminal-pass-control')
+-    obj=s.load(descriptor['artifact']);fields(obj,descriptor['checks'])
++def completion(s,descriptor,allow_native_producer_fence=False):
++    need(isinstance(descriptor,dict) and set(descriptor)=={'artifact','checks'}
++         and isinstance(descriptor['checks'],dict),'terminal-control-shape')
++    checks=descriptor['checks'];native_terminal={'exitCode':0,'originalFenceAfterPassed':True,'fenceError':None}
++    native_ok=allow_native_producer_fence and all(k in checks and type(checks[k]) is type(v)
++        and checks[k]==v for k,v in native_terminal.items())
++    need(checks.get('passed') is True or native_ok,'terminal-pass-control')
++    obj=s.load(descriptor['artifact']);fields(obj,checks)
++    if 'passed' in obj:need(obj['passed'] is True,'terminal-explicit-failure')
+     if 'firstFailurePreserved' in obj:need(obj['firstFailurePreserved'] is False,'terminal-first-failure')
+     if 'oldAuthoritiesRefreshed' in obj:need(obj['oldAuthoritiesRefreshed'] is False,'terminal-old-refresh')
+ 
+@@ -179,7 +185,7 @@
+     return r
+ 
+ def p2p(s,d,owner):
+-    r=s.load(d['result']);completion(s,d['completion'])
++    r=s.load(d['result']);completion(s,d['completion'],allow_native_producer_fence=owner=='mac-native')
+     fields(r,{'passed':True,'mode':'candidate','actualMmdMatchesM':True})
+     native=owner=='mac-native'
+     if native:fields(r,{'sourceAndSelectedDependencyInputsUnchanged':True})
