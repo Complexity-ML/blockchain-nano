@@ -1,0 +1,7 @@
+
+
+### Complément du 17 octobre 2026 — nouveau cycle Doppler privé courant
+
+Le [nouveau contrôle réel du driver Doppler](qualification/doppler-current-private-fork-20261017/README.md) termine exit 0 en 183 879 ms : 19 étapes locales Dynamic V4 → migrateur historique V2, deux swaps dont les sorties reçues atteignent le minimum de 99 %, trois transactions refusées avec état/soldes inchangés et six lectures canoniques `eth_call` dans **Anvil**, pas Nano. Instance privée ancrée au checkpoint Base 52 173 454 ; pas de preuve cryptographique de finalité Base. Les 17 fences hôte représentent 12 anciennes lignes + quatre payloads neufs + un contrôle, sans récupération de 17 admissions historiques. Enfants joints et conteneur absent ; aucune compilation C++, aucun build d’image ni redémarrage de chaîne.
+
+Le refus préparatoire Root `KeyError: absentAfterCleanup` reste conservé, distinct du cycle réussi sans rejeu ; l’ancien rejet synthétique Base InvalidGamma n’est pas requalifié et les 37 tests offline ne sont pas rejoués. Actifs, financement, bénéficiaire et gouvernance restent synthétiques. Aucun fonds/déploiement public, bridge ou relation native, termes réels, T0/indexation ni production qualifiés. La campagne03 garde C++/52 fichiers de harnais, binaires, engagements et HEAD d’exécution `b1f…` ; elle n’est ni retargetée vers `4158…` ni requalifiée par ce lot. Historiques/statuts EIP conservés ; goal actif.
