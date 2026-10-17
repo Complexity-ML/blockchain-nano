@@ -125,3 +125,75 @@ hash reads and header fences remain unchanged. The scoped 29-test result, causal
 baseline and earlier refusals are recorded in
 [the qualification report](../../docs/qualification/doppler-lp-attribution-20261016/README.md).
 This does not qualify real Base migrations, other migrators, Nano or a bridge.
+
+## Verify a persisted unsigned review offline
+
+`verify-review.mjs` compares a persisted review with a separately approved
+configuration by running the existing official SDK encoder offline. It requires
+the same schema/SDK tag, creator, Base chain, Airlock recipient, zero value,
+calldata and Keccak hash, token/hook predictions, create parameters and exact
+reviewed configuration. Unknown transaction or envelope fields are rejected.
+The configuration and review are detached before the SDK await. Decimal strings
+for serialized BigInts use the existing preview writer's representation.
+
+```sh
+node verify-review.mjs /ABS/approved-config.json CONFIG_SHA256 /ABS/review.json REVIEW_SHA256 /ABS/new-verification.json
+```
+
+Both SHA-256 pins are supplied externally. Inputs must be physical regular
+files of at most1MiB; bounded reads check FD/path identities and bytes, and the
+output is exclusive. It records both input pins. This read-time check does not
+claim to retain historical filesystem authority or fence files after it has
+copied their reviewed bytes. It uses no RPC, wallet, signer or broadcast path,
+even when `BASE_RPC_URL` exists in the environment. It never refreshes a timestamp
+or silently changes launch terms. A changed configuration needs a new preview
+and review.
+
+`reviewIntegrityVerified:true` means equality of the saved encoding to those
+terms. It is **not** a simulation, approval of token economics, or proof of native
+Nano utility/backing/redemption. A persisted successful or rejected simulation
+can remain attached to an otherwise matching encoding; neither is requalified
+offline. The result always has `simulationVerified:false`,
+`nativeAssetRelationshipVerified:false`, `signed:false`, `broadcast:false` and
+`productionReady:false`. In particular a descriptive `nativeAssetRelationship`
+string does not make a pre-issued Doppler ERC-20 compatible with a bridge's
+fresh-supply representation invariant. No token model or bridge trust decision
+is made here.
+
+## Private fixture anchor and received minimum
+
+Before creating the local wallet or issuing impersonation/funding/write calls,
+the private lifecycle now checks `anvil_nodeInfo`, the retained Base fork header
+by number and the latest local header. This fixture is specifically Base block
+**52173454**, hash
+`0xba5cc2e9e91ce6f64babb91e8bbf5a38d71e9f2fd01bc17473519a5c3dc6be5d`,
+as recorded in the initial `anvil.info` of the retained public attempt-B JSON.
+The local node must still be fresh at that height/hash, chain31337, with the
+expected fork configuration. The observed nodeInfo/header objects are copied
+before later awaits. A different chain, missing fork, wrong anchor, advanced or
+changed head refuses before impersonation. This is an RPC comparison to an
+existing checkpoint, not a cryptographic Base-finality proof. It does not
+authenticate an arbitrary future fork or justify reusing a previously modified
+local instance.
+
+For each buy/sell, the99% fixture minimum is computed once and used for both
+encoded V4 swap/take actions and the post-transaction balance oracle. The actual
+received output delta must be positive and at least that encoded minimum;
+input debit must still equal the exact input amount. A pre-existing output
+balance cannot substitute for receipt. Quote100/minimum99/received1 now refuses.
+No slippage rate, supply, fee, migration split or other economic choice changes.
+
+Targeted source regressions are in `verify-review.test.mjs` and
+`fork-invariants.test.mjs`:
+
+```sh
+node --test verify-review.test.mjs fork-invariants.test.mjs
+```
+
+These are offline SDK/mocked-RPC/pure-balance tests, using the existing public
+fixture and locked dependencies. The normal package/CI test glob also discovers
+them. Their presence is not an executed qualification. No new Anvil lifecycle,
+public simulation or deployment has been run by the proposal author. The
+historical Base rejection, the separate successful strict creation simulation,
+the private Dynamic V4-to-V2 lifecycle and the29-test LP attribution evidence
+retain their original scopes and outcomes.

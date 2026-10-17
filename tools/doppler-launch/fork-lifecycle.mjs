@@ -7,6 +7,7 @@ import {CommandBuilder} from 'doppler-router/dist/CommandBuilder.js';
 import {V4ActionBuilder,V4ActionType} from 'doppler-router/dist/V4ActionBuilder.js';
 import {parameters,USDC} from './preview.mjs';
 import {verifyMigration} from './verify-migration.mjs';
+import {requireFreshSyntheticBaseFork,verifySwapBalanceDelta} from './fork-invariants.mjs';
 const url='http://127.0.0.1:19546';
 const chain={id:31337,name:'Nanobees isolated Base fork',nativeCurrency:{name:'Test ETH',symbol:'ETH',decimals:18},rpcUrls:{default:{http:[url]}}};
 const rpc=createPublicClient({chain,transport:http(url,{retryCount:0,timeout:30000})});
@@ -20,9 +21,8 @@ const tokenAbi=parseAbi(['function owner() view returns(address)','function tota
 const routerAbi=parseAbi(['function execute(bytes,bytes[]) payable']);
 const permitAbi=parseAbi(['function approve(address,address,uint160,uint48)']);
 try {
- assert(await rpc.getChainId()===31337,'Local chainId mismatch');
- const version=await rpc.request({method:'web3_clientVersion'});assert(/anvil/i.test(version),'Anvil required');
- const info=await rpc.request({method:'anvil_nodeInfo'});report.anvil={version,info};
+ // All anchor reads finish before wallet creation, funding or impersonation.
+ report.anvil=await requireFreshSyntheticBaseFork(rpc);
  const c=JSON.parse(await readFile(new URL('./example.synthetic.json',import.meta.url)));
  c.referenceTimestamp=Number((await rpc.getBlock()).timestamp);c.startTimeOffset=7200;
  c.auction={...c.auction,startTick:-338490,endTick:-361500,gamma:23010,duration:600,epochLength:10,minProceeds:'100000000',maxProceeds:'1000000000'};
@@ -99,15 +99,16 @@ try {
   const zeroForOne=input.toLowerCase()===poolKey.currency0.toLowerCase();
   const quote=await sdk.quoter.quoteExactInputV4({poolKey,zeroForOne,exactAmount:amount,hookData:'0x'});
   assert(quote.amountOut>0n,'Zero quote');
+  const minimumOutput=quote.amountOut*99n/100n;
   const before={input:await balance(input),output:await balance(output)};
-  await record(name+'-quote',{quoteTime,amountIn:amount,amountOut:quote.amountOut,minimumOutput:quote.amountOut*99n/100n});
-  const actions=new V4ActionBuilder();actions.addSwapExactInSingle(poolKey,zeroForOne,amount,quote.amountOut*99n/100n,'0x');
-  actions.addAction(V4ActionType.SETTLE_ALL,[input,amount]);actions.addAction(V4ActionType.TAKE_ALL,[output,quote.amountOut*99n/100n]);
+  await record(name+'-quote',{quoteTime,amountIn:amount,amountOut:quote.amountOut,minimumOutput});
+  const actions=new V4ActionBuilder();actions.addSwapExactInSingle(poolKey,zeroForOne,amount,minimumOutput,'0x');
+  actions.addAction(V4ActionType.SETTLE_ALL,[input,amount]);actions.addAction(V4ActionType.TAKE_ALL,[output,minimumOutput]);
   const [a,p]=actions.build();const commands=new CommandBuilder();commands.addV4Swap(a,p);const [cmd,args]=commands.build();
   await tx(name,addresses.universalRouter,routerAbi,'execute',[cmd,args]);
   const after={input:await balance(input),output:await balance(output)};
-  assert(before.input-after.input===amount,'Input delta differs from exact amount');assert(after.output>before.output,'No output received');
-  await record(name+'-balances',{amount,quote:quote.amountOut,before,after});
+  const deltas=verifySwapBalanceDelta({amountIn:amount,minimumOutput,before,after});
+  await record(name+'-balances',{amount,quote:quote.amountOut,before,after,...deltas});
  };
  await swap('buy',USDC,tokenAddress,400000000n);
  const acquired=await balance(tokenAddress);await swap('sell',tokenAddress,USDC,acquired/10n);
