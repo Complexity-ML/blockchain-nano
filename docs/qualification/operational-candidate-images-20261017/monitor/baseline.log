@@ -1,0 +1,319 @@
+▶ HTTP monitor rejects cross-origin redirects at every read phase
+  ✖ read 1 (3.546625ms)
+  ✖ read 2 (0.653125ms)
+  ✖ read 3 (0.282541ms)
+  ✖ read 4 (0.253709ms)
+  ✖ read 5 (0.610875ms)
+  ✖ read 6 (0.222458ms)
+  ✔ valid pinned observations stay accepted (0.447083ms)
+✖ HTTP monitor rejects cross-origin redirects at every read phase (6.515834ms)
+▶ monitor rejects an already-redirected response even from an injected adapter
+  ✖ read 1 (0.31825ms)
+  ✖ read 2 (0.20775ms)
+  ✖ read 3 (0.211708ms)
+  ✖ read 4 (0.459375ms)
+  ✖ read 5 (0.192416ms)
+  ✖ read 6 (0.229042ms)
+✖ monitor rejects an already-redirected response even from an injected adapter (1.81075ms)
+▶ monitor rejects result and falsy error in the same RPC envelope
+  ✖ error null (0.215792ms)
+  ✖ error false (0.146458ms)
+  ✖ error 0 (0.148625ms)
+  ✖ error "" (0.407208ms)
+✖ monitor rejects result and falsy error in the same RPC envelope (1.029625ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 1
+ℹ fail 19
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84.576416
+
+✖ failing tests:
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:71:43
+✖ read 1 (3.546625ms)
+  AssertionError [ERR_ASSERTION]: a redirect must not yield an accepted monitor sample
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:81:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:71:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:71:43
+✖ read 2 (0.653125ms)
+  AssertionError [ERR_ASSERTION]: a redirect must not yield an accepted monitor sample
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:81:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:71:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:71:43
+✖ read 3 (0.282541ms)
+  AssertionError [ERR_ASSERTION]: a redirect must not yield an accepted monitor sample
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:81:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:71:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:71:43
+✖ read 4 (0.253709ms)
+  AssertionError [ERR_ASSERTION]: a redirect must not yield an accepted monitor sample
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:81:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:71:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:71:43
+✖ read 5 (0.610875ms)
+  AssertionError [ERR_ASSERTION]: a redirect must not yield an accepted monitor sample
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:81:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:71:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:71:43
+✖ read 6 (0.222458ms)
+  AssertionError [ERR_ASSERTION]: a redirect must not yield an accepted monitor sample
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:81:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:71:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:94:43
+✖ read 1 (0.31825ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Redirected monitor response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:101:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:94:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Redirected monitor response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:94:43
+✖ read 2 (0.20775ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Redirected monitor response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:101:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:94:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Redirected monitor response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:94:43
+✖ read 3 (0.211708ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Redirected monitor response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:101:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:94:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Redirected monitor response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:94:43
+✖ read 4 (0.459375ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Redirected monitor response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:101:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:94:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Redirected monitor response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:94:43
+✖ read 5 (0.192416ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Redirected monitor response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:101:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:94:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Redirected monitor response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:94:43
+✖ read 6 (0.229042ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Redirected monitor response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:101:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:94:35)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Redirected monitor response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:107:47
+✖ error null (0.215792ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /RPC response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:110:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:107:39)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /RPC response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:107:47
+✖ error false (0.146458ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /RPC response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:110:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:107:39)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /RPC response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:107:47
+✖ error 0 (0.148625ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /RPC response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:110:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:107:39)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /RPC response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../source/scripts/operations/finality-monitor.test.mjs:107:47
+✖ error "" (0.407208ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /RPC response rejected/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:110:10)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async TestContext.<anonymous> (file:///source/scripts/operations/finality-monitor.test.mjs:107:39)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /RPC response rejected/,
+    operator: 'match',
+    diff: 'simple'
+  }

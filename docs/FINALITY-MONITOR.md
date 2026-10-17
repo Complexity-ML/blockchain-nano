@@ -208,3 +208,20 @@ avancées communes 2 → 5, avec trois validateurs sains à l'arrêt.
 La pause observée est brève (1 892 ms) et le récepteur HTTP local reste
 un outil de qualification ; pas d'ordonnanceur/destination opérateur.
 [Preuves vivantes](qualification/alert-live-20261001/attempt-a/README.md).
+
+## 17 octobre 2026 — refus des redirections et enveloppes RPC ambiguës
+
+Le lecteur impose désormais `redirect: 'error'` et refuse une réponse déjà
+redirigée. Une réponse RPC doit être un objet contenant le résultat attendu,
+sans champ `error`, même si ce champ vaut null, false, zéro ou chaîne vide.
+Les erreurs suivent la voie existante d’observation indisponible ; les règles
+de finalité, la file persistante et les transports Docker/SSH restent inchangés.
+
+Root rapporte une qualification des seuls nouveaux groupes injectés : parent
+non corrigé, 19 échecs attendus et 1 succès de contrôle ; candidat, 20 résultats
+réussis (17 feuilles dont 16 refus et 1 contrôle valide, plus 3 parents). Les 21 tests
+existants n’ont pas été sélectionnés et ne sont pas comptés comme rejoués.
+Ces groupes n’appellent ni serveur, fetch réel, transport distant ni livraison
+d’alerte. La qualification d’un trajet HTTP réel de redirection, d’un daemon
+courant et d’un destinataire opérateur reste distincte. Les preuves historiques
+ci-dessus conservent leur périmètre. Le [rapport opérationnel](qualification/operational-candidate-images-20261017/README.md) distingue le succès VPS du refus final du packaging ARM et de son audit de contenu séparé.

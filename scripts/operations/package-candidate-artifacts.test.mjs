@@ -72,3 +72,14 @@ test('the file API pins its manifest and rejects post-read mutation',async()=>fi
  const path=join(f.root,'artifacts.json'),b=f.raw();await writeFile(path,b);const r=await packageCandidate(path,sha(b),f.options);assert.equal(r.image,IMAGE);
  f.state.context=null;f.state.hook=async a=>{if(a[0]==='build')await appendFile(path,' ');};await assert.rejects(packageCandidate(path,sha(b),f.options),/Artifact (identity|hash) changed/);await absent(f.state.context);await f.unchanged();
 }));
+
+
+test('new IID output settles metadata before its first strict identity admission',async()=>fixture(async f=>{
+ const {chmod}=await import('node:fs/promises');let timer,mutation=null,changed=false,mutationError;
+ f.state.hook=async a=>{if(a[0]==='build'){const iid=a[a.indexOf('--iidfile')+1];timer=setTimeout(()=>{mutation=chmod(iid,0o400).then(()=>{changed=true;},e=>{mutationError=e;});},500);}};
+ try{
+  const r=await f.invoke();if(mutation)await mutation;assert.equal(mutationError,undefined);assert.equal(changed,true);
+  assert.ok(r.iidFirstAdmission.stableSamples>=3);assert.ok(r.iidFirstAdmission.stableSpanMs>=2000);assert.ok(r.iidFirstAdmission.metadataChanges>=1,'the fixture must actually change metadata during settling');
+  assert.equal(r.iidFirstAdmission.sha256,sha(Buffer.from(IMAGE+'\n')));assert.equal(r.iidFirstAdmission.bytes,Buffer.byteLength(IMAGE+'\n'));await f.unchanged();await absent(f.state.context);
+ }finally{clearTimeout(timer);if(mutation)await mutation;}
+}));

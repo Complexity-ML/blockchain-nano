@@ -1,0 +1,64 @@
+TAP version 13
+# Subtest: split artifacts snapshot caller intent and retain original pins under async caller mutation
+ok 1 - split artifacts snapshot caller intent and retain original pins under async caller mutation
+  ---
+  duration_ms: 41.933417
+  type: 'test'
+  ...
+# Subtest: the independent raw manifest pin binds the exact input object before Docker
+ok 2 - the independent raw manifest pin binds the exact input object before Docker
+  ---
+  duration_ms: 6.642666
+  type: 'test'
+  ...
+# Subtest: a symlink ancestor cannot substitute an executable
+ok 3 - a symlink ancestor cannot substitute an executable
+  ---
+  duration_ms: 6.087667
+  type: 'test'
+  ...
+# Subtest: a wrong binary pin refuses before build and preserves every original
+ok 4 - a wrong binary pin refuses before build and preserves every original
+  ---
+  duration_ms: 8.3155
+  type: 'test'
+  ...
+# Subtest: source growth after copying refuses and removes only the new context
+ok 5 - source growth after copying refuses and removes only the new context
+  ---
+  duration_ms: 30.072125
+  type: 'test'
+  ...
+# Subtest: same-byte inode replacement after copying cannot satisfy the original nine-field fence
+ok 6 - same-byte inode replacement after copying cannot satisfy the original nine-field fence
+  ---
+  duration_ms: 29.610583
+  type: 'test'
+  ...
+# Subtest: an unresolved final-image library fails with original sources unchanged and context removed
+ok 7 - an unresolved final-image library fails with original sources unchanged and context removed
+  ---
+  duration_ms: 29.571625
+  type: 'test'
+  ...
+# Subtest: default temporary root creates and removes a private owned parent
+ok 8 - default temporary root creates and removes a private owned parent
+  ---
+  duration_ms: 29.623833
+  type: 'test'
+  ...
+# Subtest: the file API pins its manifest and rejects post-read mutation
+ok 9 - the file API pins its manifest and rejects post-read mutation
+  ---
+  duration_ms: 53.664167
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 283.480625

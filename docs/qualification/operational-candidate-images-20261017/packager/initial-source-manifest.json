@@ -1,0 +1,82 @@
+{
+  "format": "nano-split-artifact-package-source-proposal-v1",
+  "status": "FROZEN_SOURCE_REVIEWED_PENDING_ROOT_QUALIFICATION",
+  "payloads": [
+    {
+      "path": "source/scripts/operations/package-candidate.mjs",
+      "sha256": "bba25714b33d27123878d174d7b2ca37b5a24458b4b13e73d6129c5da0050564",
+      "bytes": 12541
+    },
+    {
+      "path": "source/scripts/operations/package-candidate-artifacts.test.mjs",
+      "sha256": "85e041581b736bbcce8528a4b1a7fca8571095da5711b78ec0fad4bd4df87a17",
+      "bytes": 9682
+    },
+    {
+      "path": "README.md",
+      "sha256": "70b8932a912f85ad975e815c92fbf08c27657286b85b4711b5c348027e36be7d",
+      "bytes": 5319
+    }
+  ],
+  "totalPayloadBytes": 27542,
+  "baselines": [
+    {
+      "path": "scripts/operations/package-candidate.sh",
+      "sha256": "fa341d495e1d28472f2a9f99f3eb4a2dac6d619e733dc13b7a65892f04bccac3",
+      "bytes": 4656,
+      "modified": false
+    },
+    {
+      "path": "scripts/operations/package-candidate.test.mjs",
+      "sha256": "3d73929c143299cec92eb7e24a8477795b459a3db8850a6ebdf1a4b248362ecd",
+      "bytes": 6009,
+      "modified": false
+    },
+    {
+      "path": "scripts/operations/package-candidate-export.test.mjs",
+      "sha256": "7aaa2e64da867e7ea99cc1c4d740cca2b9a309c55789d69eed9f5e7c8955cd56",
+      "bytes": 2976,
+      "modified": false
+    },
+    {
+      "path": "deploy/docker/candidate.Dockerfile",
+      "sha256": "87d6cad6284d491f2076cc7850576fc110318041a47ed20f6d2b0fd53bbead1f",
+      "bytes": 992,
+      "modified": false
+    },
+    {
+      "path": "deploy/docker/notices.sha256",
+      "sha256": "6eea677d963f83cedc3c60088eb176e8f88b7592316945f31998f1fb57eb1d73",
+      "bytes": 909,
+      "modified": false
+    }
+  ],
+  "expectedNewTests": {
+    "tests": 9,
+    "pass": 9,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0,
+    "authorObserved": false
+  },
+  "api": {
+    "cli": [
+      "--artifacts",
+      "ABSOLUTE_MANIFEST",
+      "MANIFEST_SHA256"
+    ],
+    "entrypoint": "packageCandidate(file,expectedSha,{runDocker,repoRoot,temporaryRoot})",
+    "runDockerReturns": "stdout string; throws on nonzero",
+    "descriptorFormat": "nano-candidate-artifacts-v1"
+  },
+  "authorOpsOrProjectExecution": false,
+  "authorRanTests": false,
+  "privateInputsRead": false,
+  "sdkRead": false,
+  "rWrites": false,
+  "cppRebuilds": 0,
+  "dockerfileChanged": false,
+  "sourceProvenanceSemanticallyVerified": false,
+  "productionQualified": false
+}

@@ -151,3 +151,46 @@ le fichier sélectionné ; fichier absent et symlinks sont refusés.
 Cette preuve ne remplace pas l’assemblage réel, la vérification des bibliothèques,
 la qualification du manifeste ni le cycle de mise à jour/restauration actuel.
 [Preuves et périmètre](qualification/coherent-package-paths-20261004/README.md).
+
+## Deux exécutables physiques distincts — 17 octobre 2026
+
+La nouvelle entrée `scripts/operations/package-candidate.mjs` complète le shell
+historique, dont le contrat et les tests ne changent pas :
+
+```sh
+node scripts/operations/package-candidate.mjs --artifacts /chemin/absolu/artifacts.json SHA256_REVU_DU_MANIFESTE
+```
+
+Le descripteur `nano-candidate-artifacts-v1` contient `runtimeBase` (ID Docker
+local immuable), `architecture`, `sourceRevision`, `maximumArtifactBytes` et
+`executables` : deux rôles exacts `nano` et `nano-p2p`, chacun avec `file`
+(chemin absolu physique sans symlink), `sha256` et `bytes`. `sourceEvidence`
+contient `file` et `sha256` pour une preuve conservée séparément. Le SHA-256 du
+descripteur lui-même est obligatoire ; le calculer depuis une entrée non revue
+ne remplace pas cette revue. Le budget total, preuve incluse, est borné à 256 MiB.
+
+L'outil conserve les fichiers sources ouverts et vérifie leurs identités et
+empreintes avant/après l'opération. Le contexte privé neuf contient les deux exécutables, les licences et la preuve
+opaque sélectionnée ; choisir une preuve publiable sans secrets. Seuls les deux
+exécutables et les licences sont copiés dans l’image. L’outil réutilise une base locale
+existante et assemble sans téléchargement ni compilation. Il ne crée aucun
+`production-source-revision.txt` pour maquiller une provenance. Les contrôles
+finaux portent sur l'ID, l'architecture, les étiquettes, l'utilisateur non root,
+les deux empreintes et les bibliothèques. La preuve de source reste opaque pour
+l'outil : `sourceProvenanceSemanticallyVerified:false` et
+`productionQualified:false` restent explicites. La liaison réelle aux sources,
+la configuration réseau et la finalité sont des qualifications distinctes.
+
+Un seul opérateur doit contrôler le daemon pendant l'assemblage ; les contrôles
+avant/après d'une référence Docker ne garantissent pas une transaction atomique
+contre un tiers qui la modifie simultanément. Les délais de subprocess et les
+budgets de lecture ne constituent pas une garantie d'interruption d'une E/S
+matérielle bloquée. Les outils Node et Buildx doivent fonctionner sur l'hôte.
+Les logs de l'assemblage sont à conserver, ainsi que tout refus de clôture.
+
+Les images actuelles ont été assemblées une seule fois par architecture, sans
+recompilation C++. Sur AMD64/VPS, le packaging a réussi ; sur ARM64/Mac, le
+contenu de l'image est vérifié, mais le refus final d'identité d'un fichier par
+le packaging demeure un échec distinct, sans cause rétrospectivement attribuée.
+Ces images n'ont remplacé aucun service et n'ont repris aucune duty.
+[Résultats et limites](qualification/operational-candidate-images-20261017/README.md).
