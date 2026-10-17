@@ -5417,3 +5417,45 @@ Restent non qualifiés par ce lot : nouveau cycle complet Anvil du driver modifi
 Le [nouveau contrôle réel du driver Doppler](qualification/doppler-current-private-fork-20261017/README.md) termine exit 0 en 183 879 ms : 19 étapes locales Dynamic V4 → migrateur historique V2, deux swaps dont les sorties reçues atteignent le minimum de 99 %, trois transactions refusées avec état/soldes inchangés et six lectures canoniques `eth_call` dans **Anvil**, pas Nano. Instance privée ancrée au checkpoint Base 52 173 454 ; pas de preuve cryptographique de finalité Base. Les 17 fences hôte représentent 12 anciennes lignes + quatre payloads neufs + un contrôle, sans récupération de 17 admissions historiques. Enfants joints et conteneur absent ; aucune compilation C++, aucun build d’image ni redémarrage de chaîne.
 
 Le refus préparatoire Root `KeyError: absentAfterCleanup` reste conservé, distinct du cycle réussi sans rejeu ; l’ancien rejet synthétique Base InvalidGamma n’est pas requalifié et les 37 tests offline ne sont pas rejoués. Actifs, financement, bénéficiaire et gouvernance restent synthétiques. Aucun fonds/déploiement public, bridge ou relation native, termes réels, T0/indexation ni production qualifiés. La campagne03 garde C++/52 fichiers de harnais, binaires, engagements et HEAD d’exécution `b1f…` ; elle n’est ni retargetée vers `4158…` ni requalifiée par ce lot. Historiques/statuts EIP conservés ; goal actif.
+
+
+## 17 octobre 2026 — objectif de production réaffirmé par l’utilisateur
+
+Le périmètre ci-dessous est conservé intégralement. Les références `391d434e` et
+`efbeb9bc` appartiennent à l’historique demandé ; elles ne remplacent pas la
+vérification des sources courantes. Au contrôle précédant cet ajout, `main` est
+propre à `e8343be67350f9ab4cbbcf820143cd4313a68ba7`, la révision productrice C++
+retenue reste `1925eeeabc9f7d0aef41f2c3fe43c11c31f1f352`, et la campagne03 conserve
+son HEAD d’exécution `b1f27bf85e24ba0d9aa04a078c82a21040465202`.
+
+### Cadrage demandé
+
+Livrer Nanobees/Nano C++ comme L1 réellement prête pour la production et préparer son fair launch Doppler sur Base en USDC. Partir de l’état vérifié du dépôt /Users/boris/Dev/blockchain-nano : main 391d434e, candidate C++ figée efbeb9bc. Conserver intégralement docs/PRODUCTION-GOAL.md, docs/VALIDATOR-EIP-ROADMAP.md, docs/EVM-PRODUCTION-EIP-ROADMAP.md et docs/EIP-IMPLEMENTATION-STATUS.md, ainsi que les preuves acquises et tous les échecs historiques. Achever les deux campagnes Docker ARM64/Mac et AMD64/VPS déjà actives sans redémarrage injustifié, vérifier sorties terminales, sources, binaires et audits. Compléter la portabilité physique du stockage et la restauration entière de la candidate avec journaux et témoins anti-double-signature, vérifier les engagements conservés séparément, reprendre effectivement les duties et démontrer une finalité commune qui avance entre Mac natif, Docker Mac et Docker du VPS autorisé ubuntu@145.239.199.166. Fermer les écarts encore ouverts du consensus : partitions/asymétries/reconnexion dans leur périmètre exact, cycle complet des validateurs, rotations, sync, sanctions, anomalie WAN A, charge bornée et ressources. Qualifier le profil EVM/RPC réellement activé, sans revendiquer de forks non activés, avec statuts implémenté/qualifié/partiel/non commencé. Finaliser pruning, CI/builds reproductibles, sauvegardes/restauration, supervision/alertes et mises à jour Docker ; laisser la revue de sécurité indépendante explicitement ouverte tant qu’elle n’est pas réalisée. Travailler par lots fonctionnels complets ; réutiliser les qualifications seulement lorsque révision et périmètre concordent, relancer les tests concernés par les changements ou les écarts, conserver des logs accessibles et réutiliser les images/volumes existants. Livrer les changements revus sur main par Git push et actualiser le VPS par Git pull, sans reconstruire les images pour les seuls documents/outils JavaScript. Terminer la relation vérifiable entre token Base et actif natif Nano : allocations, réserve canonique, ratio, conversion/remboursement et confiance du bridge USDC ; implémenter et qualifier dépôts/retraits, finalité source, reorgs, rejeu, compromission et reprises idempotentes. Préparer les termes réels Doppler : identité, offre, inflation, timing, ticks/prix, frais, gouvernance, seuils, invendus et migration ; utiliser le SDK officiel et l’outil unsigned tools/doppler-launch pour simuler création, achats, ventes et graduation. Conserver le rejet de simulation synthétique sur Base comme échec, pas comme lancement qualifié. Vérifier séparément visibilité à T0 et indexation externe sans présumer de référencement, financement, liquidité, bridge automatique ou retrait des réserves Doppler. Ne pas confondre tests verts, binaire sur VPS, cotation et production prête. Aucun flood continu, fonds réels, vente, déploiement public, nouvelle machine ou dépense sans autorisation dédiée. Continuer de façon persistante ; ne déclarer l’objectif atteint que lorsque tous les critères de production sont démontrés et qu’aucun travail requis ne reste ouvert.
+
+### État et règles de poursuite au présent contrôle
+
+- L’objectif enregistré reste **actif**. L’outil a refusé sa recréation car un
+  objectif inachevé existe déjà ; aucune clôture, pause ou réussite fictive n’a
+  été utilisée pour contourner ce refus.
+- Les lots Docker exits/reorg/pruning et les images retenues ont leurs sorties
+  et limites dans les compléments précédents. Ils ne sont pas redémarrés pour
+  satisfaire une ancienne formulation de l’objectif.
+- La campagne privée03 est effectivement active : session38587 encore vivante,
+  sans sortie terminale ni résultat global au contrôle du 17 octobre à19:44UTC.
+  Sa première restauration a été suivie d’une finalité commune observée
+  `23 → 27 → 28 → 29` sur les trois runtimes, avec trois observations stables.
+  Ce résultat intermédiaire ne qualifie ni le cycle complet ni la production.
+  Journaux, témoins, identités et autorisation existante restent conservés.
+- Le lot RPC suivant doit résoudre ensemble la capture d’état bornée hors des
+  longs verrous, l’annulation et le classement des lectures coûteuses, avec les
+  quatre lecteurs et `eth_getProof`. Le constat source de coût linéaire reste
+  ouvert ; la proposition intermédiaire c6fd n’a été ni compilée ni qualifiée.
+  Les compteurs de tests ne constituent pas un objectif artificiel à conserver.
+- La revue indépendante, la CI refusée avant exécution pour facturation/plafond,
+  les autres écarts de consensus et les conditions économiques/bridge/Doppler
+  restent ouverts dans leur périmètre. Le cycle privé Anvil réussi documenté
+  précédemment ne clôt pas l’ancien rejet Base ni les conditions d’un lancement.
+
+Les quatre documents et leurs anciens contenus restent intacts comme préfixes.
+Aucun statut EIP/fork n’est promu par cette réaffirmation. Toute qualification
+ultérieure doit citer ses révisions, ses sorties terminales et son périmètre.
