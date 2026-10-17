@@ -3,6 +3,7 @@
 #include "finality.hpp"
 #include <filesystem>
 #include <mutex>
+#include <functional>
 namespace rocksdb { class DB; class WriteBatch; }
 namespace nano {
 struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
@@ -14,6 +15,8 @@ struct CheckpointArchiveEntry {Bytes root;uint64_t slot;Bytes payload;};
 // Local opaque immutable fragments. The caller validates consensus semantics;
 // the storage layer verifies the SHA256 commitment and synchronous atomicity.
 struct CheckpointBlob {Bytes digest;std::string payload;};
+// A request-owned serialized canonical state; no proof/finality authority.
+struct SerializedExecutionState {bool canonical=false;std::optional<std::string> encoded;};
 struct ForkCheckpointRecord {ForkCheckpointToken token;std::string snapshot;};
 class ChainStore {
  friend class BeaconSigningJournal;
@@ -117,6 +120,11 @@ public:
  std::optional<Block> block_by_hash(const Bytes& hash) const;
  std::optional<Block> latest() const;
  std::optional<State> state_at(const Int& number) const;
+ // Pin state and its hash-index membership in one writer-serialized read. Copy
+ // and caller checkpoints run after unlocking; no JSON/trie work under mutex.
+ // The cap bounds the returned bytes, not RocksDB's internal I/O/cache buffers.
+ SerializedExecutionState serialized_state_at(const Int& number,const Bytes& expected_hash,
+  size_t maximum_bytes,const std::function<void()>& checkpoint={}) const;
  std::optional<Json> transaction(const Bytes& hash) const;
  std::optional<Receipt> receipt(const Bytes& hash) const;
  std::optional<Json> consensus_at(const Int& number) const;

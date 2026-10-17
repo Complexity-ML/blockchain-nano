@@ -509,6 +509,22 @@ std::optional<Block> ChainStore::block_by_number(const Int& n)const{std::lock_gu
 std::optional<Block> ChainStore::block_by_hash(const Bytes& hash)const{std::lock_guard lock(mutex_);auto number=get("hash/"+hex(hash));if(!number)return std::nullopt;auto j=read("block/"+*number);if(!j)throw std::runtime_error("broken block hash index");auto block=Block::from_json(*j);if(block.header.hash()!=hash||height_key(block.header.number)!=*number)throw std::runtime_error("block hash index mismatch");return block;}
 std::optional<Block> ChainStore::latest()const{std::lock_guard lock(mutex_);auto certified=certified_tip_impl();auto number=get("meta/tip");if(!number)return std::nullopt;auto j=read("block/"+*number);if(!j)throw std::runtime_error("missing chain tip");auto block=Block::from_json(*j);if(height_key(block.header.number)!=*number)throw std::runtime_error("chain tip height mismatch");if(certified&&(*certified!=*number||!certificate_impl(block.header.number)))throw std::runtime_error("certified tip mismatch");return block;}
 std::optional<State> ChainStore::state_at(const Int& n)const{std::lock_guard lock(mutex_);auto j=read("state/"+height_key(n));if(!j)return std::nullopt;auto state=State::from_json(*j);auto body=read("block/"+height_key(n));if(!body||state.root()!=unhex(body->at("stateRoot")))throw std::runtime_error("corrupted persisted state");return state;}
+SerializedExecutionState ChainStore::serialized_state_at(const Int& number,const Bytes& expected_hash,size_t maximum_bytes,const std::function<void()>& checkpoint)const{
+ if(expected_hash.size()!=32||!maximum_bytes||maximum_bytes>256*1024*1024)throw std::invalid_argument("Invalid serialized state policy");
+ if(checkpoint)checkpoint();rocksdb::PinnableSlice pinned;
+ {
+  std::lock_guard lock(mutex_);const auto indexed=get("hash/"+hex(expected_hash));
+  if(!indexed||*indexed!=height_key(number))return {};
+  const auto status=db_->Get(rocksdb::ReadOptions(),db_->DefaultColumnFamily(),"state/"+*indexed,&pinned);
+  if(status.IsNotFound())return {true,std::nullopt};require_ok(status);
+  if(pinned.size()>maximum_bytes)throw std::length_error("Serialized execution state byte limit exceeded");
+ }
+ // PinnableSlice retains the value across a real reorg/pruning batch. The DB
+ // handle must outlive this synchronous call, as for every existing store API.
+ std::string encoded;encoded.reserve(pinned.size());
+ for(size_t off=0;off<pinned.size();){if(checkpoint)checkpoint();const auto count=std::min(size_t(65536),pinned.size()-off);encoded.append(pinned.data()+off,count);off+=count;}
+ if(checkpoint)checkpoint();return {true,std::move(encoded)};
+}
 std::optional<Json> ChainStore::transaction(const Bytes& h)const{std::lock_guard lock(mutex_);return read("tx/"+hex(h));}
 std::optional<Receipt> ChainStore::receipt(const Bytes& h)const{std::lock_guard lock(mutex_);auto j=read("receipt/"+hex(h));return j?std::optional<Receipt>(Receipt::from_json(*j)):std::nullopt;}
 std::optional<Json> ChainStore::consensus_at(const Int& number)const{std::lock_guard lock(mutex_);return read("consensus/"+height_key(number));}

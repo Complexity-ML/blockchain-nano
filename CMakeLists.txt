@@ -159,6 +159,22 @@ add_executable(nano-rpc-simulation-context-tests tests/test_rpc_simulation_conte
 target_link_libraries(nano-rpc-simulation-context-tests PRIVATE nano_core)
 add_test(NAME rpc_simulation_context COMMAND nano-rpc-simulation-context-tests --simulation-context-self-test)
 set_tests_properties(rpc_simulation_context PROPERTIES TIMEOUT 90 LABELS qualification_rpc_simulation_context)
+add_executable(nano-rpc-state-block-id-tests tests/test_rpc_state_block_id.cpp)
+target_link_libraries(nano-rpc-state-block-id-tests PRIVATE nano_core)
+add_test(NAME rpc_state_block_id COMMAND nano-rpc-state-block-id-tests --state-readers-self-test)
+set_tests_properties(rpc_state_block_id PROPERTIES TIMEOUT 90 LABELS qualification_rpc_state_block_id)
+
+add_executable(nano-rpc-get-proof-tests tests/test_rpc_get_proof.cpp)
+target_link_libraries(nano-rpc-get-proof-tests PRIVATE nano_core)
+add_test(NAME rpc_get_proof COMMAND nano-rpc-get-proof-tests --get-proof-self-test)
+set_tests_properties(rpc_get_proof PROPERTIES TIMEOUT 90 LABELS qualification_rpc_state_proof)
+
+add_executable(nano-rpc-state-read-cost-tests tests/test_rpc_state_read_cost.cpp)
+target_link_libraries(nano-rpc-state-read-cost-tests PRIVATE nano_core)
+add_test(NAME rpc_state_read_cost COMMAND nano-rpc-state-read-cost-tests --state-read-cost-self-test)
+set_tests_properties(rpc_state_read_cost PROPERTIES TIMEOUT 90 LABELS qualification_rpc_state_proof)
+
+
 add_executable(nano-rpc-simulation-block-id-tests tests/test_rpc_simulation_block_id.cpp)
 target_link_libraries(nano-rpc-simulation-block-id-tests PRIVATE nano_core)
 add_test(NAME rpc_simulation_eip1898 COMMAND nano-rpc-simulation-block-id-tests --eip1898-self-test)
