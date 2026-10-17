@@ -1,0 +1,70 @@
+{
+  "format": "nano-libp2p-source-integrity-proposal-v2",
+  "status": "SOURCE_ONLY_PENDING_PEER_ROOT_QUALIFICATION",
+  "parent": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/libp2p-source-integrity-source-proposal-20261017/manifest.json",
+    "sha256": "cc90f9c852882dbe7920a91b27782f51acd2a2d6f64d175f1c159c97456325ac",
+    "bytes": 2713
+  },
+  "parentPayloads": [
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/libp2p-source-integrity-source-proposal-20261017/source/scripts/build-libp2p.sh",
+      "sha256": "535f0667b1952bf8f6184c85fd6c10a3202cf687928d06ca6b77ba0434e68fa1",
+      "bytes": 7525
+    },
+    {
+      "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/libp2p-source-integrity-source-proposal-20261017/source/scripts/ci/build-libp2p-source.test.mjs",
+      "sha256": "6318364f1c4e0053ea13a9c8c725d8341c471527930c0030a3b34884bd1c3bd3",
+      "bytes": 10907
+    }
+  ],
+  "payloads": [
+    {
+      "path": "source/scripts/build-libp2p.sh",
+      "sha256": "d9745a0a9b0a22241b3725cbe84e66189ac29cb4953199ca742af1172ca89c6a",
+      "bytes": 7652
+    },
+    {
+      "path": "source/scripts/ci/build-libp2p-source.test.mjs",
+      "sha256": "0c1c089e548c2cad74decc4ecdf033b307fcd12271f02367d287f906beabfe80",
+      "bytes": 11497
+    },
+    {
+      "path": "source.patch",
+      "sha256": "3d7e89a20878a63702ae5181256ec10e95effdb672a503ecb3b6352f2ef01b65",
+      "bytes": 1509
+    },
+    {
+      "path": "README.md",
+      "sha256": "66c61c9b06f36fc838dfde31bd89d3066eccbde6e2c46a59b76ea82231b228a8",
+      "bytes": 3183
+    }
+  ],
+  "delta": "Refuse any directory absent from pinned tree before traversal; eighth synthetic group covers untracked and ignored empty directories.",
+  "proposedQualification": {
+    "syntheticGroups": 8,
+    "causalPattern": "^untracked and ignored empty directories refuse before CMake without deletion$",
+    "baselineScript": "V1 script 535f0667b1952bf8f6184c85fd6c10a3202cf687928d06ca6b77ba0434e68fa1",
+    "baselineExpected": "missing refusal assertion after fake CMake; no parser/import/prerequisite failure",
+    "candidateExpected": "eight groups pass; no skip/cancel/todo"
+  },
+  "author": {
+    "projectImports": 0,
+    "testsExecuted": 0,
+    "clones": 0,
+    "builds": 0,
+    "operations": 0,
+    "sdkRead": false,
+    "privateInputsRead": false,
+    "repositoryWritten": false
+  },
+  "scope": {
+    "parentIntact": true,
+    "sourceOnly": true,
+    "noSdkCleanup": true,
+    "hunterOrToolchainQualified": false,
+    "ociReproducibilityQualified": false,
+    "bitForBitBuildQualified": false,
+    "productionQualified": false
+  }
+}

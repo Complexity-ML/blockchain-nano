@@ -1,0 +1,82 @@
+{
+  "format": "nano-libp2p-source-integrity-proposal-v1",
+  "status": "SOURCE_ONLY_PENDING_PEER_ROOT_QUALIFICATION",
+  "baseRevisionDeclaredByRoot": "e42288e61cacafde3c30d8bc0da80e7ac8ff1f8a",
+  "baseline": {
+    "path": "/Users/boris/Dev/blockchain-nano/scripts/build-libp2p.sh",
+    "sha256": "c5daca7389ed9850fc1ebb47aec1d2fb0781de417906a4f48875fb24b7770b65",
+    "bytes": 1583
+  },
+  "publicReadDependencies": [
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/dependencies.lock.json",
+      "sha256": "50d0d2c4a845294c09cdf017d389b5934f39a6b1ac57486d7b7816536e08f67b",
+      "bytes": 1896
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/scripts/ci/operations.sh",
+      "sha256": "33a36d916d91022a34cdb9631f490cc96a7582b5c33f42019f1684c85e144bae",
+      "bytes": 1103
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/Dockerfile",
+      "sha256": "1b435d6b2a2467a628fad24922ce96b3ed28acdd3b4a4698f55d7392742dd08b",
+      "bytes": 2289
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/docs/DOCKER.md",
+      "sha256": "3e1d7e3b312eb45932622329791ad15c12af005cf7154e180c3e231d7fa9c1b4",
+      "bytes": 7100
+    }
+  ],
+  "payloads": [
+    {
+      "path": "source/scripts/build-libp2p.sh",
+      "sha256": "535f0667b1952bf8f6184c85fd6c10a3202cf687928d06ca6b77ba0434e68fa1",
+      "bytes": 7525
+    },
+    {
+      "path": "source/scripts/ci/build-libp2p-source.test.mjs",
+      "sha256": "6318364f1c4e0053ea13a9c8c725d8341c471527930c0030a3b34884bd1c3bd3",
+      "bytes": 10907
+    },
+    {
+      "path": "source.patch",
+      "sha256": "1ab12f877f33e690e5661cac635249edce7476a0a6ac53f511955ce5f12c21c7",
+      "bytes": 18556
+    },
+    {
+      "path": "README.md",
+      "sha256": "b4e35d546ec3a0eae10d95cefe56adfc3ae6691d943529ffe229927393610475",
+      "bytes": 7619
+    }
+  ],
+  "proposedQualification": {
+    "syntheticGroups": 7,
+    "causalPattern": "^rejects an edited tracked source before CMake even with matching HEAD$",
+    "baselineExpected": "missing refusal assertion; no parser/import/prerequisite failure",
+    "candidateExpected": "all seven groups passed; no skip/cancel/todo",
+    "realSdkBuildExecuted": false
+  },
+  "scope": {
+    "sourceOnly": true,
+    "sourceTreeGuard": true,
+    "newCloneArgvUnchanged": true,
+    "sourceOnlyModeFlagsUnchanged": true,
+    "noSdkCleanup": true,
+    "hunterOrToolchainQualified": false,
+    "ociReproducibilityQualified": false,
+    "bitForBitBuildQualified": false,
+    "productionQualified": false
+  },
+  "author": {
+    "projectImports": 0,
+    "testsExecuted": 0,
+    "clones": 0,
+    "builds": 0,
+    "operations": 0,
+    "sdkRead": false,
+    "privateInputsRead": false,
+    "repositoryWritten": false
+  }
+}

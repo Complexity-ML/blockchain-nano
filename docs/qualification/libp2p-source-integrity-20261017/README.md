@@ -1,0 +1,19 @@
+# Intégrité des sources libp2p — qualification ciblée du 17 octobre 2026
+
+Root a exécuté deux causalités négatives puis les huit groupes du candidat V2. Les [résultats publics](evidence/result-public.json) déclarent les entrées sélectionnées inchangées. Cette qualification porte sur la garde du checkout source utilisée par `build-libp2p.sh`, avec un dépôt Git synthétique et un faux CMake ; aucun SDK réel n’a été construit.
+
+| Exécution | Résultat réel | Temps contrôleur |
+|---|---|---:|
+| Baseline main : source suivie modifiée sous HEAD inchangé | Exit 1, 0 PASS / 1 FAIL attendu | 1 146 ms |
+| Baseline V1 : répertoire vide non suivi | Exit 1, 0 PASS / 1 FAIL attendu | 1 174 ms |
+| Candidat V2, fichier complet | Exit 0, 8 PASS / 0 FAIL / 0 skip | 9 134 ms |
+
+Les deux [TAP main](evidence/baseline-main.stdout.log) et [TAP V1](evidence/baseline-v1-emptydir.stdout.log) échouent à l’assertion `dirty pinned source must refuse` : le faux build avait accepté une source que l’oracle demande de refuser. Ce sont deux refus manquants reproduits, pas des erreurs de parser, d’import ou de prérequis. Le groupe V1 s’arrête sur son premier sous-cas, le répertoire non suivi ; il ne prouve pas une seconde exécution négative du sous-cas ignoré. Le [candidat](evidence/candidate-v2.stdout.log) couvre les deux sous-cas non suivi et ignoré, les modifications stagées ou masquées par l’index, les trois frontières CMake, les liens internes propres, le clone local synthétique et la conservation du premier code d’échec. Aucun test n’est annulé ou marqué todo ; les trois stderr sont vides. Invocations et exits restent conservés à côté des TAP.
+
+Le [script V2](../../../scripts/build-libp2p.sh) lit l’arbre Git du commit fixé, compare les blobs réels sans se fier à l’index, vérifie les modes et les symlinks internes, et refuse toute feuille ou tout répertoire absent de cet arbre, y compris les éléments ignorés. Seul le `.git` racine est réservé. Les gardes entourent configure/build/install ; elles ne nettoient ni ne réparent les sources et conservent le premier échec CMake. Perl et ses modules sont des prérequis explicites. Les sorties et caches frères restent distincts.
+
+Le [nouveau test](../../../scripts/ci/build-libp2p-source.test.mjs) sera sélectionné après import par le glob `scripts/ci/*.test.mjs` du [script operations actuel](source/operations.sh). Ce fichier de tests a été exécuté seul : aucune réussite de l’ensemble operations ou de GitHub CI n’en est déduite. La base de revue déclarée par Root est `e42288e61cacafde3c30d8bc0da80e7ac8ff1f8a`. Les [manifestes V1](source/v1/manifest.json) et [V2](source/v2/manifest.json) sont archivés octet pour octet, sans réécriture de leurs statuts source. Ils décrivent leurs dossiers de proposition d’origine ; le [MANIFEST](MANIFEST.json) ci-présent inventorie les seuls fichiers publiés ici et joint les deux sources promues. L’ancien [script main](source/baseline-main/build-libp2p.sh) et le [script V1](source/v1/build-libp2p.sh) restent accessibles pour les causalités.
+
+Les tests emploient des fixtures locales possédées et n’effectuent aucun clone externe, build SDK, construction d’image ou activité de nœud. La commande clone de production demeure capable d’accéder au réseau lorsqu’un opérateur l’exécute. Les outils, l’object database Git et les sources Hunter sont des autorités distinctes ; les barrières ne constituent pas un snapshot atomique face à un écrivain concurrent. Aucune conformité apt/Hunter/toolchain, reproductibilité OCI ou bit à bit, qualification P2P/consensus, duty ou production n’est acquise.
+
+L’[objectif intégral](../../PRODUCTION-GOAL.md) reste actif. Sa recréation a été refusée parce qu’un objectif inachevé existe déjà ; son texte est déjà conservé dans les quatre documents de production. Ce lot ne le clôt pas et ne réécrit aucun échec antérieur. Il ne relance aucune campagne et ne modifie aucun statut EIP/fork.

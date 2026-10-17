@@ -1,0 +1,49 @@
+{
+  "cpp-libp2p": {
+    "repository": "https://github.com/libp2p/cpp-libp2p.git",
+    "tag": "v0.1.37",
+    "commit": "c03bf7c44c4fd30a390f3ef93bd1eab482e686a6",
+    "purpose": "Transport P2P des protocoles NanoPy ; choisi explicitement par l'utilisateur",
+    "license": "Apache-2.0 OR MIT"
+  },
+  "evm": {
+    "implementation": "native-nanopy-cpp",
+    "evmone": false
+  },
+  "solc": {
+    "version": "0.8.28",
+    "purpose": "Rebuild NanoStaking artifacts only",
+    "evmVersion": "paris",
+    "optimizerRuns": 200
+  },
+  "c-kzg-4844": {
+    "repository": "https://github.com/ethereum/c-kzg-4844",
+    "tag": "v2.1.8",
+    "commit": "e125905e5e01186e6ccb7a0ced4845bf7eddbcfe",
+    "license": "Apache-2.0",
+    "trustedSetupSha256": "d39b9f2d047cc9dca2de58f264b6a09448ccd34db967881a6713eacacf0f26b7"
+  },
+  "blst": {
+    "repository": "https://github.com/supranational/blst",
+    "commit": "e7f90de551e8df682f3cc99067d204d8b90d27ad",
+    "license": "Apache-2.0"
+  },
+  "secp256k1": {
+    "repository": "https://github.com/bitcoin-core/secp256k1",
+    "version": "v0.7.1",
+    "archive": "https://codeload.github.com/bitcoin-core/secp256k1/tar.gz/refs/tags/v0.7.1",
+    "archive_sha256": "958f204dbafc117e73a2604285dc2eb2a5128344d3499c114dcba5de54cb7a9e",
+    "source_modifications": false,
+    "release_signature_verified": false,
+    "license": "MIT (COPYING)",
+    "configuration": "Static; recovery enabled; optional ECDH/Schnorr/MuSig/EllSwift modules disabled"
+  },
+  "eest-qualification": {
+    "repository": "https://github.com/ethereum/execution-spec-tests",
+    "commit": "10eaa63d5da2f50b63d4359968f36542212f9f50",
+    "fixtures_release": "v5.4.0",
+    "archive": "https://github.com/ethereum/execution-spec-tests/releases/download/v5.4.0/fixtures_stable.tar.gz",
+    "sha256": "92cf1b47ad12fb27163261fc3c1cea5df72439cab507983d06b56c94f8741909",
+    "runtime_dependency": false
+  }
+}

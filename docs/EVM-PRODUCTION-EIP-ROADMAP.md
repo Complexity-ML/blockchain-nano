@@ -5817,3 +5817,18 @@ Le refus préparatoire Root `KeyError: absentAfterCleanup` reste conservé, dist
 > qualifiés. Correction causale + cinq nouveaux groupes + un groupe d’autorisations
 > et un fichier synthétique réel ; pas de nouveau C++/EIP/fork ou statut production.
 > Domaines/journaux et tous les anciens échecs conservés ; objectif actif.
+
+
+## 17 octobre 2026 — garde d’intégrité des sources libp2p qualifiée
+
+Les [preuves ciblées](qualification/libp2p-source-integrity-20261017/README.md)
+conservent deux causalités négatives : refus manquant de main sur une source
+modifiée, puis de V1 sur un répertoire vide non suivi. Le candidat V2 passe ses
+huit groupes sans skip ; blobs, modes, liens symboliques et inventaire ignoré/non suivi sont
+contrôlés autour des étapes du build, sans nettoyage et en conservant le premier
+échec. Tests synthétiques seulement : aucun SDK ni image construit, aucun clone
+externe ni trafic de nœud. Hunter/apt/toolchain, OCI/bit à bit, CI globale et production ne
+sont pas qualifiés. La base de revue est main `e42288e6…` ; aucun EIP/fork, duty,
+consensus ou campagne n’est promu. Les anciens contenus restent des préfixes
+intacts. L’objectif intégral déjà présent reste actif ; sa recréation a été
+refusée car un objectif inachevé existe, sans clôture ni réussite fictive.
