@@ -1,0 +1,82 @@
+{
+  "format": "nano-new-output-admission-root-unit-qualification-v1",
+  "passed": true,
+  "sourceProposal": {
+    "sha256": "36f8a91d29b4f071418168c29c4fbd92dee63c4e571b982566dfe59e1dbe8f89",
+    "bytes": 3524
+  },
+  "cases": [
+    {
+      "case": "baseline-causal",
+      "argv": [
+        "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=^new output admission: actual save",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign-new-output-admission-root-20261017-02/baseline/tests/multihost/lifecycle-driver-guard.test.mjs"
+      ],
+      "exitCode": 1,
+      "elapsedMs": 138,
+      "counts": {
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "case": "candidate-new",
+      "argv": [
+        "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=^new output admission:",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign-new-output-admission-root-20261017-02/candidate/tests/multihost/lifecycle-driver-guard.test.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 126,
+      "counts": {
+        "tests": 5,
+        "pass": 5,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    },
+    {
+      "case": "candidate-driver-guard",
+      "argv": [
+        "/opt/homebrew/Cellar/node/25.9.0_2/bin/node",
+        "--test",
+        "--test-reporter=tap",
+        "--test-name-pattern=^actual lifecycle driver gates",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign-new-output-admission-root-20261017-02/candidate/tests/multihost/lifecycle-driver-guard.test.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedMs": 6479,
+      "counts": {
+        "tests": 1,
+        "pass": 1,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      }
+    }
+  ],
+  "newGroupsPassed": 5,
+  "oldDriverGuardGroupsPassed": 1,
+  "historical55Replayed": false,
+  "inputsUnchanged": true,
+  "metadataActorReproduced": false,
+  "realFileFirstAdmissionQualified": false,
+  "campaign03StillFailed": true,
+  "newCampaignStarted": false,
+  "privateCampaignInputsRead": false,
+  "cppCompiled": false,
+  "dockerBuilt": false,
+  "productionQualified": false
+}

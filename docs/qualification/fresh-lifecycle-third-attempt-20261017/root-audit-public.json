@@ -1,0 +1,90 @@
+{
+  "format": "nano-campaign03-root-terminal-evidence-audit-v1",
+  "campaignId": "c28614aab9ad7d8d21835851c199fe16ccdde6887cd7fa7553488d5250dc0412",
+  "terminalExitCode": 1,
+  "terminalElapsedMs": 4382212,
+  "terminalHandle": 38587,
+  "terminalHandleClosed": true,
+  "guardSamples": 422,
+  "guardSigintSent": false,
+  "launcherJoined": true,
+  "campaignFailed": true,
+  "failure": {
+    "timeMs": 1792266984049,
+    "event": "fresh-failed",
+    "message": "Error: Public input changed during FD read {\"stage\":\"campaign-body\",\"publicPath\":null,\"changedFieldNames\":[\"ctimeNs\"]}\n    at inputNeed (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:503:213)\n    at observe (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:510:4)\n    at async save (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:518:419)\n    at async capturePair (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:960:98)\n    at async lifecycleCapture (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:996:14)\n    at async Object.lifecyclePrepareAndSubmit [as prepareAndSubmit] (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:1035:213)\n    at async runFreshLifecycle (file:///Users/boris/Dev/blockchain-nano/tests/multihost/lifecycle-runtime.mjs:148:16)\n    at async lifecycleBranch (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:1101:20)\n    at async runFreshCampaign (file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:1163:223)\n    at async file:///Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs:50:2",
+    "productionQualified": false
+  },
+  "closingRefusal": {
+    "timeMs": 1792267011701,
+    "event": "fresh-final-fence-failed",
+    "stage": "lifecycle-closing",
+    "message": "Completed live stages and three stopped owners",
+    "publicInputDiagnostic": null
+  },
+  "voluntaryExitAccepted": true,
+  "canonicalExitInclusionIndependentlyReplayed": false,
+  "commonFinalityObservedThroughEpoch": "87",
+  "commonFinalityRoot": "0x47a52f089fc2d0516a54810b2b05311fffa6bffc847df0efcb9058a08de16986",
+  "stoppedCapturesVerified": true,
+  "ownersCaptured": 3,
+  "primaryWitnessPairs": 65,
+  "readOnlyDatabaseRoles": 136,
+  "terminalFinalizedEpochs": {
+    "mac-native": "0x57",
+    "mac-docker": "0x57",
+    "vps-docker": "0x58"
+  },
+  "terminalCheckpointsClaimedIdentical": false,
+  "newSignaturesDuringStoppedCaptures": 0,
+  "metadataActorIdentified": false,
+  "controlledSlashingSubmitted": false,
+  "withdrawalsOrPayoutsQualified": false,
+  "secondRestoreCompleted": false,
+  "fullLifecycleQualified": false,
+  "campaignTerminalSoftwareFenceReached": false,
+  "oldJournalsAndConsumedDomainPreserved": true,
+  "newCampaignStarted": false,
+  "rawCapsulesExported": false,
+  "cppCompiled": false,
+  "dockerImagesRebuilt": false,
+  "productionQualified": false,
+  "inputs": {
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign03-current-control-root-20261017-01/launch.exit.json": {
+      "sha256": "122c8b5c674118a68462a21e997eb3d014ffb574150a889326143ac58f39a2d5",
+      "bytes": 130
+    },
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-guard-20261017-03/result-public.json": {
+      "sha256": "5b8b1e9911655713b5228264c2ba2b76c1765d1c442dde33077120a0c29a33ed",
+      "bytes": 405
+    },
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261017-03/result.json": {
+      "sha256": "07776eb85441ee722cd24b919f1e667bad4c64de440418cc61ec4d79a1a54dd9",
+      "bytes": 830
+    },
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261017-03/lifecycle-voluntary-exit-2-accepted-public.json": {
+      "sha256": "ae3ea654273b32cd4548f1dba974f0fb8c0abb523d6186568a1751d4346670c8",
+      "bytes": 498
+    },
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261017-03/lifecycle-voluntaryExit-inclusion-finality.json": {
+      "sha256": "7efcfe68daf8bfa4e1fed3b23f80f5fa383518ed7da43c672d4797aa8b803dec",
+      "bytes": 1966
+    },
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261017-03/lifecycle-stopped-captures-public.json": {
+      "sha256": "fe85e4953e4ae3328bd0eb71cf90cdd0f8629f0526a4e284bb13fd35d078d927",
+      "bytes": 5956
+    },
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261017-03/terminal-mac-native-capture-commitment-public.json": {
+      "sha256": "5c53707f820de5be04f52146efbac2d1ce8fdccf927081522d2ee15e3ea30bd2",
+      "bytes": 1594
+    },
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261017-03/terminal-mac-docker-capture-commitment-public.json": {
+      "sha256": "a4315f30ede16515b9966623e41ba4d3be72c71d44e0ba55355e73db2c8c0f65",
+      "bytes": 1594
+    },
+    "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/fresh-three-owner-current-run-20261017-03/terminal-vps-docker-capture-commitment-public.json": {
+      "sha256": "82608e90c52cf57fc2c780f690225ba75fdf42896027017d546726a60e686f2d",
+      "bytes": 1592
+    }
+  }
+}

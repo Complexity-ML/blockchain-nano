@@ -1,0 +1,27 @@
+TAP version 13
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+not ok 1 - new output admission: actual save rejects transient ctime sample before stable first admission
+  ---
+  duration_ms: 2.758125
+  type: 'test'
+  location: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign-new-output-admission-root-20261017-02/baseline/tests/multihost/lifecycle-driver-guard.test.mjs:96:1'
+  failureType: 'testCodeFailure'
+  error: 'Public input changed during FD read'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    need (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign-new-output-admission-root-20261017-02/baseline/tests/multihost/lifecycle-driver-guard.test.mjs:87:33)
+    observe (eval at newOutputFixture (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign-new-output-admission-root-20261017-02/baseline/tests/multihost/lifecycle-driver-guard.test.mjs:93:13), <anonymous>:9:4)
+    async Object.save (eval at newOutputFixture (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign-new-output-admission-root-20261017-02/baseline/tests/multihost/lifecycle-driver-guard.test.mjs:93:13), <anonymous>:16:418)
+    async TestContext.<anonymous> (file:///Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/campaign-new-output-admission-root-20261017-02/baseline/tests/multihost/lifecycle-driver-guard.test.mjs:97:150)
+    async Test.run (node:internal/test_runner/test:1208:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3)
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 69.842958

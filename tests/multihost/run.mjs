@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import {nativeRuntimeEnvironment} from './native-runtime-env.mjs';
 import {linuxSourceFiles,createMacLinuxFiles,linuxInventory,linuxBootstrapProof} from './linux-owned-files.mjs';
-import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest,publishLifecycleStoppedCapture,publishLifecycleStoppedCapturesBeforeClosing,createLifecycleStopReceipts} from './lifecycle-runtime.mjs';
+import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest,publishLifecycleStoppedCapture,publishLifecycleStoppedCapturesBeforeClosing,createLifecycleStopReceipts,admitNewLifecycleOutput} from './lifecycle-runtime.mjs';
 import {lifecycleWholeCopyProgram,lifecycleOwnerProjection} from './lifecycle-owner.mjs';
 import {deriveLifecycleParameters,validateLifecycleDeposit} from './lifecycle.mjs';
 import {freshSoftwareLocators,freshSoftwareFileMounts} from './program-locators.mjs';
@@ -515,7 +515,13 @@ async function runFreshCampaign(args){
   }finally{await f.close();}
  }
  async function fence(){for(const z of [...held.values()])await observe(z.path,z);}
- async function save(path,value){const bytes=Buffer.isBuffer(value)?value:Buffer.from(typeof value==='string'?value:JSON.stringify(value,null,2)+'\n');const f=await open(path,'wx',0o600);try{await f.writeFile(bytes);await f.sync();}finally{await f.close();}const directory=await open(dirname(path),'r');try{await directory.sync();}finally{await directory.close();}const expected={sha256:sha(bytes),bytes:bytes.length};await observe(path,expected,false,false);newFiles.set(resolve(path),expected);return bytes;}
+ async function save(path,value){
+  path=resolve(path);need(!held.has(path)&&!newFiles.has(path),'NEW save cannot replace retained output/input');const bytes=Buffer.isBuffer(value)?Buffer.from(value):Buffer.from(typeof value==='string'?value:JSON.stringify(value,null,2)+'\n');
+  need(bytes.length>0&&bytes.length<=1073741824,'NEW save known byte bound');const f=await open(path,'wx',0o600);let creation;
+  try{await f.writeFile(bytes);await f.sync();creation=material(await f.stat({bigint:true}));}finally{await f.close();}
+  const directory=await open(dirname(path),'r');try{await directory.sync();}finally{await directory.close();}const expected={sha256:sha(bytes),bytes:bytes.length};
+  await admitNewLifecycleOutput(path,expected,creation,{isRetained:()=>held.has(path)||newFiles.has(path)});need(!held.has(path)&&!newFiles.has(path),'NEW save cannot replace retained output/input');newFiles.set(path,expected);return bytes;
+ }
  const spec=validateFreshCampaignSpec(JSON.parse(await observe(resolve(specFile),{sha256:specSha},true)),{target,sourceBaseRevision:revision});
  need(!spec.lifecycle||spec.lifecycle.runtimeDriverEnabled,'Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required');
  if(spec.lifecycle)requireLifecycleRuntimeAuthority(spec);

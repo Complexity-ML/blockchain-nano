@@ -1,0 +1,85 @@
+{
+  "format": "nano-campaign-new-output-first-admission-source-proposal-v1",
+  "status": "SOURCE_ONLY_PENDING_ROOT_REVIEW_AND_EXECUTION",
+  "baselines": [
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/multihost/run.mjs",
+      "sha256": "18e4b72ff387bccbae9ab39499873694a6898c87c35a3f322572852fc383fdb2",
+      "bytes": 192023
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/multihost/lifecycle-runtime.mjs",
+      "sha256": "c19c6b48bd18deb206e71fa0db51f649962ed46889f84b9842befdc36176a42f",
+      "bytes": 30717
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/multihost/lifecycle-driver-guard.test.mjs",
+      "sha256": "8d87cb658b523d60c36be1ef733282efe36bb545865c92f6316dfa744c5df04d",
+      "bytes": 9294
+    }
+  ],
+  "unchangedReadDependencies": [
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/tests/multihost/lifecycle-runtime.test.mjs",
+      "sha256": "739bcde02a2d7d1da45677d10949c90b1c52706992b88c0f4e6b3bc845610d53",
+      "bytes": 36435
+    },
+    {
+      "path": "/Users/boris/Dev/blockchain-nano/CMakeLists.txt",
+      "sha256": "64d1ee4d8074f1d515dad1ec500e17b1c34bc804006c0045a9e3d4e17a338a18",
+      "bytes": 176765
+    }
+  ],
+  "payloads": [
+    {
+      "path": "source/tests/multihost/run.mjs",
+      "sha256": "1af106a009206966b350866e1dd9fe7017ac5bd304b1a84aa58165754b685e5a",
+      "bytes": 192469
+    },
+    {
+      "path": "source/tests/multihost/lifecycle-runtime.mjs",
+      "sha256": "5806bd7236b5314d2884c53e03a674d2fc2346558a7aa3b37db383e3d3db5fc0",
+      "bytes": 34293
+    },
+    {
+      "path": "source/tests/multihost/lifecycle-driver-guard.test.mjs",
+      "sha256": "84b671ab6d01f55dbc2d5ef853be08b203066e7c94cd0ad488accc50f51d6ea2",
+      "bytes": 17092
+    },
+    {
+      "path": "source.patch",
+      "sha256": "768bcb9be78f33e9d6f1e26577829ff4ba88d94cfe71238cd7482acd9f0ed7d4",
+      "bytes": 18592
+    },
+    {
+      "path": "README.md",
+      "sha256": "d41e6b8d9537f7f6bac0a9b1e4d732cc0d6450e95b4e412c9064aed30de2fca9",
+      "bytes": 6664
+    }
+  ],
+  "scope": {
+    "sourceOnly": true,
+    "testsExecutedByAuthor": false,
+    "operationsExecutedByAuthor": false,
+    "privateInputsRead": false,
+    "repositoryWritten": false,
+    "cppModified": false,
+    "cmakeModified": false,
+    "historical55Modified": false,
+    "oldNineFieldAuthorityRefreshed": false,
+    "metadataActorIdentified": false,
+    "campaignRestartAuthorized": false,
+    "productionQualified": false
+  },
+  "qualificationPlan": {
+    "baselineSelectors": [
+      "^new output admission: actual save"
+    ],
+    "baselineExpected": "one causal failure Public input changed during FD read",
+    "candidateSelectors": [
+      "^new output admission:"
+    ],
+    "candidateExpectedGroups": 5,
+    "result": "PENDING_ROOT"
+  }
+}

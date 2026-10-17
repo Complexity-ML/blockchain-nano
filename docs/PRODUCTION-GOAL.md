@@ -5459,3 +5459,25 @@ Livrer Nanobees/Nano C++ comme L1 réellement prête pour la production et prép
 Les quatre documents et leurs anciens contenus restent intacts comme préfixes.
 Aucun statut EIP/fork n’est promu par cette réaffirmation. Toute qualification
 ultérieure doit citer ses révisions, ses sorties terminales et son périmètre.
+
+
+## 17 octobre 2026 — tentative03 terminale FAILED, première admission des sorties corrigée
+
+La [tentative03](qualification/fresh-lifecycle-third-attempt-20261017/README.md)
+termine exit1 en4 382 212ms : guard422échantillons, aucun SIGINT, enfant joint.
+Première restauration et finalité commune acquises partiellement ; sortie volontaire
+acceptée et observation commune jusqu’à87. Le refus ctimeNs survient à la capture
+neuve mac-native avant proposer slashing ; acteur inconnu, clôture refusée pour
+stages incomplets. Trois captures terminales65paires/136rôles DB sont conservées,
+sans signatures ; le fence logiciel terminal et le cycle complet restent ouverts.
+
+La [correction de première admission](qualification/new-output-admission-20261017/README.md)
+qualifie causalement l’ancien refus (1FAIL), cinq groupes injectés nouveaux, un
+groupe existant d’autorisations et un fichier synthétique réel6,58Mo. Les garde-fous
+SHA/identité restent stricts, sans récupération d’une ancienne autorité. Minimum2s
+par nouveau save, budgets inchangés ; la tenue d’une campagne entière n’est pas
+prouvée. Les refus de préparation/parser et tous les historiques restent intacts.
+
+Aucune relance03, nouveau domaine, signature ou image n’est créée par cette
+correction JS ; l’ancien domaine reste consommé. Aucun EIP/fork, bridge/Doppler,
+revue indépendante, CI ou production n’est promu. Objectif actif.

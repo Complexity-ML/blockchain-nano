@@ -48,6 +48,34 @@ export async function admitLifecycleKnownFiles(rows,{checkpoint=()=>{},deadlineM
  need(consecutive>=3&&performance.now()-since>=2000&&performance.now()<until,'NEW first admission is not stable');const admitted=last;
  return {probeCount:probes,stableSpanMs:Math.floor(performance.now()-since),async verify(){for(const r of admitted){checkpoint();await readLifecycleKnownFile(r.path,r,{expectedMaterial:r.material});}return true;}};
 }
+// Only a just-created exclusive output may use this prospective window. No
+// retained row is replaced. A ctime-changing sample is rejected, never admitted;
+// all eight other creation fields and the known bytes must match on EVERY read.
+async function sampleNewLifecycleOutput(path,maximum){
+ need(await realpath(path)===path,'NEW output canonical path');const f=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+ try{const a=await f.stat({bigint:true});need(a.isFile()&&a.nlink===1n&&a.size===BigInt(maximum),'NEW output file type/link/size');const h=createHash('sha256'),buffer=Buffer.alloc(65536);let bytes=0;
+  for(;;){const {bytesRead}=await f.read(buffer,0,buffer.length,null);if(!bytesRead)break;bytes+=bytesRead;need(bytes<=maximum,'NEW output grew');h.update(buffer.subarray(0,bytesRead));}
+  const b=await f.stat({bigint:true}),p=await lstat(path,{bigint:true});need(b.isFile()&&p.isFile()&&b.nlink===1n&&p.nlink===1n&&await realpath(path)===path,'NEW output FD/path file identity');return {before:material(a),after:material(b),linked:material(p),sha256:h.digest('hex'),bytes};
+ }finally{await f.close();}
+}
+export async function admitNewLifecycleOutput(path,pin,creationMaterial,{isRetained,sample=sampleNewLifecycleOutput,now=()=>performance.now(),wait=ms=>sleep(ms)}={}){
+ need(typeof path==='string'&&resolve(path)===path&&typeof isRetained==='function'&&typeof sample==='function'&&typeof now==='function'&&typeof wait==='function','NEW output admission arguments');
+ need(pin&&shaPattern.test(pin.sha256)&&Number.isSafeInteger(pin.bytes)&&pin.bytes>0&&pin.bytes<=1073741824,'NEW output known bytes');const expected={sha256:pin.sha256,bytes:pin.bytes},creation=[...creationMaterial];
+ const row=v=>Array.isArray(v)&&v.length===9&&v.every(x=>typeof x==='string'&&/^-?(?:0|[1-9][0-9]*)$/.test(x)&&x!=='-0');need(row(creation)&&creation[5]==='1'&&creation[6]===String(expected.bytes),'NEW output creation material');
+ const unretained=()=>need(!isRetained(),'NEW output already retained');unretained();const began=now();need(Number.isFinite(began),'NEW output monotonic clock');const until=began+30000;let previous=null,consecutive=0,since=0,probeCount=0,unstableSamples=0,lastClock=began;
+ const time=()=>{const t=now();need(Number.isFinite(t)&&t>=lastClock&&t<until,'NEW output first-admission deadline/clock');lastClock=t;return t;};
+ for(;;){unretained();time();const x=await sample(path,expected.bytes);unretained();const t=time();++probeCount;
+  need(x&&row(x.before)&&row(x.after)&&row(x.linked),'NEW output sampled material');need(x.sha256===expected.sha256&&x.bytes===expected.bytes,'NEW output known SHA/bytes differ');
+  for(const m of [x.before,x.after,x.linked])for(let i=0;i<8;++i)need(m[i]===creation[i],'NEW output creation identity changed: '+fields[i]);
+  // A rejected intra-read sample cannot count toward the stable run. Only the
+  // not-yet-admitted ctime may start a later run; no old authority is refreshed.
+  const stable=canonical(x.before)===canonical(x.after)&&canonical(x.after)===canonical(x.linked),encoded=canonical(x.after);
+  if(!stable){++unstableSamples;previous=null;consecutive=0;since=0;}
+  else if(previous===encoded)++consecutive;else{previous=encoded;consecutive=1;since=t;}
+  if(stable&&consecutive>=3&&t-since>=2000){unretained();return {sha256:expected.sha256,bytes:expected.bytes,material:[...x.after],probeCount,unstableSamples,stableSpanMs:Math.floor(t-since)};}
+  const remaining=until-t;need(remaining>1000,'NEW output first-admission deadline');await wait(1000);unretained();
+ }
+}
 export async function lifecyclePrivateDirectory(prefix='nano-lifecycle-'){
  const parent=await realpath(tmpdir()),directory=await mkdtemp(join(parent,prefix)),s=await lstat(directory,{bigint:true});need(await realpath(directory)===directory&&s.isDirectory()&&s.uid===BigInt(process.getuid())&&(Number(s.mode)&0o7777)===0o700,'NEW owner-private directory');return directory;
 }

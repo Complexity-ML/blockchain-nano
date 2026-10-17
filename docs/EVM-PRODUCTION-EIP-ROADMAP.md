@@ -5808,3 +5808,12 @@ Le refus préparatoire Root `KeyError: absentAfterCleanup` reste conservé, dist
 > La tentative de recréation a été refusée car l’objectif précédent est actif ;
 > aucune clôture artificielle ni promotion de statut EIP/fork/production. Tous
 > les contenus antérieurs, preuves et échecs restent conservés.
+
+
+> **17 octobre 2026 — tentative03 FAILED et correction JS bornée.**
+> [Échec terminal et captures](qualification/fresh-lifecycle-third-attempt-20261017/README.md) ;
+> [qualification de première admission](qualification/new-output-admission-20261017/README.md).
+> Finalité commune observée jusqu’à87 et sortie acceptée, mais cycle/closing non
+> qualifiés. Correction causale + cinq nouveaux groupes + un groupe d’autorisations
+> et un fichier synthétique réel ; pas de nouveau C++/EIP/fork ou statut production.
+> Domaines/journaux et tous les anciens échecs conservés ; objectif actif.

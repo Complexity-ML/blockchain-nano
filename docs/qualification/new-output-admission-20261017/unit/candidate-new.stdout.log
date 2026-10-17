@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 1 - new output admission: actual save rejects transient ctime sample before stable first admission
+  ---
+  duration_ms: 3.279041
+  type: 'test'
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 2 - new output admission: three strict samples span two seconds and ctime change resets the run
+  ---
+  duration_ms: 1.268458
+  type: 'test'
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 3 - new output admission: every known-byte and creation-identity mismatch refuses without retry
+  ---
+  duration_ms: 3.489083
+  type: 'test'
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 4 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+  ---
+  duration_ms: 2.008125
+  type: 'test'
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 5 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+  ---
+  duration_ms: 0.77025
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 75.288416

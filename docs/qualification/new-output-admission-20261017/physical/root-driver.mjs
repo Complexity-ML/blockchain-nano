@@ -1,0 +1,32 @@
+// Root-only synthetic file. No campaign, signer, capsule or network is opened.
+import assert from 'node:assert/strict';
+import {open,readFile,mkdir,realpath,lstat} from 'node:fs/promises';
+import {resolve,dirname,join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+import {performance} from 'node:perf_hooks';
+const base=dirname(fileURLToPath(import.meta.url));
+const source=join(base,'campaign-new-output-admission-root-20261017-02/candidate/tests/multihost');
+const output=join(base,'campaign-new-output-admission-real-file-root-20261017-01');
+await mkdir(output,{mode:0o700});assert.equal(await realpath(output),output);
+const {admitNewLifecycleOutput}=await import(join(source,'lifecycle-runtime.mjs'));
+const run=await readFile(join(source,'run.mjs'),'utf8');
+const start=run.indexOf(' async function save(path,value){'),end=run.indexOf('\n const spec=',start);
+assert(start>=0&&end>start&&run.indexOf(' async function save(path,value){',start+1)===-1);
+const fields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
+const material=s=>fields.map(k=>String(s[k]));
+const sha=b=>createHash('sha256').update(b).digest('hex');
+const held=new Map(),newFiles=new Map(),need=(ok,why)=>{if(!ok)throw Error(why);};
+let admission;
+const observedAdmission=async(...args)=>{admission=await admitNewLifecycleOutput(...args);return admission;};
+const save=Function('resolve','held','newFiles','need','open','material','dirname','sha','admitNewLifecycleOutput',run.slice(start,end)+'\nreturn save;')(resolve,held,newFiles,need,open,material,dirname,sha,observedAdmission);
+const file=join(output,'synthetic-known-output.json'),bytes=6585558;
+const buffer=Buffer.from('{"synthetic":true}'+ ' '.repeat(bytes-18));assert.equal(buffer.length,bytes);
+const began=performance.now(),returned=await save(file,buffer),elapsed=performance.now()-began;
+assert.deepEqual(returned,buffer);assert.deepEqual(newFiles.get(file),{sha256:sha(buffer),bytes});assert.equal(held.size,0);
+assert(admission&&admission.probeCount>=3&&admission.stableSpanMs>=2000&&elapsed>=2000);
+await assert.rejects(save(file,Buffer.from('replacement')),/NEW save cannot replace retained/);
+assert.equal(sha(await readFile(file)),sha(buffer));const st=await lstat(file,{bigint:true});assert(st.isFile()&&st.nlink===1n);
+const result={format:'nano-new-output-real-file-root-qualification-v1',passed:true,syntheticBytes:bytes,elapsedMs:Math.floor(elapsed),admission,retainedOutputOverwriteRefused:true,bodyUnchanged:true,oldAuthoritiesRefreshed:false,actualFileSystemUsed:true,ctimeActorIdentified:false,ctimeIncidentReproduced:false,campaign03StillFailed:true,newCampaignStarted:false,privateInputsRead:false,cppCompiled:false,dockerBuilt:false,productionQualified:false};
+const resultFile=await open(join(output,'result-public.json'),'wx',0o600);try{await resultFile.writeFile(JSON.stringify(result,null,2)+'\n');await resultFile.sync();}finally{await resultFile.close();}
+console.log(JSON.stringify(result));
