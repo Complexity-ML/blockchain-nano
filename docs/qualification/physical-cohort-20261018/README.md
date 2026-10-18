@@ -45,3 +45,24 @@ Restent ouverts pour cette candidate :
 - Relation Base–Nano, bridge et conditions réelles du lancement Doppler. Aucune ouverture de vente, dépense ou campagne réseau 04 n’est autorisée par ce lot.
 
 Les anciens PASS restent acquis à leurs révisions et périmètres historiques. Les quatre documents normatifs reçoivent uniquement un ajout ; tous leurs critères, préfixes et échecs sont conservés. `productionQualified=false` ; objectif général actif et non atteint.
+
+## 18 octobre 2026 — Copie AMD vers ARM et copies adverses
+
+Le lecteur ARM a authentifié une copie physique produite par le véritable writer AMD. Le manifeste source est `e37934823aa91b2ea44b4259451fde17d807ede634d6d01888f2860646b2b02a` (12 445 octets) ; l’archive exportée vaut `554b4d59e92e23a58686e1b99c1e178c297a356da1092c525d7668201af81b73` (5 171 200 octets). L’export vérifie les 69 entrées contre leurs identités originales à neuf champs et leurs SHA-256, avec la source inchangée. Les preuves publiques sont référencées dans l’[inventaire](proof-inventory-reverse-adverse.json).
+
+Six fichiers publics ont été transférés par SSH. La première admission a échoué avant Docker : les nouvelles copies reçues par SCP étaient en mode `0600`, au lieu de `0400`. Seules ces copies encore non admises ont été corrigées puis admises en `0400`, sans nouveau transfert ni actualisation d’une ancienne autorité. Cet échec reste conservé.
+
+L’import utilise un nouveau volume Linux ARM, détenu par `501:20`, contre `1000:1000` pour l’archive source. Le lecteur est l’ELF ARM retenu de la campagne de volume natif 03, `d63e054a54ee40d8607dabd02904dcb2b628991498588175907619ac7bf9f960` (6 050 664 octets). Le [résultat AMD vers ARM](amd-arm-reader-result.json) correspond au contrôleur **35178, sortie 0** : une invocation `check`, sortie CLI **0** et état indépendant du conteneur **0**, trois enregistrements typés, huit bases, cinq archives et deux passes en lecture seule. Le pic RSS est de **22 660 Kio**. Les douze fichiers hôtes et les 69 entrées invitées sont contrôlés séparément, avec leurs vues d’identité et leurs SHA-256 respectifs. Les sept conteneurs sont retirés ; le volume est conservé. Aucune signature, compilation, invocation `produce` ni construction d’image n’a été effectuée par ce lecteur.
+
+Le [contrôleur adverse AMD](adverse-amd-result.json), **55189, sortie 0**, vérifie quatre refus attendus. Chaque copie échoue au stade `check-alpha`, avec une sortie CLI **1** et un état indépendant du conteneur **1** :
+
+| Copie négative | Refus attendu |
+| --- | --- |
+| Rôle absent | Inventaire des rôles exacts |
+| Un octet de fichier altéré | Empreinte de l’inventaire physique |
+| Journal/témoin `signer-witness` de beta placé sous alpha | Core : `Invalid beacon signing journal` |
+| Bit de compression de la signature d’ancre effacé à l’octet 4 | Core : `Invalid Capella durable archive` |
+
+Les deux derniers cas utilisent respectivement le [manifeste négatif du journal/témoin](negative-mixed-journal-witness-manifest.json) et le [manifeste négatif de l’ancre](negative-invalid-anchor-signature-manifest.json). Les seuls changements de ces manifestes concernent `cohorts[0].physical["signer-witness"]` et `cohorts[0].signerWitness` (valeurs copiées de beta), ou l’octet 4 du wire décodé de `anchor.ssz`. Les engagements d’autorité restent séparés et hors montage. Les 69 entrées originales et les quatre copies restent inchangées après leur vérification ; les quatre conteneurs sont retirés et l’image est inchangée. Aucune nouvelle signature n’est créée : ces quatre refus sont des réussites des scénarios négatifs, sans reclasser les échecs antérieurs.
+
+Ces résultats complètent la copie ARM vers AMD déjà documentée. Ils prouvent les lectures physiques et les refus décrits, sans assimilation des octets RocksDB produits indépendamment ni preuve d’une restauration opérationnelle. La qualification native macOS et du générateur CMake, les anciens journaux et leur protection contre le retour à un état antérieur, la restauration par un opérateur, la reprise des duties et l’avancement d’une finalité commune restent ouverts. La production, la revue de sécurité indépendante et les conditions Base–Nano/Doppler restent également ouvertes ; aucun ancien échec n’est supprimé ou requalifié.
