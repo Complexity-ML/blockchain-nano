@@ -8613,3 +8613,9 @@ Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non quali
 ## C8 — admissions logicielles complètes, statuts EIP conservés
 
 [Les API vérifient trois admissions,24 actifs, neuf mounts et le loader Native](qualification/operator-c8-final-admissions-20261018/README.md), avec terminal0 et51 entrées clôturées. Le refus01 avant API et les NO_GO source sont conservés ; aucun build, nouvelle image, EVM test répété ou signature. Cela ne promeut aucun EIP/fork ni restauration/duty/finalité réseau ; Paris/Shanghai reste activé.03 FAILED/consommée, aucune04 autorisée ; garde-fous/extension des restaurations du pilote et autres critères de production, revue indépendante comprise, restent ouverts. Historique intégral maintenu.
+
+
+<!-- nano-c8-loopback-generator-qualification-20261018 -->
+## Addendum du 18 octobre 2026 — écoute native et garde du pilote
+
+Le [lot ciblé du générateur](qualification/operator-c8-native-loopback-20261018/README.md) configure le P2P natif frais sur127.0.0.1, les conteneurs sur0.0.0.0 et conserve le RPC local. Le test topologie passe dans AMD03, dont le contrôleur global reste FAILED (1passé/1échoué/70ignorés). Le garde des trois refus d’autorisation passe séparément dans AMD06 (exit0,1passé/5ignorés) sur la candidate Git41865010 ; les échecs de montage/outillage sont conservés. Aucun build d’image, nœud, seed ou signature. Ceci qualifie le générateur et les refus négatifs, pas le WAN réel ni une restauration. L’échéance globale avec clôture et la restauration entière Native/DockerMac restent à intégrer/qualifier ; les deux restaurations VPS existantes ne couvrent pas ces propriétaires. La campagne03 a signé puis échoué : accord consommé, aucune04 déduite. Paris/Shanghai reste activé, sans promotion EIP. La relation token Base–Nano reste à décider (1:1 seulement proposé), Doppler et revue indépendante restent ouverts. Les critères normatifs et tous les échecs historiques sont intégralement conservés.

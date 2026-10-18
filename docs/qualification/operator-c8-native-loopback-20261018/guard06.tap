@@ -1,0 +1,40 @@
+TAP version 13
+# Subtest: actual lifecycle driver generation20261018 gates default mode and private authorizations before absent seed/output/network
+ok 1 - actual lifecycle driver generation20261018 gates default mode and private authorizations before absent seed/output/network
+  ---
+  duration_ms: 6806.463336
+  ...
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 2 - new output admission: actual save rejects transient ctime sample before stable first admission # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.448512
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 3 - new output admission: three strict samples span two seconds and ctime change resets the run # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.108329
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 4 - new output admission: every known-byte and creation-identity mismatch refuses without retry # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.121453
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 5 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.112434
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 6 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.098765
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 5
+# todo 0
+# duration_ms 7045.557868
