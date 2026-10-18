@@ -335,3 +335,17 @@ les fixtures TEST ne fixent ni ratio Base/natif, ni réserve, ni gouvernance ré
 Un achat/revente et migration V2 seulement : bridge, fuzzing, graduation V4,
 profil réel de Nano et exigences originales restent ouverts.
 [Preuves et limites](../docs/qualification/doppler-fork-lifecycle-20261004/README.md).
+
+
+<!-- nano-base-native-proposal-20261018 -->
+## 18 octobre 2026 — proposition d’adossement du jeton Base
+
+L’utilisateur n’a pas encore choisi le rôle exact du jeton Base. La proposition
+à étudier est une représentation du NANO natif à raison de 1 pour 1, couverte sur
+l’intégralité de l’offre préémise, avec deux escrows et un inventaire Base.
+[Relation entre actifs, conservation, bootstrap et limites](../docs/NANOBEES-BASE-ASSET.md).
+Le ratio concerne les unités de jetons, aucun cours en USDC. Le gateway existant
+à offre initiale nulle reste strict : cette nouvelle route n’est pas implémentée
+par une modification de compteur. Réserve NANO, USDC de vente, liquidité Doppler
+et bridge USDC restent des comptabilités séparées. Cette note ne fixe aucun terme
+économique et ne vaut ni choix utilisateur, ni qualification, ni ouverture de vente.

@@ -5631,3 +5631,16 @@ Depuis main5923aede, seul le lecteur de qualification C++ passe à0e54222c/42508
 Les 69 entrées des copies neuves demeurent exactes à neuf métadonnées et SHA après admission puis fermeture. Docker utilise un seul volume neuf conservé par architecture, UID10001, et neuf conteneurs possédés retirés ; aucune image/Core reconstruite. Native : copie neuve501:20, APIs RO sans montage OS RO revendiqué, onze descripteurs originaux et69 entrées réobservés par l'audit passif Root. Ce cas borne la lecture Linux RocksDB8.9.1→macOS11.8.1 à cette cohorte ; aucun downgrade, compatibilité générale ou provenance complète de la fermeture dyld/SDK n'est déduit. Les refus initiaux de préparation/compilation/lien restent conservés ; Native02 réemploie son objet déjà compilé, sans recompiler pour refaire passer un succès. [Résultats, sources, reçus terminaux et limites](qualification/cold-c8-20261018/README.md).
 
 Le Genesis de cette ancienne fixture ne roundtrip pas via le codec CLI ; le nano audit-capella installé n'est donc pas qualifié par ce lot et le codec n'est pas affaibli. Le succès canonique a externalFinalizedAncestorVerified=false et requiredFinalized=null ; aucune finalité commune avançante, reprise de duties ou restauration opérateur n'est qualifiée. Journaux Mac originaux manquants/NAS refusé, campagne03 FAILED consommée et aucune04 autorisée restent explicites. Le runtime réseau1925 reste inchangé. Tous les critères/préfixes et échecs historiques sont conservés : consensus/WAN/cycle/rotations/sync/sanctions/partitions/charge, pruning/CI/reproductibilité/exploitation et revue indépendante non réalisée restent ouverts selon leurs périmètres. Paris/Shanghai reste activé ; aucun statut EIP/fork n'est promu. Relation Base–Nano, offre/ratio/réserve/conversion, bridge USDC, Doppler/T0 restent un brouillon non adopté ou non qualifié. Aucun fonds réel, vente, dépense ou déploiement public ; objectif ACTIF, production non qualifiée.
+
+
+<!-- nano-base-native-proposal-20261018 -->
+## 18 octobre 2026 — relation Base/Nano, hypothèse de préparation
+
+[Proposition de modèle d’actif](NANOBEES-BASE-ASSET.md) : représentation Base du
+NANO natif, ratio 1 pour 1 proposé mais non adopté, préadossement de toute l’offre et
+conversion par inventaire à spécifier/implémenter/qualifier. L’utilisateur a dit
+ne pas savoir encore quel rôle donner au token Base ; ce n’est pas une décision
+économique. Le gateway actuel à offre nulle n’est pas assoupli. Aucun nouveau
+statut EIP, succès de bridge, droit aux réserves Doppler ou vente n’est déduit.
+Tous les critères et échecs historiques demeurent ; objectif ACTIF, production
+non qualifiée. Aucun changement de C++, image, runtime, clés ou duties.
