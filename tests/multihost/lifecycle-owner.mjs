@@ -49,24 +49,69 @@ def read(p,pin=None,private=True):
   if pin:need(sha(b)==pin['sha256'] and ('bytes' not in pin or len(b)==pin['bytes']) and ('material' not in pin or mat(a)==pin['material']) and ('materialSha256' not in pin or sha(canon(mat(a)))==pin['materialSha256']))
   return b,{'path':str(p),'sha256':sha(b),'bytes':len(b),'material':mat(a)}
  finally:os.close(fd)
+# Creator anchors are private to this owner invocation, never reconstructed
+# from an existing input. Successful admission fixes a full-nine row once.
+new_files={}
 def write(p,b):
- p=path(p);parent(p.parent);known={'path':str(p),'sha256':sha(b),'bytes':len(b)};fd=os.open(p,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+ p=path(p);parent(p.parent);need(str(p) not in new_files);known={'path':str(p),'sha256':sha(b),'bytes':len(b)};fd=os.open(p,os.O_RDWR|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
  try:
   view=memoryview(b)
   while view:n=os.write(fd,view);need(n>0);view=view[n:]
-  os.fsync(fd)
+  os.fsync(fd);s=os.fstat(fd);creation=mat(s);need(stat.S_ISREG(s.st_mode) and s.st_nlink==1 and s.st_uid==os.geteuid() and stat.S_IMODE(s.st_mode)==0o600 and s.st_size==len(b))
  finally:os.close(fd)
- d=os.open(p.parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW);os.fsync(d);os.close(d);read(p,known);return known
+ d=os.open(p.parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+ try:os.fsync(d)
+ finally:os.close(d)
+ need(str(p) not in new_files);new_files[str(p)]={'pin':dict(known),'creation':tuple(creation),'phase':'created','admitted':None};return known
+def sample_new(p,pin,creation):
+ p=path(p);fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+ try:
+  a=os.fstat(fd);need(stat.S_ISREG(a.st_mode) and a.st_nlink==1 and a.st_uid==os.geteuid() and stat.S_IMODE(a.st_mode)==0o600 and 0<a.st_size<=16777216);b=b''
+  while len(b)<a.st_size:
+   z=os.read(fd,min(65536,a.st_size-len(b)));need(bool(z));b+=z
+  need(not os.read(fd,1));after=os.fstat(fd);linked=os.lstat(p);samples=[mat(a),mat(after),mat(linked)];need(all(stat.S_ISREG(s.st_mode) for s in (a,after,linked)) and sha(b)==pin['sha256'] and len(b)==pin['bytes'] and all(tuple(s[:8])==creation[:8] for s in samples));return dict(pin,material=samples[1]),samples[0]==samples[1]==samples[2]
+ finally:os.close(fd)
 def fresh(p):p=path(p);parent(p.parent);os.mkdir(p,0o700);return parent(p)
 def stable(rows):
- deadline=time.monotonic()+30;previous=None;count=0;since=0;probes=0;last=None
- while time.monotonic()<deadline:
-  last=[read(r['path'],r)[1] for r in rows];now=time.monotonic();probes+=1
-  if last==previous:count+=1
-  else:previous=last;count=1;since=now
-  if count>=3 and now-since>=2:return last
-  need(deadline-now>1);time.sleep(1)
- raise ValueError('new owner-local admission deadline')
+ need(type(rows) is list and 0<len(rows)<=16 and len({r['path'] for r in rows})==len(rows));selected=[]
+ for r in rows:
+  pin=dict(r);entry=new_files.get(pin['path'])
+  if entry:
+   need(entry['pin']=={k:pin[k] for k in ('path','sha256','bytes')} and entry['phase'] in ('created','admitted'))
+   if entry['phase']=='admitted' and 'material' in pin:need(pin['material']==entry['admitted']['material'])
+  selected.append((pin,entry,bool(entry and entry['phase']=='created')))
+ for _,entry,fresh in selected:
+  if fresh:entry['phase']='sampling'
+ def guard():
+  for pin,entry,fresh in selected:need(new_files.get(pin['path']) is entry and entry['phase']==('sampling' if fresh else 'admitted') if entry else pin['path'] not in new_files)
+ began=time.monotonic();deadline=began+30;previous=None;count=0;since=0;probes=0;last=None;clock=began
+ def now():
+  nonlocal clock
+  n=time.monotonic();need(clock<=n<deadline);clock=n;return n
+ try:
+  while True:
+   guard();now();last=[];coherent=True
+   for pin,entry,fresh in selected:
+    guard();now()
+    if fresh:row,ok=sample_new(pin['path'],pin,entry['creation']);coherent=coherent and ok
+    else:row=read(pin['path'],dict(pin,material=entry['admitted']['material']) if entry else pin)[1]
+    guard();now();last.append(row)
+   at=now();probes+=1
+   if not coherent:previous=None;count=0;since=0
+   elif last==previous:count+=1
+   else:previous=last;count=1;since=at
+   if coherent and count>=3 and at-since>=2:break
+   need(deadline-at>1);time.sleep(1);guard()
+  guard();now();admitted=[dict(row,material=list(row['material'])) for row in last]
+  for i,(pin,entry,fresh) in enumerate(selected):
+   if fresh:entry['admitted']=dict(admitted[i],material=list(admitted[i]['material']));entry['phase']='admitted'
+   elif not entry:new_files[pin['path']]={'pin':{k:pin[k] for k in ('path','sha256','bytes')},'creation':None,'phase':'admitted','admitted':dict(admitted[i],material=list(admitted[i]['material']))}
+  for row in admitted:read(row['path'],row);now()
+  return admitted
+ except BaseException:
+  for _,entry,fresh in selected:
+   if fresh:entry['phase']='failed'
+  raise
 def artifact(p,pin=None):b,r=read(p,pin);return {k:r[k] for k in ('path','sha256','bytes')}
 def run(argv,prefix,seconds):
  need(type(argv) is list and all(type(a) is str for a in argv) and re.fullmatch('[a-z0-9-]+',prefix) and 1<=seconds<=615);out=root/(prefix+'-stdout.private.json');err=root/(prefix+'-stderr.private.log');fs=[]
@@ -75,7 +120,7 @@ def run(argv,prefix,seconds):
   result=subprocess.run(argv,stdout=fs[0],stderr=fs[1],timeout=seconds,check=False)
  finally:
   for f in fs:os.fsync(f.fileno());f.close()
- write(root/(prefix+'-exit.json'),canon({'exitCode':result.returncode}));need(result.returncode==0);raw,_=read(out);return json.loads(raw),raw
+ stable([write(root/(prefix+'-exit.json'),canon({'exitCode':result.returncode}))]);need(result.returncode==0);raw,_=read(out);return json.loads(raw),raw
 try:
  need(root==root.resolve() and os.geteuid()==1000);parent(root)
  if mode=='stage':

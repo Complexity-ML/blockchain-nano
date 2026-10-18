@@ -1520,6 +1520,18 @@ if(NANO_NETWORK_EXECUTABLE)
   add_test(NAME consensus_multihost_fresh_lifecycle_driver_guard COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/lifecycle-driver-guard.test.mjs)
   set_tests_properties(consensus_multihost_fresh_lifecycle_driver_guard PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_lifecycle")
+  set(NANO_LIFECYCLE_TEST_PYTHON "" CACHE FILEPATH "Optional absolute Python interpreter for synthetic lifecycle helper tests")
+  set(_nano_lifecycle_test_python_environment)
+  if(NANO_LIFECYCLE_TEST_PYTHON)
+   if(NOT IS_ABSOLUTE "${NANO_LIFECYCLE_TEST_PYTHON}" OR NANO_LIFECYCLE_TEST_PYTHON MATCHES "[;\r\n]")
+    message(FATAL_ERROR "NANO_LIFECYCLE_TEST_PYTHON must be an absolute path without list separators or newlines")
+   endif()
+   list(APPEND _nano_lifecycle_test_python_environment "NANO_LIFECYCLE_TEST_PYTHON=${NANO_LIFECYCLE_TEST_PYTHON}")
+  endif()
+  add_test(NAME consensus_multihost_lifecycle_new_file_admission COMMAND ${CMAKE_COMMAND} -E env
+   ${_nano_lifecycle_test_python_environment} ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
+   ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/lifecycle-new-file-admission.test.mjs)
+  set_tests_properties(consensus_multihost_lifecycle_new_file_admission PROPERTIES TIMEOUT 30 LABELS "qualification_consensus_lifecycle")
   add_test(NAME consensus_multihost_vps_linux_bootstrap COMMAND ${NANO_RECOVERY_NODEJS_EXECUTABLE} --test
    ${CMAKE_CURRENT_SOURCE_DIR}/tests/multihost/vps-linux-bootstrap.test.mjs)
   set_tests_properties(consensus_multihost_vps_linux_bootstrap PROPERTIES TIMEOUT 15 LABELS "qualification_consensus_harness")

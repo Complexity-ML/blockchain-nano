@@ -38,15 +38,33 @@ export async function readLifecycleKnownFile(path,pin,{maximum=1048576,privateFi
  need(typeof path==='string'&&resolve(path)===path&&await realpath(path)===path,'canonical file path');const f=await open(path,constants.O_RDONLY|constants.O_NONBLOCK|constants.O_NOFOLLOW);
  try{const a=await f.stat({bigint:true});need(a.isFile()&&a.nlink===1n&&a.size>0n&&a.size<=BigInt(maximum)&&(!privateFile||a.uid===BigInt(process.getuid())&&(Number(a.mode)&0o7777)===0o600),'file type/owner/size/mode');const bytes=await f.readFile(),m=material(a);need(bytes.length===Number(a.size)&&canonical(m)===canonical(material(await f.stat({bigint:true})))&&canonical(m)===canonical(material(await lstat(path,{bigint:true}))),'FD/path changed');if(expectedMaterial)need(canonical(m)===canonical(expectedMaterial),'old admitted material changed');need(sha(bytes)===pin.sha256&&bytes.length===pin.bytes,'known bytes differ');return {bytes,material:m};}finally{await f.close();}
 }
+// Only this module's successful EXCL creator can open a ctime-only window.
+// Admitted/failed paths never acquire a new creation authority.
+const knownLifecycleCreations=new Map();
+const lifecycleMaterialRow=v=>Array.isArray(v)&&v.length===9&&v.every(x=>typeof x==='string'&&/^-?(?:0|[1-9][0-9]*)$/.test(x)&&x!=='-0');
+function lifecycleNewSampleStable(x,expected,creation){
+ need(x&&lifecycleMaterialRow(x.before)&&lifecycleMaterialRow(x.after)&&lifecycleMaterialRow(x.linked),'NEW output sampled material');need(x.sha256===expected.sha256&&x.bytes===expected.bytes,'NEW output known SHA/bytes differ');
+ for(const m of [x.before,x.after,x.linked])for(let i=0;i<8;++i)need(m[i]===creation[i],'NEW output creation identity changed: '+fields[i]);
+ return canonical(x.before)===canonical(x.after)&&canonical(x.after)===canonical(x.linked);
+}
 export async function writeLifecycleKnownFile(path,bytes){
- need(Buffer.isBuffer(bytes)&&bytes.length>0&&bytes.length<=16*1024*1024&&resolve(path)===path&&await realpath(dirname(path))===dirname(path),'known NEW bytes/path');const parent=await lstat(dirname(path),{bigint:true});need(parent.isDirectory()&&parent.uid===BigInt(process.getuid())&&(Number(parent.mode)&0o7777)===0o700,'private known-output parent');const pin={path,sha256:sha(bytes),bytes:bytes.length},f=await open(path,constants.O_RDWR|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);
- try{await f.writeFile(bytes);await f.sync();}finally{await f.close();}const d=await open(dirname(path),constants.O_RDONLY|constants.O_DIRECTORY|constants.O_NOFOLLOW);try{await d.sync();}finally{await d.close();}await readLifecycleKnownFile(path,pin);return pin;
+ need(Buffer.isBuffer(bytes)&&bytes.length>0&&bytes.length<=16*1024*1024&&resolve(path)===path,'known NEW bytes/path');const content=Buffer.from(bytes);need(await realpath(dirname(path))===dirname(path)&&!knownLifecycleCreations.has(path),'NEW known output already retained or linked');const parent=await lstat(dirname(path),{bigint:true});need(parent.isDirectory()&&parent.uid===BigInt(process.getuid())&&(Number(parent.mode)&0o7777)===0o700,'private known-output parent');const pin={path,sha256:sha(content),bytes:content.length},f=await open(path,constants.O_RDWR|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);let creation;
+ try{await f.writeFile(content);await f.sync();const s=await f.stat({bigint:true});creation=material(s);need(s.isFile()&&s.nlink===1n&&s.uid===BigInt(process.getuid())&&(Number(s.mode)&0o7777)===0o600&&s.size===BigInt(content.length)&&lifecycleMaterialRow(creation),'NEW known output creator identity');}finally{await f.close();}const directory=await open(dirname(path),constants.O_RDONLY|constants.O_DIRECTORY|constants.O_NOFOLLOW);try{await directory.sync();}finally{await directory.close();}
+ need(!knownLifecycleCreations.has(path),'NEW known output already retained');knownLifecycleCreations.set(path,{pin:copy(pin),creation:[...creation],phase:'created',admitted:null});return pin;
 }
 export async function admitLifecycleKnownFiles(rows,{checkpoint=()=>{},deadlineMs=30000}={}){
- need(Array.isArray(rows)&&rows.length>0&&rows.length<=16&&new Set(rows.map(r=>r.path)).size===rows.length,'bounded unique NEW files');const began=performance.now(),until=began+deadlineMs;let previous=null,consecutive=0,since=0,probes=0,last;
- while(performance.now()<until){checkpoint();last=[];for(const r of rows){const x=await readLifecycleKnownFile(r.path,r);last.push({path:r.path,sha256:r.sha256,bytes:r.bytes,material:x.material});}const encoded=canonical(last),now=performance.now();need(now<until,'NEW admission deadline');++probes;if(encoded===previous)++consecutive;else{previous=encoded;consecutive=1;since=now;}if(consecutive>=3&&now-since>=2000)break;need(until-now>1000,'NEW admission deadline');await sleep(1000);}
- need(consecutive>=3&&performance.now()-since>=2000&&performance.now()<until,'NEW first admission is not stable');const admitted=last;
- return {probeCount:probes,stableSpanMs:Math.floor(performance.now()-since),async verify(){for(const r of admitted){checkpoint();await readLifecycleKnownFile(r.path,r,{expectedMaterial:r.material});}return true;}};
+ need(Array.isArray(rows)&&rows.length>0&&rows.length<=16&&new Set(rows.map(r=>r.path)).size===rows.length,'bounded unique NEW files');need(typeof checkpoint==='function'&&Number.isSafeInteger(deadlineMs)&&deadlineMs>0&&deadlineMs<=30000,'NEW admission finite budget');
+ const selected=rows.map(r=>{const pin={path:r.path,sha256:r.sha256,bytes:r.bytes},entry=knownLifecycleCreations.get(r.path);if(entry){need(canonical(entry.pin)===canonical(pin)&&['created','admitted'].includes(entry.phase),'NEW known output cannot replace old authority');}if(entry?.phase==='admitted'&&r.material!==undefined)need(canonical(r.material)===canonical(entry.admitted.material),'old admitted material changed');return {pin,entry,fresh:entry?.phase==='created',requestedMaterial:r.material===undefined?null:copy(r.material)};});for(const s of selected)if(s.fresh)s.entry.phase='sampling';
+ const guard=()=>{for(const s of selected)need(s.entry?knownLifecycleCreations.get(s.pin.path)===s.entry&&s.entry.phase===(s.fresh?'sampling':'admitted'):!knownLifecycleCreations.has(s.pin.path),'NEW known output already retained');};
+ const began=performance.now(),until=began+deadlineMs;let previous=null,consecutive=0,since=0,probes=0,last,lastClock=began;const time=()=>{const t=performance.now();need(Number.isFinite(t)&&t>=lastClock&&t<until,'NEW admission deadline/clock');lastClock=t;return t;};
+ try{
+  for(;;){guard();checkpoint();time();last=[];let stable=true;
+   for(const s of selected){guard();time();const r=s.pin;let row;if(s.fresh){need(Number.isSafeInteger(r.bytes)&&r.bytes>0&&r.bytes<=1048576,'file type/owner/size/mode');const x=await sampleNewLifecycleOutput(r.path,r.bytes);stable=lifecycleNewSampleStable(x,r,s.entry.creation)&&stable;row={...r,material:[...x.after]};}else{const x=await readLifecycleKnownFile(r.path,r,{expectedMaterial:s.entry?.admitted.material??s.requestedMaterial});row={...r,material:x.material};}guard();time();last.push(row);}
+   const now=time(),encoded=canonical(last);++probes;if(!stable){previous=null;consecutive=0;since=0;}else if(encoded===previous)++consecutive;else{previous=encoded;consecutive=1;since=now;}if(stable&&consecutive>=3&&now-since>=2000)break;need(until-now>1000,'NEW admission deadline');await sleep(1000);guard();
+  }
+  guard();time();const admitted=copy(last);for(let i=0;i<selected.length;++i){const s=selected[i];if(s.entry){if(s.fresh){s.entry.admitted=copy(admitted[i]);s.entry.phase='admitted';}}else knownLifecycleCreations.set(s.pin.path,{pin:copy(s.pin),creation:null,phase:'admitted',admitted:copy(admitted[i])});}
+  const verify=async()=>{for(const r of admitted){checkpoint();await readLifecycleKnownFile(r.path,r,{expectedMaterial:r.material});}return true;};await verify();time();return {probeCount:probes,stableSpanMs:Math.floor(lastClock-since),verify};
+ }catch(error){for(const s of selected)if(s.fresh)s.entry.phase='failed';throw error;}
 }
 // Only a just-created exclusive output may use this prospective window. No
 // retained row is replaced. A ctime-changing sample is rejected, never admitted;
@@ -65,11 +83,9 @@ export async function admitNewLifecycleOutput(path,pin,creationMaterial,{isRetai
  const unretained=()=>need(!isRetained(),'NEW output already retained');unretained();const began=now();need(Number.isFinite(began),'NEW output monotonic clock');const until=began+30000;let previous=null,consecutive=0,since=0,probeCount=0,unstableSamples=0,lastClock=began;
  const time=()=>{const t=now();need(Number.isFinite(t)&&t>=lastClock&&t<until,'NEW output first-admission deadline/clock');lastClock=t;return t;};
  for(;;){unretained();time();const x=await sample(path,expected.bytes);unretained();const t=time();++probeCount;
-  need(x&&row(x.before)&&row(x.after)&&row(x.linked),'NEW output sampled material');need(x.sha256===expected.sha256&&x.bytes===expected.bytes,'NEW output known SHA/bytes differ');
-  for(const m of [x.before,x.after,x.linked])for(let i=0;i<8;++i)need(m[i]===creation[i],'NEW output creation identity changed: '+fields[i]);
-  // A rejected intra-read sample cannot count toward the stable run. Only the
-  // not-yet-admitted ctime may start a later run; no old authority is refreshed.
-  const stable=canonical(x.before)===canonical(x.after)&&canonical(x.after)===canonical(x.linked),encoded=canonical(x.after);
+  // Shared with grouped known-file admission; the original predicates/messages
+  // and this single-output protocol remain unchanged.
+  const stable=lifecycleNewSampleStable(x,expected,creation),encoded=canonical(x.after);
   if(!stable){++unstableSamples;previous=null;consecutive=0;since=0;}
   else if(previous===encoded)++consecutive;else{previous=encoded;consecutive=1;since=t;}
   if(stable&&consecutive>=3&&t-since>=2000){unretained();return {sha256:expected.sha256,bytes:expected.bytes,material:[...x.after],probeCount,unstableSamples,stableSpanMs:Math.floor(t-since)};}

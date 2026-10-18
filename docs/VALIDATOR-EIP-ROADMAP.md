@@ -9027,3 +9027,36 @@ reproductibilité et revue indépendante non réalisée restent ouverts selon le
 périmètre. Proposition Base–Nano non adoptée ; bridge USDC, termes Doppler et T0
 non qualifiés. Aucun fonds, vente, signature ou déploiement public. Préfixes et
 échecs historiques conservés ; objectif ACTIF, production non qualifiée.
+
+
+<!-- nano-lifecycle-known-new-admission-20261018 -->
+## Pilote lifecycle — première admission des fichiers neufs
+
+[Correctif et preuves bornées](qualification/lifecycle-new-file-admission-20261018/README.md) :
+les créateurs EXCL JavaScript/Python engagent huit champs et SHA avant trois
+captures full9 stables sur au moins deux secondes, sous trente secondes. Le
+reader des anciennes entrées reste strict ; les chemins échoués ou déjà admis
+ne peuvent pas être réadmis. Le reçu de sortie Python rejoint son admission.
+Les pins historiques du driver guard sont conservés ; generation20261018
+sélectionne explicitement deux nouveaux helpers, sans retargeter les anciens
+plans, admissions ou résultats.
+
+Sur Mac, sept groupes JS passent puis le groupe Python initial refuse le stderr
+du launcher Apple. Le seul groupe Python est ensuite qualifié avec un
+interpréteur explicite (16 scénarios mockés), sans rejouer les sept corps
+inchangés. Le premier agrégat Root reste FAILED pour un compte SKIP attendu
+erroné ; sa phase réelle sortie0/1PASS/0FAIL/0SKIP est auditée séparément, sans
+rejeu. Six guards et seize cas runtime applicables passent ; deux cas Linux
+restent sautés sur Mac. La compatibilité Linux reste ouverte à ce stade. CTest
+ajouté sous réseau/Node, mais ni configuration CMake globale ni invocation via
+CTest exécutées dans ce lot. Deux préparations refusées et tous les échecs sont
+conservés. Aucun C++/Core/image/runtime remplacé, clé ou signature créée.
+
+Cela ne prouve pas la cause de campagne03, sa reprise, le vrai cycle temporel ou
+la production. Campagne03 FAILED consommée, aucune04 autorisée ; supervision
+Source03 non intégrée, SIGABRT encore inexpliqué. Profil Paris/Shanghai inchangé,
+aucun EIP/fork promu. Tous les critères normatifs de consensus, restauration,
+duties/finalité commune, exploitation, CI/facturation, reproductibilité et revue
+indépendante restent ouverts dans leur périmètre ; économie Base–Nano/bridge
+USDC/Doppler/T0 non qualifiés. Aucun fonds, vente ou déploiement public. Préfixes
+historiques intégraux conservés ; objectif ACTIF, production non qualifiée.

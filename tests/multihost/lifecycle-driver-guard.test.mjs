@@ -11,7 +11,7 @@ import {spawnSync} from 'node:child_process';
 import {performance} from 'node:perf_hooks';
 import * as lifecycleOutputAdmission from './lifecycle-runtime.mjs';
 const message='Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required';
-const sourcePins={
+const historicalSourcePins={
  "vps-linux-bootstrap.mjs": "8a5b020e44c678b66c344baaa8b5769b816fd207c4a73ee53cd72a2e8787cf0f",
  "run.mjs": "4bd4d37b443dad9604bc80cdb16245f898148cd3677eb5c9c9330a8b0dc70725",
  "terminal-evidence.mjs": "c252de8c6ba3d05714748ab9c65216d02a19c8790bf5e5c14c6a72ac7dbfc42c",
@@ -26,6 +26,15 @@ const sourcePins={
  "../../docs/qualification/local-supervisor-linux-20261015/source/known-files.pl": "7dd88b7d99ab15e9f2b1e52aac796265e6ed9bed24323e66584b3f31138cc0f6",
  "../../docs/qualification/local-supervisor-linux-20261015/source/copy-bootstrap-pairs.pl": "9fcd47d3bee3530c163e00e8b6a8dd475645336ba48579db45bdc9e20bb3bdf3"
 };
+// Historical literals remain intact; only this explicitly named source generation
+// selects the two new helper implementations. No old receipt is requalified.
+const generation20261018=Object.freeze({
+ "lifecycle-runtime.mjs":"d7b92d610a36b6b046ccdf350bbbc91d7cc4861e73b90e80d38df8ee1bab2edd",
+ "lifecycle-owner.mjs":"e60ce35c0b877de95c1ffb414881343cdca6c97a19ff1dac9ca033424c1ec880"
+});
+Object.freeze(historicalSourcePins);
+const sourcePinGeneration='generation20261018';
+const sourcePins=Object.freeze({...historicalSourcePins,...generation20261018});
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
 const material=s=>fields.map(k=>String(s[k]));
@@ -49,7 +58,9 @@ async function writeAndAdmitFixture(path,bytes){
  }
 }
 const absent=async path=>{try{await lstat(path);}catch(e){if(e.code==='ENOENT')return;throw e;}assert.fail('Forbidden fixture path was created: '+path);};
-test('actual lifecycle driver gates default mode and private authorizations before absent seed/output/network',{timeout:35000},async()=>{
+test('actual lifecycle driver generation20261018 gates default mode and private authorizations before absent seed/output/network',{timeout:35000},async()=>{
+ assert.equal(sourcePinGeneration,'generation20261018');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
+ for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261018,leaf)?generation20261018[leaf]:pin,'Only the two generation helpers may override historical pins');
  const run=resolve(process.argv[2]??fileURLToPath(new URL('./run.mjs',import.meta.url))),source=dirname(run),before={};
  for(const [leaf,expected] of Object.entries(sourcePins)){before[leaf]=await stable(join(source,leaf));assert.equal(before[leaf].sha256,expected,'Exact frozen source required');}
  const parent=await realpath(await mkdtemp(join(tmpdir(),'nano-lifecycle-unavailable-'))),missing=[];
