@@ -9143,3 +9143,23 @@ autres critères normatifs restent ouverts. Campagne03 FAILED consommée, aucune
 autorisée ; runtime1925, Paris/Shanghai et statuts EIP inchangés. Revue indépendante
 non réalisée et Base–Nano proposé/bridge USDC/Doppler/T0 restent ouverts. Aucun
 fonds, vente ou déploiement public ; préfixes intégraux conservés, objectif ACTIF.
+
+
+<!-- nano-c8-software-guard-20261018 -->
+## C8 — sélection des logiciels et garde du chargement natif
+
+[Preuves et limites](qualification/operator-c8-software-guard-20261018/README.md) :
+24 identités logicielles sont jointes aux anciennes lignes strictes (9 natifs,
+8 ARM64,7 AMD64), plus le shim auxiliaire. Les deux jointures P2P Docker passent
+avec175 entrées tenues chacune. Le contrôle pur des locators confirme24 actifs
+et9 montages fichier supplémentaires, sans déplacement ni nouvelle copie.
+Le nouveau format C8 vérifie le shim colocalisé et sa relation Mach-O, avant
+effets, autour de l’exporter et dans les fences globaux ;13 tests ciblés passent.
+Ancien format,24 rôles et13 champs d’admission conservés. Index d’identités établi ;
+fermeture composée Core/main et trois admissions entières restent ouvertes,
+sans qualification du SDK/dyld global. Aucun build Core/image, exporter réel,
+signature, duty ou réseau de chaîne lancé. Campagne03 FAILED consommée, aucune04
+autorisée ; runtime1925, Paris/Shanghai et statuts EIP inchangés. Autres critères
+normatifs, revue indépendante non réalisée et CI/facturation restent ouverts.
+Base–Nano reste proposé, non adopté ; bridge USDC/Doppler/T0 non qualifiés.
+Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non qualifiée.

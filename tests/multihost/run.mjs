@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {nativeRuntimeEnvironment} from './native-runtime-env.mjs';
+import {selectNativeExporterLoaderGuard} from './native-loader-guard.mjs';
 import {linuxSourceFiles,createMacLinuxFiles,linuxInventory,linuxBootstrapProof} from './linux-owned-files.mjs';
 import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest,publishLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,createLifecycleStopReceipts,admitNewLifecycleOutput} from './lifecycle-runtime.mjs';
 import {createTerminalEvidenceSequence} from './terminal-evidence.mjs';
@@ -536,8 +537,10 @@ async function runFreshCampaign(args){
  need(await realpath(spec.fixture.seedFile)===spec.fixture.seedFile&&seedStat.isFile()&&seedStat.nlink===1&&seedStat.size===32&&(seedStat.mode&0o777)===0o600&&seedStat.uid===process.getuid(),'Fresh externally provisioned 32-byte seed0600 required');
  need(await realpath(spec.fixture.ledgerDirectory)===spec.fixture.ledgerDirectory&&ledgerStat.isDirectory()&&(ledgerStat.mode&0o777)===0o700&&ledgerStat.uid===process.getuid(),'Persistent operator ledger0700 required');
  for(const path of [spec.overlayManifest.path,...names.map(name=>spec.owners[name].admission.path),spec.fixture.legacyPublicIdentity.path])diagnosticPublicPaths.add(resolve(path));
- await observe(spec.overlayManifest.path,spec.overlayManifest,true);
+ const overlayBytes=await observe(spec.overlayManifest.path,spec.overlayManifest,true);
+ const nativeLoader=selectNativeExporterLoaderGuard(spec,overlayBytes,{readArtifact:(pin,{body})=>observe(pin.path,pin,body)});
  for(const name of names){const a=spec.owners[name];validateFreshOwnerAdmission(JSON.parse(await observe(a.admission.path,a.admission,true)),spec,name);}
+ await nativeLoader?.verify();
  const legacy=JSON.parse(await observe(spec.fixture.legacyPublicIdentity.path,spec.fixture.legacyPublicIdentity,true));
  await mkdir(output,{mode:0o700});const record=async row=>appendFile(join(output,'run.jsonl'),JSON.stringify({timeMs:Date.now(),...row})+'\n',{mode:0o600});
  const quote=s=>"'"+String(s).replaceAll("'","'\\''")+"'",sshArgs=['-o','BatchMode=yes','-o','ConnectTimeout=8'];
@@ -572,7 +575,7 @@ async function runFreshCampaign(args){
   const expected=new Map(selected.map(row=>[row.role,row])),seen=new Set(),lines=raw.trim().split('\n');need(lines.length===selected.length,'Exact explicit host software roles');
   for(const line of lines){const m=/^([A-Za-z0-9]+) ([0-9a-f]{64}) ([1-9][0-9]*) (archive|62|183) ([0-9a-f]{64})$/.exec(line);need(m&&expected.has(m[1])&&!seen.has(m[1]),'Only fixed host software fields may egress');seen.add(m[1]);const pin=expected.get(m[1]);need(m[2]===pin.sha256&&Number(m[3])===pin.bytes&&m[4]===(pin.role==='coreArchive'?'archive':'62'),'Explicit host file must match external pin and architecture');const key=name+'\0'+pin.role;need(!hostSoftwareMaterials.has(key)||hostSoftwareMaterials.get(key)===m[5],'Previously admitted host software nine fields changed');if(!hostSoftwareMaterials.has(key))hostSoftwareMaterials.set(key,m[5]);}
  }
- async function software(){const rows=[];for(const name of names){const a=owner(name);
+ async function software(){await nativeLoader?.verify();const rows=[];for(const name of names){const a=owner(name);
   if(name==='mac-native'){for(const [role,z] of Object.entries({coreArchive:a.coreArchive,...a.programs})){
    diagnosticPublicPaths.add(resolve(z.path));const got=await observe(z.path,z);if(role!=='coreArchive'){const f=await open(z.path,'r');try{const b=Buffer.alloc(8);await f.read(b,0,8,0);need(b.readUInt32LE(0)===0xfeedfacf&&b.readUInt32LE(4)===0x0100000c,'Native Mach-O arm64 required');}finally{await f.close();}}rows.push({owner:name,role,sha256:got.sha256,bytes:got.bytes,architecture:role==='coreArchive'?'archive':'arm64'});
   }}else{
@@ -580,7 +583,7 @@ async function runFreshCampaign(args){
    const selected={coreArchive:a.coreArchive,...a.programs},raw=await docker(['run','--rm',...safe(name),'--entrypoint','sh',a.image,'-ec',metadata,'sh',...Object.entries(selected).flatMap(([role,z])=>[role,z.path])],name==='vps-docker');
    const got=raw.trim().split('\n').map(line=>{const m=/^([A-Za-z0-9]+) ([0-9a-f]{64}) ([1-9][0-9]*) (archive|62|183)$/.exec(line);need(m,'Only fixed public software fields may egress');return {role:m[1],sha256:m[2],bytes:Number(m[3]),architecture:m[4]==='archive'?'archive':Number(m[4])};});need(Array.isArray(got)&&got.length===Object.keys(selected).length&&new Set(got.map(z=>z.role)).size===got.length,'Exact fixed software roles');for(const z of got){need(Object.keys(z).sort().join(',')==='architecture,bytes,role,sha256'&&selected[z.role]&&z.sha256===selected[z.role].sha256&&z.bytes===selected[z.role].bytes&&z.architecture===(z.role==='coreArchive'?'archive':name==='vps-docker'?62:183),'Selected public ELF/archive differs');rows.push({owner:name,...z});}
   }
- }return rows;}
+ }await nativeLoader?.verify();return rows;}
  let initialSoftware,macLinux,macConfig,macBootstrap,vpsBootstrapTransport;
  const configMount=name=>{if(name==='mac-docker'){need(macConfig,'Admitted Linux configuration generation');return macConfig.mounts;}return ['--mount',`type=bind,src=${configAt(name)},dst=/config,readonly`];};
  const macNodeBytes=()=>{need(macConfig,'Current immutable Mac Linux node');return Buffer.from(macConfig.node);};
@@ -1121,7 +1124,8 @@ except BaseException:
   if(interrupted)throw interrupted;publicCheckStage='initial-software-read';initialSoftware=await software();publicCheckStage='initial-software-complete';await save(join(output,'software-public.json'),initialSoftware);const helperPath=join(harnessRoot,linuxSourceFiles.helper.path),copierPath=join(harnessRoot,linuxSourceFiles.copier.path),helperBytes=await observe(helperPath,linuxSourceFiles.helper,true),copierBytes=await observe(copierPath,linuxSourceFiles.copier,true);macLinux=createMacLinuxFiles({docker,image:owner('mac-docker').image,uuid,prefix:containers['mac-docker'],softwareMounts:()=>mounts('mac-docker'),helperPath,helperBytes,copierBytes,save:(name,b)=>save(join(output,name),b),verifyHelper:()=>observe(helperPath,linuxSourceFiles.helper),checkpoint:lifecycleCheck});await macLinux.preflight(owner('mac-docker').programs.bootstrapImport.path);publicCheckStage='initial-held-fence';await fence();publicCheckStage='campaign-body';await save(join(output,'harness.json'),await hashHarness(harnessRoot));
   // Compilation, image and public artifact checks finish BEFORE the new clock
   // and reserved key domain are exported. Never retry/reset a failed exporter.
-  const a=owner('mac-native');await nativeExec(a.programs.exporter.path,['--export-isolated-deposit-network',assets],{env:{...nativeEnv,NANO_TEST_ISOLATED_CAPELLA_SEED_FILE:spec.fixture.seedFile,NANO_TEST_ISOLATED_CAPELLA_LEDGER_DIR:spec.fixture.ledgerDirectory},timeout:180000,maxBuffer:16*1024*1024});
+  const a=owner('mac-native');const exportIsolated=()=>nativeExec(a.programs.exporter.path,['--export-isolated-deposit-network',assets],{env:{...nativeEnv,NANO_TEST_ISOLATED_CAPELLA_SEED_FILE:spec.fixture.seedFile,NANO_TEST_ISOLATED_CAPELLA_LEDGER_DIR:spec.fixture.ledgerDirectory},timeout:180000,maxBuffer:16*1024*1024});
+  if(nativeLoader)await nativeLoader.aroundExporter(exportIsolated);else await exportIsolated();
   for(const leaf of publicExportLeaves)diagnosticPublicPaths.add(join(assets,leaf));
   publicCheckStage='public-export-pre-admission-stability';const publicExportStability=await stablePublicExportInventory();if(interrupted)throw interrupted;publicCheckStage='public-export-first-admission';
   const manifestBytes=await observe(join(assets,'isolated-domain.json'),publicExportStability.inventory.get(join(assets,'isolated-domain.json')),true);manifest=JSON.parse(manifestBytes);const publicFiles=new Map();for(const z of Object.values(manifest.files)){const path=join(assets,z.path),expected=publicExportStability.inventory.get(path);need(expected&&expected.sha256===z.sha256&&expected.bytes===z.bytes,'Public export manifest and last stable inventory differ');publicFiles.set(z.path,await observe(path,expected,true));}

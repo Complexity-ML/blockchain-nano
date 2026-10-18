@@ -146,7 +146,7 @@ function freshArtifact(v){exactKeys(v,['path','sha256','bytes'],'Artifact');fres
 // manufactured from the build bindings or genesis that it is supposed to admit.
 export function validateFreshCampaignSpec(value,{target,sourceBaseRevision}){
  const spec=structuredClone(value),partitionRotation=Object.hasOwn(spec,'partitionRotation'),lifecycle=Object.hasOwn(spec,'lifecycle');exactKeys(spec,['format','sourceBaseRevision','overlayManifest','owners','fixture','clock','backupRestore','productionQualified',...(partitionRotation?['partitionRotation']:[]),...(lifecycle?['lifecycle']:[])],'Fresh spec');
- freshNeed(spec.format==='nano-fresh-capella-three-owner-campaign-v1'&&spec.sourceBaseRevision===sourceBaseRevision&&/^[0-9a-f]{40}$/.test(sourceBaseRevision)&&spec.productionQualified===false&&typeof spec.backupRestore==='boolean','Fresh source authority');freshArtifact(spec.overlayManifest);
+ freshNeed(['nano-fresh-capella-three-owner-campaign-v1','nano-fresh-capella-three-owner-campaign-c8-v2'].includes(spec.format)&&spec.sourceBaseRevision===sourceBaseRevision&&/^[0-9a-f]{40}$/.test(sourceBaseRevision)&&spec.productionQualified===false&&typeof spec.backupRestore==='boolean','Fresh source authority');freshArtifact(spec.overlayManifest);
  if(partitionRotation){
   exactKeys(spec.partitionRotation,['format','owner','recoveryMs','windowTimeoutMs'],'Partition/rotation');
   const mode=spec.partitionRotation;freshNeed(mode.format==='nano-fresh-partition-rotation-v1'&&mode.owner==='vps-docker'&&mode.recoveryMs===180000&&mode.windowTimeoutMs===720000&&spec.backupRestore===false,'Explicit bounded quorum-loss partition/rotation without backup replay');

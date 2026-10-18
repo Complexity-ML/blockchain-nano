@@ -32,9 +32,10 @@ const generation20261018=Object.freeze({
  "lifecycle-runtime.mjs":"d7b92d610a36b6b046ccdf350bbbc91d7cc4861e73b90e80d38df8ee1bab2edd",
  "lifecycle-owner.mjs":"e60ce35c0b877de95c1ffb414881343cdca6c97a19ff1dac9ca033424c1ec880"
 });
+const generation20261018NativeLoader=Object.freeze({...generation20261018,'run.mjs':'47e45e602ecd5242d8f6784d9244afe7488688f1ee0061b5bdf70811a97bb565','prepare.mjs':'fdebaf486276bc3fd5ccd452da9fbba063556453d480f3000f20a20ee156b92f','native-loader-guard.mjs':'7b484108927236da8f1b5373d1f8d1338bbafa14a1d9495285c9598f6d16e69b'});
 Object.freeze(historicalSourcePins);
-const sourcePinGeneration='generation20261018';
-const sourcePins=Object.freeze({...historicalSourcePins,...generation20261018});
+const sourcePinGeneration='generation20261018NativeLoader';
+const sourcePins=Object.freeze({...historicalSourcePins,...generation20261018NativeLoader});
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
 const material=s=>fields.map(k=>String(s[k]));
@@ -59,8 +60,9 @@ async function writeAndAdmitFixture(path,bytes){
 }
 const absent=async path=>{try{await lstat(path);}catch(e){if(e.code==='ENOENT')return;throw e;}assert.fail('Forbidden fixture path was created: '+path);};
 test('actual lifecycle driver generation20261018 gates default mode and private authorizations before absent seed/output/network',{timeout:35000},async()=>{
- assert.equal(sourcePinGeneration,'generation20261018');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
- for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261018,leaf)?generation20261018[leaf]:pin,'Only the two generation helpers may override historical pins');
+ assert.equal(sourcePinGeneration,'generation20261018NativeLoader');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
+ assert.deepEqual(Object.keys(generation20261018NativeLoader).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs','native-loader-guard.mjs','prepare.mjs','run.mjs']);
+ for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261018NativeLoader,leaf)?generation20261018NativeLoader[leaf]:pin,'Only the explicitly named source generation may override historical pins');
  const run=resolve(process.argv[2]??fileURLToPath(new URL('./run.mjs',import.meta.url))),source=dirname(run),before={};
  for(const [leaf,expected] of Object.entries(sourcePins)){before[leaf]=await stable(join(source,leaf));assert.equal(before[leaf].sha256,expected,'Exact frozen source required');}
  const parent=await realpath(await mkdtemp(join(tmpdir(),'nano-lifecycle-unavailable-'))),missing=[];
