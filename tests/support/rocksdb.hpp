@@ -4,14 +4,19 @@
 #include <string>
 
 namespace test {
-// Use the DB** API shared by supported RocksDB versions. The fixture retains
-// RAII ownership on both success and failure; no runtime storage code changes.
+// Detect the installed Open signature; keep fixture RAII ownership on success
+// and failure without changing runtime storage or any test assertion.
+template<class Database=rocksdb::DB>
 inline rocksdb::Status open_rocksdb(const rocksdb::Options& options,
                                    const std::string& path,
-                                   std::unique_ptr<rocksdb::DB>& owner) {
- rocksdb::DB* raw=nullptr;
- auto status=rocksdb::DB::Open(options,path,&raw);
- owner.reset(raw);
- return status;
+                                   std::unique_ptr<Database>& owner) {
+ if constexpr(requires { Database::Open(options,path,&owner); }){
+  return Database::Open(options,path,&owner);
+ }else{
+  Database* raw=nullptr;
+  auto status=Database::Open(options,path,&raw);
+  owner.reset(raw);
+  return status;
+ }
 }
 }

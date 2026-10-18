@@ -1,0 +1,361 @@
+{
+  "error": "ctest failed; see /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/ctest.log",
+  "format": "nano-native-c8-cmake-result-v1",
+  "imageBuilds": 0,
+  "networkStarted": false,
+  "oldDataOpened": false,
+  "phases": [
+    {
+      "argv": [
+        "/opt/homebrew/Cellar/cmake/4.4.3/bin/cmake",
+        "-S",
+        "/private/tmp/nano-native-c8-cmake-source-20261018-03",
+        "-B",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_OSX_ARCHITECTURES=arm64",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DCMAKE_C_COMPILER=/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-DCMAKE_CXX_COMPILER=/Library/Developer/CommandLineTools/usr/bin/clang++",
+        "-DMCL_PORTABLE=ON",
+        "-DNANO_NETWORK_EXECUTABLE=",
+        "-DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON",
+        "-DOPENSSL_ROOT_DIR=/opt/homebrew/Cellar/openssl@3/3.6.3",
+        "-DICU_ROOT=/opt/homebrew/Cellar/icu4c@78/78.3",
+        "-DBOOST_INCLUDE_DIR=/opt/homebrew/Cellar/boost/1.92.0/include",
+        "-DGMP_INCLUDE_DIR=/opt/homebrew/Cellar/gmp/6.3.0/include",
+        "-DGMP_LIBRARY=/opt/homebrew/Cellar/gmp/6.3.0/lib/libgmp.10.dylib",
+        "-DGMPXX_LIBRARY=/opt/homebrew/Cellar/gmp/6.3.0/lib/libgmpxx.4.dylib",
+        "-DROCKSDB_INCLUDE_DIR=/opt/homebrew/Cellar/rocksdb/11.8.1/include",
+        "-DROCKSDB_LIBRARY=/opt/homebrew/Cellar/rocksdb/11.8.1/lib/librocksdb.11.8.1.dylib"
+      ],
+      "elapsedSeconds": 2.828,
+      "exitCode": 0,
+      "log": {
+        "bytes": 5679,
+        "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/configure.log",
+        "nine": [
+          16777231,
+          83224696,
+          33188,
+          1,
+          501,
+          20,
+          5679,
+          1792318416922420121,
+          1792318416922420121
+        ],
+        "sha256": "311d44e744a03bebb90c7ec1f83d055f8af1b8d669ead7df0924a9719087ae8f"
+      },
+      "name": "configure"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/Cellar/cmake/4.4.3/bin/cmake",
+        "--build",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build",
+        "--target",
+        "nano",
+        "nano-cli-readonly-tests",
+        "nano-cli-readonly-probe",
+        "nano-chain-tests",
+        "nano-block-auth-tests",
+        "nano-capella-bootstrap-startup-tests",
+        "nano-beacon-execution-gate-tests",
+        "nano-recovery-audit-tests",
+        "nano-storage-maintenance",
+        "nano-bootstrap-archive-maintenance",
+        "nano-capella-duty-readiness",
+        "--parallel",
+        "2"
+      ],
+      "elapsedSeconds": 125.466,
+      "exitCode": 0,
+      "log": {
+        "bytes": 31716,
+        "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build.log",
+        "nine": [
+          16777231,
+          83228228,
+          33188,
+          1,
+          501,
+          20,
+          31716,
+          1792318543227432860,
+          1792318543227432860
+        ],
+        "sha256": "85bd306c5a75a2c905a29d695d202e0d0201ea52a47ba42c8e2463dcc914b68d"
+      },
+      "name": "build"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/Cellar/cmake/4.4.3/bin/ctest",
+        "--test-dir",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build",
+        "--show-only=json-v1",
+        "-R",
+        "^(cli_readonly_core|chain|block_auth|consensus_capella_bootstrap_startup|beacon_execution_gate|recovery_audit_paris|recovery_audit_shanghai)$"
+      ],
+      "elapsedSeconds": 0.025,
+      "exitCode": 0,
+      "log": {
+        "bytes": 6465,
+        "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/ctest-registration.log",
+        "nine": [
+          16777231,
+          83232287,
+          33188,
+          1,
+          501,
+          20,
+          6465,
+          1792318544704363781,
+          1792318544704363781
+        ],
+        "sha256": "48d50fe2ccb666dacb8f464b853ed90c590726eaf8392553d7d4472067dc4241"
+      },
+      "name": "ctest-registration"
+    },
+    {
+      "argv": [
+        "/opt/homebrew/Cellar/cmake/4.4.3/bin/ctest",
+        "--test-dir",
+        "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build",
+        "--output-on-failure",
+        "--verbose",
+        "--parallel",
+        "1",
+        "-R",
+        "^(cli_readonly_core|chain|block_auth|consensus_capella_bootstrap_startup|beacon_execution_gate|recovery_audit_paris|recovery_audit_shanghai)$"
+      ],
+      "elapsedSeconds": 10.164,
+      "exitCode": 8,
+      "log": {
+        "bytes": 6852,
+        "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/ctest.log",
+        "nine": [
+          16777231,
+          83232295,
+          33188,
+          1,
+          501,
+          20,
+          6852,
+          1792318555602851597,
+          1792318555602851597
+        ],
+        "sha256": "ed216de30785409b21fd4283a0051dde95b415b071338ac4d56861a5905866c3"
+      },
+      "name": "ctest"
+    }
+  ],
+  "productionCppChanged": false,
+  "productionQualified": false,
+  "runtimeDutiesStarted": false,
+  "software": [
+    {
+      "bytes": 3837392,
+      "file": "/Library/Developer/CommandLineTools/usr/bin/git",
+      "nine": [
+        16777231,
+        64643626,
+        33261,
+        1,
+        0,
+        0,
+        3837392,
+        1788320656000000000,
+        1789057396740593192
+      ],
+      "sha256": "a73bf622a2e470d5d57a4b1d5aef1e8680e67278018d4858a2f93825b7d595c7"
+    },
+    {
+      "bytes": 14076136,
+      "file": "/opt/homebrew/Cellar/cmake/4.4.3/bin/cmake",
+      "nine": [
+        16777231,
+        69372209,
+        33133,
+        1,
+        501,
+        80,
+        14076136,
+        1787670630000000000,
+        1789943283859730545
+      ],
+      "sha256": "01bb5214684f5390e96e0d6aef7aafd7415b77ecbcfd59f6b55b018d8de0d9a2"
+    },
+    {
+      "bytes": 15309688,
+      "file": "/opt/homebrew/Cellar/cmake/4.4.3/bin/ctest",
+      "nine": [
+        16777231,
+        69372211,
+        33133,
+        1,
+        501,
+        80,
+        15309688,
+        1787670630000000000,
+        1789943283890276910
+      ],
+      "sha256": "db1776ae6911a50ee184623ca1e4cbe9ad0949465525caf8873e6e8fd12d4e76"
+    },
+    {
+      "bytes": 124676976,
+      "file": "/Library/Developer/CommandLineTools/usr/bin/clang",
+      "nine": [
+        16777231,
+        64643588,
+        33261,
+        1,
+        0,
+        0,
+        124676976,
+        1787717326000000000,
+        1789057396675984429
+      ],
+      "sha256": "1590ac950a3d627817d09ade5cb60b2115f17a72182a3141e010b4bcc482a0c9"
+    },
+    {
+      "bytes": 124676976,
+      "file": "/Library/Developer/CommandLineTools/usr/bin/clang",
+      "nine": [
+        16777231,
+        64643588,
+        33261,
+        1,
+        0,
+        0,
+        124676976,
+        1787717326000000000,
+        1789057396675984429
+      ],
+      "sha256": "1590ac950a3d627817d09ade5cb60b2115f17a72182a3141e010b4bcc482a0c9"
+    },
+    {
+      "bytes": 12254096,
+      "file": "/opt/homebrew/Cellar/rocksdb/11.8.1/lib/librocksdb.11.8.1.dylib",
+      "nine": [
+        16777231,
+        69190973,
+        33060,
+        1,
+        501,
+        80,
+        12254096,
+        1789933907944190808,
+        1789933907965522728
+      ],
+      "sha256": "f36ffa5423364e81bc374bec509e93f8f9042c56a8e98f9c0e61d450ce91708e"
+    },
+    {
+      "bytes": 452352,
+      "file": "/opt/homebrew/Cellar/gmp/6.3.0/lib/libgmp.10.dylib",
+      "nine": [
+        16777231,
+        3439991,
+        33060,
+        1,
+        501,
+        80,
+        452352,
+        1776545404436492736,
+        1776545404476926202
+      ],
+      "sha256": "14123464af436d67ef69114810aa9e1e74de50e4097166fe8c110397b3ba6961"
+    },
+    {
+      "bytes": 80608,
+      "file": "/opt/homebrew/Cellar/gmp/6.3.0/lib/libgmpxx.4.dylib",
+      "nine": [
+        16777231,
+        3439992,
+        33060,
+        1,
+        501,
+        80,
+        80608,
+        1776545404463140021,
+        1776545404477109992
+      ],
+      "sha256": "1125ffbace543d5bc01769bbe4a89ec56907313506f10d6c654c1aa8f9b582d1"
+    },
+    {
+      "bytes": 872080,
+      "file": "/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libssl.3.dylib",
+      "nine": [
+        16777231,
+        41567627,
+        33060,
+        1,
+        501,
+        80,
+        872080,
+        1784745641275692351,
+        1784745642275350448
+      ],
+      "sha256": "ffd8ac6981000def0928367924b6cb1e7a98712efbc06e2a2f3f750138bd89ca"
+    },
+    {
+      "bytes": 4856256,
+      "file": "/opt/homebrew/Cellar/openssl@3/3.6.3/lib/libcrypto.3.dylib",
+      "nine": [
+        16777231,
+        41567450,
+        33060,
+        1,
+        501,
+        80,
+        4856256,
+        1784745641273372806,
+        1784745642275280240
+      ],
+      "sha256": "a12805a18cd5e4f733fa8727b91afa08b587f9da5a760517cd79cb508a3a3f71"
+    },
+    {
+      "bytes": 1866592,
+      "file": "/opt/homebrew/Cellar/icu4c@78/78.3/lib/libicuuc.78.3.dylib",
+      "nine": [
+        16777231,
+        567757,
+        33060,
+        1,
+        501,
+        80,
+        1866592,
+        1776171677317535662,
+        1776171677438335502
+      ],
+      "sha256": "177dab8ae0bf0b1357d7ec6404a1e145bcc3d927aa15c3064171d23b2a1fd263"
+    }
+  ],
+  "sourceBytes": 257715759,
+  "sourceFileCount": 9694,
+  "sourceProjectionExcludes": "Nested docs evidence only; top-level docs retained for installation.",
+  "sourceRevision": "a8eee9d6d3a35b8e14e8a7f7a6cd1b9e5ee2acd7",
+  "status": "FAILED",
+  "testOnlySourceDelta": {
+    "base": {
+      "bytes": 569,
+      "file": "/private/tmp/nano-native-c8-cmake-source-20261018-03/tests/support/rocksdb.hpp",
+      "nine": [
+        16777231,
+        83223637,
+        33024,
+        1,
+        501,
+        0,
+        569,
+        1792318409057127131,
+        1792318409057142173
+      ],
+      "sha256": "d091199cdc42cfb0c976a026d2e1968600768974bf7d501e17a0fe6bbcf9d866"
+    },
+    "bytes": 716,
+    "path": "tests/support/rocksdb.hpp",
+    "sha256": "a128ab10f79c3207412dc0a8a224ee699d865139b1b0cc9fdd0da8de5aa96376"
+  }
+}

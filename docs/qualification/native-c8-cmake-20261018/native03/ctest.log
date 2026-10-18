@@ -1,0 +1,92 @@
+UpdateCTestConfiguration  from :/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build/DartConfiguration.tcl
+Test project /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 4
+    Start   4: cli_readonly_core
+
+4: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build/nano-cli-readonly-tests "--self-test"
+4: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build
+4: Test timeout computed to be: 120
+4: {"diagnostic":"readonly-replica-source-failure-v4","kind":"stable","callerLine":"163","result":false,"before":{"st_dev":"16777231","st_ino":"83232305","st_mode":"33188","st_nlink":"1","st_uid":"501","st_gid":"20","st_size":"3299","st_mtime":{"seconds":"1792318545","nanoseconds":"866990846"},"st_ctime":{"seconds":"1792318545","nanoseconds":"866990846"}},"after":{"st_dev":"16777231","st_ino":"83232305","st_mode":"33188","st_nlink":"1","st_uid":"501","st_gid":"20","st_size":"3299","st_mtime":{"seconds":"1792318545","nanoseconds":"866990846"},"st_ctime":{"seconds":"1792318545","nanoseconds":"909210706"}}}
+4: cli-readonly test failed after 197 checks: source full9 and SHA unchanged
+1/7 Test   #4: cli_readonly_core .....................***Failed    0.45 sec
+{"diagnostic":"readonly-replica-source-failure-v4","kind":"stable","callerLine":"163","result":false,"before":{"st_dev":"16777231","st_ino":"83232305","st_mode":"33188","st_nlink":"1","st_uid":"501","st_gid":"20","st_size":"3299","st_mtime":{"seconds":"1792318545","nanoseconds":"866990846"},"st_ctime":{"seconds":"1792318545","nanoseconds":"866990846"}},"after":{"st_dev":"16777231","st_ino":"83232305","st_mode":"33188","st_nlink":"1","st_uid":"501","st_gid":"20","st_size":"3299","st_mtime":{"seconds":"1792318545","nanoseconds":"866990846"},"st_ctime":{"seconds":"1792318545","nanoseconds":"909210706"}}}
+cli-readonly test failed after 197 checks: source full9 and SHA unchanged
+
+test 17
+    Start  17: chain
+
+17: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build/nano-chain-tests
+17: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build
+17: Test timeout computed to be: 120
+17: 185 chain checks passed
+2/7 Test  #17: chain .................................   Passed    3.64 sec
+test 54
+    Start  54: block_auth
+
+54: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build/nano-block-auth-tests
+54: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build
+54: Test timeout computed to be: 15
+54: Block signature domain, tampering, encoding and malleability checks passed
+3/7 Test  #54: block_auth ............................   Passed    2.39 sec
+test 97
+    Start  97: recovery_audit_paris
+
+97: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build/nano-recovery-audit-tests "Paris"
+97: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build
+97: Test timeout computed to be: 60
+97: {"corruptReopenRejected":true,"fork":"Paris","journalUnchangedOnFailure":true,"unverifiedPrefixExtensionRejected":true,"verifiedExtensions":2}
+4/7 Test  #97: recovery_audit_paris ..................   Passed    1.41 sec
+test 98
+    Start  98: recovery_audit_shanghai
+
+98: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build/nano-recovery-audit-tests "Shanghai"
+98: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build
+98: Test timeout computed to be: 60
+98: {"corruptReopenRejected":true,"fork":"Shanghai","journalUnchangedOnFailure":true,"unverifiedPrefixExtensionRejected":true,"verifiedExtensions":2}
+5/7 Test  #98: recovery_audit_shanghai ...............   Passed    1.18 sec
+test 102
+    Start 102: beacon_execution_gate
+
+102: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build/nano-beacon-execution-gate-tests
+102: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build
+102: Test timeout computed to be: 30
+102: Paris and Shanghai Beacon genesis, startup verification and legacy mutation separation checks passed
+6/7 Test #102: beacon_execution_gate .................   Passed    0.71 sec
+test 394
+    Start 394: consensus_capella_bootstrap_startup
+
+394: Test command: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build/nano-capella-bootstrap-startup-tests "--self-test"
+394: Working Directory: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/native-c8-cmake-root-20261018-03/build
+394: Test timeout computed to be: 70
+394: Invalid Capella bootstrap proof input
+7/7 Test #394: consensus_capella_bootstrap_startup ...***Failed    0.31 sec
+Invalid Capella bootstrap proof input
+
+
+The following tests passed:
+	chain
+	block_auth
+	recovery_audit_paris
+	recovery_audit_shanghai
+	beacon_execution_gate
+
+71% tests passed, 2 tests failed out of 7
+
+Label Time Summary:
+qualification_cli_readonly            =   0.45 sec*proc (1 test)
+qualification_consensus_recovery      =   0.31 sec*proc (1 test)
+qualification_evm                     =   3.64 sec*proc (1 test)
+qualification_recovery_audit_local    =   2.59 sec*proc (2 tests)
+
+Total Test time (real) =  10.10 sec
+
+The following tests FAILED:
+	  4 - cli_readonly_core (Failed)                        qualification_cli_readonly
+	394 - consensus_capella_bootstrap_startup (Failed)      qualification_consensus_recovery
+Errors while running CTest
