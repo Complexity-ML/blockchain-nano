@@ -9,7 +9,9 @@
 #include <chrono>
 #include <csignal>
 #include <cstdint>
+#include <exception>
 #include <fcntl.h>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -35,6 +37,9 @@ volatile std::sig_atomic_t interrupted=0;
 uint64_t provider_calls=0,signatures=0,signer_constructions=0,readonly_opens=0,auth_calls=0,positives=0,refusals=0;
 uint64_t admission_samples=0,admission_streak=0,admission_elapsed_ms=0,admission_ctime_changes=0,admission_source_fences=0;
 const char* phase="arguments";
+const char* production_label="none";
+uint64_t production_samples=0,production_streak=0,production_elapsed_ms=0,production_ctime_changes=0;
+Json production_admissions=Json::array();
 void stop(int s){interrupted=s;}
 void need(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
 uint64_t rss(){
@@ -67,11 +72,6 @@ struct Seal{
  uint64_t payload_bytes()const{uint64_t n=0;for(const auto& e:entries)if(S_ISREG(e.stamp.st_mode))n+=uint64_t(e.stamp.st_size);return n;}
  void fence()const{directory.recheck();need(rd::same_entries(entries,rd::capture(directory.fd(),maximum_entries,maximum_store_bytes,guard)),"complete stopped tree FD9/SHA unchanged");directory.recheck();}
 };
-void sync_tree(const Seal& tree){
- // Only called during production, before the immutable check boundary.
- for(auto i=tree.entries.rbegin();i!=tree.entries.rend();++i){guard();if(i->name.empty()){rd::sync(tree.directory.fd());continue;}auto f=rd::relative_fd(tree.directory.fd(),i->name,(S_ISDIR(i->stamp.st_mode)?O_RDONLY|O_DIRECTORY:O_RDWR)|O_NONBLOCK);rd::sync(f.n);}
- tree.fence();
-}
 // Quiet comparisons are confined to unadmitted NEW inodes; a Seal still uses
 // the original strict full-FD9/SHA helper, including ctime, without relaxation.
 bool eight(const struct stat& a,const struct stat& b){
@@ -88,6 +88,48 @@ bool ctime_equal(const struct stat& a,const struct stat& b){
 #else
  return a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
 #endif
+}
+// These two states belong only to this fresh test producer. No existing Seal
+// is refreshed: the first capture fixes eight fields/SHA before durability,
+// then only complete post-sync observations can become the first Seal.
+void production_step(const Seal* immutable_peer,const std::function<void()>& action){
+ if(immutable_peer)immutable_peer->fence();std::exception_ptr first;
+ try{action();}catch(...){first=std::current_exception();}
+ try{if(immutable_peer)immutable_peer->fence();}catch(...){if(!first)first=std::current_exception();}
+ if(first)std::rethrow_exception(first);
+}
+std::unique_ptr<Seal> admit_produced(const fs::path& path,const char* label,const Seal* immutable_peer=nullptr){
+ need((production_admissions.empty()&&std::string_view(label)=="initial")||(production_admissions.size()==1&&std::string_view(label)=="post-sign"),"exactly two ordered fresh production admissions");
+ production_label=label;phase=std::string_view(label)=="initial"?"admit-initial-production":"admit-post-sign-production";production_samples=production_streak=production_elapsed_ms=production_ctime_changes=0;
+ const auto began=std::chrono::steady_clock::now();auto since=began;std::unique_ptr<rd::Directory> out;std::vector<rd::Entry> anchor,previous;
+ production_step(immutable_peer,[&]{guard();out=std::make_unique<rd::Directory>(path);anchor=rd::capture(out->fd(),maximum_entries,maximum_store_bytes,guard);out->recheck();need(!anchor.empty()&&anchor.size()<=maximum_entries,"bounded first unadmitted producer capture");});
+ production_step(immutable_peer,[&]{
+  out->recheck();
+  for(auto i=anchor.rbegin();i!=anchor.rend();++i){
+   guard();if(i->name.empty()){rd::sync(out->fd());continue;}
+   auto fd=rd::relative_fd(out->fd(),i->name,(S_ISDIR(i->stamp.st_mode)?O_RDONLY|O_DIRECTORY:O_RDWR)|O_NONBLOCK);struct stat before{},after{};
+   need(::fstat(fd.n,&before)==0&&eight(i->stamp,before),"unadmitted producer eight fields before sync");rd::sync(fd.n);need(::fstat(fd.n,&after)==0&&eight(i->stamp,after),"unadmitted producer eight fields after sync");
+  }
+  out->recheck();
+ });
+ previous=anchor;
+ for(;;){
+  guard();need(++production_samples<=30,"at most30 complete production samples");std::vector<rd::Entry> sample;
+  production_step(immutable_peer,[&]{out->recheck();sample=rd::capture(out->fd(),maximum_entries,maximum_store_bytes,guard);out->recheck();});
+  need(sample.size()==anchor.size(),"fresh producer entry count unchanged");bool equal=production_streak!=0;
+  for(size_t i=0;i<sample.size();++i){
+   need(sample[i].name==anchor[i].name&&sample[i].sha==anchor[i].sha&&eight(anchor[i].stamp,sample[i].stamp),"fresh producer fixed names/eight fields/SHA");
+   const bool same_ctime=ctime_equal(previous[i].stamp,sample[i].stamp);equal=equal&&same_ctime;if(!same_ctime)++production_ctime_changes;
+  }
+  const auto now=std::chrono::steady_clock::now();production_elapsed_ms=uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(now-began).count());guard();need(now-began<std::chrono::seconds(30),"production admission30s includes first capture/sync");
+  if(equal)++production_streak;else{production_streak=1;since=now;}
+  if(production_streak>=3&&now-since>=std::chrono::seconds(2)){
+   std::unique_ptr<Seal> admitted;production_step(immutable_peer,[&]{admitted=std::make_unique<Seal>(path,std::move(sample));});
+   const auto finished=std::chrono::steady_clock::now();production_elapsed_ms=uint64_t(std::chrono::duration_cast<std::chrono::milliseconds>(finished-began).count());guard();need(finished-began<std::chrono::seconds(30),"production adoption/fence within30s");
+   production_admissions.push_back({{"label",label},{"entries",admitted->entries.size()},{"payloadBytes",admitted->payload_bytes()},{"samples",production_samples},{"stableSamples",production_streak},{"elapsedMs",production_elapsed_ms},{"ctimeOnlyChanges",production_ctime_changes},{"durabilityBeforeSamples",true},{"creatorEightAndShaUnchanged",true},{"exactLastCaptureAdopted",true},{"postAdoptionStrictFence",true}});return admitted;
+  }
+  previous=std::move(sample);std::this_thread::sleep_for(std::chrono::milliseconds(1050));
+ }
 }
 bool created_directory(const struct stat& born,const struct stat& current){return born.st_dev==current.st_dev&&born.st_ino==current.st_ino&&born.st_mode==current.st_mode&&born.st_uid==current.st_uid&&born.st_gid==current.st_gid&&S_ISDIR(current.st_mode);}
 std::unique_ptr<Seal> admit_copy(const Seal& source,const rd::Directory& out,const std::vector<rd::Entry>& created){
@@ -150,7 +192,7 @@ Produced produce(const fs::path& current,const fs::path& old){
  // Every DB/signing handle is gone before either complete physical copy.
  phase="cold-copy-initial-pair";
  {
-  Seal source(current);sync_tree(source);old_seal=cold_copy(source,old);source.fence();
+  auto source=admit_produced(current,"initial");old_seal=cold_copy(*source,old);source->fence();
  }
  ConsensusBeaconHeader header{proposal_slot,0,{},{},{}};header.parent_root=root("Nano/Test/PhysicalJournalRollback/parent/v1");header.state_root=root("Nano/Test/PhysicalJournalRollback/state/v1");header.body_root=root("Nano/Test/PhysicalJournalRollback/body/v1");
  const auto signing_root=consensus_signing_root(consensus_beacon_header_root(header),consensus_domain({0,0,0,0},fork_version,validators_genesis));
@@ -200,7 +242,7 @@ Json run(const fs::path& path){
  phase="create-owned-root";need(path.is_absolute()&&path==path.lexically_normal()&&path!=path.root_path()&&fs::canonical(path.parent_path())==path.parent_path(),"canonical existing physical parent and new absolute root");directory(path);directory(path/"current");directory(path/"old");
  const auto made=produce(path/"current",path/"old");
  // TestKey, provider closure, all signer instances and RW stores are destroyed.
- phase="seal-stopped-pairs";const Seal& old=*made.old_seal;Seal current(path/"current");sync_tree(current);old.fence();need(old.entries.size()+current.entries.size()<=maximum_entries&&old.payload_bytes()+current.payload_bytes()<=maximum_store_bytes,"aggregate four-store 32 MiB/4096 entry budget");
+ phase="seal-stopped-pairs";const Seal& old=*made.old_seal;auto current_owner=admit_produced(path/"current","post-sign",&old);const Seal& current=*current_owner;old.fence();need(old.entries.size()+current.entries.size()<=maximum_entries&&old.payload_bytes()+current.payload_bytes()<=maximum_store_bytes,"aggregate four-store 32 MiB/4096 entry budget");
  phase="commit-independent-recent-floors";
  const Json authority={{"format","nano-real-physical-journal-rollback-commitments-v1"},{"chainId",uint64_t(1337)},{"executionGenesis",hex(execution_genesis)},{"genesisValidatorsRoot",hex(Bytes(validators_genesis.begin(),validators_genesis.end()))},{"publicKey",hex(made.public_key)},{"slotsPerEpoch",slots_per_epoch},{"proposalSlot",proposal_slot},{"proposalSigningRoot",hex(Bytes(made.signing_root.begin(),made.signing_root.end()))},{"old",tokens_json(made.old)},{"recent",tokens_json(made.recent)},{"newTestOnlySignaturesCreated",uint64_t(1)},{"runtimeDutiesAuthorized",false},{"productionQualified",false}};
  Commitment committed(path,authority);const auto providers_before=provider_calls,signatures_before=signatures,constructors_before=signer_constructions;const BeaconJournalIdentity identity{made.public_key,validators_genesis,slots_per_epoch};
@@ -216,12 +258,12 @@ Json run(const fs::path& path){
   }
   old.fence();current.fence();(void)committed.read();need(provider_calls==providers_before&&signatures==signatures_before&&signer_constructions==constructors_before,"readonly check never invokes or constructs a signer/provider");
  }
- phase="final-fences";old.fence();current.fence();(void)committed.read();guard();need(provider_calls==1&&signatures==1&&signer_constructions==2&&readonly_opens==8&&auth_calls==7&&positives==4&&refusals==3,"exact complete physical rollback test counts");
- return {{"scenario","beacon-journal-real-physical-rollback"},{"result","PASS"},{"physicalPairs",2},{"databases",4},{"independentReadonlyPasses",2},{"readonlyDatabaseOpens",readonly_opens},{"CoreAuthentications",auth_calls},{"positiveAuthentications",positives},{"oldPairRecentPrimaryFloorRefused",true},{"oldPairRecentWitnessFloorRefused",true},{"oldPairBothRecentFloorsRefused",true},{"expectedCoreRefusals",refusals},{"newTestOnlySignaturesCreated",signatures},{"signingProviderCalls",provider_calls},{"signerConstructions",signer_constructions},{"newSignaturesInCheck",uint64_t(0)},{"signersConstructedInCheck",uint64_t(0)},{"fourClosedStoresFD9ShaUnchanged",true},{"completeIndependentPhysicalCopy",true},{"externalCommitmentOutsideBothTrees",true},{"externalCommitmentSha256",committed.sha},{"externalCommitmentBytes",committed.expected.size()},{"externalCommitmentFD9ShaUnchanged",true},{"maximumStoreBytes",maximum_store_bytes},{"storeBytes",old.payload_bytes()+current.payload_bytes()},{"maximumEntries",maximum_entries},{"storeEntries",old.entries.size()+current.entries.size()},{"maximumRssKiB",maximum_rss_kib},{"actualPeakRssKiB",rss()},{"maximumWallSeconds",180},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()},{"independentExternalRollbackProtectionQualified",false},{"historicalDigestAncestryVerified",false},{"deliveredSignatureHistoryVerified",false},{"automaticRecoveryUsed",false},{"operatorRecoveryQualified",false},{"privateInputsRead",false},{"runtimeDutiesAuthorized",false},{"networkTransport",false},{"commonFinalityQualified",false},{"productionQualified",false}};
+ phase="final-fences";old.fence();current.fence();(void)committed.read();guard();need(provider_calls==1&&signatures==1&&signer_constructions==2&&readonly_opens==8&&auth_calls==7&&positives==4&&refusals==3&&production_admissions.size()==2,"exact complete physical rollback test counts");
+ return {{"scenario","beacon-journal-real-physical-rollback"},{"result","PASS"},{"productionAdmissions",production_admissions},{"physicalPairs",2},{"databases",4},{"independentReadonlyPasses",2},{"readonlyDatabaseOpens",readonly_opens},{"CoreAuthentications",auth_calls},{"positiveAuthentications",positives},{"oldPairRecentPrimaryFloorRefused",true},{"oldPairRecentWitnessFloorRefused",true},{"oldPairBothRecentFloorsRefused",true},{"expectedCoreRefusals",refusals},{"newTestOnlySignaturesCreated",signatures},{"signingProviderCalls",provider_calls},{"signerConstructions",signer_constructions},{"newSignaturesInCheck",uint64_t(0)},{"signersConstructedInCheck",uint64_t(0)},{"fourClosedStoresFD9ShaUnchanged",true},{"completeIndependentPhysicalCopy",true},{"externalCommitmentOutsideBothTrees",true},{"externalCommitmentSha256",committed.sha},{"externalCommitmentBytes",committed.expected.size()},{"externalCommitmentFD9ShaUnchanged",true},{"maximumStoreBytes",maximum_store_bytes},{"storeBytes",old.payload_bytes()+current.payload_bytes()},{"maximumEntries",maximum_entries},{"storeEntries",old.entries.size()+current.entries.size()},{"maximumRssKiB",maximum_rss_kib},{"actualPeakRssKiB",rss()},{"maximumWallSeconds",180},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-started).count()},{"independentExternalRollbackProtectionQualified",false},{"historicalDigestAncestryVerified",false},{"deliveredSignatureHistoryVerified",false},{"automaticRecoveryUsed",false},{"operatorRecoveryQualified",false},{"privateInputsRead",false},{"runtimeDutiesAuthorized",false},{"networkTransport",false},{"commonFinalityQualified",false},{"productionQualified",false}};
 }
 }
 int main(int argc,char** argv){
  ::umask(0077);std::signal(SIGINT,stop);std::signal(SIGTERM,stop);std::signal(SIGHUP,stop);
  try{need(argc==2,"usage: nano-beacon-journal-physical-rollback RUN_ABSENT_ROOT");const auto result=run(fs::path(argv[1]));std::cout<<result.dump()<<std::endl;need(bool(std::cout),"public result output");return 0;}
- catch(const std::exception& e){std::string reason=e.what();if(reason.size()>512)reason.resize(512);std::cerr<<Json{{"diagnostic","beacon-journal-real-physical-rollback-refused-v1"},{"result","FAIL"},{"phase",phase},{"reason",reason},{"newTestOnlySignaturesCreated",signatures},{"signingProviderCalls",provider_calls},{"readonlyDatabaseOpens",readonly_opens},{"CoreAuthentications",auth_calls},{"expectedCoreRefusals",refusals},{"newCopyAdmissionSamples",admission_samples},{"newCopyAdmissionStableSamples",admission_streak},{"newCopyAdmissionElapsedMs",admission_elapsed_ms},{"newCopyPreAdmissionCtimeChanges",admission_ctime_changes},{"newCopyAdmissionSourceFences",admission_source_fences},{"productionQualified",false}}.dump()<<std::endl;return 1;}
+ catch(const std::exception& e){std::string reason=e.what();if(reason.size()>512)reason.resize(512);std::cerr<<Json{{"diagnostic","beacon-journal-real-physical-rollback-refused-v1"},{"result","FAIL"},{"phase",phase},{"reason",reason},{"newTestOnlySignaturesCreated",signatures},{"signingProviderCalls",provider_calls},{"readonlyDatabaseOpens",readonly_opens},{"CoreAuthentications",auth_calls},{"expectedCoreRefusals",refusals},{"newCopyAdmissionSamples",admission_samples},{"newCopyAdmissionStableSamples",admission_streak},{"newCopyAdmissionElapsedMs",admission_elapsed_ms},{"newCopyPreAdmissionCtimeChanges",admission_ctime_changes},{"newCopyAdmissionSourceFences",admission_source_fences},{"productionAdmissionLabel",production_label},{"productionAdmissionSamples",production_samples},{"productionAdmissionStableSamples",production_streak},{"productionAdmissionElapsedMs",production_elapsed_ms},{"productionPreAdmissionCtimeChanges",production_ctime_changes},{"completedProductionAdmissions",production_admissions},{"productionQualified",false}}.dump()<<std::endl;return 1;}
 }
