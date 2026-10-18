@@ -5733,3 +5733,29 @@ production promu. Tous les autres critères normatifs, CI/facturation, revue
 indépendante non réalisée et économie Base–Nano/bridge USDC/Doppler/T0 restent
 ouverts dans leur périmètre. Aucun fonds, vente, signature, réseau de chaîne ou
 déploiement public. Préfixes historiques conservés ; objectif ACTIF.
+
+
+<!-- nano-c8-docker-operator-leaves-20261018 -->
+## C8 — outils opérateur Docker compilés sur les deux architectures
+
+[Preuves et limites](qualification/operator-c8-docker-leaves-20261018/README.md) :
+5 TU/liens ARM64 et 4 AMD64 contre les Core C8 existants terminent avec leurs
+28/23 commandes attendues ; 425 entrées sélectionnées tenues par architecture,
+9/10 anciens logiciels et les deux produits Core/nano conservés inchangés.
+M avant compilation, MD égal après normalisation, sources Git exactes, ELF/ldd
+vérifiés. Aucun Core/image reconstruit. Les deux self-tests non signants passent
+(25 cas capture ; 3 groupes/26 refus lifecycle submit), ainsi que les refus
+sans arguments prévus. Aucun vrai import, dépôt, audit DB ou duty par ce lot.
+36 fichiers logiciels neufs sont conservés durablement avec hashes relus.
+
+Les admissions entières des trois opérateurs restent ouvertes : jointure P2P
+native, tenue SDK avant compilation des consommateurs natifs concernés, index
+24 actifs et nouvelles admissions exactes. Les anciens refus/admissions restent
+intacts ; aucune reproduction globale ou cause de campagne03 n'est déduite.
+Campagne03 FAILED, accord consommé ; aucune04 autorisée. Runtime1925 et profil
+Paris/Shanghai inchangés. Restauration entière, duties/finalité commune et autres
+critères normatifs restent ouverts dans leur périmètre, dont supervision,
+CI/facturation, reproductibilité et revue indépendante non réalisée. Base–Nano
+reste une proposition non adoptée ; bridge USDC/Doppler/T0 non qualifiés. Aucun
+fonds, vente, signature, réseau de chaîne ou déploiement public. Objectif ACTIF,
+production non qualifiée ; préfixes historiques intégraux conservés.

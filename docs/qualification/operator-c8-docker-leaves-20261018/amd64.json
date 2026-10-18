@@ -1,0 +1,392 @@
+{
+  "all1047HistoricalRowsClaimedUnchanged": false,
+  "architecture": "amd64",
+  "builderImage": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+  "canonicalCmakeSourceSha256": "f3ff7ba149390129b56a4b47e0797cecdc6bcbcb3a9f49d56c252dc65b397a02",
+  "caseAdmissionProbes": 3,
+  "caseSources": {
+    "src/beacon_block_json.hpp": {
+      "bytes": 415,
+      "sha256": "cf83b53705284a0c65d572a5a877982dde28830473e8de0ac33a52453c1e1d77"
+    },
+    "tests/capella/deposit_audit.cpp": {
+      "bytes": 16560,
+      "sha256": "00d6b280ffde5c5fa9f10ee25b0cb87399f111adae7a5d5a8a274787bcf4d33e"
+    },
+    "tests/capella/isolated_bootstrap_audit.cpp": {
+      "bytes": 18049,
+      "sha256": "a3e77dd3b57c2bb8e5b72939fcbe3b623043869230e92daa5fd482acd45ad1cd"
+    },
+    "tests/capella/isolated_stopped_capture.cpp": {
+      "bytes": 39898,
+      "sha256": "2c0f727b3c6816af2a7f49180d1a7224b8b007def004a5eb0c12dff08c27164c"
+    },
+    "tests/multihost/lifecycle_submit.cpp": {
+      "bytes": 583,
+      "sha256": "43687eebe75dc51f31cf55371bd901d34236b8e6908a1a4533a9f3d29eccf153"
+    },
+    "tests/support/capella_canonical_stream.hpp": {
+      "bytes": 3221,
+      "sha256": "ed2cb1cbe01d720464a407a5705e84b85478096a7fbc6c2abb999f202e5cd8b4"
+    },
+    "tests/support/capella_canonical_stream.ipp": {
+      "bytes": 15171,
+      "sha256": "26507fa05882fc059331dda6adc4616ff880be2f04422212ef1fb1756f7e4755"
+    },
+    "tests/support/capella_canonical_stream_self_test.hpp": {
+      "bytes": 8585,
+      "sha256": "9d046347a59d77bfb4af71648621e9f90adfa29acf23952b57b51e6e66cbb57a"
+    },
+    "tests/support/capella_stream_signed_fixture.hpp": {
+      "bytes": 27220,
+      "sha256": "5d751a71a00d0ecb4344c9292eeb72ff4e24a6fc3785e517d00da7516675c08d"
+    },
+    "tests/support/fresh_lifecycle.hpp": {
+      "bytes": 35754,
+      "sha256": "310d47b0cce4513b13bc627dc0a80b98214ba5d1f902561421e901e176ba938e"
+    },
+    "tests/support/fresh_lifecycle_observe_self_test.hpp": {
+      "bytes": 7771,
+      "sha256": "f3ebca95b0659f0caa2a29387913e8aac5274bb269c7a6004b9be9d320ee5e9f"
+    },
+    "tests/support/fresh_lifecycle_self_test.hpp": {
+      "bytes": 8323,
+      "sha256": "8589f8b6cc61dd3ce08f60314114aa5f45538b75bf3f05689a86ee37137e0a9f"
+    },
+    "tests/support/fresh_lifecycle_terminal.hpp": {
+      "bytes": 24376,
+      "sha256": "6681926f496290afc2b98495315b8ae5ba1c646095aece0e21287cca83b28629"
+    },
+    "tests/support/fresh_managed_submission.hpp": {
+      "bytes": 20531,
+      "sha256": "a4fa687f995fee990784ddd20d76b3469a84bb9ebede83ba6049d5cc2d6c2e06"
+    },
+    "tests/support/fresh_managed_submission_self_test.hpp": {
+      "bytes": 8305,
+      "sha256": "7a8fdfbb31c6df68a604ff8324fe1a0b13b6670cc1fa1c6025d257697e1692e4"
+    }
+  },
+  "coreMembers": 143,
+  "coreRebuilds": 0,
+  "coreSha256": "a1475733637348e9a22e72d6f8be3d61ebeafb39443cb168110ca353781ae2e6",
+  "cppRuntimeExecutions": 4,
+  "format": "nano-c8-operator-leaves-public-projection-v1",
+  "heldRowsUnchanged": 487,
+  "newImages": 0,
+  "newLinks": 4,
+  "newTranslationUnits": 4,
+  "oldDataOpened": false,
+  "oldResultRetargeted": false,
+  "oldSelectedHeaderAndDependencyRowsUnchanged": 425,
+  "oldSoftwareRowsUnchanged": 10,
+  "ownedContainerCleanupFailures": [],
+  "passiveCommands": [
+    {
+      "actualExitCode": 1,
+      "arguments": [],
+      "expectedExitCode": 1,
+      "outputRecords": 1,
+      "records": [
+        {
+          "diagnostic": "expected manifest plan anchors source-inventory owner dataRoot witnessRoot",
+          "format": "nano-isolated-bootstrap-physical-audit-v1",
+          "journalWritesRequested": false,
+          "newSignaturesCreated": 0,
+          "passed": false,
+          "productionQualified": false,
+          "refusedStage": "arguments",
+          "runtimeStarted": false
+        }
+      ],
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 294,
+      "stdoutSha256": "f3ba1ad90c32fcb5d96f609bdd823f11c49087b8422a5d4b32dccaae94337a0c",
+      "target": "nano-capella-isolated-bootstrap-audit"
+    },
+    {
+      "actualExitCode": 0,
+      "arguments": [
+        "--self-test"
+      ],
+      "expectedExitCode": 0,
+      "outputRecords": 1,
+      "records": [
+        {
+          "cases": 25,
+          "databaseAccessed": false,
+          "envRead": false,
+          "format": "nano-isolated-stopped-capture-self-test-v1",
+          "newSignaturesCreated": 0,
+          "passed": true,
+          "runtimeStarted": false
+        }
+      ],
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 170,
+      "stdoutSha256": "cca4ce82df7d23ff6dd9a81f7504ad16c359ecd728c6cf583e18436b6cf38d36",
+      "target": "nano-capella-isolated-stopped-capture"
+    },
+    {
+      "actualExitCode": 1,
+      "arguments": [],
+      "expectedExitCode": 1,
+      "outputRecords": 0,
+      "records": [],
+      "stderrBytes": 96,
+      "stderrSha256": "6346fa1fa8e12bca40441bec0ce8f65efdefda4a07ad88fe53d37f9a25323c98",
+      "stdoutBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "target": "nano-capella-deposit-audit"
+    },
+    {
+      "actualExitCode": 0,
+      "arguments": [
+        "--self-test"
+      ],
+      "expectedExitCode": 0,
+      "outputRecords": 4,
+      "records": [
+        {
+          "cryptographicWireVerificationClaimed": false,
+          "expectedRefusals": 9,
+          "passed": true,
+          "productionQualified": false,
+          "scenario": "fresh-lifecycle-managed-submit-policy"
+        },
+        {
+          "callbackCalls": 5,
+          "execExecuted": false,
+          "expectedRefusals": 11,
+          "passed": true,
+          "productionQualified": false,
+          "realHttpUsed": false,
+          "scenario": "fresh-lifecycle-managed-submit-ipc"
+        },
+        {
+          "actualOpaqueFilesystemFixtures": true,
+          "databaseAccessed": false,
+          "expectedRefusals": 6,
+          "passed": true,
+          "productionQualified": false,
+          "scenario": "fresh-lifecycle-managed-submit-input-fences"
+        },
+        {
+          "databaseAccessed": false,
+          "envRead": false,
+          "execExecuted": false,
+          "expectedRefusals": 26,
+          "groups": 3,
+          "networkUsed": false,
+          "passed": true,
+          "productionQualified": false,
+          "scenario": "fresh-lifecycle-managed-submit-summary",
+          "signaturesCreated": 0
+        }
+      ],
+      "stderrBytes": 0,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdoutBytes": 753,
+      "stdoutSha256": "27b86b7d3313eb2f1b7a042055e900a0ca3612dec61f41fbc83e8dd571181904",
+      "target": "nano-capella-lifecycle-submit"
+    }
+  ],
+  "phases": [
+    {
+      "elapsedSeconds": 0.065,
+      "exitCode": 0,
+      "name": "image-before"
+    },
+    {
+      "elapsedSeconds": 0.265,
+      "exitCode": 0,
+      "name": "core-members"
+    },
+    {
+      "elapsedSeconds": 0.466,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-bootstrap-audit-scan"
+    },
+    {
+      "elapsedSeconds": 13.908,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-bootstrap-audit-compile"
+    },
+    {
+      "elapsedSeconds": 0.567,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-bootstrap-audit-link"
+    },
+    {
+      "elapsedSeconds": 0.265,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-bootstrap-audit-loader"
+    },
+    {
+      "elapsedSeconds": 0.415,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-stopped-capture-scan"
+    },
+    {
+      "elapsedSeconds": 19.025,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-stopped-capture-compile"
+    },
+    {
+      "elapsedSeconds": 0.717,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-stopped-capture-link"
+    },
+    {
+      "elapsedSeconds": 0.266,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-stopped-capture-loader"
+    },
+    {
+      "elapsedSeconds": 0.466,
+      "exitCode": 0,
+      "name": "nano-capella-deposit-audit-scan"
+    },
+    {
+      "elapsedSeconds": 26.495,
+      "exitCode": 0,
+      "name": "nano-capella-deposit-audit-compile"
+    },
+    {
+      "elapsedSeconds": 0.666,
+      "exitCode": 0,
+      "name": "nano-capella-deposit-audit-link"
+    },
+    {
+      "elapsedSeconds": 0.266,
+      "exitCode": 0,
+      "name": "nano-capella-deposit-audit-loader"
+    },
+    {
+      "elapsedSeconds": 0.416,
+      "exitCode": 0,
+      "name": "nano-capella-lifecycle-submit-scan"
+    },
+    {
+      "elapsedSeconds": 12.804,
+      "exitCode": 0,
+      "name": "nano-capella-lifecycle-submit-compile"
+    },
+    {
+      "elapsedSeconds": 0.518,
+      "exitCode": 0,
+      "name": "nano-capella-lifecycle-submit-link"
+    },
+    {
+      "elapsedSeconds": 0.266,
+      "exitCode": 0,
+      "name": "nano-capella-lifecycle-submit-loader"
+    },
+    {
+      "elapsedSeconds": 0.065,
+      "exitCode": 0,
+      "name": "image-after"
+    },
+    {
+      "elapsedSeconds": 0.265,
+      "exitCode": 1,
+      "name": "nano-capella-isolated-bootstrap-audit-passive"
+    },
+    {
+      "elapsedSeconds": 0.268,
+      "exitCode": 0,
+      "name": "nano-capella-isolated-stopped-capture-passive"
+    },
+    {
+      "elapsedSeconds": 0.265,
+      "exitCode": 1,
+      "name": "nano-capella-deposit-audit-passive"
+    },
+    {
+      "elapsedSeconds": 0.265,
+      "exitCode": 0,
+      "name": "nano-capella-lifecycle-submit-passive"
+    }
+  ],
+  "productionQualified": false,
+  "productionSourceRevision": "a8eee9d6d3a35b8e14e8a7f7a6cd1b9e5ee2acd7",
+  "products": {
+    "nano-capella-deposit-audit": {
+      "bytes": 6638240,
+      "sha256": "785bcfee7e82d946aa83c9b55d746f69106614152bd4c3f9382f3e55be7ec11d"
+    },
+    "nano-capella-deposit-audit.o": {
+      "bytes": 1891488,
+      "sha256": "a4a49b72c2af73d93062d5e5759f4d173e9d2d791f7d27d7e827041611252ff5"
+    },
+    "nano-capella-deposit-audit.o.M": {
+      "bytes": 35115,
+      "sha256": "42123ba688ad95c684d625487658115d35636a7d9c1e21d942bd341a230123d1"
+    },
+    "nano-capella-deposit-audit.o.d": {
+      "bytes": 35115,
+      "sha256": "42123ba688ad95c684d625487658115d35636a7d9c1e21d942bd341a230123d1"
+    },
+    "nano-capella-isolated-bootstrap-audit": {
+      "bytes": 2557592,
+      "sha256": "024fb11fc27fb580cd7934e4d897eaaef1f2e3d684113e3ca0d415bed1f18c35"
+    },
+    "nano-capella-isolated-bootstrap-audit.o": {
+      "bytes": 775000,
+      "sha256": "7d8b895ca7dfd661ea95dac18646c501920031b8b81cc829da293962c18f62f5"
+    },
+    "nano-capella-isolated-bootstrap-audit.o.M": {
+      "bytes": 32935,
+      "sha256": "1c41b7f3015a438898c11fa88bb5e7fc76152f7ad20df1a7029b8e98885d3f17"
+    },
+    "nano-capella-isolated-bootstrap-audit.o.d": {
+      "bytes": 32935,
+      "sha256": "1c41b7f3015a438898c11fa88bb5e7fc76152f7ad20df1a7029b8e98885d3f17"
+    },
+    "nano-capella-isolated-stopped-capture": {
+      "bytes": 6145864,
+      "sha256": "0cd0271392b9f9de29aec20ec71fd6e10891fcab40aaf4aa6ea49843cc21696e"
+    },
+    "nano-capella-isolated-stopped-capture.o": {
+      "bytes": 1112048,
+      "sha256": "4c4933fbdcde1a9b740624a9582e9da1dea5dcbee48ff14acbb1e2e7a7ec57e2"
+    },
+    "nano-capella-isolated-stopped-capture.o.M": {
+      "bytes": 36036,
+      "sha256": "8b37e47b51eb0f2d8e44925a9d508a0173e24ba2d81aa5c893fa345786fae88a"
+    },
+    "nano-capella-isolated-stopped-capture.o.d": {
+      "bytes": 36036,
+      "sha256": "8b37e47b51eb0f2d8e44925a9d508a0173e24ba2d81aa5c893fa345786fae88a"
+    },
+    "nano-capella-lifecycle-submit": {
+      "bytes": 482584,
+      "sha256": "ba626c763b6e98c3b69416eb249c6c66fae2ea74c6863f4b8b6abb26d38fa2e3"
+    },
+    "nano-capella-lifecycle-submit.o": {
+      "bytes": 770432,
+      "sha256": "5207b56f5f3ad38fdaa511a7f089747af66c97ff40bfcd6232241b62facc8bfc"
+    },
+    "nano-capella-lifecycle-submit.o.M": {
+      "bytes": 30034,
+      "sha256": "ce244dd94e4b8520bfa69136c9dd70c82127a2393bfc57a06df46450de6b2966"
+    },
+    "nano-capella-lifecycle-submit.o.d": {
+      "bytes": 30034,
+      "sha256": "ce244dd94e4b8520bfa69136c9dd70c82127a2393bfc57a06df46450de6b2966"
+    }
+  },
+  "retainedBytes": 20641488,
+  "retainedC8ProductsUnchanged": 2,
+  "retainedFiles": 16,
+  "retentionIsRuntimeAdmission": false,
+  "retentionReceiptSha256": "8d1e24b55633e27a0c54e229c214325d802eca311e19282b7163a7ac4a0947d2",
+  "runtimeDutiesResumed": false,
+  "sourceResultBytes": 78410,
+  "sourceResultSha256": "840b09b2e7568e520f2efa024d6809c5543e3f75d0a73dd368a1f83702c7d2dc",
+  "sourceRevision": "ffae0567933bee0affdb553410335d2127bbea88",
+  "status": "PASS",
+  "wholeOperatorAdmissionQualified": false,
+  "workerSha256": "322a73ecfed5e2ac56599eaab99038f18b655008710e5662cc8a7038a6fefbb0"
+}
