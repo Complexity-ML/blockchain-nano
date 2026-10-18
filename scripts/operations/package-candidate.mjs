@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Package two already qualified files. Integrity does not authenticate their provenance.
+// Package the selected two- or five-executable profile; integrity is not provenance.
 import {constants} from 'node:fs';
 import {open,lstat,realpath,mkdtemp,mkdir,writeFile,chmod,rm,rmdir} from 'node:fs/promises';
 import {resolve,isAbsolute,join} from 'node:path';
@@ -14,15 +14,18 @@ const sha=b=>createHash('sha256').update(b).digest('hex'),hash=s=>typeof s==='st
 const need=(ok,message)=>{if(!ok)throw Error(message);},row=s=>NINE.map(k=>String(s[k]));
 const exact=(o,keys)=>need(o&&typeof o==='object'&&!Array.isArray(o)&&Object.keys(o).sort().join('|')===[...keys].sort().join('|'),'Unexpected descriptor fields');
 const NOTICES={'LICENSE.ethereumjs':'third_party/opcodes/LICENSE.ethereumjs','LICENSE.evm-codes':'third_party/opcodes/LICENSE.evm-codes','bip39-LICENSE':'third_party/bip39/LICENSE','blst-LICENSE':'third_party/ckzg/blst/LICENSE','ckzg-LICENSE':'third_party/ckzg/LICENSE','json-COPYRIGHTS':'third_party/notices/json-COPYRIGHTS','json-LICENSE.MIT':'third_party/notices/json-LICENSE.MIT','libp2p-LICENSE-APACHE':'third_party/notices/libp2p-LICENSE-APACHE','libp2p-LICENSE-MIT':'third_party/notices/libp2p-LICENSE-MIT','mcl-COPYRIGHT':'third_party/mcl/COPYRIGHT','secp256k1-LICENSE':'third_party/secp256k1/COPYING'};
-const RECIPE='87d6cad6284d491f2076cc7850576fc110318041a47ed20f6d2b0fd53bbead1f',NOTICE_MANIFEST='6eea677d963f83cedc3c60088eb176e8f88b7592316945f31998f1fb57eb1d73';
+const EXECUTABLES={'nano-candidate-artifacts-v1':['nano','nano-p2p'],'nano-candidate-artifacts-v2':['nano','nano-p2p','nano-storage-maintenance','nano-bootstrap-archive-maintenance','nano-capella-duty-readiness']};
+const HASH_ARGUMENTS={'nano':'NANO_SHA256','nano-p2p':'P2P_SHA256','nano-storage-maintenance':'STORAGE_MAINTENANCE_SHA256','nano-bootstrap-archive-maintenance':'BOOTSTRAP_ARCHIVE_MAINTENANCE_SHA256','nano-capella-duty-readiness':'CAPELLA_DUTY_READINESS_SHA256'};
+const RECIPE='c370b60ab4e5641e0c5713ae83d6fee803d40ea3f743bd95baffba3d72496610',NOTICE_MANIFEST='6eea677d963f83cedc3c60088eb176e8f88b7592316945f31998f1fb57eb1d73';
 export function validateArtifacts(input){
  const d=structuredClone(input);exact(d,['format','runtimeBase','architecture','sourceRevision','sourceEvidence','executables','maximumArtifactBytes']);
- need(d.format==='nano-candidate-artifacts-v1'&&/^sha256:[0-9a-f]{64}$/.test(d.runtimeBase)&&['arm64','amd64'].includes(d.architecture)&&/^[0-9a-f]{40}$/.test(d.sourceRevision),'Invalid candidate identity');
+ need(typeof d.format==='string'&&Object.hasOwn(EXECUTABLES,d.format)&&/^sha256:[0-9a-f]{64}$/.test(d.runtimeBase)&&['arm64','amd64'].includes(d.architecture)&&/^[0-9a-f]{40}$/.test(d.sourceRevision),'Invalid candidate identity');
  need(Number.isSafeInteger(d.maximumArtifactBytes)&&d.maximumArtifactBytes>0&&d.maximumArtifactBytes<=MAX,'Artifact budget rejected');
- exact(d.executables,['nano','nano-p2p']);exact(d.sourceEvidence,['file','sha256']);
+ exact(d.executables,EXECUTABLES[d.format]);exact(d.sourceEvidence,['file','sha256']);
  for(const e of [d.sourceEvidence,...Object.values(d.executables)])need(typeof e.file==='string'&&isAbsolute(e.file)&&resolve(e.file)===e.file&&hash(e.sha256),'Physical absolute artifact path and hash required');
  for(const e of Object.values(d.executables)){exact(e,['file','sha256','bytes']);need(Number.isSafeInteger(e.bytes)&&e.bytes>0,'Executable size rejected');}
- need(d.executables.nano.bytes+d.executables['nano-p2p'].bytes<d.maximumArtifactBytes,'Artifact budget rejected');return d;
+ const executableBytes=Object.values(d.executables).reduce((total,e)=>total+e.bytes,0);
+ need(Number.isSafeInteger(executableBytes)&&executableBytes<d.maximumArtifactBytes,'Artifact budget rejected');return d;
 }
 async function physical(file){need(isAbsolute(file)&&resolve(file)===file&&await realpath(file)===file,'Artifact path must be physical');}
 async function bytes(fd,limit){
@@ -72,6 +75,7 @@ export async function packageArtifacts(input,{manifestBytes,manifestSha256,runDo
  // Snapshot both objects and raw bytes before the first await; the caller's pin binds them.
  const d=validateArtifacts(input),raw=Buffer.from(manifestBytes??[]);
  need(raw.length>0&&raw.length<=META&&hash(manifestSha256)&&sha(raw)===manifestSha256&&isDeepStrictEqual(JSON.parse(raw),d),'Descriptor pin/object mismatch');
+ const roles=EXECUTABLES[d.format],target=d.format==='nano-candidate-artifacts-v1'?'node':'complete';
  const guards=manifestGuard?[manifestGuard]:[],sources=[],call=async(a,o)=>{const s=await runDocker([...a],o);need(typeof s==='string'&&Buffer.byteLength(s)<=4*META,'Docker response budget');return s;};
  let context,contextIdentity,ownedParent,ownedParentIdentity,first,result;
  try{
@@ -80,7 +84,7 @@ export async function packageArtifacts(input,{manifestBytes,manifestSha256,runDo
   const inspect=async id=>JSON.parse(await call(['image','inspect',id,'--format','{{json .}}']));
   const base=await inspect(d.runtimeBase);need(base.Id===d.runtimeBase&&base.Architecture===d.architecture&&base.Os==='linux','Runtime base mismatch');
   let total=0;const identities=new Set();
-  for(const [role,want] of [...Object.entries(d.executables),['source-evidence',d.sourceEvidence]]){
+  for(const [role,want] of [...roles.map(role=>[role,d.executables[role]]),['source-evidence',d.sourceEvidence]]){
    const g=await hold(want.file,want,d.maximumArtifactBytes-total);guards.push(g);total+=g.bytes;
    const inode=g.identity.slice(0,2).join(':');need(!identities.has(inode),'Artifact identities overlap');identities.add(inode);sources.push([role,g]);
   }
@@ -92,20 +96,21 @@ export async function packageArtifacts(input,{manifestBytes,manifestSha256,runDo
   if(temporaryRoot===undefined){temporaryRoot=await mkdtemp(join(await realpath(tmpdir()),'nano-package-parent-'));ownedParent=temporaryRoot;ownedParentIdentity=row(await lstat(temporaryRoot,{bigint:true}));await chmod(temporaryRoot,0o700);}
   await physical(temporaryRoot);const parent=await lstat(temporaryRoot);need(parent.isDirectory()&&parent.uid===process.getuid()&&(parent.mode&0o022)===0,'Unsafe context parent');
   context=await mkdtemp(join(temporaryRoot,'nano-package-'));contextIdentity=row(await lstat(context,{bigint:true}));await mkdir(join(context,'notices'),{mode:0o700});
-  for(const [name,g] of sources){const path=join(context,name),mode=name==='nano'||name==='nano-p2p'?0o755:name.startsWith('notices/')?0o644:0o600;await writeFile(path,g.body,{flag:'wx',mode});await chmod(path,mode);}await chmod(join(context,'notices'),0o755);
+  for(const [name,g] of sources){const path=join(context,name),mode=roles.includes(name)?0o755:name.startsWith('notices/')?0o644:0o600;await writeFile(path,g.body,{flag:'wx',mode});await chmod(path,mode);}await chmod(join(context,'notices'),0o755);
   await writeFile(join(context,'notices/notices.sha256'),notices.body,{flag:'wx',mode:0o644});await chmod(join(context,'notices/notices.sha256'),0o644);await writeFile(join(context,'candidate.Dockerfile'),recipe.body,{flag:'wx',mode:0o600});
   const baseRef='nano-candidate-base:'+d.runtimeBase.slice(7),existing=(await call(['image','ls','--no-trunc','--filter','reference='+baseRef,'--format','{{.ID}}'])).trim();
   need(!existing||existing===d.runtimeBase,'Derived runtime reference already differs');if(!existing)await call(['tag',d.runtimeBase,baseRef]);
   need((await inspect(baseRef)).Id===d.runtimeBase,'Derived base reference mismatch');for(const g of guards)await g.fence();
-  await call(['build','--network','none','--pull=false','--progress','plain','--iidfile',join(context,'image-id'),'--build-arg','NANO_RUNTIME_BASE='+baseRef,'--build-arg','RUNTIME_BASE_ID='+d.runtimeBase,'--build-arg','SOURCE_REVISION='+d.sourceRevision,'--build-arg','NANO_SHA256='+d.executables.nano.sha256,'--build-arg','P2P_SHA256='+d.executables['nano-p2p'].sha256,'-f',join(context,'candidate.Dockerfile'),context],{timeout:300000});
+  const hashArguments=roles.flatMap(role=>['--build-arg',HASH_ARGUMENTS[role]+'='+d.executables[role].sha256]);
+  await call(['build','--target',target,'--network','none','--pull=false','--progress','plain','--iidfile',join(context,'image-id'),'--build-arg','NANO_RUNTIME_BASE='+baseRef,'--build-arg','RUNTIME_BASE_ID='+d.runtimeBase,'--build-arg','SOURCE_REVISION='+d.sourceRevision,...hashArguments,'-f',join(context,'candidate.Dockerfile'),context],{timeout:300000});
   need((await inspect(baseRef)).Id===d.runtimeBase,'Derived base reference changed');
   const idFile=await hold(join(context,'image-id'),null,80,true);guards.push(idFile);const image=idFile.body.toString().trim();need(/^sha256:[0-9a-f]{64}$/.test(image),'Invalid built image ID');
   const final=await inspect(image);need(final.Id===image&&final.Os==='linux'&&final.Architecture===d.architecture&&final.Config?.User==='10001:10001'&&final.Config?.Labels?.['org.opencontainers.image.revision']===d.sourceRevision&&final.Config?.Labels?.['org.nanobees.runtime-base-id']===d.runtimeBase,'Built image metadata mismatch');
   const sandbox=['run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','512m','--cpus','1'];
-  const output=await call([...sandbox,'--entrypoint','/usr/bin/sha256sum',image,'/usr/local/bin/nano','/usr/local/bin/nano-p2p']);const seen=new Set();
-  for(const line of output.trim().split('\n')){const r=/^([0-9a-f]{64})\s+\/usr\/local\/bin\/(nano|nano-p2p)$/.exec(line);need(r&&!seen.has(r[2])&&r[1]===d.executables[r[2]].sha256,'Built executable hash mismatch');seen.add(r[2]);}need(seen.size===2,'Missing built executable');
-  const libs=await call([...sandbox,'--entrypoint','/usr/bin/ldd',image,'/usr/local/bin/nano','/usr/local/bin/nano-p2p']);need(libs.trim()&&!/not found/.test(libs),'Unresolved executable libraries');
-  result={format:'nano-candidate-artifacts-package-result-v1',image,architecture:d.architecture,sourceRevision:d.sourceRevision,runtimeBase:d.runtimeBase,manifestSha256,sourceEvidence:{...d.sourceEvidence,bytes:sources.find(([n])=>n==='source-evidence')[1].bytes},executables:structuredClone(d.executables),artifactBytes:total,noticeCount:records.size,iidFirstAdmission:idFile.admission,integrityVerified:true,sourceProvenanceSemanticallyVerified:false,productionQualified:false};
+  const paths=roles.map(role=>'/usr/local/bin/'+role),output=await call([...sandbox,'--entrypoint','/usr/bin/sha256sum',image,...paths]),seen=new Set();
+  for(const line of output.trim().split('\n')){const r=/^([0-9a-f]{64})\s+\/usr\/local\/bin\/([A-Za-z0-9._-]+)$/.exec(line);need(r&&roles.includes(r[2])&&!seen.has(r[2])&&r[1]===d.executables[r[2]].sha256,'Built executable hash mismatch');seen.add(r[2]);}need(seen.size===roles.length,'Missing built executable');
+  for(const path of paths){const libs=await call([...sandbox,'--entrypoint','/usr/bin/ldd',image,path]);need(libs.trim()&&!/not found/.test(libs),'Unresolved executable libraries');}
+  result={format:d.format==='nano-candidate-artifacts-v1'?'nano-candidate-artifacts-package-result-v1':'nano-candidate-artifacts-package-result-v2',image,architecture:d.architecture,sourceRevision:d.sourceRevision,runtimeBase:d.runtimeBase,manifestSha256,sourceEvidence:{...d.sourceEvidence,bytes:sources.find(([n])=>n==='source-evidence')[1].bytes},executables:structuredClone(d.executables),artifactBytes:total,noticeCount:records.size,iidFirstAdmission:idFile.admission,integrityVerified:true,sourceProvenanceSemanticallyVerified:false,productionQualified:false};
  }catch(e){first=e;}
  finally{
   for(const g of guards){try{await g.fence();}catch(e){first??=e;}}

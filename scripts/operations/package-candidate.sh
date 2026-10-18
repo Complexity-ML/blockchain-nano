@@ -75,7 +75,7 @@ base_ref="nano-candidate-base:${base#sha256:}"
 docker tag "$base" "$base_ref"
 [ "$(docker image inspect "$base_ref" --format '{{.Id}}')" = "$base" ] || exit 1
 # No source compilation or apt step occurs.
-docker build --network none --pull=false --progress plain --iidfile "$context/image-id" \
+docker build --target node --network none --pull=false --progress plain --iidfile "$context/image-id" \
   --build-arg "NANO_RUNTIME_BASE=$base_ref" --build-arg "RUNTIME_BASE_ID=$base" --build-arg "SOURCE_REVISION=$revision" \
   --build-arg "NANO_SHA256=$nano_hash" --build-arg "P2P_SHA256=$p2p_hash" \
   -f "$recipe" "$context"
