@@ -2074,6 +2074,11 @@ add_executable(nano-physical-cohort-portability tests/qualification/physical_coh
 target_link_libraries(nano-physical-cohort-portability PRIVATE nano_core)
 target_compile_definitions(nano-physical-cohort-portability PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 
+# Explicit synthetic journal rollback qualification; no automatic CTest.
+add_executable(nano-beacon-journal-physical-rollback tests/qualification/beacon_journal_physical_rollback.cpp)
+target_link_libraries(nano-beacon-journal-physical-rollback PRIVATE nano_core)
+target_compile_features(nano-beacon-journal-physical-rollback PRIVATE cxx_std_20)
+
 add_test(NAME consensus_capella_historical_state_pruning COMMAND nano-capella-transition-tests --historical-state-pruning)
 set_tests_properties(consensus_capella_historical_state_pruning PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
 

@@ -1,0 +1,30 @@
+# Ancien couple physique de journaux — portée vérifiée
+
+Ce lot ajoute une unité de qualification C++, pas une règle de production. Le Core C7 reste celui de `9692ccd15b168c513596bc59f951d6e5bf1326f2` ; le parent de livraison est `cd2975d02c3c9d820f7ed9da06b3271f2a8fb083`. Aucun moteur, helper, fork activé ou statut EIP n'est promu. Les résultats Linux ARM↔AMD de [portabilité physique](../physical-cohort-20261018/README.md) gardent leur périmètre distinct.
+
+Le test crée une paire primaire/témoin, la ferme et en copie tous les fichiers vers de nouveaux inodes. Il reprend uniquement la paire courante, signe une proposition BLS publique de fixture et conserve les engagements récents hors des deux arbres. Deux passes RO lisent ensuite les vrais records anciens/courants : quatre authentifications positives et trois refus Core précis de l'ancien couple face au floor récent du primaire, du témoin, puis des deux. Les tokens des records ne sont jamais remplacés par les floors attendus. Les quatre bases et l'engagement extérieur doivent rester inchangés en FD9/SHA. Le préparateur signe une fois ; les contrôles RO n'instancient aucun signer et ne signent pas.
+
+| Source / environnement | Résultat terminal | Périmètre acquis |
+|---|---|---|
+| Parent `14b4117c…`, AMD02 | PASS | 7 authentifications, 4 positives/3 refus, 8 ouvertures RO ; 1 BLS public ; 471 dépendances M/MD. |
+| Parent `14b4117c…`, Native04 | FAILED | Une invocation C++ ; 5 authentifications avant refus de clôture sur le ctime d'un ancien WAL. Aucun PASS natif transféré depuis AMD. |
+| Successeur `b6760c6d…`, AMD03 | PASS | 1 prétraitement, 1 compilation du TU, 1 lien, 1 contrôle du chargeur, 1 invocation ; 482 dépendances M/MD concordantes. Même oracle 7/4/3/8, 2 197 ms, RSS 102 744 KiB. |
+| Successeur, préparations natives 01/02/03 | FAILED avant compilation et C++ | Aucun prétraitement, compilation ou runtime de ce successeur sur Mac ; aucune cohorte native produite ou vérifiée. Les refus restent publiés séparément. |
+
+Le véritable ELF AMD du successeur est `f898a51ceb75504ba5411b3a0c12ea80380191ed33ed3f48312ca51a1dc6e516` (2 894 936 octets). Le Core de 143 membres est réutilisé, l'image reste identique et le conteneur possédé est retiré. Le [résultat hôte](amd-successor/03/result-public.json), le [résultat C++](amd-successor/03/outputs/RUN.stdout.log), l'[état terminal Docker](amd-successor/03/container-terminal-public.json) et l'[audit passif indépendant](amd-successor/root-passive-audit.json) restent distincts. L'audit n'a relancé ni C++ ni signature et n'a exporté aucune base ni clé d'opérateur.
+
+Le successeur `b6760c6ddf98ec1cbd8968351e37155848d5eab752c4c11e2c0bf96b8bb901d6` (24 367 octets) admet seulement ses nouvelles copies avant leur premier Seal : identités de création et SHA fixes, trois captures FD9 concordantes sur au moins deux secondes, sous trente secondes. Une variation prospective de ctime peut recommencer cette série ; aucune autorité ancienne n'est rafraîchie. Après admission, tous les contrôles restent stricts, ctime compris. Le [parent archivé](source/v1/README.source.md) reste distinct et n'a aucune cible compilée concurrente. Les manifestes de gel source décrivent leur état avant exécution ; les résultats terminaux ci-dessus définissent la qualification.
+
+## Limite native conservée
+
+La configuration et le build CMake natifs complets sont terminaux zéro : 143 objets Core et les deux exécutables ARM64 du parent sont produits. Le Core Mach-O conservé est `ee2098fd3ce117ced0619be331ff61e64f0ee7a979e9c38b5b90cba16e38ad9d` (29 444 744 octets) ; le binaire de cohorte est `45151a03fb9447b953a6133d72fbb4b48eeaa1fd722e4a73b088a31244dce167` (6 312 736 octets). Il n'a pas encore été exécuté. Les dépendances installées ont été admises après le build : provenance antérieure du toolchain, cache dyld et reproductibilité globale ne sont pas qualifiés.
+
+Les premiers refus natifs restent dans `native-parent` : assertion de répertoires scellés non établie, résolution ICU relative, dispatchers Apple à plusieurs liens, puis ctime du WAL après exécution réelle du parent. Dans `native-successor`, 01 refuse les métadonnées de répertoires non consommés ; 02 protège les 35 ancêtres consommés mais refuse l'admission des deux nouvelles copies ; 03 refuse à nouveau les anciennes autorités source avant toute nouvelle copie ou compilation. Les trois lanceurs n'ont exécuté aucun C++ du successeur. Ils ne sont pas la campagne réseau privée03.
+
+Le [diagnostic passif final](native-successor/03-closure-diagnosis-public.json) précise ce dernier refus : inventaire toujours de 9 541 fichiers, aucun ajout ni suppression, contenu identique ; 15 fichiers ont un ctime différent. Les 3 334 entrées sélectionnées et leurs aliases restent exacts. Les métadonnées de 28 des 35 ancêtres consommés diffèrent également de l'admission conservée. Cause et acteur non établis ; aucun reset de permissions, suppression de fichiers, remplacement de témoin ou nouvelle autorité ne transforme ces refus en réussite. `wholeTreeDirectoryFD9Qualified` reste faux et la cohorte native reste ouverte.
+
+## Utilisation et critères encore ouverts
+
+La cible explicite `nano-beacon-journal-physical-rollback` accepte un unique chemin absolu vers un répertoire encore absent. Ce test synthétique est limité à 180 s, 32 MiB de stores, 4 096 entrées et une limite RSS vérifiée de 128 MiB. Aucun CTest automatique n'est ajouté et aucune réussite CI n'est revendiquée. Les sources et preuves sont inventoriées dans [proof-inventory.json](proof-inventory.json).
+
+L'engagement extérieur de cette fixture n'est pas un service protégé contre le rollback simultané de ses propres données. Ni ascendance historique des digests, ni livraison passée des signatures, ni restauration d'un opérateur, reprise de duties, finalité commune avançante ou WAN ne sont démontrés par ce lot. La campagne réseau privée03 reste FAILED et consommée ; aucune04 n'est autorisée. Tous les critères des quatre normes, la revue indépendante non réalisée et la relation Base–Nano/bridge/USDC/Doppler restent ouverts. La production et le fair launch ne sont pas qualifiés.
