@@ -1,0 +1,328 @@
+{
+  "actualRuntimeToolExitCodeObservedByRoot": 0,
+  "actualRuntimeToolSession": 31991,
+  "failedCompilerControllerPreserved": true,
+  "format": "nano-cli-readonly-arm-root-passive-audit-v1",
+  "newBuildCommands": 0,
+  "newCppExecutions": 0,
+  "old69UnchangedInRuntime": true,
+  "originalCaseRowsUnchanged": 19,
+  "originalConsumedSourceRowsUnchanged": 96,
+  "originalProductRowsUnchanged": 36,
+  "originalSoftwareRowsUnchanged": 9,
+  "passed": true,
+  "productionQualified": false,
+  "retainedMMDRecords": 9,
+  "runtimeCases": [
+    {
+      "name": "readonly",
+      "passed": true,
+      "records": [
+        {
+          "actualWriteRefusals": 2,
+          "auditScratchSeparateAndRemoved": true,
+          "beaconReadinessBypassed": false,
+          "elapsedMs": 74,
+          "expectedRefusals": 11,
+          "genuinePowBlocksCreated": 1,
+          "groups": 6,
+          "inMemoryStatePreservedAfterWriteRefusal": true,
+          "newSignaturesCreated": 0,
+          "peakRssKiB": 19116,
+          "positiveReadonlyOpens": 5,
+          "productionQualified": false,
+          "realCliInvocations": 0,
+          "result": "PASS",
+          "runtimeDutiesAuthorized": false,
+          "scenario": "cli-readonly-core",
+          "sourceFull9ShaUnchanged": true
+        }
+      ],
+      "unit": "readonly"
+    },
+    {
+      "name": "cli-probe",
+      "passed": true,
+      "records": [
+        {
+          "actualCliCommands": 18,
+          "auditScratchSeparateAndRemoved": true,
+          "beaconFixtureWriterOpens": 1,
+          "candidateHistoricalFd9Qualified": false,
+          "candidatePinHeldInRun": true,
+          "elapsedMs": 570,
+          "expectedCliRefusals": 10,
+          "genuinePowBlocksCreated": 1,
+          "metadataFixtureMutations": 2,
+          "newSignaturesCreated": 0,
+          "oldDataOpened": false,
+          "peakRssKiB": 18104,
+          "productionQualified": false,
+          "readonlySourceChecks": 15,
+          "result": "PASS",
+          "runtimeDutiesAuthorized": false,
+          "scenario": "real-cli-readonly",
+          "sourceFull9ShaUnchanged": true,
+          "successfulCliExits": 8
+        }
+      ],
+      "unit": "cli-probe"
+    },
+    {
+      "name": "chain",
+      "passed": true,
+      "records": {
+        "chainChecks": 185
+      },
+      "unit": "chain"
+    },
+    {
+      "name": "block-auth",
+      "passed": true,
+      "records": null,
+      "unit": "block-auth"
+    },
+    {
+      "name": "bootstrap-startup",
+      "passed": true,
+      "records": [
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "pinned-proof-inputs-and-refusals"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "post-validation-artifact-rebinding-refused"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "strict-existing-owner-never-initializes"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "explicit-two-pin-runtime-startup-before-clock"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "fresh-typed-bootstrap-archives-before-clock"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "main-cli-typed-recovery-refuses-absent-primary"
+        },
+        {
+          "clockRebased": false,
+          "hostClockRead": false,
+          "networkUsed": false,
+          "newSignaturesCreated": 0,
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "scenario": "bootstrap-startup-self-test",
+          "workersStarted": false
+        }
+      ],
+      "unit": "bootstrap-startup"
+    },
+    {
+      "name": "beacon-gate",
+      "passed": true,
+      "records": null,
+      "unit": "beacon-gate"
+    },
+    {
+      "name": "recovery-audit-paris",
+      "passed": true,
+      "records": [
+        {
+          "corruptReopenRejected": true,
+          "fork": "Paris",
+          "journalUnchangedOnFailure": true,
+          "unverifiedPrefixExtensionRejected": true,
+          "verifiedExtensions": 2
+        }
+      ],
+      "unit": "recovery-audit"
+    },
+    {
+      "name": "recovery-audit-shanghai",
+      "passed": true,
+      "records": [
+        {
+          "corruptReopenRejected": true,
+          "fork": "Shanghai",
+          "journalUnchangedOnFailure": true,
+          "unverifiedPrefixExtensionRejected": true,
+          "verifiedExtensions": 2
+        }
+      ],
+      "unit": "recovery-audit"
+    }
+  ],
+  "runtimeDutiesAuthorized": false,
+  "sameOriginalProducts": {
+    "beacon-gate.o": {
+      "bytes": 237336,
+      "sha256": "6018df9d9b4e79f7493edbe31846b0c75f6c1f0b074c6c8e20502ec2fe7f84df"
+    },
+    "beacon-gate.o.M": {
+      "bytes": 32268,
+      "sha256": "f772aec2fab4b4da3ba4df969f8119fdf711e86a28066aac4148d74397132ae6"
+    },
+    "beacon-gate.o.d": {
+      "bytes": 32268,
+      "sha256": "f772aec2fab4b4da3ba4df969f8119fdf711e86a28066aac4148d74397132ae6"
+    },
+    "block-auth.o": {
+      "bytes": 699904,
+      "sha256": "9a15b9518b2569ea1ee32e6a61e99e45b349844fe068db1b12ff6ddc4e9b7950"
+    },
+    "block-auth.o.M": {
+      "bytes": 31914,
+      "sha256": "1728542a73cfec64eafcac1b937de1f9184b556cd31806002e373b48d748f9cc"
+    },
+    "block-auth.o.d": {
+      "bytes": 31914,
+      "sha256": "1728542a73cfec64eafcac1b937de1f9184b556cd31806002e373b48d748f9cc"
+    },
+    "bootstrap-startup.o": {
+      "bytes": 715616,
+      "sha256": "5eaa478fc23541349656f1ebadbd8d021091ccb12ee5df872470f57e5f8fb91d"
+    },
+    "bootstrap-startup.o.M": {
+      "bytes": 38267,
+      "sha256": "a1b5e69caebff48b9182140be18c2bffdca8bdd185c2c1440d050d636a495baf"
+    },
+    "bootstrap-startup.o.d": {
+      "bytes": 38267,
+      "sha256": "a1b5e69caebff48b9182140be18c2bffdca8bdd185c2c1440d050d636a495baf"
+    },
+    "chain.cpp.o": {
+      "bytes": 657168,
+      "sha256": "1ca7ec21d1f2d020936304fea5297a2b237b813bb80bcc798d4ee6f39f43453f"
+    },
+    "chain.cpp.o.M": {
+      "bytes": 30297,
+      "sha256": "b6e5d6bcef862555e2559d03f34cff84d9e0e202635117fe64ee5ecf8177ab14"
+    },
+    "chain.cpp.o.d": {
+      "bytes": 30297,
+      "sha256": "b6e5d6bcef862555e2559d03f34cff84d9e0e202635117fe64ee5ecf8177ab14"
+    },
+    "chain.o": {
+      "bytes": 602928,
+      "sha256": "5a5108f8f642baa4cd342f49458b71d3827a7cb2353b5195840c9acb34f9fd70"
+    },
+    "chain.o.M": {
+      "bytes": 29316,
+      "sha256": "35ccf76fd4977c6cd087b14d4b18e4abfa5103ebe8284cf391454eb1f66d912b"
+    },
+    "chain.o.d": {
+      "bytes": 29316,
+      "sha256": "35ccf76fd4977c6cd087b14d4b18e4abfa5103ebe8284cf391454eb1f66d912b"
+    },
+    "cli-probe.o": {
+      "bytes": 675000,
+      "sha256": "5e74051c6a8aa58aeab93f886382a196ada6241bb97c17cea2d831b0081cf434"
+    },
+    "cli-probe.o.M": {
+      "bytes": 35817,
+      "sha256": "c350a7d8f735474790209af274e17da611cfb9224412348ae8e38b90c7ea018f"
+    },
+    "cli-probe.o.d": {
+      "bytes": 35817,
+      "sha256": "c350a7d8f735474790209af274e17da611cfb9224412348ae8e38b90c7ea018f"
+    },
+    "libnano_core.a": {
+      "bytes": 41306560,
+      "sha256": "aeb98ef70e24886d73ad76e0656adbfebdca045bb5b1763359d53e1773229717"
+    },
+    "nano": {
+      "bytes": 13474384,
+      "sha256": "45651c9cf7beb5ce26260a2edb23c452fdf1e924e50ca5263b3918b54448d4ec"
+    },
+    "nano-beacon-execution-gate-tests": {
+      "bytes": 7189296,
+      "sha256": "0168d6d0972d34c0a08c2bf1e3b543994c79113a26a3d110b0905883699e0a8a"
+    },
+    "nano-block-auth-tests": {
+      "bytes": 7256144,
+      "sha256": "36b3f28a76444a17b55ef316f5478a3467a33d3bbbbf76e6b7f283eb0b466211"
+    },
+    "nano-capella-bootstrap-startup-tests": {
+      "bytes": 6160088,
+      "sha256": "6e73e3d9c84ec674b2fd293563938a86a8fbda7ad2df69bd35223ddcafa850ce"
+    },
+    "nano-chain-tests": {
+      "bytes": 7321168,
+      "sha256": "297996bea84a5ede19ee7770d601102aed67d1d84a548cfb292b8586c892578d"
+    },
+    "nano-cli-readonly-probe": {
+      "bytes": 4128408,
+      "sha256": "3a96403044d783721b35d75e6025c8dd22705164d36b2ab537387c5cf87603d1"
+    },
+    "nano-cli-readonly-tests": {
+      "bytes": 4057432,
+      "sha256": "22c6c83f0efe53035556cf7f7cf9fff82632bf0c9c3ea73553c9c3e0a2cf5545"
+    },
+    "nano-recovery-audit-tests": {
+      "bytes": 3983600,
+      "sha256": "e3fe210d94b7b3770d3ce4b5c544f09d6b519c91b233b3178eeed46c53102040"
+    },
+    "nano.o": {
+      "bytes": 493312,
+      "sha256": "e2983c010333069af6da75dc69d7f94b541e4098ec4f1dff04d55c0df7c2476a"
+    },
+    "nano.o.M": {
+      "bytes": 33263,
+      "sha256": "809558a91f7c9cdbc0b61d3302ec8ad54400a9c496e54c7590bae2e959515488"
+    },
+    "nano.o.d": {
+      "bytes": 33263,
+      "sha256": "809558a91f7c9cdbc0b61d3302ec8ad54400a9c496e54c7590bae2e959515488"
+    },
+    "readonly.o": {
+      "bytes": 445976,
+      "sha256": "24438f0b57aa3c784baa3cdb24f1144ebb0bec5053e8154d6f1521166b4e9324"
+    },
+    "readonly.o.M": {
+      "bytes": 33945,
+      "sha256": "972640eec2e7a4cbd33f057991947811ffd05da3cded98925ed9e5329316c0fc"
+    },
+    "readonly.o.d": {
+      "bytes": 33945,
+      "sha256": "972640eec2e7a4cbd33f057991947811ffd05da3cded98925ed9e5329316c0fc"
+    },
+    "recovery-audit.o": {
+      "bytes": 467560,
+      "sha256": "716dd97e6b25bdcfda8dc6ff87532076fe539e1963628090efde7227d9d49a7e"
+    },
+    "recovery-audit.o.M": {
+      "bytes": 34887,
+      "sha256": "d5a48b2884b8df767da579f43649ed9e8e77f91b640af2db722147cce886db32"
+    },
+    "recovery-audit.o.d": {
+      "bytes": 34887,
+      "sha256": "d5a48b2884b8df767da579f43649ed9e8e77f91b640af2db722147cce886db32"
+    }
+  },
+  "sourceCodeIntegrated": false
+}

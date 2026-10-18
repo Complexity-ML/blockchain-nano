@@ -1,0 +1,2801 @@
+{
+  "CoreCleanBuildQualified": false,
+  "CppExitSource": "owned docker exec actual exit and closed host process group",
+  "archiveProof": {
+    "changedMembers": 1,
+    "memberCount": 143,
+    "newArchivePin": {
+      "bytes": 41306560,
+      "sha256": "aeb98ef70e24886d73ad76e0656adbfebdca045bb5b1763359d53e1773229717"
+    },
+    "objectPin": {
+      "bytes": 657168,
+      "sha256": "1ca7ec21d1f2d020936304fea5297a2b237b813bb80bcc798d4ee6f39f43453f"
+    },
+    "passed": true,
+    "replacedMember": "chain.cpp.o",
+    "retainedArchivePin": {
+      "bytes": 41306456,
+      "sha256": "65c91631ffe93515e500fd1eeacb4e6fd784fa04d431a193c40ec14733077938"
+    },
+    "unchangedMembers": 142
+  },
+  "caseResults": [],
+  "changedCoreObjects": 1,
+  "counterKind": "attemptedCommands",
+  "counts": {
+    "CoreCpp": 1,
+    "CoreM": 1,
+    "archiveUpdates": 1,
+    "cppCompilations": 8,
+    "independentM": 8,
+    "links": 8,
+    "loaderChecks": 8,
+    "runs": 0
+  },
+  "firstFailure": {
+    "message": "held input changed before case",
+    "stage": "qualification",
+    "type": "ValueError"
+  },
+  "format": "nano-cli-readonly-worker-v1",
+  "freshBuildProducts": 36,
+  "headerDocumentationConsumed": false,
+  "keepaliveStateExitCodeIsCppExitCode": false,
+  "mmd": {
+    "beacon-gate": {
+      "dependencyCount": 465,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/tests/test_beacon_execution_gate.cpp",
+      "target": "/outputs/beacon-gate.o"
+    },
+    "block-auth": {
+      "dependencyCount": 463,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/tests/test_block_auth.cpp",
+      "target": "/outputs/block-auth.o"
+    },
+    "bootstrap-startup": {
+      "dependencyCount": 581,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/tests/test_capella_bootstrap_startup.cpp",
+      "target": "/outputs/bootstrap-startup.o"
+    },
+    "chain": {
+      "dependencyCount": 408,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/tests/test_chain.cpp",
+      "target": "/outputs/chain.o"
+    },
+    "cli-probe": {
+      "dependencyCount": 546,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/tests/qualification/cli_readonly_probe.cpp",
+      "target": "/outputs/cli-probe.o"
+    },
+    "core-chain": {
+      "dependencyCount": 434,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/src/chain.cpp",
+      "target": "/outputs/chain.cpp.o"
+    },
+    "nano": {
+      "dependencyCount": 482,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/src/main.cpp",
+      "target": "/outputs/nano.o"
+    },
+    "readonly": {
+      "dependencyCount": 511,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/tests/test_cli_readonly.cpp",
+      "target": "/outputs/readonly.o"
+    },
+    "recovery-audit": {
+      "dependencyCount": 521,
+      "literalMEqualsMd": true,
+      "normalizedMEqualsMd": true,
+      "source": "/case/tests/test_recovery_audit.cpp",
+      "target": "/outputs/recovery-audit.o"
+    }
+  },
+  "newImages": 0,
+  "oldHeaderCompiled": true,
+  "ownerPreparationSamples": [
+    {
+      "admitted": false,
+      "elapsedMs": 1341,
+      "expectedOwnerPaths": 26,
+      "observedOwnerChanges": 7,
+      "phase": "initial",
+      "probes": 2
+    },
+    {
+      "admitted": false,
+      "elapsedMs": 730,
+      "expectedOwnerPaths": 17,
+      "observedOwnerChanges": 0,
+      "phase": "core-chain-M-input-0",
+      "probes": 1
+    },
+    {
+      "admitted": false,
+      "elapsedMs": 808,
+      "expectedOwnerPaths": 77,
+      "observedOwnerChanges": 0,
+      "phase": "nano-M-input-0",
+      "probes": 1
+    },
+    {
+      "admitted": false,
+      "elapsedMs": 139,
+      "expectedOwnerPaths": 2,
+      "observedOwnerChanges": 0,
+      "phase": "bootstrap-startup-M-input-512",
+      "probes": 1
+    }
+  ],
+  "passed": false,
+  "productionQualified": false,
+  "retainedCoreObjects": 142,
+  "runtimeDutiesAuthorized": false,
+  "secondaryFailures": [],
+  "semanticCommentOnlyCoreReuse": true,
+  "steps": [
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 125,
+      "phase": "observe-1"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 156,
+      "phase": "observe-2"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 117,
+      "phase": "observe-3"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 156,
+      "phase": "observe-4"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 123,
+      "phase": "observe-5"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 226,
+      "phase": "core-chain-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-6"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "core-chain-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-7"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 62,
+      "phase": "observe-8"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "observe-9"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 66,
+      "phase": "observe-10"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 212,
+      "phase": "observe-11"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-12"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-13"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 103,
+      "phase": "observe-14"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-15"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-16"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-17"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 104,
+      "phase": "observe-18"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 239,
+      "phase": "observe-19"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-20"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-21"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 103,
+      "phase": "observe-22"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 247,
+      "phase": "observe-23"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 210,
+      "phase": "observe-24"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 210,
+      "phase": "observe-25"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 108,
+      "phase": "observe-26"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 2828,
+      "phase": "core-chain-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-27"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "core-chain-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-28"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 48,
+      "phase": "observe-29"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-30"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 43,
+      "phase": "observe-31"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 213,
+      "phase": "observe-32"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-33"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-34"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 103,
+      "phase": "observe-35"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 236,
+      "phase": "observe-36"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-37"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-38"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 102,
+      "phase": "observe-39"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 241,
+      "phase": "observe-40"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-41"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-42"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 106,
+      "phase": "observe-43"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 61,
+      "phase": "Core-copy"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "Core-writable"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 280,
+      "phase": "Core-replace"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 57,
+      "phase": "observe-44"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "Core-archive-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 56,
+      "phase": "observe-45"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 66,
+      "phase": "observe-46"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 97,
+      "phase": "observe-47"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 130,
+      "phase": "nano-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-48"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "nano-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-49"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 56,
+      "phase": "observe-50"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 63,
+      "phase": "observe-51"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 59,
+      "phase": "observe-52"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-53"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-54"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-55"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 178,
+      "phase": "observe-56"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-57"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-58"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-59"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 181,
+      "phase": "observe-60"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 240,
+      "phase": "observe-61"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-62"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-63"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 186,
+      "phase": "observe-64"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 211,
+      "phase": "observe-65"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 207,
+      "phase": "observe-66"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-67"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 184,
+      "phase": "observe-68"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 2194,
+      "phase": "nano-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-69"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "nano-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-70"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 67,
+      "phase": "observe-71"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 44,
+      "phase": "observe-72"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 43,
+      "phase": "observe-73"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-74"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 211,
+      "phase": "observe-75"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-76"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 180,
+      "phase": "observe-77"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 210,
+      "phase": "observe-78"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 207,
+      "phase": "observe-79"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-80"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 185,
+      "phase": "observe-81"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 222,
+      "phase": "observe-82"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-83"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-84"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 183,
+      "phase": "observe-85"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 89,
+      "phase": "observe-86"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 94,
+      "phase": "observe-87"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 126,
+      "phase": "observe-88"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 411,
+      "phase": "nano-LINK"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 45,
+      "phase": "observe-89"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "nano-executable-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "observe-90"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 72,
+      "phase": "observe-91"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 73,
+      "phase": "observe-92"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 44,
+      "phase": "nano-LDD"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 81,
+      "phase": "observe-93"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 115,
+      "phase": "observe-94"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 114,
+      "phase": "observe-95"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 120,
+      "phase": "readonly-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-96"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 29,
+      "phase": "readonly-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-97"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 61,
+      "phase": "observe-98"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 55,
+      "phase": "observe-99"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 40,
+      "phase": "observe-100"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-101"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-102"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-103"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-104"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 240,
+      "phase": "observe-105"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-106"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-107"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-108"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 239,
+      "phase": "observe-109"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-110"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 214,
+      "phase": "observe-111"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 210,
+      "phase": "observe-112"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 2586,
+      "phase": "readonly-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-113"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "readonly-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 37,
+      "phase": "observe-114"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 40,
+      "phase": "observe-115"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 40,
+      "phase": "observe-116"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 64,
+      "phase": "observe-117"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 214,
+      "phase": "observe-118"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-119"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-120"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-121"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 233,
+      "phase": "observe-122"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 196,
+      "phase": "observe-123"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-124"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-125"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-126"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-127"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-128"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-129"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 86,
+      "phase": "observe-130"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 125,
+      "phase": "observe-131"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 94,
+      "phase": "observe-132"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 163,
+      "phase": "readonly-LINK"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 37,
+      "phase": "observe-133"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "readonly-executable-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-134"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 64,
+      "phase": "observe-135"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 42,
+      "phase": "observe-136"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 70,
+      "phase": "observe-137"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 40,
+      "phase": "readonly-LDD"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 74,
+      "phase": "observe-138"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 114,
+      "phase": "observe-139"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 111,
+      "phase": "observe-140"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 115,
+      "phase": "cli-probe-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-141"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "cli-probe-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-142"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 61,
+      "phase": "observe-143"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 38,
+      "phase": "observe-144"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 64,
+      "phase": "observe-145"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 215,
+      "phase": "observe-146"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-147"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-148"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-149"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 234,
+      "phase": "observe-150"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-151"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-152"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-153"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 236,
+      "phase": "observe-154"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-155"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-156"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-157"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 79,
+      "phase": "observe-158"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 87,
+      "phase": "observe-159"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 121,
+      "phase": "observe-160"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 2982,
+      "phase": "cli-probe-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-161"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "cli-probe-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-162"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-163"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 63,
+      "phase": "observe-164"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-165"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-166"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-167"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-168"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 242,
+      "phase": "observe-169"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-170"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 209,
+      "phase": "observe-171"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-172"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 242,
+      "phase": "observe-173"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-174"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-175"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-176"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 84,
+      "phase": "observe-177"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 120,
+      "phase": "observe-178"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 120,
+      "phase": "observe-179"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 85,
+      "phase": "observe-180"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 128,
+      "phase": "observe-181"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 94,
+      "phase": "observe-182"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 163,
+      "phase": "cli-probe-LINK"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-183"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "cli-probe-executable-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 37,
+      "phase": "observe-184"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 62,
+      "phase": "observe-185"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 67,
+      "phase": "observe-186"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-187"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "cli-probe-LDD"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 79,
+      "phase": "observe-188"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 115,
+      "phase": "observe-189"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 108,
+      "phase": "observe-190"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 116,
+      "phase": "chain-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "observe-191"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "chain-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-192"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 57,
+      "phase": "observe-193"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 64,
+      "phase": "observe-194"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "observe-195"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-196"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-197"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-198"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-199"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 232,
+      "phase": "observe-200"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-201"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 195,
+      "phase": "observe-202"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 69,
+      "phase": "observe-203"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 227,
+      "phase": "observe-204"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-205"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-206"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 69,
+      "phase": "observe-207"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 3111,
+      "phase": "chain-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-208"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "chain-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-209"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 69,
+      "phase": "observe-210"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "observe-211"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 38,
+      "phase": "observe-212"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-213"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-214"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-215"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 74,
+      "phase": "observe-216"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-217"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-218"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-219"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 75,
+      "phase": "observe-220"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-221"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-222"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-223"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 69,
+      "phase": "observe-224"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 82,
+      "phase": "observe-225"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 126,
+      "phase": "observe-226"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 94,
+      "phase": "observe-227"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 271,
+      "phase": "chain-LINK"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 40,
+      "phase": "observe-228"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "chain-executable-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 37,
+      "phase": "observe-229"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 42,
+      "phase": "observe-230"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 73,
+      "phase": "observe-231"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "chain-LDD"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 77,
+      "phase": "observe-232"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 110,
+      "phase": "observe-233"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 111,
+      "phase": "observe-234"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 106,
+      "phase": "block-auth-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-235"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "block-auth-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-236"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 37,
+      "phase": "observe-237"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 63,
+      "phase": "observe-238"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 60,
+      "phase": "observe-239"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 211,
+      "phase": "observe-240"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 195,
+      "phase": "observe-241"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-242"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 139,
+      "phase": "observe-243"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 234,
+      "phase": "observe-244"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-245"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 195,
+      "phase": "observe-246"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 138,
+      "phase": "observe-247"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 237,
+      "phase": "observe-248"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-249"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-250"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 140,
+      "phase": "observe-251"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 3049,
+      "phase": "block-auth-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-252"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 29,
+      "phase": "block-auth-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-253"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 66,
+      "phase": "observe-254"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 62,
+      "phase": "observe-255"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-256"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-257"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-258"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-259"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 140,
+      "phase": "observe-260"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 240,
+      "phase": "observe-261"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-262"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 207,
+      "phase": "observe-263"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 142,
+      "phase": "observe-264"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-265"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-266"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 194,
+      "phase": "observe-267"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 139,
+      "phase": "observe-268"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 84,
+      "phase": "observe-269"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 93,
+      "phase": "observe-270"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 93,
+      "phase": "observe-271"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 270,
+      "phase": "block-auth-LINK"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 37,
+      "phase": "observe-272"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 29,
+      "phase": "block-auth-executable-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-273"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-274"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 71,
+      "phase": "observe-275"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 44,
+      "phase": "observe-276"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "block-auth-LDD"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 74,
+      "phase": "observe-277"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 82,
+      "phase": "observe-278"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 116,
+      "phase": "observe-279"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 115,
+      "phase": "bootstrap-startup-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-280"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "bootstrap-startup-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-281"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 67,
+      "phase": "observe-282"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 65,
+      "phase": "observe-283"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 39,
+      "phase": "observe-284"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 196,
+      "phase": "observe-285"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 207,
+      "phase": "observe-286"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 219,
+      "phase": "observe-287"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 195,
+      "phase": "observe-288"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 237,
+      "phase": "observe-289"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-290"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-291"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-292"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 234,
+      "phase": "observe-293"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-294"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-295"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-296"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 135,
+      "phase": "observe-297"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 134,
+      "phase": "observe-298"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 179,
+      "phase": "observe-299"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 158,
+      "phase": "observe-300"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 3087,
+      "phase": "bootstrap-startup-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 38,
+      "phase": "observe-301"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "bootstrap-startup-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-302"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 65,
+      "phase": "observe-303"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 66,
+      "phase": "observe-304"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 43,
+      "phase": "observe-305"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-306"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-307"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-308"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-309"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 241,
+      "phase": "observe-310"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-311"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-312"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-313"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-314"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-315"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-316"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-317"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 135,
+      "phase": "observe-318"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 173,
+      "phase": "observe-319"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 152,
+      "phase": "observe-320"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 93,
+      "phase": "observe-321"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 101,
+      "phase": "observe-322"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 127,
+      "phase": "observe-323"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 231,
+      "phase": "bootstrap-startup-LINK"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "observe-324"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "bootstrap-startup-executable-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 39,
+      "phase": "observe-325"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 72,
+      "phase": "observe-326"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 69,
+      "phase": "observe-327"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 40,
+      "phase": "bootstrap-startup-LDD"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 77,
+      "phase": "observe-328"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 81,
+      "phase": "observe-329"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 81,
+      "phase": "observe-330"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 106,
+      "phase": "beacon-gate-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-331"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "beacon-gate-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-332"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 69,
+      "phase": "observe-333"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 52,
+      "phase": "observe-334"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-335"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 195,
+      "phase": "observe-336"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 196,
+      "phase": "observe-337"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 140,
+      "phase": "observe-338"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 237,
+      "phase": "observe-339"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-340"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-341"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 142,
+      "phase": "observe-342"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 236,
+      "phase": "observe-343"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 196,
+      "phase": "observe-344"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-345"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 143,
+      "phase": "observe-346"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 1625,
+      "phase": "beacon-gate-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-347"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "beacon-gate-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-348"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "observe-349"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-350"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 42,
+      "phase": "observe-351"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 196,
+      "phase": "observe-352"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-353"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 196,
+      "phase": "observe-354"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 144,
+      "phase": "observe-355"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 242,
+      "phase": "observe-356"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 208,
+      "phase": "observe-357"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-358"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 142,
+      "phase": "observe-359"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 243,
+      "phase": "observe-360"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-361"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-362"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 144,
+      "phase": "observe-363"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 84,
+      "phase": "observe-364"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 124,
+      "phase": "observe-365"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 116,
+      "phase": "observe-366"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 266,
+      "phase": "beacon-gate-LINK"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 41,
+      "phase": "observe-367"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "beacon-gate-executable-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-368"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-369"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-370"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 42,
+      "phase": "beacon-gate-LDD"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 77,
+      "phase": "observe-371"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 80,
+      "phase": "observe-372"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 82,
+      "phase": "observe-373"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 105,
+      "phase": "recovery-audit-M"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-374"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 30,
+      "phase": "recovery-audit-M-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-375"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 51,
+      "phase": "observe-376"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 64,
+      "phase": "observe-377"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 211,
+      "phase": "observe-378"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-379"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-380"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-381"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 239,
+      "phase": "observe-382"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-383"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-384"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-385"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 211,
+      "phase": "observe-386"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-387"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-388"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-389"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 47,
+      "phase": "observe-390"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 75,
+      "phase": "observe-391"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 80,
+      "phase": "observe-392"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 2344,
+      "phase": "recovery-audit-CXX"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-393"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 29,
+      "phase": "recovery-audit-object-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-394"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 66,
+      "phase": "observe-395"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "observe-396"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 42,
+      "phase": "observe-397"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-398"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 198,
+      "phase": "observe-399"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-400"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 209,
+      "phase": "observe-401"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 236,
+      "phase": "observe-402"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-403"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-404"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-405"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 231,
+      "phase": "observe-406"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-407"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-408"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-409"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 45,
+      "phase": "observe-410"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 80,
+      "phase": "observe-411"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 82,
+      "phase": "observe-412"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 91,
+      "phase": "observe-413"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 105,
+      "phase": "observe-414"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 125,
+      "phase": "observe-415"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 163,
+      "phase": "recovery-audit-LINK"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 38,
+      "phase": "observe-416"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "recovery-audit-executable-mode"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-417"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 73,
+      "phase": "observe-418"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 42,
+      "phase": "observe-419"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 43,
+      "phase": "observe-420"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "recovery-audit-LDD"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 74,
+      "phase": "observe-421"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 96,
+      "phase": "observe-422"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 115,
+      "phase": "observe-423"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 276,
+      "phase": "observe-424"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-425"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-426"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 197,
+      "phase": "observe-427"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 214,
+      "phase": "observe-428"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 125,
+      "phase": "observe-429"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 35,
+      "phase": "observe-430"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-431"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-432"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 59,
+      "phase": "observe-433"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-434"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-435"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-436"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 39,
+      "phase": "observe-437"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-438"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-439"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-440"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-441"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-442"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-443"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-444"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-445"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-446"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-447"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-448"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-449"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-450"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-451"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-452"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 37,
+      "phase": "observe-453"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-454"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-455"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-456"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-457"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-458"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 33,
+      "phase": "observe-459"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-460"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 36,
+      "phase": "observe-461"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-462"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "observe-463"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 31,
+      "phase": "observe-464"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 34,
+      "phase": "observe-465"
+    }
+  ],
+  "strictE9SelectorClaimed": false,
+  "typedOwnerCount": 1073
+}

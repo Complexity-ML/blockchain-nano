@@ -71,6 +71,16 @@ set_tests_properties(core PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DI
 
 add_executable(nano src/main.cpp)
 target_link_libraries(nano PRIVATE nano_core)
+# Focused source-readonly owner/legacy audit qualification; real CLI is separate.
+add_executable(nano-cli-readonly-tests tests/test_cli_readonly.cpp)
+target_link_libraries(nano-cli-readonly-tests PRIVATE nano_core)
+add_test(NAME cli_readonly_core COMMAND nano-cli-readonly-tests --self-test)
+set_tests_properties(cli_readonly_core PROPERTIES TIMEOUT 120 LABELS qualification_cli_readonly)
+# Manual fresh-fixture qualification; four explicit runtime arguments, no CTest.
+add_executable(nano-cli-readonly-probe tests/qualification/cli_readonly_probe.cpp)
+target_include_directories(nano-cli-readonly-probe PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(nano-cli-readonly-probe PRIVATE nano_core)
+target_compile_features(nano-cli-readonly-probe PRIVATE cxx_std_20)
 add_executable(nano-private-capture-budget-tests tests/capella/test_private_capture_budget.cpp)
 target_include_directories(nano-private-capture-budget-tests PRIVATE third_party)
 add_test(NAME consensus_private_capture_resource_budget COMMAND nano-private-capture-budget-tests)

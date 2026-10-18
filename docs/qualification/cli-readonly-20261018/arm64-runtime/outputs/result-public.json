@@ -1,0 +1,431 @@
+{
+  "CoreRebuilt": false,
+  "CppExitSource": "owned docker exec actual exit and closed host process group",
+  "caseResults": [
+    {
+      "name": "readonly",
+      "passed": true,
+      "records": [
+        {
+          "actualWriteRefusals": 2,
+          "auditScratchSeparateAndRemoved": true,
+          "beaconReadinessBypassed": false,
+          "elapsedMs": 74,
+          "expectedRefusals": 11,
+          "genuinePowBlocksCreated": 1,
+          "groups": 6,
+          "inMemoryStatePreservedAfterWriteRefusal": true,
+          "newSignaturesCreated": 0,
+          "peakRssKiB": 19116,
+          "positiveReadonlyOpens": 5,
+          "productionQualified": false,
+          "realCliInvocations": 0,
+          "result": "PASS",
+          "runtimeDutiesAuthorized": false,
+          "scenario": "cli-readonly-core",
+          "sourceFull9ShaUnchanged": true
+        }
+      ],
+      "unit": "readonly"
+    },
+    {
+      "name": "cli-probe",
+      "passed": true,
+      "records": [
+        {
+          "actualCliCommands": 18,
+          "auditScratchSeparateAndRemoved": true,
+          "beaconFixtureWriterOpens": 1,
+          "candidateHistoricalFd9Qualified": false,
+          "candidatePinHeldInRun": true,
+          "elapsedMs": 570,
+          "expectedCliRefusals": 10,
+          "genuinePowBlocksCreated": 1,
+          "metadataFixtureMutations": 2,
+          "newSignaturesCreated": 0,
+          "oldDataOpened": false,
+          "peakRssKiB": 18104,
+          "productionQualified": false,
+          "readonlySourceChecks": 15,
+          "result": "PASS",
+          "runtimeDutiesAuthorized": false,
+          "scenario": "real-cli-readonly",
+          "sourceFull9ShaUnchanged": true,
+          "successfulCliExits": 8
+        }
+      ],
+      "unit": "cli-probe"
+    },
+    {
+      "name": "chain",
+      "passed": true,
+      "records": {
+        "chainChecks": 185
+      },
+      "unit": "chain"
+    },
+    {
+      "name": "block-auth",
+      "passed": true,
+      "records": null,
+      "unit": "block-auth"
+    },
+    {
+      "name": "bootstrap-startup",
+      "passed": true,
+      "records": [
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "pinned-proof-inputs-and-refusals"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "post-validation-artifact-rebinding-refused"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "strict-existing-owner-never-initializes"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "explicit-two-pin-runtime-startup-before-clock"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "fresh-typed-bootstrap-archives-before-clock"
+        },
+        {
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "runtimeDutiesResumed": false,
+          "scenario": "main-cli-typed-recovery-refuses-absent-primary"
+        },
+        {
+          "clockRebased": false,
+          "hostClockRead": false,
+          "networkUsed": false,
+          "newSignaturesCreated": 0,
+          "privateInputsRead": false,
+          "productionQualified": false,
+          "result": "PASS",
+          "scenario": "bootstrap-startup-self-test",
+          "workersStarted": false
+        }
+      ],
+      "unit": "bootstrap-startup"
+    },
+    {
+      "name": "beacon-gate",
+      "passed": true,
+      "records": null,
+      "unit": "beacon-gate"
+    },
+    {
+      "name": "recovery-audit-paris",
+      "passed": true,
+      "records": [
+        {
+          "corruptReopenRejected": true,
+          "fork": "Paris",
+          "journalUnchangedOnFailure": true,
+          "unverifiedPrefixExtensionRejected": true,
+          "verifiedExtensions": 2
+        }
+      ],
+      "unit": "recovery-audit"
+    },
+    {
+      "name": "recovery-audit-shanghai",
+      "passed": true,
+      "records": [
+        {
+          "corruptReopenRejected": true,
+          "fork": "Shanghai",
+          "journalUnchangedOnFailure": true,
+          "unverifiedPrefixExtensionRejected": true,
+          "verifiedExtensions": 2
+        }
+      ],
+      "unit": "recovery-audit"
+    }
+  ],
+  "counterKind": "attemptedCommands",
+  "counts": {
+    "CoreCpp": 0,
+    "CoreM": 0,
+    "archiveUpdates": 0,
+    "cppCompilations": 0,
+    "independentM": 0,
+    "links": 0,
+    "loaderChecks": 0,
+    "runs": 8
+  },
+  "firstFailure": null,
+  "format": "nano-cli-readonly-runtime-worker-v1",
+  "historicalGuestFD9Qualified": false,
+  "keepaliveStateExitCodeIsCppExitCode": false,
+  "newBuildProducts": 0,
+  "newImages": 0,
+  "oldGuestRowsReadopted": false,
+  "originalCarrierRequalified": false,
+  "ownerPreparationSamples": [
+    {
+      "admitted": false,
+      "elapsedMs": 3872,
+      "expectedOwnerPaths": 158,
+      "observedOwnerChanges": 7,
+      "phase": "runtime-initial",
+      "probes": 2
+    }
+  ],
+  "passed": true,
+  "productionQualified": false,
+  "retainedBuildProducts": 36,
+  "retainedBuildProofVerified": true,
+  "runtimeDutiesAuthorized": false,
+  "secondaryFailures": [],
+  "steps": [
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 339,
+      "phase": "observe-1"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 226,
+      "phase": "observe-2"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 235,
+      "phase": "observe-3"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 233,
+      "phase": "observe-4"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 222,
+      "phase": "observe-5"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 164,
+      "phase": "observe-6"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 360,
+      "phase": "observe-7"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 206,
+      "phase": "observe-8"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-9"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-10"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 210,
+      "phase": "observe-11"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 172,
+      "phase": "observe-12"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 318,
+      "phase": "observe-13"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 200,
+      "phase": "observe-14"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-15"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-16"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 209,
+      "phase": "observe-17"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 167,
+      "phase": "observe-18"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 356,
+      "phase": "observe-19"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-20"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 204,
+      "phase": "observe-21"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 201,
+      "phase": "observe-22"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 209,
+      "phase": "observe-23"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 161,
+      "phase": "observe-24"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 353,
+      "phase": "observe-25"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-26"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 205,
+      "phase": "observe-27"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-28"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 210,
+      "phase": "observe-29"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 184,
+      "phase": "observe-30"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 32,
+      "phase": "test-root"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 111,
+      "phase": "case-readonly"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 605,
+      "phase": "case-cli-probe"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 440,
+      "phase": "case-chain"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 244,
+      "phase": "case-block-auth"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 400,
+      "phase": "case-bootstrap-startup"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 68,
+      "phase": "case-beacon-gate"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 155,
+      "phase": "case-recovery-audit-paris"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 166,
+      "phase": "case-recovery-audit-shanghai"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 314,
+      "phase": "observe-31"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 203,
+      "phase": "observe-32"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 199,
+      "phase": "observe-33"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 202,
+      "phase": "observe-34"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 207,
+      "phase": "observe-35"
+    },
+    {
+      "actualExitCode": 0,
+      "elapsedMs": 164,
+      "phase": "observe-36"
+    }
+  ],
+  "typedOwnerCount": 1109
+}

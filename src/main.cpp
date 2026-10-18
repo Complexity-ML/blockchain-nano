@@ -31,7 +31,7 @@ int main(int argc,char** argv){try{
  if(command=="audit"){
   if(argc!=4)throw std::invalid_argument("audit requires genesis.json existing-database-directory");
   if(!std::filesystem::is_regular_file(std::filesystem::path(argv[3])/"CURRENT"))throw std::invalid_argument("audit requires an existing RocksDB database");
-  Blockchain chain(argv[3],Genesis::from_json(load(argv[2])));std::cout<<chain.audit().dump(2)<<"\n";return 0;
+  Blockchain chain(argv[3],Genesis::from_json(load(argv[2])),ChainStore::OpenMode::ReadOnly);std::cout<<chain.audit().dump(2)<<"\n";return 0;
  }
  if(command=="migrate"){if(argc!=5)throw std::invalid_argument("migrate requires genesis.json source-directory new-database-directory");std::cout<<migrate_chaindb(Genesis::from_json(load(argv[2])),argv[3],argv[4]).dump(2)<<"\n";return 0;}
  if(command=="rpc")return rpc_command(argc,argv);
@@ -44,7 +44,8 @@ int main(int argc,char** argv){try{
  const Json startup_config=command=="run"?(argc==5?load(argv[4]):Json::object()):command=="serve"?(argc==7?load(argv[6]):Json::object()):Json::object();
  const bool existing_archive_recovery=startup_config.is_object()&&startup_config.contains("capella")&&startup_config.at("capella").is_object()&&startup_config.at("capella").contains("bootstrapArchiveRecovery");
  auto genesis=Genesis::from_json(load(argv[2]));
- Blockchain chain(argv[3],std::move(genesis),existing_archive_recovery?ChainStore::OpenMode::ReadWriteExisting:ChainStore::OpenMode::ReadWrite);
+ const auto open_mode=command=="status"?ChainStore::OpenMode::ReadOnly:existing_archive_recovery?ChainStore::OpenMode::ReadWriteExisting:ChainStore::OpenMode::ReadWrite;
+ Blockchain chain(argv[3],std::move(genesis),open_mode);
  if(command=="run")return run_node(chain,argv[3],argv[0],startup_config);
  if(command=="serve"){
   auto port=argc>=5?u64(quantity(Json(argv[4]))):8545;if(port>65535)throw std::invalid_argument("invalid port");const std::string bind=argc>=6?argv[5]:"127.0.0.1";const auto& config=startup_config;const auto rpc_limits=RpcSimulationLimits::from_json(config.value("rpcSimulation",Json::object()));

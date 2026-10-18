@@ -92,8 +92,8 @@ Genesis Genesis::from_json(const Json& data){
 }
 namespace {
 ChainStore::OpenMode blockchain_open_mode(ChainStore::OpenMode mode){
- if(mode!=ChainStore::OpenMode::ReadWrite&&mode!=ChainStore::OpenMode::ReadWriteExisting)
-  throw std::invalid_argument("Blockchain owner requires ReadWrite or ReadWriteExisting");
+ if(mode!=ChainStore::OpenMode::ReadWrite&&mode!=ChainStore::OpenMode::ReadWriteExisting&&mode!=ChainStore::OpenMode::ReadOnly)
+  throw std::invalid_argument("Blockchain owner requires ReadWrite, ReadWriteExisting or ReadOnly");
  return mode;
 }
 }
@@ -102,12 +102,12 @@ Blockchain::Blockchain(const std::filesystem::path& database,Genesis genesis)
 Blockchain::Blockchain(const std::filesystem::path& database,Genesis genesis,ChainStore::OpenMode mode)
  :genesis_(std::move(genesis)),store_(database,blockchain_open_mode(mode)),engine_(genesis_.chain_id,[this](const Int& number){auto b=store_.block_by_number(number);if(!b)throw std::runtime_error("missing ancestor block");return b->header.hash();},genesis_.evm_revision){
  Bytes epoch(16);if(RAND_bytes(epoch.data(),int(epoch.size()))!=1)throw std::runtime_error("gossip session randomness failed");event_epoch_=hex(epoch);
- if(mode==ChainStore::OpenMode::ReadWriteExisting)
+ if(mode!=ChainStore::OpenMode::ReadWrite)
   store_.require_existing_chain_binding(genesis_.chain_id,genesis_.block.header.hash(),genesis_.consensus,genesis_.staking_contract);
  else store_.bind_chain(genesis_.chain_id,genesis_.block.header.hash(),genesis_.consensus,genesis_.staking_contract);
  auto latest=store_.latest();
  if(!latest){
-  if(mode==ChainStore::OpenMode::ReadWriteExisting)throw std::runtime_error("existing Blockchain database has no canonical tip");
+  if(mode!=ChainStore::OpenMode::ReadWrite)throw std::runtime_error(mode==ChainStore::OpenMode::ReadOnly?"read-only Blockchain database has no canonical tip":"existing Blockchain database has no canonical tip");
   pos_=sync_consensus(genesis_.state,genesis_.block.header,pos_);store_.commit(genesis_.block,genesis_.state,{},genesis_.consensus=="pos"?std::optional<Json>(pos_.to_json()):std::nullopt);tip_=genesis_.block;state_=genesis_.state;}
  else{
   auto first=store_.block_by_number(0);
