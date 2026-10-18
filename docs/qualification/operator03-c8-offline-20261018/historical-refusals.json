@@ -1,0 +1,36 @@
+{
+  "format": "nano-operator03-c8-retained-refusals-v1",
+  "failures": [
+    {
+      "phase": "first-copy-admission",
+      "bytes": 320,
+      "sha256": "a97938f4bc8a1567cbd473073a5e3d285be5bb5494551686d440fa59aec94687",
+      "outcome": "refused before DB copy; uncaptured peer.key excluded by successor"
+    },
+    {
+      "phase": "recursive-make-dry-run",
+      "bytes": 387,
+      "sha256": "9ec405d39f257118acb584d62bbe436ad3aeb91e6753a460b41364dfb1d3005c",
+      "outcome": "missing shim not materialized by make -n; actual shim then six consumers built without Core rebuild"
+    }
+  ],
+  "publicProjectionRefusals": [
+    {
+      "attempt": 1,
+      "phase": "before public output",
+      "reason": "projection treated dependencyRows list as count; assertion refused"
+    },
+    {
+      "attempt": 2,
+      "phase": "public privacy guard",
+      "reason": "unselected closure field retained local paths; refused before writing that file"
+    },
+    {
+      "attempt": 3,
+      "phase": "independent public review",
+      "reason": "program fields contained external header paths instead of aggregate counts; staging rejected before repository publication"
+    }
+  ],
+  "qualificationRerun": false,
+  "oldFailuresErased": false
+}

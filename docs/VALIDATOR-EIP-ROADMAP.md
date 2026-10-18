@@ -8994,3 +8994,36 @@ Depuis main5923aede, seul le lecteur de qualification C++ passe à0e54222c/42508
 Les 69 entrées des copies neuves demeurent exactes à neuf métadonnées et SHA après admission puis fermeture. Docker utilise un seul volume neuf conservé par architecture, UID10001, et neuf conteneurs possédés retirés ; aucune image/Core reconstruite. Native : copie neuve501:20, APIs RO sans montage OS RO revendiqué, onze descripteurs originaux et69 entrées réobservés par l'audit passif Root. Ce cas borne la lecture Linux RocksDB8.9.1→macOS11.8.1 à cette cohorte ; aucun downgrade, compatibilité générale ou provenance complète de la fermeture dyld/SDK n'est déduit. Les refus initiaux de préparation/compilation/lien restent conservés ; Native02 réemploie son objet déjà compilé, sans recompiler pour refaire passer un succès. [Résultats, sources, reçus terminaux et limites](qualification/cold-c8-20261018/README.md).
 
 Le Genesis de cette ancienne fixture ne roundtrip pas via le codec CLI ; le nano audit-capella installé n'est donc pas qualifié par ce lot et le codec n'est pas affaibli. Le succès canonique a externalFinalizedAncestorVerified=false et requiredFinalized=null ; aucune finalité commune avançante, reprise de duties ou restauration opérateur n'est qualifiée. Journaux Mac originaux manquants/NAS refusé, campagne03 FAILED consommée et aucune04 autorisée restent explicites. Le runtime réseau1925 reste inchangé. Tous les critères/préfixes et échecs historiques sont conservés : consensus/WAN/cycle/rotations/sync/sanctions/partitions/charge, pruning/CI/reproductibilité/exploitation et revue indépendante non réalisée restent ouverts selon leurs périmètres. Paris/Shanghai reste activé ; aucun statut EIP/fork n'est promu. Relation Base–Nano, offre/ratio/réserve/conversion, bridge USDC, Doppler/T0 restent un brouillon non adopté ou non qualifié. Aucun fonds réel, vente, dépense ou déploiement public ; objectif ACTIF, production non qualifiée.
+
+
+<!-- nano-operator03-c8-offline-20261018 -->
+## C8 — données Native réelles de la campagne 03, audit hors ligne
+
+[Preuves et limites](qualification/operator03-c8-offline-20261018/README.md) :
+le nano C8 installé passe l'audit canonique de 694 blocs et 2 transactions sur
+une copie des 34 rôles DB conservés ; checkpoint indépendant 7 858 et ascendance
+finalisée externe époque 87 vérifiés. La capture C8 retrouve les 16 paires de
+journaux primaire/témoin et les tokens extérieurs inchangés. Deux self-tests,
+trois refus d'arguments attendus et la capture terminent avec les sorties prévues.
+Six consommateurs Native sont compilés/liés, sans recompiler Core ; 9 713 entrées
+antérieures inchangées. Les 2 391 headers externes seulement observés après
+compilation ne prouvent pas leur identité au moment de compiler. Les refus de
+copie, dry-run et projection publique restent conservés ; aucun ancien succès
+n'est rejoué pour les faire disparaître.
+
+La quiescence des sources n'est pas qualifiée (34 LOCK ouverts en écriture par
+un service système), sans cause des anciens échecs démontrée. La clé peer est
+exclue : pas de restauration entière, de reprise de duties ou de finalité commune
+avançante. Le captureur ne prouve ni signatures des archives witness, ni
+ascendance historique des digests, ni rejeu canonique ; ce dernier appartient à
+l'audit installé distinct. Fork choice historique et votes autonomes restent
+hors preuve. La supervision Source03 reste non intégrée : 16 cas ciblés passent,
+mais le parallèle Mac échoue avec SIGABRT Node, cause inconnue.
+
+Campagne03 FAILED et accord consommé ; aucune04 autorisée. Runtime1925 inchangé,
+Paris/Shanghai activé, aucun EIP/fork promu. Autres critères intégraux de
+consensus, cycle des validateurs, exploitation, pruning, CI/facturation,
+reproductibilité et revue indépendante non réalisée restent ouverts selon leur
+périmètre. Proposition Base–Nano non adoptée ; bridge USDC, termes Doppler et T0
+non qualifiés. Aucun fonds, vente, signature ou déploiement public. Préfixes et
+échecs historiques conservés ; objectif ACTIF, production non qualifiée.
