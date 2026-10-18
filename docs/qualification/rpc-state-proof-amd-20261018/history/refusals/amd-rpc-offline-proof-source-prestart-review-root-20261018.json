@@ -1,0 +1,21 @@
+{
+  "format": "nano-offline-proof-continuation-source-prestart-review-v1",
+  "oldSourceSha256": "e3bc15d440438d56200de70f30c0ce5a632acaedda791be55574a9fb9dbfcf87",
+  "oldSourceExecuted": false,
+  "findings": [
+    "MODULE byte pin truncated62hex",
+    "completed admission observation was not persisted before30s deadline guard",
+    "dispatcher result unconditional0 without observation"
+  ],
+  "corrections": [
+    "complete qualified64hex pin and generic known-pin guard",
+    "save each complete observation before accepting or deadline refusal; currentInput retained for immediate path/type/byte errors",
+    "dispatcher observation conditional",
+    "external source pin supplied before owned output creation and held through fences"
+  ],
+  "successorSha256": "f9780062f8ed55b823126a8ed0fe644db9017ba4b390bb8349e3635718c561b5",
+  "successorBytes": 11495,
+  "mode": "0400",
+  "cppOrNodeOrSshExecuted": false,
+  "productionQualified": false
+}

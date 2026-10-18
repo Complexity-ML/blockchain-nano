@@ -15,7 +15,15 @@ public:
  int code;Json data;
  RpcError(int code,std::string message,Json data=nullptr):std::runtime_error(std::move(message)),code(code),data(std::move(data)){}
 };
+// Operator proof policy. These limits do not change State encoding or consensus.
+struct RpcStateReadLimits {
+ size_t maximum_storage_keys=64,maximum_accounts=65536,maximum_storage_entries=262144;
+ size_t maximum_snapshot_bytes=32*1024*1024,maximum_trie_bytes=32*1024*1024;
+ size_t maximum_trie_nodes=786433,maximum_output_bytes=4*1024*1024;
+ static RpcStateReadLimits from_json(const Json&);
+};
 struct RpcSimulationLimits {
+ RpcStateReadLimits state_read;
  std::chrono::milliseconds timeout{5000};
  std::function<std::chrono::steady_clock::time_point()> now=std::chrono::steady_clock::now;
  // Operator policy, never consensus limits. Every fixed-point round shares timeout.
@@ -76,6 +84,7 @@ class Rpc {
  std::map<std::string,RpcStream> filters_;
  Json logs(const Json& criteria,const std::optional<Int>& only=std::nullopt) const;
  std::optional<Block> block(const Json& tag) const;
+ std::function<Json()> prepare_state_read(const std::string&,const Json&,const std::function<void()>& cancelled={});
  std::function<Json()> prepare_access_list(const Json&,const std::function<void()>& cancelled={});
  std::function<Json()> prepare_simulation(const std::string& method,const Json& params,const std::function<void()>& cancelled={});
  Json dispatch(const std::string& method,const Json& params,const Estimate& estimate={});

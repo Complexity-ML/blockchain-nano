@@ -1,0 +1,222 @@
+{
+  "format": "nano-rpc-state-proof-source-derived-test-batch-v1",
+  "ready": false,
+  "sourceOnly": true,
+  "baselineSourceGuest": "/baseline-work",
+  "sourceGuest": "/work",
+  "compilerFlagsRequireRoot": true,
+  "testUnits": [
+    {
+      "name": "baseline-proof",
+      "scope": "baseline",
+      "source": "/baseline-work/tests/test_rpc_get_proof_baseline.cpp",
+      "compilerFlags": null
+    },
+    {
+      "name": "baseline-cost",
+      "scope": "baseline",
+      "source": "/baseline-work/tests/test_rpc_state_read_cost.cpp",
+      "compilerFlags": null
+    },
+    {
+      "name": "candidate-proof",
+      "scope": "candidate",
+      "source": "/work/tests/test_rpc_get_proof.cpp",
+      "compilerFlags": null
+    },
+    {
+      "name": "candidate-cost",
+      "scope": "candidate",
+      "source": "/work/tests/test_rpc_state_read_cost.cpp",
+      "compilerFlags": null
+    },
+    {
+      "name": "candidate-state-readers",
+      "scope": "candidate",
+      "source": "/work/tests/test_rpc_state_block_id.cpp",
+      "compilerFlags": null
+    },
+    {
+      "name": "candidate-legacy-rpc",
+      "scope": "candidate",
+      "source": "/work/tests/test_rpc.cpp",
+      "compilerFlags": null
+    }
+  ],
+  "testCases": [
+    {
+      "name": "baseline-proof",
+      "unit": "baseline-proof",
+      "args": [],
+      "timeoutSeconds": 30,
+      "expectedExit": 1,
+      "stdout": {
+        "kind": "empty"
+      },
+      "stderr": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "scenario": "get-proof-method-causal",
+            "passed": false,
+            "checks": 1,
+            "lastRpcResponse": {
+              "jsonrpc": "2.0",
+              "id": 1,
+              "error": {
+                "code": -32601,
+                "message": "Method not found"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "baseline-cost",
+      "unit": "baseline-cost",
+      "args": [
+        "--state-read-cost-self-test"
+      ],
+      "timeoutSeconds": 30,
+      "expectedExit": 1,
+      "stdout": {
+        "kind": "empty"
+      },
+      "stderr": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "scenario": "state-read-cost-summary",
+            "passed": false,
+            "stage": "cancel-eth_getBalance",
+            "checks": 1,
+            "expectedRefusals": 0,
+            "lastRpcResponse": {
+              "jsonrpc": "2.0",
+              "id": 1,
+              "result": "0x1"
+            },
+            "error": "each old state reader must now cancel inside bounded decode/root work"
+          }
+        ]
+      }
+    },
+    {
+      "name": "candidate-proof",
+      "unit": "candidate-proof",
+      "args": [
+        "--get-proof-self-test"
+      ],
+      "timeoutSeconds": 90,
+      "expectedExit": 0,
+      "stdout": {
+        "kind": "get-proof-record-stream-v1"
+      },
+      "stderr": {
+        "kind": "empty"
+      }
+    },
+    {
+      "name": "candidate-cost",
+      "unit": "candidate-cost",
+      "args": [
+        "--state-read-cost-self-test"
+      ],
+      "timeoutSeconds": 90,
+      "expectedExit": 0,
+      "stdout": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "scenario": "state-read-cost-summary",
+            "passed": true,
+            "groups": 1,
+            "checks": 7,
+            "expectedRefusals": 4,
+            "accounts": 128,
+            "slotsPerAccount": 16,
+            "externalNetwork": false
+          }
+        ]
+      },
+      "stderr": {
+        "kind": "empty"
+      }
+    },
+    {
+      "name": "candidate-state-readers",
+      "unit": "candidate-state-readers",
+      "args": [
+        "--state-readers-self-test"
+      ],
+      "timeoutSeconds": 90,
+      "expectedExit": 0,
+      "stdout": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "scenario": "state-readers-canonical-selectors-paris-shanghai",
+            "passed": true,
+            "checks": 202,
+            "expectedRefusals": 14
+          },
+          {
+            "scenario": "state-readers-selector-error-precedence",
+            "passed": true,
+            "checks": 322,
+            "expectedRefusals": 126
+          },
+          {
+            "scenario": "state-readers-detached-capture-and-real-reorg",
+            "passed": true,
+            "checks": 521,
+            "expectedRefusals": 150
+          },
+          {
+            "scenario": "state-readers-real-retention-and-reopen",
+            "passed": true,
+            "checks": 597,
+            "expectedRefusals": 170
+          },
+          {
+            "scenario": "state-readers-http-object-selectors-and-batch",
+            "passed": true,
+            "checks": 650,
+            "expectedRefusals": 179
+          },
+          {
+            "scenario": "state-readers-summary",
+            "passed": true,
+            "groups": 5,
+            "checks": 650,
+            "expectedRefusals": 179,
+            "selectedGroup": "all",
+            "methods": 4,
+            "externalNetwork": false,
+            "consensusModified": false
+          }
+        ]
+      },
+      "stderr": {
+        "kind": "empty"
+      }
+    },
+    {
+      "name": "candidate-legacy-rpc",
+      "unit": "candidate-legacy-rpc",
+      "args": [],
+      "timeoutSeconds": 120,
+      "expectedExit": 0,
+      "stdout": {
+        "kind": "last-line",
+        "text": "1053 RPC checks passed",
+        "contains": " RPC checks passed",
+        "count": 1
+      },
+      "stderr": {
+        "kind": "empty"
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+--- retained-continuation-v1-17e368c4/host.py
++++ retained-continuation-v2/host.py
+@@ -59,6 +59,16 @@
+  return type(row)is dict and set(row)==set(F)|{'sha256'}and all(type(row[k])is int and row[k]>=0 for k in F)and type(row['sha256'])is str and re.fullmatch('[0-9a-f]{64}',row['sha256'])
+ def descriptor(item):return type(item)is dict and set(item)=={'file','guest','pin'}and type(item['file'])is str and type(item['guest'])is str and valid_pin(item['pin'])
+ 
++
++def retain_new_worker_products(out,units,report,m):
++ authority=out/'outputs'/'final-observations.private.json';need(str(authority)not in m.HELD,'new worker product authority not previously held');row,raw=m.material(authority,16777216);value=json_body(raw);need(type(value)is dict and set(value)=={'guestStatSha','guestAliases','products','guestFdIdentityVerified'}and value['guestFdIdentityVerified']is False,'new worker product authority shape')
++ expected=set()
++ for u in units:
++  n=u['name'];obj='/outputs/unit-'+n+'.o';exe='/outputs/'+u['executable'];need(report['unitProducts'][n]=={'scope':'candidate','source':u['source'],'object':obj,'objectReused':False,'executable':exe},'four fresh unit products match original worker report');expected.update(str(out/'outputs'/x.removeprefix('/outputs/'))for x in (obj,obj+'.M',obj+'.d',exe))
++ products=value['products'];need(type(products)is dict and len(products)==16 and set(products)==expected,'exact sixteen new M/object/MD/executable products')
++ for p,v in products.items():
++  need(type(v)is dict and set(v)=={'hostFD9','guestStatSha'}and field_row(v['hostFD9'])and str(p)not in m.HELD,'new worker original product row');g=v['guestStatSha'];h=v['hostFD9'];need(type(g)is dict and set(g)=={'materialGNU9','sha256','bytes'}and g['sha256']==h['sha256']and g['bytes']==h['st_size'],'worker host/guest new product byte pin');m.hold(p,h)
++ m.hold(authority,row);return len(products)
+ 
+ def runtime_stream(raw,policy):
+  need(type(raw)is bytes and len(raw)<=16777216 and type(policy)is dict,'bounded retained CLI stream');kind=policy.get('kind')
+@@ -145,7 +155,7 @@
+  def select(value,keys):
+   for key in keys:value=value[key]
+   return value
+- project={};source_pins={};inventories={};known={};mounts={};library_guests=[];core=None;retained={};runtime_results=[];runtime_guest=None;retention=None
++ project={};source_pins={};inventories={};known={};mounts={};library_guests=[];core=None;retained={};runtime_results=[];runtime_guest=None;retention=None;new_product_rows=0
+  def inventory():
+   for root,wanted in inventories.items():
+    found=set();pending=[pathlib.Path(root)];entries=0
+@@ -201,6 +211,7 @@
+   need(len(config)==20,'exact retained 20 fields; no archive callback or Core recipe');m.save('worker-config.private.json',config);m.save('selected-host-inputs-before-worker.private.json',dict(m.HELD));m.save('prepared-public.json',{'sourceRevision':CANDIDATE,'actualHead':c['actualHead'],'image':m.IMAGE,'sourceFiles':{'candidate':1276,'baseline':1271},'retainedCore':CORE_PIN,'worker':WORKER_PIN,'runtimeLibraries':6,'generatedProviders':len(gen),'coreScansRequested':0,'freshUnitsRequested':4,'candidateTestsRequested':4,'retainedExecutables':8,'runtimeCliRequested':9,'previousFailedEnvelopeReclassified':False,'newImagesBuilt':0,'productionQualified':False})
+   runtime_guest=admit_retained_guest(dk,cid,retained,m)
+   worker_ns={};exec(compile(wraw,str(worker),'exec'),worker_ns);report=worker_ns['run_qualification'](config);counts=report['counts'];want={'independentM':4,'coreIndependentM':0,'testIndependentM':4,'compiledTranslationUnits':4,'coreCompiledTranslationUnits':0,'testCompiledTranslationUnits':4,'archiveUpdates':0,'links':4,'loaderChecks':4,'testInvocations':4,'runtimeCliInvocations':0,'unitInvocations':4,'runtimeIndependentM':0,'runtimeCompiledTranslationUnits':0,'reusedSubmitObjects':0};need(report['passed']is True and report['allConfiguredCasesPassed']is True and report['coreMode']=='retained'and counts==want and all(type(counts[k])is int for k in want)and report['coreProof']is None and len(report['mmd'])==4 and all(x['normalizedMEqualsMd']is True for x in report['mmd'].values()),'exact four fresh candidates, retained Core')
++  new_product_rows=retain_new_worker_products(out,units,report,m)
+   for t in c['retainedCases']:
+    x=retained[t['unit']];env=['--env','HOME=/tmp','--env','TMPDIR=/tmp','--env','LANG=C','--env','LC_ALL=C'];at=time.monotonic();raw,err,code=dk('CLI-'+t['name'],['exec','--workdir','/work',*env,cid,x['guest'],*t['args']],t['timeoutSeconds'],expected=t['expectedExit']);stdout_oracle=runtime_stream(raw,t['stdout']);stderr_oracle=runtime_stream(err,t['stderr']);event={'phase':'retained-'+t['name'],'exitCode':code,'elapsedMs':round((time.monotonic()-at)*1000)};r={'name':t['name'],'unit':t['unit'],'scope':'runtime','actualExitCode':code,'semanticStreamOraclesPassed':True,'runtimeArityOnly':True,'stdoutOracle':stdout_oracle,'stderrOracle':stderr_oracle};runtime_results.append(r);m.save('retained-case-'+t['name']+'-public.json',r);m.save('retained-test-'+t['name']+'.exit.json',event);m.write_new(out/('retained-test-'+t['name']+'.stdout.log'),raw);m.write_new(out/('retained-test-'+t['name']+'.stderr.log'),err)
+    need(observe_retained_guest(dk,cid,retained)==runtime_guest,'retained guest executable changed after CLI')
+@@ -252,7 +263,7 @@
+     post_cleanup_fence=False
+     if path not in changed_paths:diff.append({'path':path,'errorType':type(error).__name__});changed_paths.add(path)
+   if not post_cleanup_fence and first is None:first=RuntimeError('original host inputs changed after cleanup/image-final')
+-  result={'format':'nano-rpc-candidate-amd-retained-continuation-host-result-v1','passed':first is None,'workerPassed':bool(report and report.get('passed')),'allConfiguredCasesPassed':bool(report and report.get('allConfiguredCasesPassed')and len(runtime_results)==9),'sourceRevision':CANDIDATE,'actualHead':c['actualHead'],'baselineSourceRevision':BASE,'retainedCore':CORE_PIN,'image':m.IMAGE,'imageFinalFence':image_final,'hostFinalFenceAfterCleanup':post_cleanup_fence,'originalHostInputsUnchanged':not diff,'changedHostInputs':len(diff),'cleanup':cleanup,'workerCounts':None if report is None else report['counts'],'retainedCoreProof':None if retention is None else retention['coreProof'],'retainedProductRows':265 if retention is not None else 0,'retainedRuntimeCliInvocations':len(runtime_results),'retainedRuntimeCases':runtime_results,'retainedExecutableCompilationsRepeated':0,'retainedExecutableLinksRepeated':0,'previousFailedEnvelopeReclassified':False,'runtimeLibraries':len(library_guests),'generatedProviders':len(c['generatedProviders']),'newImagesBuilt':0,'cmakeConfigures':0,'currentDbReclassifiedAsOriginalAuthority':False,'rootIndependentProofVectorsVerified':False,'runtimeServeOrRpcQualified':False,'runtimeDutiesResumed':False,'productionQualified':False}
++  result={'format':'nano-rpc-candidate-amd-retained-continuation-host-result-v1','passed':first is None,'workerPassed':bool(report and report.get('passed')),'allConfiguredCasesPassed':bool(report and report.get('allConfiguredCasesPassed')and len(runtime_results)==9),'sourceRevision':CANDIDATE,'actualHead':c['actualHead'],'baselineSourceRevision':BASE,'retainedCore':CORE_PIN,'image':m.IMAGE,'imageFinalFence':image_final,'hostFinalFenceAfterCleanup':post_cleanup_fence,'originalHostInputsUnchanged':not diff,'changedHostInputs':len(diff),'cleanup':cleanup,'workerCounts':None if report is None else report['counts'],'retainedCoreProof':None if retention is None else retention['coreProof'],'retainedProductRows':265 if retention is not None else 0,'newWorkerProductRowsHeldThroughCleanup':new_product_rows,'retainedRuntimeCliInvocations':len(runtime_results),'retainedRuntimeCases':runtime_results,'retainedExecutableCompilationsRepeated':0,'retainedExecutableLinksRepeated':0,'previousFailedEnvelopeReclassified':False,'runtimeLibraries':len(library_guests),'generatedProviders':len(c['generatedProviders']),'newImagesBuilt':0,'cmakeConfigures':0,'currentDbReclassifiedAsOriginalAuthority':False,'rootIndependentProofVectorsVerified':False,'runtimeServeOrRpcQualified':False,'runtimeDutiesResumed':False,'productionQualified':False}
+   if first is not None:result.update(firstFailureType=type(first).__name__,firstFailureMessage=str(first))
+   try:m.save('host-final-observations.private.json',{'inputs':dict(m.HELD),'differences':diff});m.save('host-final-fence-public.json',{'passed':not diff,'selectedFiles':len(m.HELD),'oldAuthoritiesRefreshed':False});m.save('result-public.json',result);print(json.dumps(result),flush=True)
+   except BaseException:

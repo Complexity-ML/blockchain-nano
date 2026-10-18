@@ -1,5 +1,6 @@
 #include "nano/rpc_timing.hpp"
 #include "nano/rpc.hpp"
+#include "nano/trie_proof.hpp"
 #include "../network/altair_rpc_service.hpp"
 #include "../network/bellatrix_rpc_service.hpp"
 #include "nano/consensus_capella_runtime.hpp"
@@ -132,6 +133,71 @@ void require_simulation_canonical_header(const Header& selected,const std::optio
  // Historical states are keyed by canonical height, never fabricate branch state.
  if(!is_canonical)throw RpcError(-32000,"Selected block state is unavailable");
 }
+bool state_reader_method(const std::string& method){
+ return method=="eth_getBalance"||method=="eth_getCode"||method=="eth_getTransactionCount"||method=="eth_getStorageAt";
+}
+Int proof_storage_key(const Json& value){
+ if(value.is_string()){
+  const auto& text=value.get_ref<const std::string&>();
+  if(text.size()==66&&access_prefix(text)){const auto raw=unhex(text);if(raw.size()==32)return integer(raw);}
+ }
+ return access_quantity(value,256,"storage key");
+}
+void validate_proof_limits(const RpcStateReadLimits& p){
+ if(!p.maximum_storage_keys||p.maximum_storage_keys>65536||!p.maximum_accounts||p.maximum_accounts>1048576||!p.maximum_storage_entries||p.maximum_storage_entries>4194304||!p.maximum_snapshot_bytes||p.maximum_snapshot_bytes>256*1024*1024||!p.maximum_trie_bytes||p.maximum_trie_bytes>256*1024*1024||!p.maximum_trie_nodes||p.maximum_trie_nodes>12582913||!p.maximum_output_bytes||p.maximum_output_bytes>16*1024*1024)throw std::invalid_argument("Invalid RPC proof limits");
+}
+struct CapturedAccountState {Account account;std::unique_ptr<MptProofTrie> accounts,storage;};
+CapturedAccountState decode_execution_state(const std::string& encoded,const Header& header,const std::string& requested,const RpcStateReadLimits& limits,const std::function<void()>& check){
+ // A bounded serialized value is decoded on the worker after both mutexes were
+ // released. Parser events and every account/slot/trie visit share one deadline.
+ Json decoded;
+ try{decoded=Json::parse(encoded,[&](int depth,Json::parse_event_t,Json&){check();if(depth>8)throw RpcError(-32603,"Persisted state nesting invalid");return true;});}
+ catch(const Json::exception&){throw RpcError(-32603,"Persisted state JSON invalid");}
+ if(!decoded.is_object())throw RpcError(-32603,"Persisted state must be an object");
+ if(decoded.size()>limits.maximum_accounts)throw RpcError(-32005,"Proof account limit exceeded");
+ size_t slots=0,nodes=0,trie_bytes=0;std::map<Bytes,Bytes> accounts;
+ std::unique_ptr<MptProofTrie> selected_storage;Account selected_account;
+ const auto trie=[&](const std::map<Bytes,Bytes>& entries,size_t entry_limit){
+  check();if(nodes>=limits.maximum_trie_nodes||trie_bytes>=limits.maximum_trie_bytes)throw RpcError(-32005,"Proof trie work limit exceeded");
+  MptProofLimits policy;policy.maximum_entries=entry_limit;policy.maximum_input_bytes=limits.maximum_snapshot_bytes;policy.maximum_nodes=limits.maximum_trie_nodes-nodes;policy.maximum_materialized_bytes=limits.maximum_trie_bytes-trie_bytes;policy.maximum_proof_bytes=limits.maximum_output_bytes;
+  auto built=std::make_unique<MptProofTrie>(entries,policy,check);nodes+=built->node_count();trie_bytes+=built->materialized_bytes();return built;
+ };
+ for(auto it=decoded.begin();it!=decoded.end();++it){
+  check();const auto account=access_address(Json(it.key()));if(account!=it.key())throw RpcError(-32603,"Persisted account address is not canonical");const auto& row=it.value();if(!row.is_object())throw RpcError(-32603,"Persisted account invalid");
+  const auto nonce=quantity(row.value("nonce",Json("0x0"))),balance=quantity(row.value("balance",Json("0x0")));
+  if(nonce<0||balance<0)throw RpcError(-32603,"Persisted account integer invalid");
+  const auto code=unhex(row.value("code",std::string("0x")));check();std::map<Bytes,Bytes> storage;
+  if(row.contains("storage")){
+   if(!row["storage"].is_object())throw RpcError(-32603,"Persisted storage invalid");
+   if(row["storage"].size()>limits.maximum_storage_entries-slots)throw RpcError(-32005,"Proof storage entry limit exceeded");slots+=row["storage"].size();
+   for(auto slot=row["storage"].begin();slot!=row["storage"].end();++slot){check();const auto key=quantity(Json(slot.key())),value=quantity(slot.value());if(quantity(key)!=slot.key())throw RpcError(-32603,"Persisted storage key is not canonical");const auto raw=bytes(key,32);(void)bytes(value,32);if(value!=0)storage.emplace(keccak(raw),Rlp(value).encode());}
+  }
+  // Match State::root exactly: storage alone does not persist an empty account.
+  // Never return unauthenticated ghost storage from an omitted account.
+  if(nonce==0&&balance==0&&code.empty())continue;
+  auto built=trie(storage,limits.maximum_storage_entries);
+  const auto account_value=Rlp(std::vector<Rlp>{Rlp(nonce),Rlp(balance),Rlp(built->root()),Rlp(keccak(code))}).encode();
+  accounts.emplace(keccak(unhex(account)),account_value);
+  if(account==requested){selected_storage=std::move(built);selected_account.nonce=nonce;selected_account.balance=balance;selected_account.code=code;
+   if(row.contains("storage"))for(auto slot=row["storage"].begin();slot!=row["storage"].end();++slot){check();const auto value=quantity(slot.value());if(value!=0)selected_account.storage.emplace(quantity(Json(slot.key())),value);}
+  }
+ }
+ check();auto account_trie=trie(accounts,limits.maximum_accounts);
+ if(account_trie->root()!=header.state_root)throw RpcError(-32000,"Selected block and state do not match");
+ if(!selected_storage){const std::map<Bytes,Bytes> empty;selected_storage=trie(empty,limits.maximum_storage_entries);}
+ return {std::move(selected_account),std::move(account_trie),std::move(selected_storage)};
+}
+Json execution_state_proof(CapturedAccountState captured,const std::string& requested,const std::vector<Int>& keys,const RpcStateReadLimits& limits,const std::function<void()>& check){
+ const auto& selected=captured.account;
+ size_t output_bytes=512;const auto charge=[&](size_t count){if(count>limits.maximum_output_bytes-std::min(output_bytes,limits.maximum_output_bytes))throw RpcError(-32005,"Proof response byte limit exceeded");output_bytes+=count;};
+ const auto proof_json=[&](const std::vector<Bytes>& proof){Json out=Json::array();for(const auto& raw:proof){check();charge(raw.size()*2+5);out.push_back(hex(raw));}return out;};
+ Json out={{"address",requested},{"balance",quantity(selected.balance)},{"nonce",quantity(selected.nonce)},{"codeHash",hex(keccak(selected.code))},{"storageHash",hex(captured.storage->root())},{"accountProof",proof_json(captured.accounts->proof(keccak(unhex(requested))))},{"storageProof",Json::array()}};
+ for(const auto& key:keys){check();const auto raw=bytes(key,32);auto proof=captured.storage->proof(keccak(raw));Int value=0;
+  const auto found=selected.storage.find(key);if(found!=selected.storage.end())value=found->second;
+  charge(180);out["storageProof"].push_back({{"key",quantity(key)},{"value",quantity(value)},{"proof",proof_json(proof)}});
+ }
+ check();if(out.dump().size()>limits.maximum_output_bytes)throw RpcError(-32005,"Proof response byte limit exceeded");check();return out;
+}
 Json access_json(const std::vector<Access>& list,const std::function<void()>& check){
  Json out=Json::array();for(const auto& row:list){check();Json keys=Json::array();for(const auto& key:row.keys){check();keys.push_back(hex(key));}out.push_back({{"address",row.address},{"storageKeys",std::move(keys)}});}return out;
 }
@@ -176,10 +242,19 @@ void access_overrides(State& state,const Json& overrides,const RpcSimulationLimi
 }
 
 }
+RpcStateReadLimits RpcStateReadLimits::from_json(const Json& config){
+ if(!config.is_object())throw std::invalid_argument("rpcSimulation.state_read must be an object");
+ RpcStateReadLimits out;const std::map<std::string,std::pair<size_t*,size_t>> fields={
+  {"maximum_storage_keys",{&out.maximum_storage_keys,65536}},{"maximum_accounts",{&out.maximum_accounts,1048576}},
+  {"maximum_storage_entries",{&out.maximum_storage_entries,4194304}},{"maximum_snapshot_bytes",{&out.maximum_snapshot_bytes,256*1024*1024}},
+  {"maximum_trie_bytes",{&out.maximum_trie_bytes,256*1024*1024}},{"maximum_trie_nodes",{&out.maximum_trie_nodes,12582913}},{"maximum_output_bytes",{&out.maximum_output_bytes,16*1024*1024}}};
+ for(auto it=config.begin();it!=config.end();++it){auto field=fields.find(it.key());if(field==fields.end())throw std::invalid_argument("Unknown rpcSimulation.state_read setting: "+it.key());if(!it.value().is_number_integer())throw std::invalid_argument("RPC proof limit must be an integer");const Int n(it.value().dump());if(n<1||n>Int(std::to_string(field->second.second)))throw std::invalid_argument("RPC proof limit out of range");*field->second.first=size_t(u64(n));}
+ validate_proof_limits(out);return out;
+}
 RpcSimulationLimits RpcSimulationLimits::from_json(const Json& config){
- if(!config.is_object())throw std::invalid_argument("rpcSimulation must be an object");for(auto it=config.begin();it!=config.end();++it)if(it.key()!="timeout_ms"&&it.key()!="maximum_access_list_iterations"&&it.key()!="maximum_access_list_addresses"&&it.key()!="maximum_access_list_storage_keys"&&it.key()!="maximum_access_list_override_code_bytes")throw std::invalid_argument("Unknown rpcSimulation setting: "+it.key());
+ if(!config.is_object())throw std::invalid_argument("rpcSimulation must be an object");for(auto it=config.begin();it!=config.end();++it)if(it.key()!="timeout_ms"&&it.key()!="maximum_access_list_iterations"&&it.key()!="maximum_access_list_addresses"&&it.key()!="maximum_access_list_storage_keys"&&it.key()!="maximum_access_list_override_code_bytes"&&it.key()!="state_read")throw std::invalid_argument("Unknown rpcSimulation setting: "+it.key());
  auto bounded=[&](const char* key,uint64_t fallback,uint64_t maximum){if(!config.contains(key))return fallback;if(!config[key].is_number_integer())throw std::invalid_argument(std::string("rpcSimulation ")+key+" must be an integer");const Int n(config[key].dump());if(n<1||n>Int(std::to_string(maximum)))throw std::invalid_argument(std::string("rpcSimulation ")+key+" out of range");return u64(n);};
- RpcSimulationLimits out;out.timeout=std::chrono::milliseconds(bounded("timeout_ms",out.timeout.count(),60000));out.maximum_access_list_iterations=size_t(bounded("maximum_access_list_iterations",out.maximum_access_list_iterations,1024));out.maximum_access_list_addresses=size_t(bounded("maximum_access_list_addresses",out.maximum_access_list_addresses,65536));out.maximum_access_list_storage_keys=size_t(bounded("maximum_access_list_storage_keys",out.maximum_access_list_storage_keys,1048576));out.maximum_access_list_override_code_bytes=size_t(bounded("maximum_access_list_override_code_bytes",out.maximum_access_list_override_code_bytes,16777216));return out;
+ RpcSimulationLimits out;if(config.contains("state_read"))out.state_read=RpcStateReadLimits::from_json(config["state_read"]);out.timeout=std::chrono::milliseconds(bounded("timeout_ms",out.timeout.count(),60000));out.maximum_access_list_iterations=size_t(bounded("maximum_access_list_iterations",out.maximum_access_list_iterations,1024));out.maximum_access_list_addresses=size_t(bounded("maximum_access_list_addresses",out.maximum_access_list_addresses,65536));out.maximum_access_list_storage_keys=size_t(bounded("maximum_access_list_storage_keys",out.maximum_access_list_storage_keys,1048576));out.maximum_access_list_override_code_bytes=size_t(bounded("maximum_access_list_override_code_bytes",out.maximum_access_list_override_code_bytes,16777216));return out;
 }
 Json Rpc::network_block(const Block& block,bool full)const{
  auto result=full?block.to_transport_json():block.to_json(false);if(!full)result["transactionEncoding"]="signed-rlp-hashes-v1";result["uncleHeaders"]=Json::array();
@@ -295,15 +370,6 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
  if(method=="eth_gasPrice"||method=="eth_maxPriorityFeePerGas"){
   arity(p,0,0);const auto head=chain_.tip_header();const auto tip=suggested_tip(head);
   return quantity(method=="eth_gasPrice"?std::min(Int((Int(1)<<256)-1),Int(head.base_fee.value_or(Int(0))+tip)):tip);
- }
- if(method=="eth_getBalance"||method=="eth_getCode"||method=="eth_getTransactionCount"||method=="eth_getStorageAt"){
-  bool storage=method=="eth_getStorageAt";arity(p,storage?2:1,storage?3:2);auto addr=address(p[0].get<std::string>());Json tag=p.size()>(storage?2:1)?p[storage?2:1]:Json("latest");
-  if(method=="eth_getTransactionCount"&&tag=="pending")return quantity(chain_.pending_nonce(addr));
-  auto b=block(tag);if(!b)throw RpcError(-32000,"Unknown block");auto state=chain_.store().state_at(b->header.number);if(!state)throw RpcError(-32000,"State unavailable");
-  const auto& account=static_cast<const State&>(*state).get(addr);
-  if(storage)return hex(bytes(state->get_storage(addr,quantity(p[1])),32));
-  if(method=="eth_getCode")return hex(account.code);
-  return quantity(method=="eth_getBalance"?account.balance:account.nonce);
  }
  if(method=="eth_getBlockByNumber"||method=="eth_getBlockByHash"||method=="eth_getBlockTransactionCountByNumber"||method=="eth_getBlockTransactionCountByHash"||method=="eth_getTransactionByBlockNumberAndIndex"||method=="eth_getTransactionByBlockHashAndIndex"){
   bool by_hash=method.find("Hash")!=std::string::npos;bool count=method.find("Count")!=std::string::npos;bool tx=method.ends_with("AndIndex");arity(p,tx?2:1,count?1:2);
@@ -555,6 +621,44 @@ Json Rpc::dispatch(const std::string& method,const Json& p,const Estimate& estim
  }
  throw RpcError(-32601,"Method not found");
 }
+std::function<Json()> Rpc::prepare_state_read(const std::string& method,const Json& params,const std::function<void()>& cancelled){
+ const bool proof=method=="eth_getProof",storage=method=="eth_getStorageAt";
+ arity(params,proof?3:storage?2:1,proof?3:storage?3:2);const auto limits=simulation_limits_;validate_proof_limits(limits.state_read);
+ if(limits.timeout.count()<=0||limits.timeout>std::chrono::seconds(60)||!limits.now)throw RpcError(-32602,"Invalid RPC state-read timeout");
+ const auto deadline=limits.now()+limits.timeout;auto check=[deadline,now=limits.now,cancelled]{if(cancelled)cancelled();if(now()>=deadline)throw ExecutionCancelled("RPC state-read execution timeout");};check();
+ const auto account=proof?access_address(params[0]):address(params[0].get<std::string>());std::vector<Int> keys;Int position=0;Json tag="latest";
+ if(proof){if(!params[1].is_array())throw RpcError(-32602,"Expected storage key array");if(params[1].size()>limits.state_read.maximum_storage_keys)throw RpcError(-32005,"Proof storage key limit exceeded");keys.reserve(params[1].size());for(const auto& value:params[1]){check();keys.push_back(proof_storage_key(value));}tag=params[2];}
+ else{if(storage)position=quantity(params[1]);if(params.size()>(storage?2u:1u))tag=params[storage?2:1];}
+ const auto selector=simulation_block_selector(std::move(tag),false);
+ // Pending nonce retains its original mempool semantics. There is no persisted
+ // pending state root to use for the other readers or a Merkle proof.
+ if(method=="eth_getTransactionCount"&&selector.tag=="pending"){const auto nonce=chain_.pending_nonce(account);return [nonce,check,maximum=limits.state_read.maximum_output_bytes]{check();Json out=quantity(nonce);if(out.dump().size()>maximum)throw RpcError(-32005,"State-read response byte limit exceeded");return out;};}
+ // Capture the selected header under the existing Rpc lock. The large serialized
+ // state copy, decoding and all MPT work happen only in the returned worker job.
+ auto selected=selector.hash_selected?chain_.store().block_by_hash(selector.hash):block(selector.tag);
+ if(!selected)throw RpcError(selector.object?-32001:-32000,"Unknown block");check();
+ const auto header=selected->header;const auto required=selector.canonical_required;const auto* store=&chain_.store();
+ return [header,account,keys=std::move(keys),position,method,proof,storage,limits,check,required,store]{
+  check();SerializedExecutionState snapshot;
+  try{snapshot=store->serialized_state_at(header.number,header.hash(),limits.state_read.maximum_snapshot_bytes,check);}
+  catch(const std::length_error&){throw RpcError(-32005,"Serialized execution state byte limit exceeded");}
+  if(!snapshot.canonical)throw RpcError(-32000,required?"Selected block is not canonical":"Selected block state is unavailable");
+  if(!snapshot.encoded)throw RpcError(-32000,"State unavailable");check();
+  try{auto captured=decode_execution_state(*snapshot.encoded,header,account,limits.state_read,check);
+   if(proof)return execution_state_proof(std::move(captured),account,keys,limits.state_read,check);
+   check();Json response;
+   if(storage){const auto found=captured.account.storage.find(position);response=hex(bytes(found==captured.account.storage.end()?Int(0):found->second,32));}
+   else if(method=="eth_getCode"){if(limits.state_read.maximum_output_bytes<4||captured.account.code.size()>(limits.state_read.maximum_output_bytes-4)/2)throw RpcError(-32005,"State-read response byte limit exceeded");response=hex(captured.account.code);}
+   else response=quantity(method=="eth_getBalance"?captured.account.balance:captured.account.nonce);
+   if(response.dump().size()>limits.state_read.maximum_output_bytes)throw RpcError(-32005,"State-read response byte limit exceeded");check();return response;
+  }
+  catch(const MptProofLimitExceeded& error){throw RpcError(-32005,error.what());}
+  catch(const RpcError& error){if(error.code==-32602)throw RpcError(-32603,"Persisted state encoding invalid");throw;}
+  catch(const Json::exception&){throw RpcError(-32603,"Persisted state encoding invalid");}
+  catch(const std::invalid_argument&){throw RpcError(-32603,"Persisted state encoding invalid");}
+  catch(const std::overflow_error&){throw RpcError(-32603,"Persisted state encoding invalid");}
+ };
+}
 std::function<Json()> Rpc::prepare_access_list(const Json& p,const std::function<void()>& cancelled){
  arity(p,1,3);if(!p[0].is_object())throw RpcError(-32602,"Expected call object");const auto limits=simulation_limits_;
  if(limits.timeout.count()<=0||!limits.now||!limits.maximum_access_list_iterations||!limits.maximum_access_list_addresses||!limits.maximum_access_list_storage_keys||!limits.maximum_access_list_override_code_bytes)throw RpcError(-32602,"Invalid access list simulation limits");
@@ -787,6 +891,9 @@ Json Rpc::one(const Json& request,const std::function<void()>& cancelled){
     else if(method=="nano_capellaSubmit")result=runtime->admission->submit_receipt(params[1].get<std::string>(),positive(params[2]),params[3]);
     else result=runtime->admission->receipt(params[1].get<std::string>(),positive(params[2]),method=="nano_capellaCancel",method=="nano_capellaForget");
    }
+  }
+  else if(state_reader_method(method)||method=="eth_getProof"){
+   auto read=prepare_state_read(method,params,cancelled);lock.unlock();result=read();
   }
   else if(method=="eth_call"||method=="eth_estimateGas"||method=="eth_createAccessList"){
    std::function<Json()> simulation;{rpc_timing::Span preparation("prepare");simulation=prepare_simulation(method,params,cancelled);}

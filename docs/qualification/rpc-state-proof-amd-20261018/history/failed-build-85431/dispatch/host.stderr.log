@@ -1,0 +1,39 @@
+Traceback (most recent call last):
+  File "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/host.py", line 206, in <module>
+    if __name__=='__main__':main()
+                            ^^^^^^
+  File "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/host.py", line 205, in main
+    p=argparse.ArgumentParser();p.add_argument('control');p.add_argument('sha256');p.add_argument('bytes',type=int);a=p.parse_args();path=physical(a.control);c,row,samples=control_input(path,{'sha256':a.sha256,'bytes':a.bytes});run_host(c,path,row,samples)
+                                                                                                                                                                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/host.py", line 201, in run_host
+    if first is not None:raise first
+                         ^^^^^^^^^^^
+  File "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/host.py", line 152, in run_host
+    worker_ns={};exec(compile(wraw,str(worker),'exec'),worker_ns);config['proveArchiveSet']=helper_ns['prove_object_replacements'];report=worker_ns['run_qualification'](config);counts=report['counts'];K=report['coreProof']['selectedReplacementCount'];want={'independentM':155,'coreIndependentM':143,'testIndependentM':4,'compiledTranslationUnits':K+12,'coreCompiledTranslationUnits':K,'testCompiledTranslationUnits':4,'archiveUpdates':1,'links':12,'loaderChecks':12,'testInvocations':4,'runtimeCliInvocations':9,'unitInvocations':13,'runtimeIndependentM':8,'runtimeCompiledTranslationUnits':8,'reusedSubmitObjects':0};need(report['passed']is True and report['allConfiguredCasesPassed']is True and report['coreMode']=='incremental'and counts==want and all(type(counts[k])is int for k in want)and report['coreProof']['members']==143 and report['coreProof']['unchangedOutsideReplacementSet']==143-K,'exact full AMD batch')
+                                                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/worker.py", line 328, in run_qualification
+    if first is not None:raise first
+                         ^^^^^^^^^^^
+  File "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/worker.py", line 306, in run_qualification
+    run('CXX-'+name,argv+['-MD','-MF',md,'-MT',obj,'-o',obj,'-c',u['source']],300);counts['compiledTranslationUnits']+=1;counts['runtimeCompiledTranslationUnits'if u['scope']=='runtime'else'testCompiledTranslationUnits']+=1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/worker.py", line 84, in run
+    if error is not None:raise error
+                         ^^^^^^^^^^^
+  File "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01/worker.py", line 74, in run
+    result=subprocess.run(command,stdin=subprocess.DEVNULL,stdout=stdout,stderr=stderr,env={'PATH':'/usr/bin:/bin','LANG':'C','LC_ALL':'C'},timeout=limit)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2141, in _communicate
+    self.wait(timeout=self._remaining_time(endtime))
+  File "/usr/lib/python3.12/subprocess.py", line 1264, in wait
+    return self._wait(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2045, in _wait
+    raise TimeoutExpired(self.args, timeout)
+subprocess.TimeoutExpired: Command '['/usr/bin/sudo', '-n', '/usr/bin/docker', '--host', 'unix:///var/run/docker.sock', '--config', '/home/ubuntu/rpc-candidate-amd-root-20261018-01/docker-client', 'exec', '--workdir', '/outputs', '--env', 'CCACHE_DISABLE=1', '--env', 'HOME=/tmp', '--env', 'LANG=C', '--env', 'LC_ALL=C', '--env', 'TMPDIR=/tmp', '5f2c5dc53f8c3a32e348e5e7365a151ab5eb393bd06719c81c29a963d3126e55', '/usr/bin/clang++', '-DMCL_BINT_ASM_X64=0', '-DMCL_DONT_USE_XBYAK', '-DMCL_FP_BIT=384', '-DMCL_FR_BIT=256', '-DMCL_MSM=0', '-DMCL_PORTABLE=1', '-DMCL_USE_LLVM=1', '-I/work/include', '-I/work/third_party', '-I/work/third_party/mcl/include', '-O3', '-DNDEBUG', '-std=gnu++20', '-MD', '-MF', '/outputs/unit-candidate-proof.o.d', '-MT', '/outputs/unit-candidate-proof.o', '-o', '/outputs/unit-candidate-proof.o', '-c', '/work/tests/test_rpc_get_proof.cpp']' timed out after 0.7532942809630185 seconds

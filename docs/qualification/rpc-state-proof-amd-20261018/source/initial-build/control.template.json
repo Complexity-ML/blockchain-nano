@@ -1,0 +1,486 @@
+{
+  "actualHead": null,
+  "cases": [
+    {
+      "args": [
+        "--get-proof-self-test"
+      ],
+      "expectedExit": 0,
+      "name": "candidate-proof",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "kind": "get-proof-record-stream-v1"
+      },
+      "timeoutSeconds": 90,
+      "unit": "candidate-proof"
+    },
+    {
+      "args": [
+        "--state-read-cost-self-test"
+      ],
+      "expectedExit": 0,
+      "name": "candidate-cost",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "accounts": 128,
+            "checks": 7,
+            "expectedRefusals": 4,
+            "externalNetwork": false,
+            "groups": 1,
+            "passed": true,
+            "scenario": "state-read-cost-summary",
+            "slotsPerAccount": 16
+          }
+        ]
+      },
+      "timeoutSeconds": 90,
+      "unit": "candidate-cost"
+    },
+    {
+      "args": [
+        "--state-readers-self-test"
+      ],
+      "expectedExit": 0,
+      "name": "candidate-state-readers",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "checks": 202,
+            "expectedRefusals": 14,
+            "passed": true,
+            "scenario": "state-readers-canonical-selectors-paris-shanghai"
+          },
+          {
+            "checks": 322,
+            "expectedRefusals": 126,
+            "passed": true,
+            "scenario": "state-readers-selector-error-precedence"
+          },
+          {
+            "checks": 521,
+            "expectedRefusals": 150,
+            "passed": true,
+            "scenario": "state-readers-detached-capture-and-real-reorg"
+          },
+          {
+            "checks": 597,
+            "expectedRefusals": 170,
+            "passed": true,
+            "scenario": "state-readers-real-retention-and-reopen"
+          },
+          {
+            "checks": 650,
+            "expectedRefusals": 179,
+            "passed": true,
+            "scenario": "state-readers-http-object-selectors-and-batch"
+          },
+          {
+            "checks": 650,
+            "consensusModified": false,
+            "expectedRefusals": 179,
+            "externalNetwork": false,
+            "groups": 5,
+            "methods": 4,
+            "passed": true,
+            "scenario": "state-readers-summary",
+            "selectedGroup": "all"
+          }
+        ]
+      },
+      "timeoutSeconds": 90,
+      "unit": "candidate-state-readers"
+    },
+    {
+      "args": [],
+      "expectedExit": 0,
+      "name": "candidate-legacy-rpc",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "contains": " RPC checks passed",
+        "count": 1,
+        "kind": "last-line",
+        "text": "1053 RPC checks passed"
+      },
+      "timeoutSeconds": 120,
+      "unit": "candidate-legacy-rpc"
+    },
+    {
+      "args": [],
+      "expectedExit": 1,
+      "name": "nano-empty",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "kind": "exact",
+        "text": "Nano local chain tools\nUsage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]\n  wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]\n  wallet deployment-address <keyfile> [nonce]\n  wallet create-many <new-directory> [count] (default: 10)\n  wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]\n  rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]\n  rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>\n  rpc <URL> stake-withdraw <keyfile> <contract>\n  rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]\n  validator <config.json> [--once] (separate client)\n  init/status: show canonical chain status\n  mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]\n  audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)\n  beacon-journal init <identity.json> <new-database> <new-receipt-directory>\n  beacon-journal status <identity.json> <database> <expected-commitment.json>\n  beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>\n  beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>\n  migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>\n  import: <block.json> <current-timestamp>\n  run: [node-config.json] (RPC and P2P together)\n  serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)\n"
+      },
+      "timeoutSeconds": 15,
+      "unit": "nano"
+    },
+    {
+      "args": [
+        "--help"
+      ],
+      "expectedExit": 0,
+      "name": "nano-help",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "kind": "exact",
+        "text": "Nano local chain tools\nUsage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]\n  wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]\n  wallet deployment-address <keyfile> [nonce]\n  wallet create-many <new-directory> [count] (default: 10)\n  wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]\n  rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]\n  rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>\n  rpc <URL> stake-withdraw <keyfile> <contract>\n  rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]\n  validator <config.json> [--once] (separate client)\n  init/status: show canonical chain status\n  mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]\n  audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)\n  beacon-journal init <identity.json> <new-database> <new-receipt-directory>\n  beacon-journal status <identity.json> <database> <expected-commitment.json>\n  beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>\n  beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>\n  migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>\n  import: <block.json> <current-timestamp>\n  run: [node-config.json] (RPC and P2P together)\n  serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)\n"
+      },
+      "timeoutSeconds": 15,
+      "unit": "nano"
+    },
+    {
+      "args": [],
+      "expectedExit": 1,
+      "name": "checkpointExporter-empty",
+      "stderr": {
+        "kind": "exact",
+        "text": "usage: checkpoint-export genesis.json copied-database shutdown-output.json [node-config.json [--admit-fixture|--resume-fixture|--attestation-report|--duty-report|--beacon-report|--replay-archive peer.json]]\n"
+      },
+      "stdout": {
+        "kind": "empty"
+      },
+      "timeoutSeconds": 15,
+      "unit": "checkpointExporter"
+    },
+    {
+      "args": [],
+      "expectedExit": 1,
+      "name": "bootstrapImport-empty",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "errorDetailsSuppressed": true,
+            "format": "nano-isolated-fixture-private-binding-audit-v1",
+            "networkLaunched": false,
+            "newSignaturesCreated": 0,
+            "passed": false,
+            "productionQualified": false,
+            "refusedStage": "arguments",
+            "runtimeStarted": false,
+            "signerCallbacksInvoked": 0
+          }
+        ]
+      },
+      "timeoutSeconds": 15,
+      "unit": "bootstrapImport"
+    },
+    {
+      "args": [],
+      "expectedExit": 1,
+      "name": "bootstrapAudit-empty",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "diagnostic": "expected manifest plan anchors source-inventory owner dataRoot witnessRoot",
+            "format": "nano-isolated-bootstrap-physical-audit-v1",
+            "journalWritesRequested": false,
+            "newSignaturesCreated": 0,
+            "passed": false,
+            "productionQualified": false,
+            "refusedStage": "arguments",
+            "runtimeStarted": false
+          }
+        ]
+      },
+      "timeoutSeconds": 15,
+      "unit": "bootstrapAudit"
+    },
+    {
+      "args": [],
+      "expectedExit": 1,
+      "name": "stoppedCapture-empty",
+      "stderr": {
+        "kind": "empty"
+      },
+      "stdout": {
+        "kind": "json-lines",
+        "records": [
+          {
+            "diagnostic": "usage: --capture public-manifest public-runtime-config external-stop-receipt dataOwnerRoot witnessOwnerRoot owner",
+            "format": "nano-isolated-stopped-recovery-pins-v1",
+            "journalWritesRequested": false,
+            "newSignaturesCreated": 0,
+            "passed": false,
+            "productionQualified": false,
+            "refusedStage": "arguments",
+            "runtimeStarted": false
+          }
+        ]
+      },
+      "timeoutSeconds": 15,
+      "unit": "stoppedCapture"
+    },
+    {
+      "args": [],
+      "expectedExit": 1,
+      "name": "depositAudit-empty",
+      "stderr": {
+        "kind": "exact",
+        "text": "usage: --audit synthetic-genesis node-config stopped-db external-audit-request deposit-metadata\n"
+      },
+      "stdout": {
+        "kind": "empty"
+      },
+      "timeoutSeconds": 15,
+      "unit": "depositAudit"
+    },
+    {
+      "args": [],
+      "expectedExit": 1,
+      "name": "slashingFixture-empty",
+      "stderr": {
+        "kind": "exact",
+        "text": "usage: --generate synthetic-genesis node-config NEW-proof; private supervisor bootstrap only\n"
+      },
+      "stdout": {
+        "kind": "empty"
+      },
+      "timeoutSeconds": 15,
+      "unit": "slashingFixture"
+    },
+    {
+      "args": [],
+      "expectedExit": 1,
+      "name": "lifecycleSubmit-empty",
+      "stderr": {
+        "kind": "exact",
+        "text": "{\"event\":\"fresh-lifecycle-child-submission-refused\",\"accepted\":false,\"detailsExported\":false,\"productionQualified\":false}\n"
+      },
+      "stdout": {
+        "kind": "empty"
+      },
+      "timeoutSeconds": 15,
+      "unit": "lifecycleSubmit"
+    }
+  ],
+  "coreRecipe": {
+    "compilerFlags": null,
+    "coreSources": [],
+    "recordsAt": [
+      "/outputs/libnano_core.a",
+      "objects"
+    ]
+  },
+  "format": "nano-rpc-candidate-amd-control-v1",
+  "generatedProviders": [
+    {
+      "file": "/absolute/original/generated/nano_kzg_setup.hpp",
+      "guest": "/old/third_party/ckzg/include/nano_kzg_setup.hpp",
+      "pin": null
+    }
+  ],
+  "libraries": [],
+  "originalFiles": {},
+  "outputRoot": "/home/ubuntu/rpc-candidate-amd-root-20261018-01",
+  "ready": false,
+  "retainedCore": {
+    "file": "/home/ubuntu/exit-reanchor-amd-root-20261017-01/outputs/libnano_core.a",
+    "pin": {
+      "bytes": 40811064,
+      "sha256": "a3fdf87a71e05264058fb8bbb7894082330ef6042dd23f68007cf9d782ae2c48"
+    },
+    "producerPin": {
+      "bytes": 284564,
+      "sha256": "06a34b84b4bdd41a282ce59bd232f70e4fe6b8b1677c9e6133461d3ac797c896"
+    }
+  },
+  "runtimeInputs": [
+    "/work/tests/fixtures/python-rpc.json"
+  ],
+  "sourceRoots": {
+    "baseline": {
+      "authority": {
+        "file": "/home/ubuntu/rpc-baseline-full-source-root-20261018-01/source-authorities.private.json",
+        "pin": {
+          "bytes": 2078511,
+          "sha256": "038bc9e2411e4c6f39fb9f5ffe6a10a0f631dadec32e7461c1f1c57f9c32f9f0"
+        }
+      },
+      "revision": "1925eeeabc9f7d0aef41f2c3fe43c11c31f1f352",
+      "root": "/home/ubuntu/rpc-baseline-full-source-root-20261018-01/source"
+    },
+    "candidate": {
+      "authority": {
+        "file": "/home/ubuntu/rpc-candidate-full-source-root-20261017-01/source-authorities.private.json",
+        "pin": null
+      },
+      "revision": "c6cdf780c68eab8b06306d76257bda9028928ea3",
+      "root": "/home/ubuntu/rpc-candidate-full-source-root-20261017-01/source"
+    }
+  },
+  "timeoutSeconds": 1980,
+  "toolDir": "/home/ubuntu/rpc-candidate-amd-tools-root-20261018-01",
+  "units": [
+    {
+      "compilerFlags": null,
+      "executable": "nano",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "nano",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "runtime",
+      "source": "/work/src/main.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-bellatrix-checkpoint-export",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "checkpointExporter",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "runtime",
+      "source": "/work/tests/bellatrix_checkpoint_export.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-capella-isolated-bootstrap-import",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "bootstrapImport",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "runtime",
+      "source": "/work/tests/capella/isolated_bootstrap_import.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-capella-isolated-bootstrap-audit",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "bootstrapAudit",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "runtime",
+      "source": "/work/tests/capella/isolated_bootstrap_audit.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-capella-isolated-stopped-capture",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "stoppedCapture",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "runtime",
+      "source": "/work/tests/capella/isolated_stopped_capture.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-capella-deposit-audit",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "depositAudit",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "runtime",
+      "source": "/work/tests/capella/deposit_audit.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-capella-slashing-fixture",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "slashingFixture",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "runtime",
+      "source": "/work/tests/capella/slashing_fixture.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-capella-lifecycle-submit",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "lifecycleSubmit",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "runtime",
+      "source": "/work/tests/multihost/lifecycle_submit.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-rpc-get-proof-tests",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "candidate-proof",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "candidate",
+      "source": "/work/tests/test_rpc_get_proof.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-rpc-state-read-cost-tests",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "candidate-cost",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "candidate",
+      "source": "/work/tests/test_rpc_state_read_cost.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-rpc-state-block-id-tests",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "candidate-state-readers",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "candidate",
+      "source": "/work/tests/test_rpc_state_block_id.cpp"
+    },
+    {
+      "compilerFlags": null,
+      "executable": "nano-rpc-tests",
+      "linkPrefix": null,
+      "linkTail": null,
+      "name": "candidate-legacy-rpc",
+      "object": {
+        "kind": "compile"
+      },
+      "scope": "candidate",
+      "source": "/work/tests/test_rpc.cpp"
+    }
+  ]
+}

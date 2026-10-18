@@ -1,0 +1,542 @@
+{
+  "$defs": {
+    "case": {
+      "additionalProperties": false,
+      "properties": {
+        "args": {
+          "items": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 16,
+          "type": "array"
+        },
+        "expectedExit": {
+          "enum": [
+            0,
+            1
+          ],
+          "type": "integer"
+        },
+        "name": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+          "type": "string"
+        },
+        "stderr": {
+          "additionalProperties": true,
+          "properties": {
+            "kind": {
+              "enum": [
+                "empty",
+                "exact",
+                "json-lines"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        "stdout": {
+          "additionalProperties": true,
+          "properties": {
+            "kind": {
+              "enum": [
+                "empty",
+                "exact",
+                "json-lines",
+                "last-line",
+                "get-proof-record-stream-v1"
+              ]
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        "timeoutSeconds": {
+          "maximum": 300,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "unit": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "unit",
+        "args",
+        "timeoutSeconds",
+        "expectedExit",
+        "stdout",
+        "stderr"
+      ],
+      "type": "object"
+    },
+    "document": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "maxLength": 4096,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "pin": {
+          "$ref": "#/$defs/pin"
+        }
+      },
+      "required": [
+        "file",
+        "pin"
+      ],
+      "type": "object"
+    },
+    "fullNineSha": {
+      "additionalProperties": false,
+      "properties": {
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "st_ctime_ns": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "st_dev": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "st_gid": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "st_ino": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "st_mode": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "st_mtime_ns": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "st_nlink": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "st_size": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "st_uid": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "st_dev",
+        "st_ino",
+        "st_mode",
+        "st_nlink",
+        "st_uid",
+        "st_gid",
+        "st_size",
+        "st_mtime_ns",
+        "st_ctime_ns",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "pin": {
+      "additionalProperties": false,
+      "properties": {
+        "bytes": {
+          "maximum": 536870912,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sha256",
+        "bytes"
+      ],
+      "type": "object"
+    },
+    "provider": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "maxLength": 4096,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "guest": {
+          "maxLength": 4096,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "pin": {
+          "$ref": "#/$defs/pin"
+        }
+      },
+      "required": [
+        "file",
+        "guest",
+        "pin"
+      ],
+      "type": "object"
+    },
+    "retainedExecutable": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "maxLength": 4096,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "guest": {
+          "pattern": "^/old/executables/[A-Za-z][A-Za-z0-9_-]*$",
+          "type": "string"
+        },
+        "name": {
+          "enum": [
+            "bootstrapAudit",
+            "bootstrapImport",
+            "checkpointExporter",
+            "depositAudit",
+            "lifecycleSubmit",
+            "nano",
+            "slashingFixture",
+            "stoppedCapture"
+          ]
+        },
+        "pin": {
+          "$ref": "#/$defs/pin"
+        },
+        "source": {
+          "maxLength": 4096,
+          "pattern": "^/",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "source",
+        "file",
+        "guest",
+        "pin"
+      ],
+      "type": "object"
+    },
+    "unit": {
+      "additionalProperties": false,
+      "properties": {
+        "compilerFlags": {
+          "items": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "executable": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "type": "string"
+        },
+        "linkPrefix": {
+          "items": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "linkTail": {
+          "items": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 512,
+          "minItems": 1,
+          "type": "array"
+        },
+        "name": {
+          "enum": [
+            "candidate-proof",
+            "candidate-cost",
+            "candidate-state-readers",
+            "candidate-legacy-rpc"
+          ]
+        },
+        "object": {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "compile"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        "scope": {
+          "const": "candidate"
+        },
+        "source": {
+          "maxLength": 4096,
+          "pattern": "^/",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "scope",
+        "source",
+        "compilerFlags",
+        "linkPrefix",
+        "linkTail",
+        "executable",
+        "object"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Structural schema. Runtime host enforces original authority joins, exact units/oracles, canonical/disjoint paths and all hashes. Template ready:false is intentionally invalid/incomplete.",
+  "properties": {
+    "actualHead": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "cases": {
+      "items": {
+        "$ref": "#/$defs/case"
+      },
+      "maxItems": 4,
+      "minItems": 4,
+      "type": "array"
+    },
+    "format": {
+      "const": "nano-rpc-candidate-amd-retained-continuation-control-v1"
+    },
+    "generatedProviders": {
+      "items": {
+        "$ref": "#/$defs/provider"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "type": "array"
+    },
+    "libraries": {
+      "items": {
+        "$ref": "#/$defs/provider"
+      },
+      "maxItems": 6,
+      "minItems": 6,
+      "type": "array"
+    },
+    "originalFiles": {
+      "additionalProperties": {
+        "$ref": "#/$defs/fullNineSha"
+      },
+      "maxProperties": 30000,
+      "minProperties": 10,
+      "type": "object"
+    },
+    "outputRoot": {
+      "maxLength": 4096,
+      "pattern": "^/",
+      "type": "string"
+    },
+    "ready": {
+      "const": true
+    },
+    "retainedCases": {
+      "items": {
+        "$ref": "#/$defs/case"
+      },
+      "maxItems": 9,
+      "minItems": 9,
+      "type": "array"
+    },
+    "retainedCore": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "maxLength": 4096,
+          "pattern": "^/",
+          "type": "string"
+        },
+        "pin": {
+          "$ref": "#/$defs/pin"
+        },
+        "producerPin": {
+          "$ref": "#/$defs/pin"
+        }
+      },
+      "required": [
+        "file",
+        "pin",
+        "producerPin"
+      ],
+      "type": "object"
+    },
+    "retainedExecutables": {
+      "items": {
+        "$ref": "#/$defs/retainedExecutable"
+      },
+      "maxItems": 8,
+      "minItems": 8,
+      "type": "array"
+    },
+    "retainedProducer": {
+      "additionalProperties": false,
+      "properties": {
+        "control": {
+          "$ref": "#/$defs/document"
+        },
+        "coreProof": {
+          "$ref": "#/$defs/document"
+        },
+        "terminalAudit": {
+          "$ref": "#/$defs/document"
+        },
+        "workerResult": {
+          "$ref": "#/$defs/document"
+        }
+      },
+      "required": [
+        "control",
+        "workerResult",
+        "coreProof",
+        "terminalAudit"
+      ],
+      "type": "object"
+    },
+    "runtimeInputs": {
+      "items": {
+        "maxLength": 4096,
+        "pattern": "^/",
+        "type": "string"
+      },
+      "maxItems": 128,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "sourceRoots": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "additionalProperties": false,
+          "properties": {
+            "authority": {
+              "$ref": "#/$defs/document"
+            },
+            "revision": {
+              "pattern": "^[0-9a-f]{40}$",
+              "type": "string"
+            },
+            "root": {
+              "maxLength": 4096,
+              "pattern": "^/",
+              "type": "string"
+            }
+          },
+          "required": [
+            "root",
+            "revision",
+            "authority"
+          ],
+          "type": "object"
+        },
+        "candidate": {
+          "additionalProperties": false,
+          "properties": {
+            "authority": {
+              "$ref": "#/$defs/document"
+            },
+            "revision": {
+              "pattern": "^[0-9a-f]{40}$",
+              "type": "string"
+            },
+            "root": {
+              "maxLength": 4096,
+              "pattern": "^/",
+              "type": "string"
+            }
+          },
+          "required": [
+            "root",
+            "revision",
+            "authority"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "candidate",
+        "baseline"
+      ],
+      "type": "object"
+    },
+    "timeoutSeconds": {
+      "maximum": 1980,
+      "minimum": 240,
+      "type": "integer"
+    },
+    "toolDir": {
+      "maxLength": 4096,
+      "pattern": "^/",
+      "type": "string"
+    },
+    "units": {
+      "items": {
+        "$ref": "#/$defs/unit"
+      },
+      "maxItems": 4,
+      "minItems": 4,
+      "type": "array"
+    }
+  },
+  "required": [
+    "format",
+    "ready",
+    "actualHead",
+    "outputRoot",
+    "toolDir",
+    "sourceRoots",
+    "originalFiles",
+    "retainedCore",
+    "retainedProducer",
+    "libraries",
+    "generatedProviders",
+    "units",
+    "cases",
+    "runtimeInputs",
+    "timeoutSeconds",
+    "retainedExecutables",
+    "retainedCases"
+  ],
+  "title": "AMD retained C6 continuation: ready Root control only",
+  "type": "object"
+}

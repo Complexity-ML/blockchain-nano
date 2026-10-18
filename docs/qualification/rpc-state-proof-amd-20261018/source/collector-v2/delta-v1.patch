@@ -1,0 +1,58 @@
+--- a/amd-rpc-continuation-audit-source-20261018/collect.py
++++ b/amd-rpc-continuation-audit-source-v2-20261018/collect.py
+@@ -5,10 +5,11 @@
+ 
+ E=Path('/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012')
+ R=Path('/Users/boris/Dev/blockchain-nano')
+-O=E/'rpc-candidate-amd-continuation-public-audit-root-20261018-01'
++O=E/'rpc-candidate-amd-continuation-public-audit-root-20261018-02'
+ D=E/'amd-rpc-continuation-dispatch-root-20261018-01'
+ REMOTE_ROOT='/home/ubuntu/rpc-candidate-amd-continuation-root-20261018-01'
+ UNIT=E/'rpc-proof-verifier-js-root-20261017-01'
++S=E/'rpc-eip1186-account-storage-proof-source-proposal-20261017/source'
+ NODE=Path('/opt/homebrew/Cellar/node/25.9.0_2/bin/node')
+ DRIVER=E/'verify-rpc-proof-vectors-root-20261017.mjs'
+ MODULE=UNIT/'source/tests/qualification/rpc-proof.mjs'
+@@ -151,7 +152,7 @@
+  parser=argparse.ArgumentParser();parser.add_argument('unit_admission_sha256');parser.add_argument('unit_admission_bytes',type=int);args=parser.parse_args();need({'sha256':args.unit_admission_sha256,'bytes':args.unit_admission_bytes}==UNIT_AUTHORITY_PIN,'external original verifier-authority pin supplied by Root')
+  need(len(ALLOWLIST)==56 and len({p for p,_ in ALLOWLIST})==56,'exact 56-file public consumer')
+  need(O.parent.resolve(strict=True)==O.parent and not O.is_relative_to(R),'new physical audit namespace');O.mkdir(mode=0o700,exist_ok=False)
+- held={};first=None;failures=[];catalog={};host=None;worker=None;fence=None;parsed=None;js_event=None;dispatch=None;old_audit=None;retained_proof=None;final_changes=[];assembly_join_valid=False;authority_read=False;started=time.monotonic()
++ held={};first=None;failures=[];catalog={};host=None;worker=None;fence=None;parsed=None;js_event=None;dispatch=None;old_audit=None;retained_proof=None;final_changes=[];assembly_join_valid=False;authority_read=False;source_origin_rows_joined=0;projection_copies_admitted=0;started=time.monotonic()
+  def fail(stage,error):
+   nonlocal first
+   failures.append({'stage':stage,'errorType':type(error).__name__})
+@@ -181,8 +182,14 @@
+   correction=loads(known(UNIT/'terminal-audit-correction-public.json',{'sha256':'dd2e4544e8936932cd402b664c04a5c62de1e4bbe9c557c5087461dff09fa0ee','bytes':1592}))
+   need(correction['passedEight']is True and correction['testsReplayed']is False and correction['inputsUnchanged']is True and correction['nodeTestExitCode']==0 and correction['actualCounts']=={'tests':8,'suites':0,'pass':8,'fail':0,'cancelled':0,'skipped':0,'todo':0},'existing eight-unit qualification, no replay')
+   module_pins={MODULE:{'sha256':'b59224b4a64231d493ccf21b98d4c5ddb5f5ce3ec9889b792190d0e0e0b090ce','bytes':5340},MODULE.parent/'account-proof.mjs':{'sha256':'2a07c2f6d0602250e85a71b563161fbbaafd5c8cac7d612f3c3c8c02909d31c9','bytes':2439},MODULE.parent.parent/'hardhat/package.json':{'sha256':'39a64e23c4cde8a0a0c3db20da85f0ac5c5e4508d9fe118c8a8c42fd0d1a2e8d','bytes':550}}
++  # Historical rows describe the selected S/R origins, never the UNIT copies.
++  source_origins={'tests/qualification/rpc-proof.mjs':S/'tests/qualification/rpc-proof.mjs','tests/qualification/rpc-proof.test.mjs':S/'tests/qualification/rpc-proof.test.mjs','tests/qualification/account-proof.mjs':R/'tests/qualification/account-proof.mjs','tests/hardhat/package.json':R/'tests/hardhat/package.json'}
++  qualified_source_rows=public_unit['newSourcePins'];need(type(qualified_source_rows)is dict and set(qualified_source_rows)==set(source_origins),'four exact qualified source-origin roles')
++  for relative,path in source_origins.items():
++   row=qualified_source_rows[relative];need(valid_row(row)and original.get(str(path))==row and held.get(str(path))==row,'qualified public row must join its historical origin path')
++  source_origin_rows_joined=len(source_origins)
+   for path,wanted in module_pins.items():
+-   row=public_unit['newSourcePins'][str(path.relative_to(UNIT/'source'))];need(valid_row(row)and pin(row)==wanted,'original qualified module row');read(path,row,body=False);hold(path,row)
++   relative=str(path.relative_to(UNIT/'source'));need(pin(qualified_source_rows[relative])==wanted,'qualified source-origin bytes for prospective copy')
+   own=Path(__file__).resolve(strict=True);row,_=read(own,body=False);hold(own,row)
+   dispatch_path=D/'dispatch-exit-public.json';row,raw=read(dispatch_path,bound=65536);dispatch=loads(raw);hold(dispatch_path,row);need(dispatch['actualProcessTerminal']is True and type(dispatch['exitCode'])is int and dispatch['exitCode']==0,'actual continuation dispatcher terminal0')
+   old_root=E/'rpc-candidate-amd-terminal-failure-root-20261018-01'
+@@ -221,7 +228,7 @@
+    need(case['runtimeArityOnly']is(not is_test),'case runtime arity scope')
+    if is_test:need(case['baselineExpectedFailure']is False,'no baseline replay')
+    for stream in ('stdout','stderr'):stream_oracle((O/(prefix+name+'.'+stream+'.log')).read_bytes(),policy[stream])
+-  local_pins={O/rel:{'sha256':row['sha256'],'bytes':row['bytes']}for rel,row in catalog.items()};local_pins[DRIVER]={'sha256':'94b5a31b2bd404e600a9c09f5d261d109b1c13e789820ba67fe22d5b738b7f3f','bytes':3291};local_pins[dispatch_path]=pin(held[str(dispatch_path)]);admitted([*local_pins],local_pins)
++  local_pins={O/rel:{'sha256':row['sha256'],'bytes':row['bytes']}for rel,row in catalog.items()};local_pins[DRIVER]={'sha256':'94b5a31b2bd404e600a9c09f5d261d109b1c13e789820ba67fe22d5b738b7f3f','bytes':3291};local_pins[dispatch_path]=pin(held[str(dispatch_path)]);local_pins.update(module_pins);admitted([*local_pins],local_pins);projection_copies_admitted=len(module_pins)
+   proof=O/'outputs/test-candidate-proof.stdout.log';proof_pin=local_pins[proof];argv=[str(NODE),str(DRIVER),str(proof),proof_pin['sha256'],str(MODULE)];save('independent-proof-invocation-public.json',{'argv':argv,'scope':'24 actual AMD continuation proof vectors; no eight-unit replay','candidate':REV,'actualHead':HEAD})
+   raw,err,js_event=bounded_process('independent-proof',argv,timeout=60,stdout_limit=AGGREGATE,stderr_limit=1048576,env={'PATH':'/usr/bin:/bin','NODE_PATH':str(R/'tests/hardhat/node_modules')});need(js_event['exitCode']==0 and js_event['actualProcessJoined']is True and not err,'actual independent proof child terminal0');parsed=loads(raw)
+   need(parsed['format']=='nano-rpc-proof-vectors-independent-check-v1'and parsed['passed']is True and type(parsed['verifiedVectors'])is int and parsed['verifiedVectors']==24 and parsed['inputSha256']==proof_pin['sha256']and len(parsed['results'])==24 and parsed['consensusRootAuthenticated']is False and parsed['productionQualified']is False,'24 actual proof vectors independently verified')
+@@ -234,7 +241,7 @@
+   except BaseException as error:fail('final-fence-publication',error)
+   passed=first is None and parsed is not None and parsed.get('passed')is True and parsed.get('verifiedVectors')==24
+   combined={'independentM':156,'coreIndependentM':143,'runtimeIndependentM':8,'testIndependentM':5,'compiledTranslationUnits':56,'coreCompiledTranslationUnits':44,'runtimeCompiledTranslationUnits':8,'testCompiledTranslationUnits':4,'archiveUpdates':1,'links':12,'loaderChecks':12,'testInvocations':4,'runtimeCliInvocations':9,'unitInvocations':13}
+-  proof_row=catalog.get('outputs/test-candidate-proof.stdout.log');result={'format':'nano-rpc-candidate-amd-continuation-public-root-audit-v1','passed':passed,'sourceRevision':REV,'actualHead':HEAD,'actualDispatcherExitCode':None if dispatch is None else dispatch.get('exitCode'),'terminalHostPassed':bool(host and host.get('passed')),'newWorkerCounts':None if worker is None else worker.get('counts'),'combinedRawCountsAcrossFailedAndNewAttempts':combined if assembly_join_valid else None,'combinedRawMIncludesAbortedPriorProofScan':True,'originalFailedEnvelopeReclassified':False,'retainedCoreProof':retained_proof,'retainedOldProductRows':0 if host is None else host.get('retainedProductRows',0),'newProductsHeldThroughCleanup':0 if host is None else host.get('newWorkerProductRowsHeldThroughCleanup',0),'runtimeCppOrLinksRepeated':0 if assembly_join_valid else None,'verifiedProofVectors':24 if passed else 0,'verifierReportedVectors':None if parsed is None else parsed.get('verifiedVectors'),'proofStdoutPin':None if proof_row is None else {k:proof_row[k]for k in ('sha256','bytes')},'proofBytesEqualNativeAndArm':bool(proof_row and(proof_row['sha256'],proof_row['bytes'])==('f8c059c07a766da1afc84e9c557e9167c64a5336786f0334f906a9e777241e94',41688)),'selectedInputsUnchanged':not final_changes,'selectedInputCount':len(held),'failures':failures,'javascriptUnitTestsReplayed':0,'newCppCompilationsByAudit':0,'privateFilesTransferred':0,'allowlistPublicFiles':len(catalog),'localVerifierAuthorityRead':authority_read,'consensusRootAuthenticated':False,'runtimeDutiesResumed':False,'candidateImportedToMain':False,'productionQualified':False,'elapsedSeconds':round(time.monotonic()-started,3)}
++  proof_row=catalog.get('outputs/test-candidate-proof.stdout.log');result={'format':'nano-rpc-candidate-amd-continuation-public-root-audit-v1','passed':passed,'sourceRevision':REV,'actualHead':HEAD,'actualDispatcherExitCode':None if dispatch is None else dispatch.get('exitCode'),'terminalHostPassed':bool(host and host.get('passed')),'newWorkerCounts':None if worker is None else worker.get('counts'),'combinedRawCountsAcrossFailedAndNewAttempts':combined if assembly_join_valid else None,'combinedRawMIncludesAbortedPriorProofScan':True,'originalFailedEnvelopeReclassified':False,'retainedCoreProof':retained_proof,'retainedOldProductRows':0 if host is None else host.get('retainedProductRows',0),'newProductsHeldThroughCleanup':0 if host is None else host.get('newWorkerProductRowsHeldThroughCleanup',0),'runtimeCppOrLinksRepeated':0 if assembly_join_valid else None,'verifiedProofVectors':24 if passed else 0,'verifierReportedVectors':None if parsed is None else parsed.get('verifiedVectors'),'proofStdoutPin':None if proof_row is None else {k:proof_row[k]for k in ('sha256','bytes')},'proofBytesEqualNativeAndArm':bool(proof_row and(proof_row['sha256'],proof_row['bytes'])==('f8c059c07a766da1afc84e9c557e9167c64a5336786f0334f906a9e777241e94',41688)),'selectedInputsUnchanged':not final_changes,'selectedInputCount':len(held),'failures':failures,'javascriptUnitTestsReplayed':0,'newCppCompilationsByAudit':0,'privateFilesTransferred':0,'allowlistPublicFiles':len(catalog),'localVerifierAuthorityRead':authority_read,'originalQualifiedSourceRowsJoinedToOriginPaths':source_origin_rows_joined,'verifierProjectionCopiesProspectivelyAdmitted':projection_copies_admitted,'historicalFd9OfProjectionCopiesClaimed':False,'consensusRootAuthenticated':False,'runtimeDutiesResumed':False,'candidateImportedToMain':False,'productionQualified':False,'elapsedSeconds':round(time.monotonic()-started,3)}
+   if first is not None:result['firstFailureType']=type(first).__name__
+   try:save('root-audit-public.json',result);print(json.dumps(result),flush=True)
+   except BaseException as error:

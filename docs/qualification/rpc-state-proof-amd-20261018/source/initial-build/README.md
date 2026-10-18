@@ -1,0 +1,39 @@
+# Hôte AMD C6 — successeur source uniquement
+
+Aucune importation/exécution projet, lecture privée/SDK, opération SSH/Docker, compilation/test ou écriture R par l’auteur. Les parents gelés sont intacts. Root seul prépare, authentifie, stage et exécute le contrôle ; `control.template.json` reste `ready:false`, incomplet et inexécutable.
+
+## Réemploi et entrées exactes
+
+Le nouveau fichier autonome reprend le fournisseur public f28 et la structure de cycle de l’hôte AMD935e. Il ne charge pas l’ancien host935e à l’exécution : trois fichiers seulement à stager, `host.py`, le worker V2 e9bfc/37768 inchangé et `archive_object_replacements.py` aa20/10821 inchangé. Le fournisseur f28/52822 est lu depuis le dépôt VPS sous son pin existant, sans lancer son main ou son worker Perl.
+
+Le CLI est `python3 host.py CONTROL_JSON CONTROL_SHA256 CONTROL_BYTES`. Root fournit le pin connu avant la première admission du contrôle : SHA/taille stricts à chaque lecture FD/path9, trois observations identiques sur au moins deux secondes sous trente secondes. Les anciennes lignes ne sont jamais réinitialisées. Le contrôle a exactement quinze champs :
+
+`format, ready, actualHead, outputRoot, toolDir, sourceRoots, originalFiles, retainedCore, coreRecipe, libraries, generatedProviders, units, cases, runtimeInputs, timeoutSeconds`.
+
+Le format est `nano-rpc-candidate-amd-control-v1`. `actualHead` est un SHA40 fourni Root, sans constante fa3/6183 ; main doit rester propre avant/après. La source C6 `c6cdf780c68eab8b06306d76257bda9028928ea3` et la base réellement qualifiée1925 sont distinctes de ce HEAD documentaire.
+
+- `sourceRoots` a `candidate` et `baseline`, chacun `{root,revision,authority:{file,pin}}`. Le fichier d’autorité est celui du parent de root. À l’exécution Root, l’hôte lit son pin externe, son catalogue `pins` et les originales `observations[-1].files`, vérifie chaque full9/SHA/taille et l’inventaire sans aliases :1276/1271 fichiers. Il ne fabrique pas leurs anciennes identités depuis le disque. La projection a été créée/jointe à Git par Root ; ce contrôleur ne reconstruit pas le dépôt et ne refait pas ce transfert.
+- `originalFiles` est la table full9+SHA normalisée et authentifiée par Root pour ses inputs retenus ou prospectivement admis, dont hôte/modules/outils, quatre REFS, documents d’autorité et providers. Root distingue lui-même leurs provenances ; aucune table SDK globale ni identité manquante n’est inventée. Toutes les lignes fournies sont relues avant/après. Les fichiers de projection et le Core rejoignent aussi leurs vraies rows depuis leurs documents épinglés.
+- `retainedCore={file,pin,producerPin}` désigne Corea3f/40811064, depuis son producteur06a34/284564 à `file.parent/final-observations.private.json`, clé `products[absoluteCore].hostFD9`. `guestStatSha` ne devient jamais une FD9 hôte.
+- `coreRecipe={recordsAt,compilerFlags,coreSources}` sélectionne `['/outputs/libnano_core.a','objects']` depuis `docs['archives']`. L’hôte redérive les143 entrées et leur unique préfixe depuis les enregistrements originaux3a4f, vérifie le suffixe cible nano_core.dir, remappe seulement `/outputs/third_party` vers `/old/third_party`, puis compare les flags et les143 sources fournis Root. Aucun DB courant n’est lu/requalifié comme une autorité originale.
+- `libraries` contient six `{file,guest,pin}` : quatre archives hors Core et deux objets ASM, exactement joints aux quatre REFS et à la recette Audit originale. `generatedProviders` contient1à16 descripteurs de même forme, distincts et RO, avec leurs propres rows Root ; ils ne gonflent pas le compteur de bibliothèques.
+
+## Unités, cas et budgets
+
+Les unités sont exactement les huit runtimes nano/checkpointExporter/bootstrapImport/bootstrapAudit/stoppedCapture/depositAudit/slashingFixture/lifecycleSubmit et les quatre candidats proof/cost/state-readers/legacy-rpc. Chaque unité possède les huit champs du worker V2 : `name,scope,source,compilerFlags,linkPrefix,linkTail,executable,object`. `object` vaut toujours `{kind:'compile'}`. Les sources/targets et le lien Core sont contrôlés contre le CMake C6 épinglé. Root atteste les recettes et l’ordre des providers par rôle ; le script n’affirme pas avoir retrouvé une recette historique manquante.
+
+Le macro depositAudit est exigé avant M/CXX avec `-DNANO_TEST_SOURCE="/work"`. Les includes BLST déclarés pour import/deposit/slashing sont exigés. CheckpointExporter lie directement CKZG : ses trois includes publics (src, blst/bindings et include généré remappé) et le bind connu `nano_kzg_setup.hpp` sont vérifiés avant CXX. Le rôle reste Bellatrix, sans dylib sync-fault d’un autre exporter.
+
+Chaque cas a **sept** champs : `name,unit,args,timeoutSeconds,expectedExit,stdout,stderr`. Treize cas couvrent toutes les unités : quatre candidats et neuf CLI. Le modèle copie les politiques publiques du batch17231520 et les arités publiques C6 ; aucune sortie candidate n’a servi à fabriquer les attentes. Nano[]/--help et sept helpers[] sont seuls autorisés côté runtime, budgets≤30s. Les quatre candidats ont leurs selectors/oracles ; la fixture `python-rpc.json` est obligatoirement explicitée dans runtimeInputs, tenue par les autorités source et par le worker avant exécution avec cwd=/work.
+
+`timeoutSeconds` est le budget hôte hors cleanup60s ; il vaut240à1980. Le worker reçoit `timeoutSeconds−180`, soit60à1800. Le modèle1980 donne1800 au worker. Root borne aussi sa commande SSH (au moins budget hôte+cleanup+marge), sans redémarrage automatique. Conteneur neuf image AMD fd9 existante, sans pull/build, networknone, root/source/Core/providers RO, nouvelle sortie RW, UID/GID1000, CPU2/RAM3GiB/pids128/cap-drop ALL/no-new-privileges, tmpfs1536MiB. Les quatre TU peuvent ouvrir leurs listeners HTTP/WS locaux de fixture ; aucun main serve/run, réseau de validateurs ou service réel n’est lancé.
+
+La configuration worker comporte21 champs sérialisables + le callback `proveArchiveSet` injecté depuis le helper épinglé : les22 champs stricts incremental. Aucun champ retained/callback legacy silencieux n’est passé. L’ancien Core est parsé en143 corps par le helper ; K est dérivé par les fermetures M et ne vaut pas44 par convention.
+
+## Résultats et limites
+
+Succès futur attendu :155 M (143Core+4tests+8runtime), K+12CXX, un ar, douze liens/ldd, quatre tests et neuf CLI ; zéro objet Submit réemployé, baseline ancienne ou suite globale rejouée. Chaque nouveau produit est admis par le worker sous knownSHA/taille puis stablefull9 hôte/gueststat distinct ; les observations finales et produits partiels restent sous outputs même en refus. Les flux proof30records/24vecteurs/5groupes/63refus sont mécaniques ; la vérification JS indépendante des24 sorties réelles appartient à un reçu Root séparé, sans rejouer ses unités.
+
+Lire `result-public.json`, `host-final-fence-public.json`, cleanup/imageFinalFence et `outputs/result-public.json` ensemble. Après les tentatives de cleanup et d’inspection finale de l’image, une seconde fence complète de `m.HELD` relit les neuf champs et SHA originaux ; `hostFinalFenceAfterCleanup` rapporte cette passe. Toute divergence antérieure reste conservée, une même feuille n’est pas comptée deux fois et la première erreur n’est jamais remplacée. Le résumé hôte reste petit et n’inclut aucune table privée ; les traces/autorités originales restent sur VPS, les readbacks publics sont sélectionnés/bornés par Root. L’inventaire est aussi clôturé en échec et seuls CID/nom/label/image propres permettent stop/remove/absence. Aucun retour à une ancienne identité ni purge image/volume.
+
+Cette source ne qualifie pas encore AMD C6, un SDK/loader complet, la cohérence globale des admissions/index24, une image runtime, la reprise duties/finalité, campagne ou production. Native/ARM déjà acquis et leurs FAILED historiques conservent leurs périmètres. AST et pins seuls ont été vérifiés par l’auteur ; tout CXX/test/Docker/SSH reste réservé Root.

@@ -1,0 +1,365 @@
+--- a/collect-and-verify-amd-rpc-candidate-root-20261018.py
++++ b/collect.py
+@@ -1,129 +1,244 @@
+-"""Read back only terminal public AMD artifacts, then verify actual proof vectors offline."""
++#!/usr/bin/env python3
++"""Root-only future public readback/actual-vector audit. No imports on creation."""
+ from pathlib import Path
+-import base64,hashlib,json,os,stat,subprocess,time
+-E=Path(__file__).parent
++import argparse,base64,hashlib,json,os,re,selectors,signal,stat,subprocess,time
++
++E=Path('/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012')
+ R=Path('/Users/boris/Dev/blockchain-nano')
+-O=E/'rpc-candidate-amd-public-audit-root-20261018-01'
+-D=E/'rpc-candidate-amd-dispatch-root-20261018-01'
++O=E/'rpc-candidate-amd-continuation-public-audit-root-20261018-01'
++D=E/'amd-rpc-continuation-dispatch-root-20261018-01'
++REMOTE_ROOT='/home/ubuntu/rpc-candidate-amd-continuation-root-20261018-01'
++UNIT=E/'rpc-proof-verifier-js-root-20261017-01'
+ NODE=Path('/opt/homebrew/Cellar/node/25.9.0_2/bin/node')
+ DRIVER=E/'verify-rpc-proof-vectors-root-20261017.mjs'
+-UNIT=E/'rpc-proof-verifier-js-root-20261017-01'
+ MODULE=UNIT/'source/tests/qualification/rpc-proof.mjs'
+ REV='c6cdf780c68eab8b06306d76257bda9028928ea3'
+-HEAD='6183a799df411edfaecd549bdca43bad20b51508'
++HEAD='4388f77b9e9c1b3b94ba5da6f3e486eaa13a3f5c'
++BASE='1925eeeabc9f7d0aef41f2c3fe43c11c31f1f352'
++IMAGE='sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14'
++CORE={'sha256':'3ef6c2cdd75c793b8cec88f3268ab0309e2ebc30aba3be86c1fb9125b13dc652','bytes':40988476}
++UNIT_AUTHORITY_PIN={'sha256':'1f20ae6cde3a0de220376b260395f86e1eef025306d5154b2889fbbe705440a6','bytes':8680}
+ F=('st_dev','st_ino','st_mode','st_nlink','st_uid','st_gid','st_size','st_mtime_ns','st_ctime_ns')
++AGGREGATE=16*1024*1024;WIRE=32*1024*1024
++CANDIDATES=('candidate-proof','candidate-cost','candidate-state-readers','candidate-legacy-rpc')
++RUNTIME=('nano-empty','nano-help','checkpointExporter-empty','bootstrapImport-empty','bootstrapAudit-empty','stoppedCapture-empty','depositAudit-empty','slashingFixture-empty','lifecycleSubmit-empty')
++TARGETS={'candidate-proof':('nano-rpc-get-proof-tests','tests/test_rpc_get_proof.cpp'),'candidate-cost':('nano-rpc-state-read-cost-tests','tests/test_rpc_state_read_cost.cpp'),'candidate-state-readers':('nano-rpc-state-block-id-tests','tests/test_rpc_state_block_id.cpp'),'candidate-legacy-rpc':('nano-rpc-tests','tests/test_rpc.cpp')}
++WANT={'independentM':4,'coreIndependentM':0,'testIndependentM':4,'compiledTranslationUnits':4,'coreCompiledTranslationUnits':0,'testCompiledTranslationUnits':4,'archiveUpdates':0,'links':4,'loaderChecks':4,'testInvocations':4,'runtimeCliInvocations':0,'unitInvocations':4,'runtimeIndependentM':0,'runtimeCompiledTranslationUnits':0,'reusedSubmitObjects':0}
++FIXED=(('result-public.json',131072),('host-final-fence-public.json',8192),('prepared-public.json',65536),('outputs/result-public.json',8388608))
++ALLOWLIST=(*FIXED,*[(path,bound)for n in CANDIDATES for path,bound in [('outputs/case-'+n+'-public.json',131072),('outputs/test-'+n+'.exit.json',8192),('outputs/test-'+n+'.stdout.log',AGGREGATE),('outputs/test-'+n+'.stderr.log',AGGREGATE)]],*[(path,bound)for n in RUNTIME for path,bound in [('retained-case-'+n+'-public.json',131072),('retained-test-'+n+'.exit.json',8192),('retained-test-'+n+'.stdout.log',AGGREGATE),('retained-test-'+n+'.stderr.log',AGGREGATE)]])
++
+ def need(ok,why):
+- if not ok: raise ValueError(why)
+-def read(p,old=None):
+- need(p.is_absolute() and p.resolve(strict=True)==p,'physical input')
+- fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
++ if not ok:raise ValueError(why)
++def loads(raw):
++ def unique(pairs):
++  keys=[k for k,_ in pairs];need(len(keys)==len(set(keys)),'duplicate JSON keys');return dict(pairs)
++ def nonfinite(_):raise ValueError('nonfinite JSON constant')
++ return json.loads(raw,object_pairs_hook=unique,parse_constant=nonfinite)
++def canonical(value):return json.dumps(value,sort_keys=True,separators=(',',':'),allow_nan=False)
++def valid_row(row):return type(row)is dict and set(row)==set(F)|{'sha256'}and all(type(row[k])is int and row[k]>=0 for k in F)and type(row['sha256'])is str and re.fullmatch('[0-9a-f]{64}',row['sha256'])
++def read(path,expected=None,bound=536870912,body=True):
++ path=Path(path);need(path.is_absolute()and path.resolve(strict=True)==path,'physical absolute input');fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+  try:
+-  a=os.fstat(fd); need(stat.S_ISREG(a.st_mode) and a.st_nlink==1 and 0<=a.st_size<=536870912,'bounded regular input')
+-  row={k:getattr(a,k) for k in F}; parts=[]
+-  while chunk:=os.read(fd,1048576): parts.append(chunk)
+-  data=b''.join(parts)
+-  need(len(data)==a.st_size and row=={k:getattr(os.fstat(fd),k) for k in F}=={k:getattr(p.lstat(),k) for k in F},'FD/path stability')
+-  row['sha256']=hashlib.sha256(data).hexdigest()
+-  need(old is None or row==old,'original selected input changed')
+-  return row,data
+- finally: os.close(fd)
+-def save(name,v):
+- with (O/name).open('x') as f: json.dump(v,f,indent=2); f.write('\n')
+-dispatch=json.loads((D/'dispatch-exit-public.json').read_text())
+-need(dispatch['actualProcessTerminal'] is True and dispatch['exitCode']==0,'actual AMD dispatcher must be terminal 0')
+-remote=r"""
+-from pathlib import Path
+-import os,stat,json,hashlib,base64
+-O=Path('/home/ubuntu/rpc-candidate-amd-root-20261018-01')
+-F=('st_dev','st_ino','st_mode','st_nlink','st_uid','st_gid','st_size','st_mtime_ns','st_ctime_ns')
+-def read(rel,bound):
+- p=O/rel
+- assert p.resolve(strict=True)==p
+- fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
++  before=os.fstat(fd);need(stat.S_ISREG(before.st_mode)and before.st_nlink==1 and 0<=before.st_size<=bound,'bounded regular input');row={k:getattr(before,k)for k in F};parts=[];h=hashlib.sha256();size=0
++  while chunk:=os.read(fd,1048576):
++   size+=len(chunk);need(size<=before.st_size,'input grew');h.update(chunk)
++   if body:parts.append(chunk)
++  need(size==before.st_size and row=={k:getattr(os.fstat(fd),k)for k in F}=={k:getattr(path.lstat(),k)for k in F}and path.resolve(strict=True)==path,'input FD/path stability');row['sha256']=h.hexdigest();need(expected is None or row==expected,'original selected input changed');return row,b''.join(parts)if body else None
++ finally:os.close(fd)
++def write(path,raw):
++ need(type(raw)is bytes and len(raw)<=WIRE,'bounded own output');path=Path(path);need(path.is_relative_to(O)and path.parent.resolve(strict=True)==path.parent,'own physical output parent')
++ fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+  try:
+-  a=os.fstat(fd); assert stat.S_ISREG(a.st_mode) and a.st_nlink==1 and 0<=a.st_size<=bound
+-  row={k:getattr(a,k) for k in F}; parts=[]
+-  while chunk:=os.read(fd,1048576): parts.append(chunk)
+-  b=b''.join(parts)
+-  assert len(b)==a.st_size and row=={k:getattr(os.fstat(fd),k) for k in F}=={k:getattr(p.lstat(),k) for k in F}
+-  return {'file':rel,'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest(),'readbackFD9':row,'base64':base64.b64encode(b).decode()}
+- finally: os.close(fd)
+-fixed=[('result-public.json',131072),('host-final-fence-public.json',8192),('prepared-public.json',65536),('outputs/result-public.json',8388608),('outputs/core-recompile-selection-public.json',1048576),('outputs/core-member-proof.json',524288)]
+-rows=[read(p,n) for p,n in fixed]
+-worker=json.loads(base64.b64decode(next(r for r in rows if r['file']=='outputs/result-public.json')['base64']))
+-expected=['candidate-proof','candidate-cost','candidate-state-readers','candidate-legacy-rpc','nano-empty','nano-help','checkpointExporter-empty','bootstrapImport-empty','bootstrapAudit-empty','stoppedCapture-empty','depositAudit-empty','slashingFixture-empty','lifecycleSubmit-empty']
+-assert len(worker['testResults'])==13 and {r['name'] for r in worker['testResults']}==set(expected)
+-for name in expected:
+- rows.append(read('outputs/case-'+name+'-public.json',131072))
+- rows.append(read('outputs/test-'+name+'.exit.json',8192))
+- for suffix in ('stdout','stderr'): rows.append(read('outputs/test-'+name+'.'+suffix+'.log',16777216))
+-assert sum(row['bytes'] for row in rows)<=16777216, 'aggregate public readback consumer limit'
+-for row in rows: print(json.dumps(row),flush=True)
+-"""
+-compile(remote,'<selected-public-readback>','exec')
+-O.mkdir(mode=0o700,exist_ok=False)
+-start=time.monotonic()
+-argv=['/usr/bin/ssh','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=10','ubuntu@145.239.199.166','/usr/bin/python3','-']
+-r=subprocess.run(argv,input=remote.encode(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=120)
+-(O/'readback.stderr.log').write_bytes(r.stderr)
+-need(r.returncode==0 and not r.stderr and len(r.stdout)<=33554432,'public readback process/bound')
+-catalog={}
+-for line in r.stdout.splitlines():
+- row=json.loads(line); rel=row.pop('file'); encoded=row.pop('base64'); data=base64.b64decode(encoded,validate=True)
+- need(rel not in catalog and not Path(rel).is_absolute() and '..' not in Path(rel).parts and '.private' not in rel,'public allowlist path')
+- need(len(data)==row['bytes'] and hashlib.sha256(data).hexdigest()==row['sha256'],'transfer byte pin')
+- target=O/rel; target.parent.mkdir(parents=True,exist_ok=True)
+- with target.open('xb') as f:f.write(data)
+- catalog[rel]=row
+-save('readback-catalog-public.json',{'remoteSource':'ubuntu@145.239.199.166:/home/ubuntu/rpc-candidate-amd-root-20261018-01','files':catalog,'privateFilesTransferred':0,'readbackRowsAreHistoricalAuthorities':False})
+-host=json.loads((O/'result-public.json').read_text())
+-fence=json.loads((O/'host-final-fence-public.json').read_text())
+-worker=json.loads((O/'outputs/result-public.json').read_text())
+-proof=json.loads((O/'outputs/core-member-proof.json').read_text())
+-need(all(host[k] is True for k in ('passed','workerPassed','allConfiguredCasesPassed','hostFinalFenceAfterCleanup','originalHostInputsUnchanged')),'terminal host gates')
+-need(host['sourceRevision']==REV and host['actualHead']==HEAD and host['baselineSourceRevision']=='1925eeeabc9f7d0aef41f2c3fe43c11c31f1f352','source revisions')
+-need(host['image']=='sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14','existing AMD image')
+-need(host['changedHostInputs']==0 and host['cleanup']['passed'] is True and host['cleanup']['ownedContainerAbsent'] is True and host['imageFinalFence']['passed'] is True,'cleanup/final fences')
+-need(host['runtimeLibraries']==6 and host['generatedProviders']==1 and host['newImagesBuilt']==0 and host['cmakeConfigures']==0,'fixed assembly scope')
+-need(fence['passed'] is True and fence['oldAuthoritiesRefreshed'] is False and fence['selectedFiles']>0,'original inputs fence')
+-need(worker['passed'] is True and worker['allConfiguredCasesPassed'] is True and worker['coreMode']=='incremental' and worker['format']=='nano-linux-rpc-state-proof-runtime-units-qualification-v1','worker gate')
+-K=host['selectedReplacementCount']
+-want={'independentM':155,'coreIndependentM':143,'testIndependentM':4,'compiledTranslationUnits':K+12,'coreCompiledTranslationUnits':K,'testCompiledTranslationUnits':4,'archiveUpdates':1,'links':12,'loaderChecks':12,'testInvocations':4,'runtimeCliInvocations':9,'unitInvocations':13,'runtimeIndependentM':8,'runtimeCompiledTranslationUnits':8,'reusedSubmitObjects':0}
+-need(worker['counts']==host['workerCounts']==want,'exact AMD counters')
+-need(proof==worker['coreProof'] and proof['passed'] is True and proof['memberOrderPreserved'] is True and proof['members']==143 and proof['selectedReplacementCount']==K and proof['unchangedOutsideReplacementSet']==143-K and proof['actualChangedCount']<=K,'Core member proof')
+-for case in worker['testResults']:
+- name=case['name']; same=json.loads((O/('outputs/case-'+name+'-public.json')).read_text())
+- event=json.loads((O/('outputs/test-'+name+'.exit.json')).read_text())
+- need(case==same and case['semanticStreamOraclesPassed'] is True and event['exitCode']==case['actualExitCode'],'actual case outputs/exits')
+- need(case['actualExitCode']==(0 if name.startswith('candidate-') or name=='nano-help' else 1),'case arity exit')
+-need(len(worker['mmd'])==K+12 and all(x['normalizedMEqualsMd'] is True for x in worker['mmd'].values()),'MMD normalization for every compiled unit')
+-held={}
+-old=json.loads((UNIT/'new-input-admission.json').read_text())['samples'][-1]
+-for p,row in old.items():read(Path(p),row);held[p]=row
+-INPUT=O/'outputs/test-candidate-proof.stdout.log'
+-known={DRIVER:('94b5a31b2bd404e600a9c09f5d261d109b1c13e789820ba67fe22d5b738b7f3f',3291),MODULE:('b59224b4a64231d493ccf21b98d4c5ddb5f5ce3ec9889b792190d0e0e0b090ce',5340),MODULE.parent/'account-proof.mjs':('2a07c2f6d0602250e85a71b563161fbbaafd5c8cac7d612f3c3c8c02909d31c9',2439),MODULE.parent.parent/'hardhat/package.json':('39a64e23c4cde8a0a0c3db20da85f0ac5c5e4508d9fe118c8a8c42fd0d1a2e8d',550)}
+-new=[*known,INPUT,O/'result-public.json',O/'host-final-fence-public.json',O/'outputs/result-public.json']
+-samples=[]
+-for i in range(3):
+- rows={}
+- for p in new:
+-  row,b=read(p)
+-  if p in known:need((row['sha256'],len(b))==known[p],'known verifier source pin')
+-  rows[str(p)]=row
+- samples.append(rows)
+- if i!=2:time.sleep(1.05)
+-need(samples[0]==samples[1]==samples[2],'prospective verifier inputs stable')
+-held.update(samples[-1]);save('selected-verifier-inputs-before.private.json',held)
+-proof_pin=catalog['outputs/test-candidate-proof.stdout.log']
+-need(held[str(INPUT)]['sha256']==proof_pin['sha256'] and held[str(INPUT)]['st_size']==proof_pin['bytes'],'actual remote proof bytes')
+-jsargv=[str(NODE),str(DRIVER),str(INPUT),proof_pin['sha256'],str(MODULE)]
+-js=subprocess.run(jsargv,cwd=E,env={'PATH':'/usr/bin:/bin','NODE_PATH':str(R/'tests/hardhat/node_modules')},stdin=subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=60)
+-(O/'independent-proof.stdout.json').write_bytes(js.stdout);(O/'independent-proof.stderr.log').write_bytes(js.stderr)
+-parsed=json.loads(js.stdout) if js.returncode==0 else None
+-unchanged=all(read(Path(p),row)[0]==row for p,row in held.items())
+-passed=js.returncode==0 and not js.stderr and parsed is not None and parsed['passed'] is True and parsed['verifiedVectors']==24 and unchanged
+-result={'format':'nano-rpc-candidate-amd-public-root-audit-v1','passed':passed,'sourceRevision':REV,'actualHead':HEAD,'actualDispatcherExitCode':dispatch['exitCode'],'terminalHostPassed':host['passed'],'hostFinalFenceAfterCleanup':host['hostFinalFenceAfterCleanup'],'originalHostInputsUnchanged':host['originalHostInputsUnchanged'],'ownedContainerAbsent':host['cleanup']['ownedContainerAbsent'],'counts':want,'coreProof':proof,'verifiedProofVectors':0 if parsed is None else parsed['verifiedVectors'],'proofStdoutPin':{'sha256':proof_pin['sha256'],'bytes':proof_pin['bytes']},'proofBytesEqualNativeAndArm':(proof_pin['sha256'],proof_pin['bytes'])==('f8c059c07a766da1afc84e9c557e9167c64a5336786f0334f906a9e777241e94',41688),'selectedVerifierInputsUnchanged':unchanged,'javascriptUnitTestsReplayed':0,'liveRpcCalls':0,'newCppCompilationsByAudit':0,'privateFilesTransferred':0,'consensusRootAuthenticated':False,'runtimeDutiesResumed':False,'productionQualified':False,'elapsedSeconds':round(time.monotonic()-start,3)}
+-save('root-audit-public.json',result)
+-print(json.dumps(result))
+-need(passed,'independent actual-vector verification')
++  view=memoryview(raw)
++  while view:
++   written=os.write(fd,view);need(written>0,'own output write progress');view=view[written:]
++  os.fsync(fd)
++ finally:os.close(fd)
++ d=os.open(path.parent,os.O_RDONLY)
++ try:os.fsync(d)
++ finally:os.close(d)
++def save(name,value):write(O/name,(json.dumps(value,indent=2,allow_nan=False)+'\n').encode())
++def pin(row):return {'sha256':row['sha256'],'bytes':row['st_size']}
++def bounded_process(stage,argv,*,timeout,stdout_limit,stderr_limit,input_bytes=None,env=None):
++ """Bound while draining; keep the first process error through joined cleanup."""
++ first=None;secondary=[];child=None;streams={};chunks=[[],[]];sizes=[0,0];started=time.monotonic();timed=False;joined=False;selector=selectors.DefaultSelector()
++ try:
++  child=subprocess.Popen(argv,cwd=E,env=env,stdin=subprocess.PIPE if input_bytes is not None else subprocess.DEVNULL,stdout=subprocess.PIPE,stderr=subprocess.PIPE,start_new_session=True)
++  need(child.pid>1 and child.pid!=28722,'own child identity')
++  if input_bytes is not None:
++   need(len(input_bytes)<=65536,'bounded fixed remote program');child.stdin.write(input_bytes);child.stdin.close()
++  for i,stream in enumerate((child.stdout,child.stderr)):os.set_blocking(stream.fileno(),False);selector.register(stream,selectors.EVENT_READ,i);streams[i]=stream
++  deadline=started+timeout
++  while selector.get_map():
++   remaining=deadline-time.monotonic()
++   if remaining<=0:timed=True;raise TimeoutError(stage+' deadline')
++   for key,_ in selector.select(min(remaining,0.25)):
++    data=os.read(key.fileobj.fileno(),65536)
++    if not data:selector.unregister(key.fileobj);continue
++    i=key.data;sizes[i]+=len(data);need(sizes[i]<=(stdout_limit if i==0 else stderr_limit),stage+' stream bound');chunks[i].append(data)
++  child.wait(timeout=max(0.01,deadline-time.monotonic()));joined=True
++ except BaseException as error:first=error;timed=timed or isinstance(error,(TimeoutError,subprocess.TimeoutExpired))
++ finally:
++  if child is not None and not joined:
++   try:
++    if child.poll()is None:
++     need(child.pid!=28722 and os.getpgid(child.pid)==child.pid,'own process-group cleanup');os.killpg(child.pid,signal.SIGTERM)
++    try:child.wait(timeout=5)
++    except subprocess.TimeoutExpired:
++     need(child.pid!=28722 and os.getpgid(child.pid)==child.pid,'own process-group kill');os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=5)
++    joined=True
++   except BaseException as error:
++    secondary.append({'phase':'process-cleanup','errorType':type(error).__name__})
++    if first is None:first=error
++  child_streams=[]if child is None else[stream for stream in(child.stdout,child.stderr,child.stdin)if stream is not None and not stream.closed]
++  for cleanup in [selector.close,*[stream.close for stream in child_streams]]:
++   try:cleanup()
++   except BaseException as error:
++    secondary.append({'phase':'pipe-cleanup','errorType':type(error).__name__})
++    if first is None:first=error
++  event={'phase':stage,'argv':argv,'exitCode':None if child is None else child.returncode,'timedOut':timed,'actualProcessJoined':joined,'stdoutObservedBytes':sizes[0],'stderrObservedBytes':sizes[1],'elapsedMs':round((time.monotonic()-started)*1000),'secondaryFailures':secondary}
++  if first is not None:event['firstFailureType']=type(first).__name__
++  for suffix,parts in [('stdout.log',chunks[0]),('stderr.log',chunks[1])]:
++   try:write(O/(stage+'.'+suffix),b''.join(parts))
++   except BaseException as error:
++    if first is None:first=error
++  try:save(stage+'.exit-public.json',event)
++  except BaseException as error:
++   if first is None:first=error
++  if first is not None:raise first
++ return b''.join(chunks[0]),b''.join(chunks[1]),event
+ 
++REMOTE_BODY=r'''
++def need(ok,why):
++ if not ok:raise ValueError(why)
++def read(rel,bound,body=True):
++ p=O/rel;need(p.resolve(strict=True)==p,'physical public source');fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
++ try:
++  a=os.fstat(fd);need(stat.S_ISREG(a.st_mode)and a.st_nlink==1 and 0<=a.st_size<=bound,'bounded public file');row={k:getattr(a,k)for k in F};parts=[];h=hashlib.sha256();size=0
++  while chunk:=os.read(fd,1048576):
++   size+=len(chunk);need(size<=a.st_size,'public file grew');h.update(chunk)
++   if body:parts.append(chunk)
++  need(size==a.st_size and row=={k:getattr(os.fstat(fd),k)for k in F}=={k:getattr(p.lstat(),k)for k in F}and p.resolve(strict=True)==p,'public FD/path changed')
++  return {'file':rel,'bytes':size,'sha256':h.hexdigest(),'readbackFD9':row},b''.join(parts)if body else None
++ finally:os.close(fd)
++need(len(ALLOWLIST)==56 and len({p for p,_ in ALLOWLIST})==56,'exact public allowlist')
++rows=[];aggregate=0
++for rel,bound in ALLOWLIST:
++ need(not Path(rel).is_absolute()and '..'not in Path(rel).parts and '.private'not in rel,'fixed public path only')
++ size=(O/rel).lstat().st_size;need(0<=size<=bound and aggregate+size<=AGGREGATE,'aggregate public readback cap before allocation')
++ row,raw=read(rel,min(bound,AGGREGATE-aggregate));aggregate+=len(raw);need(aggregate<=AGGREGATE,'aggregate public readback cap');rows.append((row,raw))
++for row,_ in rows:
++ now,_=read(row['file'],row['bytes'],False);need(now==row,'public source changed before transfer')
++wire=0
++for row,raw in rows:
++ line=json.dumps(dict(row,base64=base64.b64encode(raw).decode()),separators=(',',':'))+'\n';wire+=len(line.encode());need(wire<=WIRE,'wire cap');print(line,end='',flush=True)
++'''
++def remote_program():
++ return ('from pathlib import Path\nimport os,stat,json,hashlib,base64\nO=Path('+repr(REMOTE_ROOT)+')\nF='+repr(F)+'\nAGGREGATE='+str(AGGREGATE)+'\nWIRE='+str(WIRE)+'\nALLOWLIST='+repr(ALLOWLIST)+'\n'+REMOTE_BODY).encode()
++def stream_oracle(raw,policy):
++ need(type(raw)is bytes and len(raw)<=AGGREGATE and type(policy)is dict,'bounded actual stream');kind=policy.get('kind')
++ if kind=='empty':need(set(policy)=={'kind'}and raw==b'','expected empty stream')
++ elif kind=='exact':need(set(policy)=={'kind','text'}and raw==policy['text'].encode(),'expected exact stream')
++ elif kind=='json-lines':need(set(policy)=={'kind','records'}and canonical([loads(line)for line in raw.decode().splitlines()])==canonical(policy['records']),'typed expected JSON stream')
++ elif kind=='last-line':
++  lines=raw.decode().splitlines();need(set(policy)=={'kind','text','contains','count'}and lines and lines[-1]==policy['text']and sum(policy['contains']in line for line in lines)==policy['count'],'last-line oracle')
++ elif kind=='get-proof-record-stream-v1':
++  records=[loads(line)for line in raw.decode().splitlines()];need(len(records)==30 and sum(r.get('scenario')=='proof-vector'for r in records)==24 and records[-1].get('scenario')=='get-proof-summary'and records[-1].get('passed')is True,'actual proof stream shape; cryptographic verification follows')
++ else:raise ValueError('unsupported fixed public policy')
++def exact_counts(value,wanted,label):need(type(value)is dict and set(value)==set(wanted)and all(type(value[k])is int and value[k]==v for k,v in wanted.items()),label)
++
++def main():
++ parser=argparse.ArgumentParser();parser.add_argument('unit_admission_sha256');parser.add_argument('unit_admission_bytes',type=int);args=parser.parse_args();need({'sha256':args.unit_admission_sha256,'bytes':args.unit_admission_bytes}==UNIT_AUTHORITY_PIN,'external original verifier-authority pin supplied by Root')
++ need(len(ALLOWLIST)==56 and len({p for p,_ in ALLOWLIST})==56,'exact 56-file public consumer')
++ need(O.parent.resolve(strict=True)==O.parent and not O.is_relative_to(R),'new physical audit namespace');O.mkdir(mode=0o700,exist_ok=False)
++ held={};first=None;failures=[];catalog={};host=None;worker=None;fence=None;parsed=None;js_event=None;dispatch=None;old_audit=None;retained_proof=None;final_changes=[];assembly_join_valid=False;authority_read=False;started=time.monotonic()
++ def fail(stage,error):
++  nonlocal first
++  failures.append({'stage':stage,'errorType':type(error).__name__})
++  if first is None:first=error
++ def hold(path,row):
++  key=str(path);need(key not in held or held[key]==row,'held row cannot refresh');held[key]=row
++ def known(path,expected,body=True):
++  row,raw=read(path,held.get(str(path)),bound=expected['bytes'],body=body);need(pin(row)==expected,'known public bytes differ');hold(path,row);return raw
++ def admitted(paths,known_pins):
++  samples=[];start=time.monotonic()
++  for i in range(3):
++   rows={}
++   for path in paths:
++    row,_=read(path,held.get(str(path)),body=False);need(pin(row)==known_pins[path],'known bytes on every prospective sample');rows[str(path)]=row
++   samples.append(rows)
++   if i!=2:time.sleep(1.05)
++  need(time.monotonic()-start>=2 and samples[0]==samples[1]==samples[2],'new selected inputs stable full-nine')
++  for path,row in samples[-1].items():hold(Path(path),row)
++  save('new-input-admission.private.json',{'samples':samples,'originalRowsRefreshed':False});return samples[-1]
++ try:
++  # No private file is transferred remotely. Root supplies this one LOCAL
++  # historical authority's known pin before reading it; its internal rows stay exact.
++  authority=UNIT/'new-input-admission.json';authority_pin={'sha256':args.unit_admission_sha256,'bytes':args.unit_admission_bytes};old=loads(known(authority,authority_pin));authority_read=True
++  need(type(old)is dict and type(old.get('samples'))is list and old['samples'],'original verifier admission shape');original=old['samples'][-1];need(type(original)is dict and 1<=len(original)<=20000 and str(NODE)in original,'original Node and selected dependencies required')
++  for path,row in original.items():need(valid_row(row),'original verifier full-nine/SHA');read(Path(path),row,body=False);hold(Path(path),row)
++  public_unit=loads(known(UNIT/'result-public.json',{'sha256':'44e6950c127151fc4a5ad9ab620e81c336ae2bc495853c7ff856e00634491a55','bytes':1996}))
++  correction=loads(known(UNIT/'terminal-audit-correction-public.json',{'sha256':'dd2e4544e8936932cd402b664c04a5c62de1e4bbe9c557c5087461dff09fa0ee','bytes':1592}))
++  need(correction['passedEight']is True and correction['testsReplayed']is False and correction['inputsUnchanged']is True and correction['nodeTestExitCode']==0 and correction['actualCounts']=={'tests':8,'suites':0,'pass':8,'fail':0,'cancelled':0,'skipped':0,'todo':0},'existing eight-unit qualification, no replay')
++  module_pins={MODULE:{'sha256':'b59224b4a64231d493ccf21b98d4c5ddb5f5ce3ec9889b792190d0e0e0b090ce','bytes':5340},MODULE.parent/'account-proof.mjs':{'sha256':'2a07c2f6d0602250e85a71b563161fbbaafd5c8cac7d612f3c3c8c02909d31c9','bytes':2439},MODULE.parent.parent/'hardhat/package.json':{'sha256':'39a64e23c4cde8a0a0c3db20da85f0ac5c5e4508d9fe118c8a8c42fd0d1a2e8d','bytes':550}}
++  for path,wanted in module_pins.items():
++   row=public_unit['newSourcePins'][str(path.relative_to(UNIT/'source'))];need(valid_row(row)and pin(row)==wanted,'original qualified module row');read(path,row,body=False);hold(path,row)
++  own=Path(__file__).resolve(strict=True);row,_=read(own,body=False);hold(own,row)
++  dispatch_path=D/'dispatch-exit-public.json';row,raw=read(dispatch_path,bound=65536);dispatch=loads(raw);hold(dispatch_path,row);need(dispatch['actualProcessTerminal']is True and type(dispatch['exitCode'])is int and dispatch['exitCode']==0,'actual continuation dispatcher terminal0')
++  old_root=E/'rpc-candidate-amd-terminal-failure-root-20261018-01'
++  old_audit=loads(known(old_root/'root-failure-audit-public.json',{'sha256':'e1b1f0d01107b64c14559afda379ee538eb6b2e27b174020b0bdc72f80a52ea7','bytes':2054}))
++  retained_proof=loads(known(old_root/'outputs/core-member-proof.json',{'sha256':'acabca41c17b518fa2a82dcf8ec7751dab9358344769dd812b53c7b5a43e17cb','bytes':8779}))
++  need(old_audit['actualDispatcherExitCode']==1 and old_audit['hostPassed']is False and old_audit['failureType']=='TimeoutExpired'and old_audit['failedEnvelopeReclassified']is False and old_audit['counts']['independentM']==152,'old failed envelope remains failed')
++  batch=loads(known(E/'rpc-state-proof-test-oracles-source-20261017/test-batch.json',{'sha256':'17231520964bd3b3e039bff96a5b46f6024c64af853767f9d909779545e4c802','bytes':5545}))
++  runtime_policies=loads(known(E/'native-rpc-state-proof-controller-source-v3-20261017/runtime-cases.json',{'sha256':'aa613ce2e1980a8f73aaf886be81ac5c3c0a1d9edf72cc5749f97ac61b68e068','bytes':7038}))
++  remote=remote_program();compile(remote,'<fixed-continuation-public-readback>','exec')
++  argv=['/usr/bin/ssh','-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','ConnectTimeout=10','ubuntu@145.239.199.166','/usr/bin/python3','-']
++  raw,err,event=bounded_process('readback',argv,timeout=120,stdout_limit=WIRE,stderr_limit=1048576,input_bytes=remote,env={'PATH':'/usr/bin:/bin'})
++  need(event['exitCode']==0 and event['actualProcessJoined']is True and not err,'public readback terminal0/empty stderr');allowed=dict(ALLOWLIST);aggregate=0
++  for line in raw.splitlines():
++   row=loads(line);need(type(row)is dict and set(row)=={'file','bytes','sha256','readbackFD9','base64'},'fixed readback row');rel=row['file'];need(type(rel)is str and rel in allowed and rel not in catalog and '.private'not in rel,'only fixed public allowlist paths');need(type(row['bytes'])is int and 0<=row['bytes']<=allowed[rel]and aggregate+row['bytes']<=AGGREGATE,'local aggregate bound before decode');data=base64.b64decode(row['base64'],validate=True);need(len(data)==row['bytes']and hashlib.sha256(data).hexdigest()==row['sha256'],'actual transfer pin');remote_row=dict(row['readbackFD9'],sha256=row['sha256']);need(valid_row(remote_row)and remote_row['st_size']==len(data)and remote_row['st_nlink']==1 and stat.S_ISREG(remote_row['st_mode']),'public readback FD9');aggregate+=len(data)
++   target=O/rel;target.parent.mkdir(parents=True,exist_ok=True,mode=0o700);write(target,data);catalog[rel]={k:v for k,v in row.items()if k not in ('file','base64')}
++  need(set(catalog)==set(allowed)and len(catalog)==56,'all and only56 public files');save('readback-catalog-public.json',{'remoteSource':'ubuntu@145.239.199.166:'+REMOTE_ROOT,'files':catalog,'privateFilesTransferred':0,'readbackRowsAreHistoricalAuthorities':False})
++  host=loads((O/'result-public.json').read_bytes());fence=loads((O/'host-final-fence-public.json').read_bytes());prepared=loads((O/'prepared-public.json').read_bytes());worker=loads((O/'outputs/result-public.json').read_bytes())
++  need(host['format']=='nano-rpc-candidate-amd-retained-continuation-host-result-v1'and all(host[k]is True for k in ('passed','workerPassed','allConfiguredCasesPassed','hostFinalFenceAfterCleanup','originalHostInputsUnchanged')),'host terminal success gates')
++  need(host['sourceRevision']==REV and host['actualHead']==HEAD and host['baselineSourceRevision']==BASE and host['retainedCore']==CORE and host['image']==IMAGE,'exact retained candidate/revisions/image')
++  need(type(host['changedHostInputs'])is int and host['changedHostInputs']==0 and host['cleanup']['passed']is True and host['cleanup']['ownedContainerAbsent']is True and host['cleanup']['imagesOrVolumesPruned']is False and host['imageFinalFence']=={'passed':True,'image':IMAGE,'architecture':'amd64'},'cleanup/image final success')
++  need(fence['passed']is True and fence['oldAuthoritiesRefreshed']is False and type(fence['selectedFiles'])is int and fence['selectedFiles']>=281,'full old265+new16 and selected source inputs fence')
++  need(host['retainedProductRows']==265 and type(host['retainedProductRows'])is int and host['newWorkerProductRowsHeldThroughCleanup']==16 and type(host['newWorkerProductRowsHeldThroughCleanup'])is int,'exact265old+16new held through CLI/cleanup')
++  need(host['retainedCoreProof']==retained_proof and retained_proof['passed']is True and retained_proof['members']==143 and retained_proof['selectedReplacementCount']==44 and retained_proof['unchangedOutsideReplacementSet']==99 and retained_proof['newArchive']==CORE,'original Core proof joined, never recomputed')
++  need(host['runtimeLibraries']==6 and host['generatedProviders']==1 and host['newImagesBuilt']==host['cmakeConfigures']==host['retainedExecutableCompilationsRepeated']==host['retainedExecutableLinksRepeated']==0 and host['previousFailedEnvelopeReclassified']is False and all(host[k]is False for k in ('rootIndependentProofVectorsVerified','runtimeServeOrRpcQualified','runtimeDutiesResumed','productionQualified')),'no repeated assembly or false production scope')
++  need(prepared['sourceRevision']==REV and prepared['actualHead']==HEAD and prepared['image']==IMAGE and prepared['sourceFiles']=={'candidate':1276,'baseline':1271}and prepared['retainedCore']==CORE and prepared['coreScansRequested']==0 and prepared['freshUnitsRequested']==prepared['candidateTestsRequested']==4 and prepared['retainedExecutables']==8 and prepared['runtimeCliRequested']==9 and prepared['previousFailedEnvelopeReclassified']is False,'prepared retained scope')
++  need(worker['format']=='nano-linux-rpc-state-proof-runtime-units-qualification-v1'and worker['passed']is True and worker['allConfiguredCasesPassed']is True and worker['coreMode']=='retained'and worker['coreProof']is None,'worker retained success, coreProofnull')
++  exact_counts(worker['counts'],WANT,'exact four-unit worker counters');exact_counts(host['workerCounts'],WANT,'host/worker counters join');need(set(worker['mmd'])==set(CANDIDATES)and len(worker['mmd'])==4 and all(v['normalizedMEqualsMd']is True and v['objectReused']is False and v['scope']=='candidate'for v in worker['mmd'].values()),'four fresh MMD equalities')
++  need(set(worker['unitProducts'])==set(CANDIDATES),'only four fresh unit products')
++  for name,(exe,src)in TARGETS.items():need(worker['unitProducts'][name]=={'scope':'candidate','source':'/work/'+src,'object':'/outputs/unit-'+name+'.o','objectReused':False,'executable':'/outputs/'+exe},'exact fresh unit product roles')
++  assembly_join_valid=True
++  candidate_cases=worker['testResults'];runtime_cases=host['retainedRuntimeCases'];need(len(candidate_cases)==4 and {x['name']for x in candidate_cases}==set(CANDIDATES),'four exact candidate results');need(host['retainedRuntimeCliInvocations']==9 and type(host['retainedRuntimeCliInvocations'])is int and len(runtime_cases)==9 and{x['name']for x in runtime_cases}==set(RUNTIME),'nine first-time retained CLI results')
++  policies={x['name']:x for x in batch['testCases']if x['name']in CANDIDATES};policies.update({x['name']:x for x in runtime_policies});need(set(policies)==set(CANDIDATES)|set(RUNTIME),'fixed public policies')
++  for case in [*candidate_cases,*runtime_cases]:
++   name=case['name'];is_test=name in CANDIDATES;prefix='outputs/test-'if is_test else'retained-test-';case_path='outputs/case-'+name+'-public.json'if is_test else'retained-case-'+name+'-public.json';same=loads((O/case_path).read_bytes());exit_event=loads((O/(prefix+name+'.exit.json')).read_bytes());policy=policies[name]
++   need(case==same and case['unit']==policy['unit']and case['scope']==('candidate'if is_test else'runtime')and case['semanticStreamOraclesPassed']is True and type(case['actualExitCode'])is int and case['actualExitCode']==policy['expectedExit']and type(exit_event['exitCode'])is int and exit_event['exitCode']==policy['expectedExit']and exit_event['phase']==('test-'if is_test else'retained-')+name,'actual independent case/exit join')
++   need(case['runtimeArityOnly']is(not is_test),'case runtime arity scope')
++   if is_test:need(case['baselineExpectedFailure']is False,'no baseline replay')
++   for stream in ('stdout','stderr'):stream_oracle((O/(prefix+name+'.'+stream+'.log')).read_bytes(),policy[stream])
++  local_pins={O/rel:{'sha256':row['sha256'],'bytes':row['bytes']}for rel,row in catalog.items()};local_pins[DRIVER]={'sha256':'94b5a31b2bd404e600a9c09f5d261d109b1c13e789820ba67fe22d5b738b7f3f','bytes':3291};local_pins[dispatch_path]=pin(held[str(dispatch_path)]);admitted([*local_pins],local_pins)
++  proof=O/'outputs/test-candidate-proof.stdout.log';proof_pin=local_pins[proof];argv=[str(NODE),str(DRIVER),str(proof),proof_pin['sha256'],str(MODULE)];save('independent-proof-invocation-public.json',{'argv':argv,'scope':'24 actual AMD continuation proof vectors; no eight-unit replay','candidate':REV,'actualHead':HEAD})
++  raw,err,js_event=bounded_process('independent-proof',argv,timeout=60,stdout_limit=AGGREGATE,stderr_limit=1048576,env={'PATH':'/usr/bin:/bin','NODE_PATH':str(R/'tests/hardhat/node_modules')});need(js_event['exitCode']==0 and js_event['actualProcessJoined']is True and not err,'actual independent proof child terminal0');parsed=loads(raw)
++  need(parsed['format']=='nano-rpc-proof-vectors-independent-check-v1'and parsed['passed']is True and type(parsed['verifiedVectors'])is int and parsed['verifiedVectors']==24 and parsed['inputSha256']==proof_pin['sha256']and len(parsed['results'])==24 and parsed['consensusRootAuthenticated']is False and parsed['productionQualified']is False,'24 actual proof vectors independently verified')
++ except BaseException as error:fail('audit',error)
++ finally:
++  for path,row in held.items():
++   try:read(Path(path),row,body=False)
++   except BaseException as error:final_changes.append({'path':path,'errorType':type(error).__name__});fail('final-input-fence',error)
++  try:save('final-input-fence-public.json',{'passed':not final_changes,'selectedFiles':len(held),'failures':final_changes,'oldAuthoritiesRefreshed':False})
++  except BaseException as error:fail('final-fence-publication',error)
++  passed=first is None and parsed is not None and parsed.get('passed')is True and parsed.get('verifiedVectors')==24
++  combined={'independentM':156,'coreIndependentM':143,'runtimeIndependentM':8,'testIndependentM':5,'compiledTranslationUnits':56,'coreCompiledTranslationUnits':44,'runtimeCompiledTranslationUnits':8,'testCompiledTranslationUnits':4,'archiveUpdates':1,'links':12,'loaderChecks':12,'testInvocations':4,'runtimeCliInvocations':9,'unitInvocations':13}
++  proof_row=catalog.get('outputs/test-candidate-proof.stdout.log');result={'format':'nano-rpc-candidate-amd-continuation-public-root-audit-v1','passed':passed,'sourceRevision':REV,'actualHead':HEAD,'actualDispatcherExitCode':None if dispatch is None else dispatch.get('exitCode'),'terminalHostPassed':bool(host and host.get('passed')),'newWorkerCounts':None if worker is None else worker.get('counts'),'combinedRawCountsAcrossFailedAndNewAttempts':combined if assembly_join_valid else None,'combinedRawMIncludesAbortedPriorProofScan':True,'originalFailedEnvelopeReclassified':False,'retainedCoreProof':retained_proof,'retainedOldProductRows':0 if host is None else host.get('retainedProductRows',0),'newProductsHeldThroughCleanup':0 if host is None else host.get('newWorkerProductRowsHeldThroughCleanup',0),'runtimeCppOrLinksRepeated':0 if assembly_join_valid else None,'verifiedProofVectors':24 if passed else 0,'verifierReportedVectors':None if parsed is None else parsed.get('verifiedVectors'),'proofStdoutPin':None if proof_row is None else {k:proof_row[k]for k in ('sha256','bytes')},'proofBytesEqualNativeAndArm':bool(proof_row and(proof_row['sha256'],proof_row['bytes'])==('f8c059c07a766da1afc84e9c557e9167c64a5336786f0334f906a9e777241e94',41688)),'selectedInputsUnchanged':not final_changes,'selectedInputCount':len(held),'failures':failures,'javascriptUnitTestsReplayed':0,'newCppCompilationsByAudit':0,'privateFilesTransferred':0,'allowlistPublicFiles':len(catalog),'localVerifierAuthorityRead':authority_read,'consensusRootAuthenticated':False,'runtimeDutiesResumed':False,'candidateImportedToMain':False,'productionQualified':False,'elapsedSeconds':round(time.monotonic()-started,3)}
++  if first is not None:result['firstFailureType']=type(first).__name__
++  try:save('root-audit-public.json',result);print(json.dumps(result),flush=True)
++  except BaseException as error:
++   if first is None:first=error
++ if first is not None:raise first
++ need(passed,'terminal public audit and actual independent proof verification')
++if __name__=='__main__':main()
