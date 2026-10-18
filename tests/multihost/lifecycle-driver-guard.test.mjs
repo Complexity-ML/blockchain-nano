@@ -86,7 +86,7 @@ test('actual lifecycle driver generation20261018 gates default mode and private 
   for(let i=0;i<cases.length;++i){const selected=structuredClone(spec);cases[i].edit(selected);if(selected.lifecycle.runtimeDriverEnabled)for(const [name,o] of Object.entries(selected.owners))o.programs.lifecycleSubmit={path:(name==='mac-native'?o.coreBuildRoot:'/outputs')+'/nano-capella-lifecycle-submit',sha256:'d'.repeat(64),bytes:1};
    const file=join(parent,'synthetic-spec-'+i+'.json'),bytes=Buffer.from(JSON.stringify(selected)),specBefore=await writeAndAdmitFixture(file,bytes);
    const child=spawnSync(process.execPath,['--max-old-space-size=32','--max-semi-space-size=1',run,'ubuntu@127.0.0.1',selected.sourceBaseRevision,output,'--fresh-campaign',file,'--fresh-campaign-sha',sha(bytes)],{env,encoding:'utf8',timeout:4000,maxBuffer:262144});
-   assert.ifError(child.error);assert.equal(child.signal,null);assert.equal(child.status,1);assert.equal(child.stdout,'');assert(child.stderr.includes(cases[i].message),'A parser/import/ENOENT refusal is not this guard');assert(!child.stderr.includes('ENOENT'));
+   assert.ifError(child.error);assert.equal(child.signal,null);assert.equal(child.status,1);assert.equal(child.stdout,'');assert(child.stderr.includes(cases[i].message),'A parser/import/ENOENT refusal is not this guard: '+JSON.stringify({caseIndex:i,status:child.status,stderr:child.stderr}));assert(!child.stderr.includes('ENOENT'));
    for(const p of missing)await absent(p);assert.deepEqual(await stable(file),specBefore);for(const leaf of Object.keys(sourcePins))assert.deepEqual(await stable(join(source,leaf)),before[leaf]);
   }
  }finally{await rm(parent,{recursive:true,force:true});}
