@@ -6084,3 +6084,20 @@ fonds, vente, signature, réseau de chaîne ou déploiement public. Objectif ACT
 production non qualifiée ; préfixes historiques intégraux conservés.
 
 Aucun test EEST/RPC/DeFi ni profil EVM supplémentaire n'est promu par ce lot.
+
+
+<!-- nano-c8-native-consumers-p2p-20261018 -->
+## C8 — outils natifs et provenance P2P
+
+[Preuves et limites](qualification/operator-c8-native-consumers-20261018/README.md) :
+six outils natifs et leur shim liés ; continuation08 conserve07FAILED et réutilise
+ses deux compilations réussies. Les headers consommateurs sont tenus avant M/MD,
+28 fichiers sont conservés et cinq vérifications passives terminent comme prévu.
+La provenance P2P native rejoint81 pins courants sans recompilation/exécution.
+Le SDK historique Core/fournisseurs et dyld global ne sont pas qualifiés ; index24
+actifs/admissions entières restent ouverts. Copies Docker0400 à compléter par de
+nouvelles copies exécutables. Aucun Core/image/runtime remplacé, signature ou
+duty. Campagne03 FAILED consommée, aucune04 autorisée ; Paris/Shanghai inchangé,
+aucun EIP/fork promu. Autres critères normatifs, revue indépendante non réalisée,
+Base–Nano proposé et bridge USDC/Doppler/T0 restent ouverts. Objectif ACTIF,
+production non qualifiée ; préfixes et tous les échecs historiques conservés.
