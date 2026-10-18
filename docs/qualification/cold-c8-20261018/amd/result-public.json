@@ -1,0 +1,996 @@
+{
+  "checkRecords": [
+    {
+      "allFourStoresReadOnly": true,
+      "archivesAuthenticated": 2,
+      "canonicalHistoryAudit": {
+        "allHistoricalStatesMaterialized": true,
+        "archiveBytes": 2048,
+        "blocksIncludingTrustedAnchor": 3,
+        "canonicalHistoryVerified": true,
+        "checkpointDigest": "0x78e15f98669f931f2b842110c60f282ff55cab954cde5289ed90860af3366169",
+        "checkpointSequence": 8,
+        "externalFinalizedAncestorVerified": false,
+        "finalized": {
+          "epoch": "0x0",
+          "root": "0xbf98b9c9858d014003ece6535447bff265b3f8bfe32164816cbd8d8a9639d38c"
+        },
+        "firstExecutionBlock": "0x1",
+        "head": "0x6336d9388ce8a2b4430a87cf6b2c382ebd96da816906062d41acc529ac683e25",
+        "historicalForkChoiceVerified": false,
+        "historicalStandaloneVotesReplayed": false,
+        "lastExecutionBlock": "0x3",
+        "prunedExecutionStatesReplayed": 0,
+        "requiredFinalized": null,
+        "transactions": 0,
+        "trustedAnchor": "0xbf98b9c9858d014003ece6535447bff265b3f8bfe32164816cbd8d8a9639d38c"
+      },
+      "closedPhysicalInventoryUnchanged": true,
+      "coldClosureAuthenticated": true,
+      "executionCoupled": true,
+      "externalFinalizedBeforeAnchorRefused": true,
+      "headRoot": "0x6336d9388ce8a2b4430a87cf6b2c382ebd96da816906062d41acc529ac683e25",
+      "independentReadonlyPasses": 2,
+      "journalProposalBoundToArchivedBlock": true,
+      "mode": "check",
+      "name": "alpha",
+      "pendingBlsChanges": 1,
+      "primaryToken": {
+        "digest": "0x78e15f98669f931f2b842110c60f282ff55cab954cde5289ed90860af3366169",
+        "sequence": "0x8"
+      },
+      "result": "PASS",
+      "scenario": "physical-authenticated-cohort",
+      "signedAnchorAuthenticatedOnBothStores": true,
+      "witnessToken": {
+        "digest": "0x1ba970dd43fd0f71b5c970a94737109fff979429ed04bc3994219f62f167fb61",
+        "sequence": "0x8"
+      }
+    },
+    {
+      "allFourStoresReadOnly": true,
+      "archivesAuthenticated": 3,
+      "canonicalHistoryAudit": {
+        "allHistoricalStatesMaterialized": true,
+        "archiveBytes": 3072,
+        "blocksIncludingTrustedAnchor": 4,
+        "canonicalHistoryVerified": true,
+        "checkpointDigest": "0xa353c59c0601750271dbaa1524de9dd0363342b6eb994d8e73e5e03a50d099cf",
+        "checkpointSequence": 10,
+        "externalFinalizedAncestorVerified": false,
+        "finalized": {
+          "epoch": "0x0",
+          "root": "0xbf98b9c9858d014003ece6535447bff265b3f8bfe32164816cbd8d8a9639d38c"
+        },
+        "firstExecutionBlock": "0x1",
+        "head": "0x7395c97f353d23caa884ca9e36dd9117ca3bf1615f5fd7f7cb2416369bcb266a",
+        "historicalForkChoiceVerified": false,
+        "historicalStandaloneVotesReplayed": false,
+        "lastExecutionBlock": "0x4",
+        "prunedExecutionStatesReplayed": 0,
+        "requiredFinalized": null,
+        "transactions": 0,
+        "trustedAnchor": "0xbf98b9c9858d014003ece6535447bff265b3f8bfe32164816cbd8d8a9639d38c"
+      },
+      "closedPhysicalInventoryUnchanged": true,
+      "coldClosureAuthenticated": true,
+      "executionCoupled": true,
+      "externalFinalizedBeforeAnchorRefused": true,
+      "headRoot": "0x7395c97f353d23caa884ca9e36dd9117ca3bf1615f5fd7f7cb2416369bcb266a",
+      "independentReadonlyPasses": 2,
+      "journalProposalBoundToArchivedBlock": true,
+      "mode": "check",
+      "name": "beta",
+      "pendingBlsChanges": 1,
+      "primaryToken": {
+        "digest": "0xa353c59c0601750271dbaa1524de9dd0363342b6eb994d8e73e5e03a50d099cf",
+        "sequence": "0xa"
+      },
+      "result": "PASS",
+      "scenario": "physical-authenticated-cohort",
+      "signedAnchorAuthenticatedOnBothStores": true,
+      "witnessToken": {
+        "digest": "0x109d7c34584b79b65fdd684059782faf9d5a949105b8d9523c2835ed21e65ab1",
+        "sequence": "0xa"
+      }
+    },
+    {
+      "actualPeakRssKiB": 24884,
+      "archivesAuthenticated": 5,
+      "automaticRecoveryUsed": false,
+      "cohorts": 2,
+      "databases": 8,
+      "finalityAdvanceQualified": false,
+      "independentReadonlyPasses": 2,
+      "manifestSha256": "89cf80fa311d4fd91b54094f7f1e8a08bfbc71ac4d831d98b24669703c6ffdbc",
+      "maximumRssKiB": 131072,
+      "maximumWallSeconds": 180,
+      "mode": "check",
+      "networkTransport": false,
+      "newSignaturesInCheck": 0,
+      "newTestOnlySignaturesCreated": 0,
+      "noMissingStoreCreation": true,
+      "productionQualified": false,
+      "result": "PASS",
+      "runtimeDutiesAuthorized": false,
+      "scenario": "physical-authenticated-cohort-summary"
+    }
+  ],
+  "checkerCompleted": true,
+  "checkerRequested": true,
+  "cleanup": {
+    "containers": {
+      "admit-1": {
+        "cid": "31b3188272de4007bfbe580d85ea5f22aee6159234ada2f2e4467e443ed49e24",
+        "name": "nano-cold-admit-1-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      },
+      "admit-2": {
+        "cid": "f2eada966472376fba58e38d38eb9bbea8e8e35ccffe6466c60fda873d9e4d2e",
+        "name": "nano-cold-admit-2-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      },
+      "admit-3": {
+        "cid": "9c6ead76d7a68756a5f113b7c8cdd7c7435900bb190d98a573a77fff72514793",
+        "name": "nano-cold-admit-3-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      },
+      "after-check": {
+        "cid": "9aeb62e8a13166d86df770012e0ece25a12ab4adde7b93d3e2a6ce0db8192b4a",
+        "name": "nano-cold-after-check-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      },
+      "after-cleanup-audit": {
+        "cid": "69cfa28c42776d2425397e56ed741ca6025728efc2eebc17c64c0312e96060ce",
+        "name": "nano-cold-after-cleanup-audit-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      },
+      "before-check": {
+        "cid": "a6b956bf74961534222dddf273102b5c826d6e5cb336b0d1e98378e699e667a4",
+        "name": "nano-cold-before-check-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      },
+      "check": {
+        "cid": "f473d21e55ad1fbbc8acd27bdd83c48e065a3228334d581621228d5dda1e26df",
+        "name": "nano-cold-check-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      },
+      "extract": {
+        "cid": "90ceaeddee971d6c519ce06dc25b238277d77f344b99153bd7070e27418800ac",
+        "name": "nano-cold-extract-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      },
+      "setup": {
+        "cid": "a1026dad55bde7621d2a8e188dee824ca814f9ddd827b4b253cdde2df6d176f4",
+        "name": "nano-cold-setup-ce78234864474fe5a16e944bc22b2b3c",
+        "removed": true
+      }
+    },
+    "passed": true,
+    "volumeName": "nano-cold-restore-ce78234864474fe5a16e944bc22b2b3c",
+    "volumeRetained": true
+  },
+  "cppCompilations": 0,
+  "entries": 69,
+  "events": [
+    {
+      "elapsedMs": 268,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "image-before",
+      "pid": 422684,
+      "stderrBytes": 0,
+      "stdoutBytes": 2520
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "volume-name-before",
+      "pid": 422693,
+      "stderrBytes": 99,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 238,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "volume-create",
+      "pid": 422702,
+      "stderrBytes": 0,
+      "stdoutBytes": 51
+    },
+    {
+      "elapsedMs": 237,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "volume-created",
+      "pid": 422712,
+      "stderrBytes": 0,
+      "stdoutBytes": 419
+    },
+    {
+      "elapsedMs": 239,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "setup-name-before",
+      "pid": 422721,
+      "stderrBytes": 96,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 280,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "setup-create",
+      "pid": 422730,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "setup-created",
+      "pid": 422740,
+      "stderrBytes": 0,
+      "stdoutBytes": 7731
+    },
+    {
+      "elapsedMs": 391,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "setup-start",
+      "pid": 422750,
+      "stderrBytes": 0,
+      "stdoutBytes": 0
+    },
+    {
+      "elapsedMs": 240,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "setup-terminal",
+      "pid": 422829,
+      "stderrBytes": 0,
+      "stdoutBytes": 8291
+    },
+    {
+      "elapsedMs": 244,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "setup-cleanup-inspect",
+      "pid": 422839,
+      "stderrBytes": 0,
+      "stdoutBytes": 8291
+    },
+    {
+      "elapsedMs": 239,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "setup-cleanup-stopped",
+      "pid": 422849,
+      "stderrBytes": 0,
+      "stdoutBytes": 8291
+    },
+    {
+      "elapsedMs": 252,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "setup-cleanup-remove",
+      "pid": 422859,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 254,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "setup-cleanup-absent",
+      "pid": 422868,
+      "stderrBytes": 96,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 240,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "extract-name-before",
+      "pid": 422877,
+      "stderrBytes": 98,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 316,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "extract-create",
+      "pid": 422887,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 290,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "extract-created",
+      "pid": 422897,
+      "stderrBytes": 0,
+      "stdoutBytes": 7903
+    },
+    {
+      "elapsedMs": 422,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "extract-start",
+      "pid": 422907,
+      "stderrBytes": 0,
+      "stdoutBytes": 0
+    },
+    {
+      "elapsedMs": 246,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "extract-terminal",
+      "pid": 422983,
+      "stderrBytes": 0,
+      "stdoutBytes": 8464
+    },
+    {
+      "elapsedMs": 261,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "extract-cleanup-inspect",
+      "pid": 422993,
+      "stderrBytes": 0,
+      "stdoutBytes": 8464
+    },
+    {
+      "elapsedMs": 267,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "extract-cleanup-stopped",
+      "pid": 423003,
+      "stderrBytes": 0,
+      "stdoutBytes": 8464
+    },
+    {
+      "elapsedMs": 277,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "extract-cleanup-remove",
+      "pid": 423013,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 244,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "extract-cleanup-absent",
+      "pid": 423023,
+      "stderrBytes": 98,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "admit-1-name-before",
+      "pid": 423033,
+      "stderrBytes": 98,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 291,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-1-create",
+      "pid": 423043,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 273,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-1-created",
+      "pid": 423053,
+      "stderrBytes": 0,
+      "stdoutBytes": 8847
+    },
+    {
+      "elapsedMs": 856,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-1-start",
+      "pid": 423063,
+      "stderrBytes": 0,
+      "stdoutBytes": 14251
+    },
+    {
+      "elapsedMs": 240,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-1-terminal",
+      "pid": 423545,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-1-cleanup-inspect",
+      "pid": 423555,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 241,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-1-cleanup-stopped",
+      "pid": 423565,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 254,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-1-cleanup-remove",
+      "pid": 423575,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 240,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "admit-1-cleanup-absent",
+      "pid": 423584,
+      "stderrBytes": 98,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 273,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "admit-2-name-before",
+      "pid": 423593,
+      "stderrBytes": 98,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 289,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-2-create",
+      "pid": 423603,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 241,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-2-created",
+      "pid": 423613,
+      "stderrBytes": 0,
+      "stdoutBytes": 8847
+    },
+    {
+      "elapsedMs": 846,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-2-start",
+      "pid": 423622,
+      "stderrBytes": 0,
+      "stdoutBytes": 14251
+    },
+    {
+      "elapsedMs": 243,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-2-terminal",
+      "pid": 424108,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-2-cleanup-inspect",
+      "pid": 424119,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 238,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-2-cleanup-stopped",
+      "pid": 424129,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 272,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-2-cleanup-remove",
+      "pid": 424139,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 243,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "admit-2-cleanup-absent",
+      "pid": 424150,
+      "stderrBytes": 98,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 246,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "admit-3-name-before",
+      "pid": 424160,
+      "stderrBytes": 98,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 286,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-3-create",
+      "pid": 424170,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 240,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-3-created",
+      "pid": 424180,
+      "stderrBytes": 0,
+      "stdoutBytes": 8847
+    },
+    {
+      "elapsedMs": 855,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-3-start",
+      "pid": 424190,
+      "stderrBytes": 0,
+      "stdoutBytes": 14251
+    },
+    {
+      "elapsedMs": 272,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-3-terminal",
+      "pid": 424670,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 259,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-3-cleanup-inspect",
+      "pid": 424680,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 248,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-3-cleanup-stopped",
+      "pid": 424690,
+      "stderrBytes": 0,
+      "stdoutBytes": 9408
+    },
+    {
+      "elapsedMs": 249,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "admit-3-cleanup-remove",
+      "pid": 424700,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 236,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "admit-3-cleanup-absent",
+      "pid": 424709,
+      "stderrBytes": 98,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 238,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "before-check-name-before",
+      "pid": 424719,
+      "stderrBytes": 103,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 282,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "before-check-create",
+      "pid": 424729,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 253,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "before-check-created",
+      "pid": 424740,
+      "stderrBytes": 0,
+      "stdoutBytes": 8857
+    },
+    {
+      "elapsedMs": 868,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "before-check-start",
+      "pid": 424750,
+      "stderrBytes": 0,
+      "stdoutBytes": 14251
+    },
+    {
+      "elapsedMs": 245,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "before-check-terminal",
+      "pid": 425230,
+      "stderrBytes": 0,
+      "stdoutBytes": 9418
+    },
+    {
+      "elapsedMs": 243,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "before-check-cleanup-inspect",
+      "pid": 425240,
+      "stderrBytes": 0,
+      "stdoutBytes": 9418
+    },
+    {
+      "elapsedMs": 243,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "before-check-cleanup-stopped",
+      "pid": 425250,
+      "stderrBytes": 0,
+      "stdoutBytes": 9418
+    },
+    {
+      "elapsedMs": 256,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "before-check-cleanup-remove",
+      "pid": 425260,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 243,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "before-check-cleanup-absent",
+      "pid": 425270,
+      "stderrBytes": 103,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 252,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "check-name-before",
+      "pid": 425280,
+      "stderrBytes": 96,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 275,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "check-create",
+      "pid": 425289,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 245,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "check-created",
+      "pid": 425300,
+      "stderrBytes": 0,
+      "stdoutBytes": 8298
+    },
+    {
+      "elapsedMs": 13232,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "check-start",
+      "pid": 425310,
+      "stderrBytes": 0,
+      "stdoutBytes": 3575
+    },
+    {
+      "elapsedMs": 244,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "check-terminal",
+      "pid": 425867,
+      "stderrBytes": 0,
+      "stdoutBytes": 8858
+    },
+    {
+      "elapsedMs": 262,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "check-cleanup-inspect",
+      "pid": 425877,
+      "stderrBytes": 0,
+      "stdoutBytes": 8858
+    },
+    {
+      "elapsedMs": 258,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "check-cleanup-stopped",
+      "pid": 425887,
+      "stderrBytes": 0,
+      "stdoutBytes": 8858
+    },
+    {
+      "elapsedMs": 260,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "check-cleanup-remove",
+      "pid": 425897,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 237,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "check-cleanup-absent",
+      "pid": 425907,
+      "stderrBytes": 96,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 248,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "after-check-name-before",
+      "pid": 425917,
+      "stderrBytes": 102,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 323,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-check-create",
+      "pid": 425926,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-check-created",
+      "pid": 425936,
+      "stderrBytes": 0,
+      "stdoutBytes": 8855
+    },
+    {
+      "elapsedMs": 835,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-check-start",
+      "pid": 425946,
+      "stderrBytes": 0,
+      "stdoutBytes": 14251
+    },
+    {
+      "elapsedMs": 239,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-check-terminal",
+      "pid": 426425,
+      "stderrBytes": 0,
+      "stdoutBytes": 9416
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-check-cleanup-inspect",
+      "pid": 426435,
+      "stderrBytes": 0,
+      "stdoutBytes": 9416
+    },
+    {
+      "elapsedMs": 246,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-check-cleanup-stopped",
+      "pid": 426445,
+      "stderrBytes": 0,
+      "stdoutBytes": 9416
+    },
+    {
+      "elapsedMs": 253,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-check-cleanup-remove",
+      "pid": 426455,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 241,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "after-check-cleanup-absent",
+      "pid": 426464,
+      "stderrBytes": 102,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-name-before",
+      "pid": 426473,
+      "stderrBytes": 110,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 286,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-create",
+      "pid": 426484,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 249,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-created",
+      "pid": 426494,
+      "stderrBytes": 0,
+      "stdoutBytes": 8871
+    },
+    {
+      "elapsedMs": 845,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-start",
+      "pid": 426504,
+      "stderrBytes": 0,
+      "stdoutBytes": 14251
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-terminal",
+      "pid": 426983,
+      "stderrBytes": 0,
+      "stdoutBytes": 9432
+    },
+    {
+      "elapsedMs": 247,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-cleanup-inspect",
+      "pid": 426993,
+      "stderrBytes": 0,
+      "stdoutBytes": 9432
+    },
+    {
+      "elapsedMs": 246,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-cleanup-stopped",
+      "pid": 427003,
+      "stderrBytes": 0,
+      "stdoutBytes": 9432
+    },
+    {
+      "elapsedMs": 260,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-cleanup-remove",
+      "pid": 427013,
+      "stderrBytes": 0,
+      "stdoutBytes": 65
+    },
+    {
+      "elapsedMs": 242,
+      "exitCode": 1,
+      "groupClosed": true,
+      "phase": "after-cleanup-audit-cleanup-absent",
+      "pid": 427022,
+      "stderrBytes": 110,
+      "stdoutBytes": 3
+    },
+    {
+      "elapsedMs": 279,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "volume-retained-final",
+      "pid": 427031,
+      "stderrBytes": 0,
+      "stdoutBytes": 419
+    },
+    {
+      "elapsedMs": 270,
+      "exitCode": 0,
+      "groupClosed": true,
+      "phase": "image-final",
+      "pid": 427041,
+      "stderrBytes": 0,
+      "stdoutBytes": 2520
+    }
+  ],
+  "firstFailure": null,
+  "format": "nano-public-c8-cold-restore-root-v1",
+  "historicalFinalityQualified": false,
+  "image": {
+    "architecture": "amd64",
+    "id": "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+    "user": "10001:10001"
+  },
+  "importCompleted": true,
+  "inputFinalFence": {
+    "afterCleanup": true,
+    "guestEntries": 69,
+    "hostAndGuestMetadataViewsSeparate": true,
+    "originalHostFiles": 6,
+    "passed": true
+  },
+  "installedNanoAuditCliQualified": false,
+  "newGuestOwner": [
+    10001,
+    10001
+  ],
+  "newSignaturesCreated": 0,
+  "operatorRecoveryQualified": false,
+  "passed": true,
+  "portableRoleInventories": 8,
+  "produceInvocations": 0,
+  "productionQualified": false,
+  "requiresControllerExit0": true,
+  "runtimeDutiesAuthorized": false,
+  "secondaryFailures": [],
+  "sourceArchiveOwner": [
+    501,
+    20
+  ],
+  "volumeName": "nano-cold-restore-ce78234864474fe5a16e944bc22b2b3c",
+  "volumeRetained": true
+}

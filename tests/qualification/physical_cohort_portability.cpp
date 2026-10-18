@@ -1,6 +1,7 @@
 // Public, synthetic stopped-cohort fixture only. No scheduler, service or P2P.
 #include "../support/durable_owned_fixture.hpp"
 #include "nano/consensus_beacon_journal_auth.hpp"
+#include "nano/consensus_capella_audit.hpp"
 #include "../../tools/storage-maintenance/bootstrap-readonly-replica.hpp"
 #include <csignal>
 #include <optional>
@@ -199,6 +200,7 @@ Json verify_cohort(const fs::path& root,const Json& row,const Json& chain,const 
  auto close_fence=[&]{for(const auto& f:fences)f->fence();cohort.fence();};
  const auto chain_id=quantity(chain.at("chainId"));const auto genesis=fixed(chain.at("genesisHash"),32);const auto staking=chain.at("stakingContract").get<std::string>();
  std::optional<AuthenticatedCheckpointBlobClosure> authenticated;std::optional<ConsensusBeaconHeader> last_header;
+ Json canonical_history_audit;bool external_finalized_before_anchor_refused=false;
  {
   ChainStore primary(root/name/"primary",ChainStore::OpenMode::ReadOnly),witness(root/name/"witness",ChainStore::OpenMode::ReadOnly);
   primary.require_existing_chain_binding(chain_id,genesis,"beacon",staking);witness.require_existing_chain_binding(chain_id,genesis,"nano-capella-recovery-v1");
@@ -225,6 +227,31 @@ Json verify_cohort(const fs::path& root,const Json& row,const Json& chain,const 
    const auto verified=authenticate_capella_checkpoint_blob_closure(p.snapshot,p.token.digest,rules,limits,fetch,{*entry},guard);check(verified.description()==authenticated->description(),"Core authenticates actual archived BLS signature and retained state");
    last_header=header_of(entry->payload,rules);check(root_text(consensus_beacon_header_root(*last_header))==a.at("root").get<std::string>(),"archived beacon header root");++at;
   }
+  // Export no authority and construct no signing provider: recover only the
+  // externally committed, already authenticated anchor through the RO reader.
+  CapellaForkStore trusted_anchor;
+  {
+   CapellaDurableReactor restored(primary,chain_id,genesis,rules,limits,p.token,guard);
+   const auto publication=restored.current();check(publication.token==p.token,"audit anchor uses exact external checkpoint");
+   const auto anchor_root=test_root(anchor.root);const auto retained=publication.state->blocks.at(anchor_root).lease(guard);
+   check(consensus_beacon_header_root(retained->header)==anchor_root&&retained->header.slot==anchor.slot,"audit anchor matches external signed archive");
+   trusted_anchor=initialize_capella_fork_store(retained->state,std::span<const uint8_t>(anchor.payload).subspan(100),retained->execution_block,retained->execution_state,retained->receipts,{g->header},rules,guard,retained->deposit_history);
+   check(trusted_anchor.blocks.size()==1&&trusted_anchor.timed.view.anchor==anchor_root,"audit uses reconstructed singleton anchor");
+  }
+  const auto& finalized=row.at("observation").at("finalized");shape(finalized,{"epoch","root"});
+  ConsensusCheckpoint required_finalized{natural(finalized.at("epoch")),test_root(fixed(finalized.at("root"),32))};
+  canonical_history_audit=audit_capella_canonical_history(primary,chain_id,genesis,rules,limits,trusted_anchor,p.token,1+children,children*limits.envelope_bytes,guard,std::nullopt);
+  check(canonical_history_audit.at("canonicalHistoryVerified")==true&&canonical_history_audit.at("externalFinalizedAncestorVerified")==false&&canonical_history_audit.at("requiredFinalized").is_null(),"real Core canonical audit without historical finalized ancestry claim");
+  check(canonical_history_audit.at("checkpointSequence")==p.token.sequence&&canonical_history_audit.at("checkpointDigest")==hex(p.token.digest)&&canonical_history_audit.at("head")==row.at("headRoot")&&canonical_history_audit.at("trustedAnchor")==hex(anchor.root),"canonical audit matches exact external checkpoint/head/anchor");
+  check(canonical_history_audit.at("finalized")==finalized,"canonical audit matches externally committed finalized checkpoint");
+  // Epoch zero precedes this fixture's retained slot-one anchor. Preserve the
+  // ancestry rule: that external checkpoint must be refused, never inferred.
+  try{(void)audit_capella_canonical_history(primary,chain_id,genesis,rules,limits,trusted_anchor,p.token,1+children,children*limits.envelope_bytes,guard,required_finalized);}
+  catch(const std::invalid_argument& error){if(std::string(error.what())!="observed finalized checkpoint outside replayed ancestry")throw;external_finalized_before_anchor_refused=true;}
+  check(external_finalized_before_anchor_refused,"exact external finalized-before-anchor refusal required");
+  // This historical synthetic fixture has empty execution blocks: no transaction
+  // replay coverage is inferred from the actual canonical-history audit.
+  check(canonical_history_audit.at("blocksIncludingTrustedAnchor")==1+children&&canonical_history_audit.at("transactions")==0,"fixture canonical audit block and empty-transaction counts");
  }
  // Every DB handle above is destroyed before immutable-file fences/reopen.
  close_fence();check(authenticated&&last_header,"complete independent readonly capture");
@@ -242,7 +269,7 @@ Json verify_cohort(const fs::path& root,const Json& row,const Json& chain,const 
   const Json expected={{"proposal",{{"slot",number(last_header->slot)},{"root",root_text(signing_root)}}},{"attestation",nullptr},{"retired",false}};
   check(reservation(pair.primary())==expected&&reservation(pair.candidate())==expected,"exact durable journal reservation for delivered fixture block");
  }
- close_fence();return {{"name",name},{"primaryToken",row.at("primary").at("token")},{"witnessToken",row.at("witness").at("token")},{"headRoot",row.at("headRoot")},{"archivesAuthenticated",children},{"journalProposalBoundToArchivedBlock",true},{"pendingBlsChanges",1},{"coldClosureAuthenticated",true},{"signedAnchorAuthenticatedOnBothStores",true},{"executionCoupled",true},{"allFourStoresReadOnly",true},{"closedPhysicalInventoryUnchanged",true}};
+ close_fence();return {{"name",name},{"primaryToken",row.at("primary").at("token")},{"witnessToken",row.at("witness").at("token")},{"headRoot",row.at("headRoot")},{"archivesAuthenticated",children},{"journalProposalBoundToArchivedBlock",true},{"pendingBlsChanges",1},{"coldClosureAuthenticated",true},{"canonicalHistoryAudit",canonical_history_audit},{"externalFinalizedBeforeAnchorRefused",external_finalized_before_anchor_refused},{"signedAnchorAuthenticatedOnBothStores",true},{"executionCoupled",true},{"allFourStoresReadOnly",true},{"closedPhysicalInventoryUnchanged",true}};
 }
 Json verify_manifest(const fs::path& root,const Json& manifest){
  const auto signatures_before=test_signatures;
