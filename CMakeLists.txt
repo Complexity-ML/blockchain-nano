@@ -2286,3 +2286,10 @@ if(UNIX)
  add_test(NAME storage_pruning_sst_reclaim COMMAND nano-owned-copy-physical-admission-tests --pruning-sst-reclaim)
  set_tests_properties(storage_pruning_sst_reclaim PROPERTIES TIMEOUT 130 LABELS qualification_storage_pruning_reclaim)
 endif()
+
+# Local adverse sync composition; no live network or validator runtime.
+add_executable(nano-capella-sync-adverse-tests tests/test_capella_sync_adverse.cpp)
+target_link_libraries(nano-capella-sync-adverse-tests PRIVATE nano_core)
+target_compile_definitions(nano-capella-sync-adverse-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+add_test(NAME consensus_capella_sync_adverse COMMAND nano-capella-sync-adverse-tests --self-test)
+set_tests_properties(consensus_capella_sync_adverse PROPERTIES TIMEOUT 180 LABELS "qualification_consensus_sync_adverse")

@@ -1,0 +1,34 @@
+{
+  "format": "nano-capella-sync-adverse-retained-control-v1",
+  "ready": false,
+  "repoRoot": null,
+  "gitExecutable": null,
+  "actualHead": "4ae774f16220d8a9362004b573d83f3c8ed78a97",
+  "sourceRoot": null,
+  "outputRoot": null,
+  "docker": {"prefix": [], "image": null, "architecture": "arm64", "uid": null, "gid": null, "tmpfsMiB": 512},
+  "worker": {"file": null, "pin": {"sha256": "e9bfc40c92f8659af4eda8a4ebcd306699531b058b56acb5d2a426e34ebb7301", "bytes": 37768}},
+  "retainedCore": {"file": null, "guest": "/baseline/libnano_core.a", "pin": {"sha256": "11c1494f4e9fdd9dddd2ee12f8e43e6dffa0a8921f022d39b3d6400477055606", "bytes": 41225178}, "members": 143},
+  "libraries": [],
+  "generatedProviders": [],
+  "originalFiles": {},
+  "coreSourcePins": {},
+  "workerConfig": {
+    "coreMode": "retained",
+    "expectedObjectMembers": 143,
+    "timeoutSeconds": 900,
+    "runtimeInputs": [],
+    "sourcePins": {},
+    "projectPins": {},
+    "units": [{"name": "capella-sync-adverse", "scope": "candidate", "source": "/work/tests/test_capella_sync_adverse.cpp", "compilerFlags": [], "linkPrefix": [], "linkTail": [], "executable": "nano-capella-sync-adverse-tests", "object": {"kind": "compile"}}],
+    "cases": [{
+      "name": "capella-sync-adverse-self-test", "unit": "capella-sync-adverse", "args": ["--self-test"], "timeoutSeconds": 180, "expectedExit": 0,
+      "stderr": {"kind": "empty"},
+      "stdout": {"kind": "json-field-records", "records": [
+        {"expectedFields": {"scenario": "capella-sync-orphan-retry", "result": "PASS"}, "integerFields": {}},
+        {"expectedFields": {"scenario": "capella-sync-deferred-session-reopen", "result": "PASS"}, "integerFields": {}},
+        {"expectedFields": {"scenario": "capella-sync-adverse-summary", "result": "PASS", "groups": 2, "signedBlocks": 3, "newTestOnlySignaturesCreated": 8, "privateInputsRead": false, "runtimeDutiesAuthorized": false, "networkTransport": false, "productionQualified": false}, "integerFields": {}}
+      ]}
+    }]
+  }
+}

@@ -6,7 +6,7 @@ import {join,resolve,dirname} from 'node:path';
 import {execFile,execFileSync} from 'node:child_process';
 import {promisify} from 'node:util';
 const exec=promisify(execFile),repo=process.cwd(),gate=join(repo,'scripts/ci/check-core.cmake');
-const expected=['core','chain','rpc_queue_expiry','rpc_simulation_context','rpc','rpc_state_block_id','rpc_get_proof','rpc_state_read_cost','ethereum_consensus_bls_verify','ethereum_consensus_bls_fast_aggregate','storage_execution_checkpoint','consensus_capella_payload_paired_state','consensus_capella_signed_transition','consensus_capella_clock_diagnostics','consensus_capella_published_signed_inventory','consensus_capella_publication_cancel_boundary','consensus_local_monotonic_time','consensus_capella_duty_projection_availability','consensus_isolated_stopped_capture_guards'];
+const expected=['core','chain','rpc_queue_expiry','rpc_simulation_context','rpc','rpc_state_block_id','rpc_get_proof','rpc_state_read_cost','ethereum_consensus_bls_verify','ethereum_consensus_bls_fast_aggregate','storage_execution_checkpoint','consensus_capella_payload_paired_state','consensus_capella_signed_transition','consensus_capella_clock_diagnostics','consensus_capella_published_signed_inventory','consensus_capella_publication_cancel_boundary','consensus_local_monotonic_time','consensus_capella_duty_projection_availability','consensus_isolated_stopped_capture_guards','consensus_capella_sync_adverse'];
 const stateRegistrations={
  rpc_state_block_id:{program:'nano-rpc-state-block-id-tests',argument:'--state-readers-self-test',label:'qualification_rpc_state_block_id'},
  rpc_get_proof:{program:'nano-rpc-get-proof-tests',argument:'--get-proof-self-test',label:'qualification_rpc_state_proof'},
@@ -21,16 +21,17 @@ async function fixture(fn){
   const availability=join(dir,'nano-capella-duty-availability-tests');await writeFile(availability,'#!/bin/sh\nexit 0\n',{mode:0o700});
   const simulation=join(dir,'nano-rpc-simulation-context-tests');await writeFile(simulation,'#!/bin/sh\nexit 0\n',{mode:0o700});
   const legacy=join(dir,'nano-rpc-tests');await writeFile(legacy,'#!/bin/sh\nexit 0\n',{mode:0o700});
+  const adverse=join(dir,'nano-capella-sync-adverse-tests');await writeFile(adverse,'#!/bin/sh\nexit 0\n',{mode:0o700});
   await mkdir(join(dir,'tests/fixtures'),{recursive:true});await writeFile(join(dir,'tests/fixtures/python-rpc.json'),'{}\n');
   for(const {program}of Object.values(stateRegistrations))await writeFile(join(dir,program),'#!/bin/sh\nexit 0\n',{mode:0o700});
   const registry=()=>({tests:expected.map(name=>({name,
-   command:stateRegistrations[name]?[join(dir,stateRegistrations[name].program),stateRegistrations[name].argument]:name==='rpc'?[legacy]:name==='rpc_simulation_context'?[simulation,'--simulation-context-self-test']:name===expected.at(-1)?[executable,'--self-test']:name==='consensus_capella_duty_projection_availability'?[availability,'--self-test']:['/usr/bin/true'],
-   properties:stateRegistrations[name]?[{name:'TIMEOUT',value:90},{name:'LABELS',value:[stateRegistrations[name].label]}]:name==='rpc'?[{name:'TIMEOUT',value:120},{name:'WORKING_DIRECTORY',value:dir}]:name==='rpc_simulation_context'?[{name:'TIMEOUT',value:90},{name:'LABELS',value:['qualification_rpc_simulation_context']}]:name===expected.at(-1)?[{name:'TIMEOUT',value:15},{name:'LABELS',value:['qualification_consensus_recovery_tooling']}]:name==='consensus_capella_duty_projection_availability'?[{name:'TIMEOUT',value:70},{name:'LABELS',value:['qualification_consensus_duty_availability']}]:[{name:'TIMEOUT',value:120}]}))});
+   command:name==='consensus_capella_sync_adverse'?[adverse,'--self-test']:stateRegistrations[name]?[join(dir,stateRegistrations[name].program),stateRegistrations[name].argument]:name==='rpc'?[legacy]:name==='rpc_simulation_context'?[simulation,'--simulation-context-self-test']:name==='consensus_isolated_stopped_capture_guards'?[executable,'--self-test']:name==='consensus_capella_duty_projection_availability'?[availability,'--self-test']:['/usr/bin/true'],
+   properties:name==='consensus_capella_sync_adverse'?[{name:'TIMEOUT',value:180},{name:'LABELS',value:['qualification_consensus_sync_adverse']}]:stateRegistrations[name]?[{name:'TIMEOUT',value:90},{name:'LABELS',value:[stateRegistrations[name].label]}]:name==='rpc'?[{name:'TIMEOUT',value:120},{name:'WORKING_DIRECTORY',value:dir}]:name==='rpc_simulation_context'?[{name:'TIMEOUT',value:90},{name:'LABELS',value:['qualification_rpc_simulation_context']}]:name==='consensus_isolated_stopped_capture_guards'?[{name:'TIMEOUT',value:15},{name:'LABELS',value:['qualification_consensus_recovery_tooling']}]:name==='consensus_capella_duty_projection_availability'?[{name:'TIMEOUT',value:70},{name:'LABELS',value:['qualification_consensus_duty_availability']}]:[{name:'TIMEOUT',value:120}]}))});
   const check=async data=>{const path=join(dir,'registry.json');await writeFile(path,JSON.stringify(data));return exec('cmake',['-DREGISTRY='+path,'-P',gate],{timeout:10000});};
   await fn({dir,registry,check});
  }finally{await rm(dir,{recursive:true,force:true});}
 }
-test('exact nineteen daily registrations validate without claiming full C++ qualification',async()=>fixture(async({registry,check})=>assert.match((await check(registry())).stdout,/Verified 19 daily core/)));
+test('exact twenty daily registrations validate without claiming full C++ qualification',async()=>fixture(async({registry,check})=>assert.match((await check(registry())).stdout,/Verified 20 daily core/)));
 test('missing, duplicated and foreign registrations cannot pass daily core gate',async()=>fixture(async({registry,check})=>{
  for(const change of [x=>x.tests.pop(),x=>x.tests[3].name=x.tests[2].name,x=>x.tests[3].name='foreign']){const r=registry();change(r);await assert.rejects(check(r),/count differs|names differ/);}
 }));
@@ -44,7 +45,7 @@ test('explicit positive numeric budgets and unique properties are required',asyn
  for(const props of [[],[{name:'TIMEOUT',value:0}],[{name:'TIMEOUT',value:'120'}],[{name:'TIMEOUT',value:120},{name:'TIMEOUT',value:120}]]){const r=registry();r.tests[0].properties=props;await assert.rejects(check(r),/timeout|duplicate property/);}
 }));
 test('new capture command, helper name, label and exact fifteen-second budget are bound',async()=>fixture(async({registry,check})=>{
- for(const change of [x=>x.command[1]='--capture',x=>x.command[0]='/usr/bin/true',x=>x.properties[0].value=16,x=>x.properties[1].value=['other'],x=>x.command.push('extra')]){const r=registry();change(r.tests.at(-1));await assert.rejects(check(r),/Isolated capture self-test/);}
+ for(const change of [x=>x.command[1]='--capture',x=>x.command[0]='/usr/bin/true',x=>x.properties[0].value=16,x=>x.properties[1].value=['other'],x=>x.command.push('extra')]){const r=registry();change(r.tests.find(x=>x.name==='consensus_isolated_stopped_capture_guards'));await assert.rejects(check(r),/Isolated capture self-test/);}
  const r=registry();r.tests[0].command[0]='/missing/nano';await assert.rejects(check(r),/executable missing/);
 }));
 test('duty availability registration cannot substitute a different program, mode, label or budget',async()=>fixture(async({registry,check})=>{
@@ -65,6 +66,12 @@ test('new state reader and proof registrations bind every program, selector, lab
   }
   const r=registry();r.tests=r.tests.filter(x=>x.name!==name);await assert.rejects(check(r),/count differs/);
  }
+}));
+test('adverse sync registration cannot be omitted or substituted by another program, mode, label or budget',async()=>fixture(async({registry,check})=>{
+ for(const change of [x=>x.command[0]='/usr/bin/true',x=>x.command[1]='--help',x=>x.command.pop(),x=>x.command.push('extra'),x=>x.properties[0].value=181,x=>x.properties[1].value=['other'],x=>x.properties[1].value.push('extra')]){
+  const r=registry();change(r.tests.find(x=>x.name==='consensus_capella_sync_adverse'));await assert.rejects(check(r),/Capella adverse sync self-test/);
+ }
+ const r=registry();r.tests=r.tests.filter(x=>x.name!=='consensus_capella_sync_adverse');await assert.rejects(check(r),/count differs/);
 }));
 test('legacy RPC registration keeps its real program, no selector, fixture cwd and 120-second budget',async()=>fixture(async({registry,check})=>{
  for(const change of [x=>x.command[0]='/usr/bin/true',x=>x.command.push('--self-test'),x=>x.properties[0].value=121,x=>x.properties[1].value='/missing/source',x=>x.properties.pop(),x=>x.properties[1].value=123]){
@@ -99,7 +106,7 @@ test('daily shell refuses a green CTest exit with a skipped or incomplete JUnit 
   {name:'skipped',cases:all.map((x,i)=>i===0?x.replace('/>','><skipped/></testcase>'):x),reason:'skipped/non-executed result: core'}
  ];
  for(const scenario of scenarios){
-  const xml='<testsuite tests="19" failures="0">'+scenario.cases.join('')+'</testsuite>';
+  const xml='<testsuite tests="20" failures="0">'+scenario.cases.join('')+'</testsuite>';
   await writeFile(join(dir,'fixture.xml'),xml);
   for(const name of ['fixture-ctest-executed','ci-reports/core.xml'])await rm(join(dir,name),{force:true});
   let failure;
@@ -112,7 +119,7 @@ test('daily shell refuses a green CTest exit with a skipped or incomplete JUnit 
   assert.equal(failure.code,1,diagnostic);
   assert.equal(await capture('fixture-ctest-executed'),'ctest executed\n',diagnostic);
   assert.equal(await capture('ci-reports/core.xml'),xml,diagnostic);
-  assert.match(await capture('ci-reports/selection-audit.log'),/Verified 19 daily core/,diagnostic);
+  assert.match(await capture('ci-reports/selection-audit.log'),/Verified 20 daily core/,diagnostic);
   assert(String(failure.stderr).split('\n').includes(scenario.reason),diagnostic);
  }
 }));
