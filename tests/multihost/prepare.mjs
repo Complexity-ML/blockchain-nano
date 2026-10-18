@@ -93,7 +93,7 @@ export function buildFreshNodePlan(input){
   const directory=freshAbsolute(t.runtimeDirectory),config=t.mode==='docker'?'/config':directory;
   const dataBase=t.mode==='docker'?'/var/lib/nano-data':join(directory,'data'),witnessBase=t.mode==='docker'?'/var/lib/nano-witness':join(directory,'witness');
   const dataRoot=join(dataBase,bootstrapPlan.campaignNamespace,t.name),witnessRoot=join(witnessBase,bootstrapPlan.campaignNamespace,t.name);
-  const node=structuredClone(nodes[0]);node.rpc_host='127.0.0.1';node.rpc_port=t.rpcPort;node.listen_addr=`/ip4/0.0.0.0/tcp/${t.p2pPort}`;
+  const node=structuredClone(nodes[0]);node.rpc_host='127.0.0.1';node.rpc_port=t.rpcPort;node.listen_addr=`/ip4/${t.mode==='native'?'127.0.0.1':'0.0.0.0'}/tcp/${t.p2pPort}`;
   node.p2p_binary=t.mode==='docker'?'/network-build/nano-p2p':freshAbsolute(t.p2pBinary);node.p2p_identity=join(dataRoot,'peer.key');node.bootnodes=[];
   node.capella.profile.file=join(config,'profile.json');node.capella.initial.file=join(config,'initial.json');node.capella.recoveryWitness=join(witnessRoot,'chain-witness');
   node.capella.validator.keys=[];const environment={},signerIdentities=[];

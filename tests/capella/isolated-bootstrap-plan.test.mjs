@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {createIsolatedBootstrapPlan} from './isolated-bootstrap-plan.mjs';
+import {buildFreshNodePlan} from '../multihost/prepare.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex'),root=label=>'0x'+sha(Buffer.from('PUBLIC MODEL '+label)),encode=v=>Buffer.from(JSON.stringify(v)),key=i=>'0x'+sha(Buffer.from('PUBLIC KEY '+i))+sha(Buffer.from('PUBLIC KEY HALF '+i)).slice(0,32);
 const legacy='0x0a08c27fe4ece2483f9e581f78c66379a06f96e9c24cd1390594ff939b26f95b';
 function fixture(){
@@ -22,6 +23,19 @@ function reseal(f){
  const {manifest,initial,publicAudit,privateAudit,journalBindings}=f.objects,initialBytes=encode(initial);Object.assign(manifest.files.initial,{sha256:sha(initialBytes),bytes:initialBytes.length});const manifestBytes=encode(manifest),manifestHash=sha(manifestBytes);privateAudit.inputManifestSha256=manifestHash;journalBindings.inputManifestSha256=manifestHash;privateAudit.journalBindingsSha256=sha(encode(journalBindings));publicAudit.publicExportFiles=[{name:'isolated-domain.json',sha256:manifestHash,bytes:manifestBytes.length},...Object.values(manifest.files).map(x=>({name:x.path,sha256:x.sha256,bytes:x.bytes}))];f.documents=Object.fromEntries(Object.entries(f.objects).map(([name,obj])=>[name,encode(obj)]));f.evidencePins=Object.fromEntries(Object.entries(f.documents).map(([name,b])=>[name,sha(b)]));
 }
 const input=f=>({campaignNamespace:f.campaignNamespace,documents:f.documents,evidencePins:f.evidencePins,assignments:f.assignments});
+test('fresh topology keeps native P2P private and container listeners available without widening RPC',()=>{
+ const f=fixture(),bootstrapPlan=createIsolatedBootstrapPlan(input(f));
+ // Invalid synthetic scalars are parser inputs only; this model never signs.
+ const keys=bootstrapPlan.owners.flatMap(o=>o.keys.map(k=>({...structuredClone(k.runtimeKey),restart:null})));
+ const partitions=[keys.slice(0,32),keys.slice(32)],nodes=partitions.map(selected=>({rpc_host:'0.0.0.0',listen_addr:'/ip4/0.0.0.0/tcp/30303',capella:{profile:{},initial:{},validator:{keys:selected}}}));
+ const envs=partitions.map(selected=>Object.fromEntries(selected.map(k=>[k.keyEnv,'0x'+'00'.repeat(32)])));
+ const topology=['mac-native','mac-docker','vps-docker'].map((name,i)=>({name,mode:i===0?'native':'docker',host:i===2?'vps':'mac',runtimeDirectory:'/public/topology/'+name,p2pBinary:'/public/software/nano-p2p',rpcPort:i===0?18546:8546,p2pPort:i===0?31305:31303}));
+ const model={nodes,envs,domain:f.objects.manifest,bootstrapPlan,topology},before=structuredClone(model),plan=buildFreshNodePlan(model);
+ assert.deepEqual(model,before);
+ assert.deepEqual(plan.nodes.map(n=>n.node.listen_addr),['/ip4/127.0.0.1/tcp/31305','/ip4/0.0.0.0/tcp/31303','/ip4/0.0.0.0/tcp/31303']);
+ assert.deepEqual(plan.nodes.map(n=>[n.node.rpc_host,n.node.rpc_port]),[['127.0.0.1',18546],['127.0.0.1',8546],['127.0.0.1',8546]]);
+ assert.deepEqual(plan.nodes.map(n=>n.node.bootnodes),[[],[],[]]);
+});
 test('fresh model assigns 16/16/33 zero-based keys and keeps primary restart distinct from witness evidence',()=>{
  const f=fixture(),original={...structuredClone(input(f)),documents:Object.fromEntries(Object.entries(f.documents).map(([k,b])=>[k,Buffer.from(b)]))},plan=createIsolatedBootstrapPlan(input(f));assert.deepEqual(input(f),original);assert.deepEqual(plan.owners.map(o=>[o.owner,o.registeredKeys,o.pendingKeys]),[['mac-native',16,0],['mac-docker',16,0],['vps-docker',32,1]]);assert.deepEqual(plan.owners[0].keys.map(k=>k.publicKeyIndex),Array.from({length:16},(_,i)=>i));assert.equal(plan.owners[2].keys.at(-1).runtimeKey.index,null);
  for(const owner of plan.owners)for(const k of owner.keys){const j=f.objects.journalBindings.journals[k.publicKeyIndex];assert.deepEqual(k.runtimeKey.restart,j.primaryCommitment);assert.deepEqual(k.expectedWitnessCommitment,j.witnessCommitment);assert.notDeepEqual(k.runtimeKey.restart,k.expectedWitnessCommitment);assert.equal(k.runtimeKey.index,k.publicKeyIndex===64?null:'0x'+k.publicKeyIndex.toString(16));assert.ok(k.runtimeKey.journal.startsWith('@DATA@/'));assert.ok(k.runtimeKey.recoveryWitness.startsWith('@WITNESS@/'));assert.equal(k.importedHistory.proposalSlot,k.publicKeyIndex===63?1:null);assert.equal(k.importedHistory.attestationTarget,null);}

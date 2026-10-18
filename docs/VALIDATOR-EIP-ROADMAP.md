@@ -9169,3 +9169,9 @@ Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non quali
 ## C8 — raccord des logiciels, sans nouvelle qualification de validateurs
 
 [Native/ARM64/AMD64 : collectes Core/main0](qualification/operator-c8-core-main-join-20261018/README.md),519/1074/1075 fichiers clôturés, sans nouvelle compilation ou duty. Ce raccord source/recette ne modifie aucun statut EIP, cycle de validateur, sanction, restauration ou finalité réseau. Les admissions complètes C8 restent à composer ;03 FAILED/consommée, aucune04 autorisée. Tous les critères et échecs antérieurs, CI et revue indépendante non réalisée restent ouverts selon leur portée. Production non qualifiée.
+
+
+<!-- nano-c8-final-software-admissions-20261018 -->
+## C8 — trois admissions logicielles, sans nouvelle signature
+
+[Assemblage24 et API d’admission/loader PASS](qualification/operator-c8-final-admissions-20261018/README.md),51 entrées clôturées, terminal0. L’échec01 et toutes les limites historiques restent explicites. Aucun nouveau validateur, journal ou domaine n’est créé ;03 FAILED/consommée et aucune04 autorisée. Avant une reprise nouvelle restent les garde-fous du pilote et les restaurations Native/Docker Mac. Aucun statut EIP/cycle/finalité/production promu ; critères intégraux et revue indépendante non réalisée maintenus.

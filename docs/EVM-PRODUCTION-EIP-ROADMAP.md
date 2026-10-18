@@ -6142,3 +6142,9 @@ Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non quali
 ## C8 — provenance Core/main, profil EVM inchangé
 
 [Les raccords Native/ARM64/AMD64 terminent0](qualification/operator-c8-core-main-join-20261018/README.md), sans réexécuter les suites EVM ni compiler de nouveau Core. Recettes canoniques et contenus sélectionnés se composent aux preuves antérieures ; aucune conformité EIP/fork ou parité RPC supplémentaire n’est déduite. Paris/Shanghai reste activé ; production et revue indépendante restent ouvertes. Tous les préfixes, statuts et échecs sont conservés.
+
+
+<!-- nano-c8-final-software-admissions-20261018 -->
+## C8 — assemblage candidat qualifié dans sa portée logicielle
+
+[24 actifs, trois admissions et garde Native acceptés par les API](qualification/operator-c8-final-admissions-20261018/README.md), sans compilation, image ou test EVM répété. Les sept sources natives rejoignent leurs observations consommées ; aucune conformité supplémentaire n’est déduite. Paris/Shanghai, tous les statuts EIP/RPC, anciens échecs et limites restent inchangés ; restauration/duties/finalité commune, production et revue indépendante demeurent ouvertes.

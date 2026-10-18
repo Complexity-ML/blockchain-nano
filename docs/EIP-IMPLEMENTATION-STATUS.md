@@ -8607,3 +8607,9 @@ Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non quali
 ## C8 — clôture du raccord source/recette Core/main
 
 [Collectes Native/ARM64/AMD640](qualification/operator-c8-core-main-join-20261018/README.md) :519/1074/1075 fichiers tenus jusqu’aux clôtures ; aucune compilation, image ou répétition de test C++. Le résultat porte sur la provenance des produits sélectionnés, pas sur de nouvelles implémentations EIP. Aucun statut EIP/fork n’est promu ; Paris/Shanghai et toutes les limites antérieures restent inchangés. Admissions complètes C8, restauration/duties/finalité, autres critères de production et revue indépendante non réalisée demeurent ouverts. Historique intégral conservé.
+
+
+<!-- nano-c8-final-software-admissions-20261018 -->
+## C8 — admissions logicielles complètes, statuts EIP conservés
+
+[Les API vérifient trois admissions,24 actifs, neuf mounts et le loader Native](qualification/operator-c8-final-admissions-20261018/README.md), avec terminal0 et51 entrées clôturées. Le refus01 avant API et les NO_GO source sont conservés ; aucun build, nouvelle image, EVM test répété ou signature. Cela ne promeut aucun EIP/fork ni restauration/duty/finalité réseau ; Paris/Shanghai reste activé.03 FAILED/consommée, aucune04 autorisée ; garde-fous/extension des restaurations du pilote et autres critères de production, revue indépendante comprise, restent ouverts. Historique intégral maintenu.
