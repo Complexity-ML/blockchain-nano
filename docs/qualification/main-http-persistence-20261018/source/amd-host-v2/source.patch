@@ -1,0 +1,258 @@
+--- a/host.py
++++ b/host.py
+@@ -75,7 +75,7 @@
+             and re.fullmatch(r'[0-9a-f]{64}', value['sha256']) is not None)
+ 
+ 
+-def material(path, observer=None):
++def material(path, observer=None, allow_empty=False):
+     need(path.is_absolute() and path.resolve(strict=True) == path, 'physical absolute input')
+     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+     event = {'path': str(path), 'before': None, 'after': None, 'pathAfter': None,
+@@ -85,7 +85,8 @@
+         before = os.fstat(fd)
+         event['before'] = fdrow(before)
+         need(stat.S_ISREG(before.st_mode) and before.st_nlink == 1
+-             and 0 < before.st_size <= 32 * 1024 * 1024, 'bounded single-link regular input')
++             and (0 <= before.st_size if allow_empty else 0 < before.st_size)
++             and before.st_size <= 32 * 1024 * 1024, 'bounded single-link regular input')
+         data = bytearray()
+         while True:
+             chunk = os.read(fd, 1024 * 1024)
+@@ -115,7 +116,7 @@
+ 
+ 
+ class Host:
+-    def __init__(self, revision):
++    def __init__(self, revision, python_control):
+         need(sys.platform.startswith('linux') and os.getuid() == os.getgid() == 1000,
+              'Root AMD Linux execution as uid/gid1000')
+         need(revision == MAIN, 'explicit current main revision')
+@@ -129,6 +130,14 @@
+         self.deadline = self.started + 450
+         self.cleanup_deadline = None
+         self.revision = revision
++        self.python_control = python_control
++        self.python_root = None
++        self.python_files = set()
++        self.python_directories = set()
++        self.empty_python_files = set()
++        self.python_ready = False
++        self.python_summary = None
++        self.python_environment = {}
+         self.held = {}
+         self.first = None
+         self.secondary = []
+@@ -168,7 +177,7 @@
+ 
+     def hold(self, path, expected):
+         need(valid_row(expected), 'genuine full-nine SHA authority row')
+-        raw, row = material(path)
++        raw, row = material(path, allow_empty=str(path) in self.empty_python_files)
+         need(row == expected, 'original input changed: ' + str(path))
+         need(str(path) not in self.held or self.held[str(path)] == expected,
+              'never refresh an already held input')
+@@ -212,7 +221,7 @@
+         failures = []
+         for path, expected in list(self.held.items()):
+             try:
+-                _, actual = material(Path(path))
++                _, actual = material(Path(path), allow_empty=path in self.empty_python_files)
+                 if actual != expected:
+                     failures.append({'path': path, 'changedFields': [k for k in expected if actual[k] != expected[k]]})
+             except BaseException as exc:
+@@ -313,6 +322,91 @@
+         need(not err and len(ids) <= 1 and all(re.fullmatch(r'[0-9a-f]{64}', x) for x in ids), 'single own namespace')
+         self.cid = ids[0] if ids else None
+ 
++    def python_inventory(self):
++        need(self.python_root is not None, 'declared test Python root')
++        files, directories = set(), {str(self.python_root)}
++        pending, entries = [self.python_root], 0
++        while pending:
++            directory = pending.pop()
++            row = directory.lstat()
++            need(stat.S_ISDIR(row.st_mode) and directory.resolve(strict=True) == directory
++                 and stat.S_IMODE(row.st_mode) == 0o500, 'physical test Python directory mode500')
++            with os.scandir(directory) as children:
++                for child in children:
++                    entries += 1
++                    need(entries <= 20000 and not child.is_symlink(), 'bounded alias-free test Python inventory')
++                    if child.is_dir(follow_symlinks=False):
++                        directories.add(child.path)
++                        pending.append(Path(child.path))
++                    else:
++                        need(child.is_file(follow_symlinks=False), 'regular test Python provider')
++                        files.add(child.path)
++        need(files == self.python_files and directories == self.python_directories,
++             'exact admitted test Python files and directories')
++
++    def prepare_python(self):
++        descriptor = self.python_control
++        raw = self.new_input(descriptor['file'], descriptor['pin'], 'python-runtime-control')
++        control = parse(raw)
++        fields = {'format', 'ready', 'runtimeRoot', 'guestRoot', 'interpreter', 'version',
++                  'files', 'directories', 'environment', 'flags', 'provenance'}
++        need(type(control) is dict and set(control) == fields
++             and control['format'] == 'nano-test-python-runtime-control-v1'
++             and control['ready'] is True, 'exact ready Root test Python control')
++        need(control['guestRoot'] == '/python-runtime' and control['interpreter'] == 'bin/python3'
++             and control['version'] == '3.12.3' and control['flags'] == ['-S'],
++             'explicit Python3.12 test interpreter and no site initialization')
++        environment = {'PYTHONHOME': '/python-runtime', 'PYTHONDONTWRITEBYTECODE': '1',
++                       'PYTHONNOUSERSITE': '1', 'PYTHONSAFEPATH': '1',
++                       'PYTHONPYCACHEPREFIX': '/tmp/nano-python-cache'}
++        need(control['environment'] == environment and type(control['provenance']) is dict
++             and len(json.dumps(control['provenance'], allow_nan=False).encode()) <= 65536,
++             'explicit test-only environment and bounded descriptive provenance')
++        root = Path(control['runtimeRoot'])
++        need(root.is_absolute() and root.resolve(strict=True) == root and root.is_dir()
++             and all(not (root == p or root in p.parents or p in root.parents)
++                     for p in (OUT, TOOLS, REPO, OLD)), 'isolated physical test Python root')
++        files, directories = control['files'], control['directories']
++        need(type(files) is dict and 2 <= len(files) <= 4096
++             and type(directories) is list and len(directories) <= 8192
++             and all(type(x) is str for x in directories)
++             and len(set(directories)) == len(directories), 'bounded provider tables')
++        self.python_root = root
++        self.python_directories = {str(root)}
++        for rel in directories:
++            part = Path(rel)
++            need(type(rel) is str and not part.is_absolute() and '..' not in part.parts
++                 and part.as_posix() == rel and len(rel) <= 512, 'canonical provider directory')
++            self.python_directories.add(str(root / part))
++        total = 0
++        for rel, expected in files.items():
++            part = Path(rel)
++            need(type(rel) is str and not part.is_absolute() and rel not in ('', '.')
++                 and '..' not in part.parts and part.as_posix() == rel and len(rel) <= 512
++                 and valid_row(expected), 'canonical provider file and original Root FD9SHA')
++            path = root / part
++            if expected['st_size'] == 0:
++                need(expected['sha256'] == hashlib.sha256(b'').hexdigest(), 'known empty provider SHA')
++                self.empty_python_files.add(str(path))
++            mode = 0o500 if rel == 'bin/python3' else 0o400
++            need(stat.S_IMODE(expected['st_mode']) == mode
++                 and expected['st_uid'] == expected['st_gid'] == 1000,
++                 'Root copied test provider owner/mode')
++            self.hold(path, expected)
++            self.python_files.add(str(path))
++            total += expected['st_size']
++        need('bin/python3' in files and 'lib/python3.12/encodings/__init__.py' in files
++             and total <= 128 * 1024 * 1024, 'complete bounded interpreter and standard-library cohort')
++        self.python_inventory()
++        self.python_ready = True
++        self.python_environment = environment
++        self.python_summary = {'controlPin': descriptor['pin'], 'declaredVersion': control['version'],
++            'interpreterGuest': '/python-runtime/bin/python3', 'flags': ['-S'],
++            'files': len(files), 'directories': len(self.python_directories), 'bytes': total,
++            'knownEmptyProviderFiles': len(self.empty_python_files), 'readOnlyMount': True,
++            'rootCopiedProvidersAdmittedRowsRetained': True, 'wholeSdkQualified': False,
++            'pythonBundledInImageClaimed': False, 'productionRuntimeProviderQualified': False}
++
+     def preflight(self):
+         need(TOOLS.resolve(strict=True) == TOOLS and TOOLS.is_dir(), 'physical staged public tools')
+         own_source = Path(__file__).resolve(strict=True)
+@@ -357,6 +451,7 @@
+         need(nano['st_mode'] & 0o111, 'original Nano executable mode')
+         self.original_software_rows = 4  # Nano, Docker, sudo, Git; not all 265 products.
+         self.docker_ready = True
++        self.prepare_python()
+         raw, err, _ = self.run('git-head-before', ['/usr/bin/git', '-C', str(REPO), 'rev-parse', 'HEAD'])
+         need(not err and raw.decode().strip() == self.revision, 'current clean main revision')
+         raw, err, _ = self.run('git-clean-before', ['/usr/bin/git', '-C', str(REPO), 'status', '--porcelain'])
+@@ -370,7 +465,7 @@
+         self.new_input(expected_path, pin(data), 'new-ready-expectations', creation)
+         self.save('prepared-public.json', {'passed': True, 'actualHead': self.revision,
+             'compiledSourceRevision': C6, 'nanoPin': NANO_PIN, 'workerPin': PUBLIC_PINS['worker.py'],
+-            'image': IMAGE, 'originalSoftwareRows': 4,
++            'image': IMAGE, 'originalSoftwareRows': 4, 'testPythonRuntime': self.python_summary,
+             'authority866InitialBuildHistoricalFd9Claimed': False,
+             'authority866PriorStagingRowRetained': self.authority_prior_row,
+             'bridgeControlOwnRowProspectivelyAdmitted': self.bridge_admitted, 'newExpectationsPin': pin(data),
+@@ -383,6 +478,9 @@
+         raw, err, _ = self.docker('own-name-absent', ['ps', '-a', '--no-trunc', '--filter',
+                                   'name=^/' + self.name + '$', '--format', '{{.ID}}'])
+         need(not raw.strip() and not err, 'fresh own container namespace')
++        python_env = ['--env', 'PYTHONPATH=']
++        for key, value in sorted(self.python_environment.items()):
++            python_env += ['--env', key + '=' + value]
+         argv = ['run', '--detach', '--pull=never', '--cidfile', str(self.cidfile), '--name', self.name,
+             '--label', self.label + '=' + self.name, '--network', 'none', '--read-only', '--user', '1000:1000',
+             '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--cpus', '1', '--memory', '1g',
+@@ -391,7 +489,8 @@
+             '--mount', 'type=bind,src=' + str(TOOLS) + ',dst=/inputs,readonly',
+             '--mount', 'type=bind,src=' + str(OUT / 'controls/expectations.json') + ',dst=/controls/expectations.json,readonly',
+             '--mount', 'type=bind,src=' + str(OUT / 'outputs') + ',dst=/outputs',
+-            '--entrypoint', '/usr/bin/python3', IMAGE, '/inputs/worker.py',
++            '--mount', 'type=bind,src=' + str(self.python_root) + ',dst=/python-runtime,readonly',
++            *python_env, '--entrypoint', '/python-runtime/bin/python3', IMAGE, '-S', '/inputs/worker.py',
+             '--nano', '/candidate/nano', '--genesis', '/inputs/genesis.json',
+             '--transactions', '/inputs/transactions.json', '--expectations', '/controls/expectations.json',
+             '--output', '/outputs/worker']
+@@ -401,16 +500,20 @@
+         self.cid = raw.decode().strip()
+         value = self.owned()
+         config, limits = value['Config'], value['HostConfig']
+-        need(config['User'] == '1000:1000' and config['Entrypoint'] == ['/usr/bin/python3']
++        need(config['User'] == '1000:1000' and config['Entrypoint'] == ['/python-runtime/bin/python3']
++             and config['Cmd'][:2] == ['-S', '/inputs/worker.py']
+              and limits['NetworkMode'] == 'none' and limits['ReadonlyRootfs'] is True
+              and not limits.get('PortBindings') and not limits.get('Privileged')
+              and limits['NanoCpus'] == 1000000000 and limits['Memory'] == 1073741824
+              and limits['PidsLimit'] == 64 and 'ALL' in limits['CapDrop']
+              and any(x.startswith('no-new-privileges') for x in limits['SecurityOpt']), 'fixed private runtime guards')
++        actual_environment = dict(x.split('=', 1) for x in config['Env'])
++        need(all(actual_environment.get(k) == v for k, v in self.python_environment.items())
++             and actual_environment.get('PYTHONPATH') == '', 'only explicit isolated Python import paths')
+         mounts = {x['Destination']: x for x in value['Mounts']}
+         expected_mounts = {'/candidate/nano': str(NANO), '/inputs': str(TOOLS),
+                            '/controls/expectations.json': str(OUT / 'controls/expectations.json'),
+-                           '/outputs': str(OUT / 'outputs')}
++                           '/outputs': str(OUT / 'outputs'), '/python-runtime': str(self.python_root)}
+         need({k for k, x in mounts.items() if x['Type'] == 'bind'} == set(expected_mounts)
+              and all(mounts[g]['Source'] == p and mounts[g]['RW'] == (g == '/outputs')
+                      for g, p in expected_mounts.items()), 'only original Nano/public inputs RO and new output RW')
+@@ -496,6 +599,12 @@
+                     self.secondary.append({'stage': 'image-final', 'error': str(exc)})
+         # Independent of cleanup/image success and always after both attempts.
+         failures = self.fence()
++        if self.python_ready:
++            try:
++                self.python_inventory()
++            except BaseException as exc:
++                failures.append({'scope': 'testPythonRuntimeInventory',
++                                 'error': type(exc).__name__ + ': ' + str(exc)})
+         if failures and self.first is None:
+             self.first = ValueError('original/new selected inputs changed after cleanup/image-final')
+         fence_published = False
+@@ -512,6 +621,7 @@
+         result = {'format': 'nano-main-http-amd-host-result-v1', 'passed': self.first is None,
+             'actualHead': self.revision, 'compiledSourceRevision': C6, 'nanoPin': NANO_PIN,
+             'image': IMAGE, 'workerExitCode': self.worker_exit, 'worker': self.worker,
++            'testPythonRuntime': self.python_summary, 'pythonBundledInImageClaimed': False,
+             'cleanup': self.cleanup, 'imageFinalFence': self.image_final,
+             'hostFinalFenceAfterCleanup': not failures, 'hostFinalFencePublicationPassed': fence_published,
+             'hostInputRows': len(self.held),
+@@ -544,6 +654,7 @@
+ def main():
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument('--revision', required=True)
++    parser.add_argument('--python-runtime-control', nargs=3, required=True, metavar=('FILE', 'SHA256', 'BYTES'))
+     args = parser.parse_args()
+     host = None
+     def interrupted(signum, frame):
+@@ -551,7 +662,12 @@
+     for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+         signal.signal(signum, interrupted)
+     try:
+-        host = Host(args.revision)
++        file, sha, size = args.python_runtime_control
++        need(re.fullmatch(r'[0-9a-f]{64}', sha) is not None
++             and re.fullmatch(r'[1-9][0-9]*', size) is not None
++             and int(size) <= 8 * 1024 * 1024, 'external Root test Python control pin')
++        python_control = {'file': Path(file), 'pin': {'sha256': sha, 'bytes': int(size)}}
++        host = Host(args.revision, python_control)
+         try:
+             host.execute()
+         except BaseException as exc:

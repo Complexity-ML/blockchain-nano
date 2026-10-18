@@ -1,0 +1,190 @@
+{
+  "cliRequired": [
+    "--nano",
+    "--genesis",
+    "--transactions",
+    "--expectations",
+    "--output"
+  ],
+  "consensusFinalityAuthenticated": false,
+  "expectationsExactFields": [
+    "baseFeePerGas",
+    "chainId",
+    "coinbase",
+    "consensus",
+    "evmFork",
+    "format",
+    "gasLimit",
+    "genesisValues",
+    "inputs",
+    "nano",
+    "postValues",
+    "ready",
+    "receipt",
+    "sender",
+    "senderBalanceAfter",
+    "senderBalanceBefore",
+    "senderNonceAfter",
+    "senderNonceBefore",
+    "storageKeys",
+    "target",
+    "targetBalance",
+    "targetCode",
+    "targetNonce",
+    "timestamps",
+    "txHash"
+  ],
+  "expectationsFormat": "nano-main-http-persistence-expectations-v1",
+  "expectationsProposalReady": false,
+  "externalRootHistoricalInputAuthoritiesRequired": true,
+  "format": "nano-main-http-persistence-worker-source-manifest-v2",
+  "independentVerificationByRootPending": true,
+  "noExternalRpc": true,
+  "noWalletOrSigningCommands": true,
+  "oldQualificationsReplayedByAuthor": 0,
+  "outputs": [
+    "result-public.json",
+    "input-final-fence-public.json",
+    "rpc-cases.jsonl",
+    "proof-vectors.jsonl",
+    "headers-public.json",
+    "phase-{0,1,2}-public.json",
+    "serve-{0,1,2}.{process,readiness,exit}-public.json",
+    "mine-{12,24}.{process,exit}-public.json",
+    "config-first-observation-N-public.json",
+    "config-first-admission-public.json",
+    "rpc-NNN.response.json",
+    "per-child stdout/stderr logs"
+  ],
+  "parentManifestV1": {
+    "bytes": 4057,
+    "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/main-http-persistence-worker-proposal-20261018/manifest.json",
+    "sha256": "98d0a35abd3bd3a4dec5a0d194191fe0bb1fbb87a5b88959421c16e8a3a18242"
+  },
+  "parentWorkerV1": {
+    "bytes": 40186,
+    "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/main-http-persistence-worker-proposal-20261018/worker.py",
+    "sha256": "a37b706f13068d44c7dc95632adf0e484437b639175ac2f932471be13e67896c"
+  },
+  "parents": [
+    {
+      "bytes": 4031,
+      "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/main-http-persistence-fixture-proposal-20261018/MANIFEST.json",
+      "sha256": "07f9258acabb8084f06a5cb986057e80667b65bfe79b1f06140855dfcbd0ce3e"
+    },
+    {
+      "bytes": 1399,
+      "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/main-http-persistence-fixture-proposal-20261018/expectations.json",
+      "sha256": "48e24ec04c7a7aef4a4011a2d92c0e756fcf1d7fe689bf74396db1368b038c70"
+    },
+    {
+      "bytes": 4434,
+      "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/verify-main-http-persistence-root-20261018.mjs",
+      "sha256": "d9900fc7e431e5e89ff90ed0a88f22cbd116b2eec52248595de63aaafb3e0c0f"
+    },
+    {
+      "bytes": 8051,
+      "file": "/Users/boris/Dev/blockchain-nano/src/main.cpp",
+      "sha256": "89a57ac849e71255295159a02937f0dbc5c3617f9b07e93454bf788f03867f74"
+    },
+    {
+      "bytes": 14676,
+      "file": "/Users/boris/Dev/blockchain-nano/src/http.cpp",
+      "sha256": "9012d3bfbe954326e4c7ac0348922358f53ac52fa0b39e7877b41fe2171aef06"
+    }
+  ],
+  "payloadBytes": 42300,
+  "payloadFiles": 2,
+  "payloads": [
+    {
+      "bytes": 40458,
+      "file": "worker.py",
+      "gitMode": "100644",
+      "sha256": "2959cc8a72b77ef4ce48318bd7b250be786d71280c7d6a4396a9c5e1a8a2e844"
+    },
+    {
+      "bytes": 1842,
+      "file": "source.patch",
+      "gitMode": "100644",
+      "sha256": "f176c507f16d1b4875e9e4c902bf4f374a9b523ba042ab5669b4d72cf186dd8e"
+    }
+  ],
+  "physicalDeliveryMode": "0400",
+  "productionQualified": false,
+  "prospectiveSuccessfulScenario": {
+    "actionDeadlineSeconds": 282,
+    "cleanServerStopsExit0": 3,
+    "cleanupReserveSeconds": 18,
+    "databaseReopens": 2,
+    "httpCalls": 57,
+    "maximumWallSeconds": 300,
+    "mineCommands": 2,
+    "mineTimestamps": [
+      12,
+      24
+    ],
+    "proofHeaderHeightOrder": [
+      0,
+      1,
+      0,
+      2,
+      1
+    ],
+    "proofVectors": 5,
+    "serverStarts": 3,
+    "totalPopenStarts": 5
+  },
+  "publicFailureEvidence": [
+    {
+      "bytes": 548,
+      "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/main-http-native-qualification-root-20261018-01/worker/rpc-016.response.json",
+      "sha256": "34a9bae4dc03914b32553139b84257f8bd7709dcc3e48e7ca7c4d1ca1070fcc5"
+    },
+    {
+      "bytes": 1810,
+      "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/main-http-native-qualification-root-20261018-01/worker/result-public.json",
+      "sha256": "4b12639a749c2c50d508969d078cebbd611f3c5568a1bb6b75c8110095e14994"
+    }
+  ],
+  "reason": {
+    "actualRun": "Native 55054",
+    "cause": "Oracle compared checksummed DATA20 from/to strings to lowercase fixture strings. These are the same 20-byte addresses.",
+    "cppBugEstablished": false,
+    "failedRunReclassified": false,
+    "firstFailingRpc": 16,
+    "firstFailure": "actual transaction fields",
+    "newComparisons": "Validate mixed-case hex DATA20, then compare lower() to the already canonical lowercase fixture. Apply to transaction from/to and header miner only.",
+    "newExecutionByAuthor": false,
+    "terminalExitCode": 1,
+    "unchangedStrictFields": [
+      "transaction hashes",
+      "block hashes",
+      "state roots",
+      "nonces",
+      "code",
+      "balances",
+      "storage",
+      "receipt",
+      "transaction positions",
+      "proof.address lower-case requirement"
+    ]
+  },
+  "repositoryWritesByAuthor": 0,
+  "resultRequiredByRoot": [
+    "passed",
+    "httpCalls",
+    "processStarts",
+    "mineCommands",
+    "proofVectors",
+    "cleanStops",
+    "allOwnedProcessesJoined",
+    "databaseReopened",
+    "firstFailure",
+    "phases"
+  ],
+  "rootMustCreateNewReadyExpectationsWithNanoPin": true,
+  "sourceMainRevisionProvidedByRoot": "bc99b0ec2cf8bc6bcb21a26ec980ef2c4e8573a8",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_EXECUTION",
+  "testsOrRuntimeExecutedByAuthor": 0,
+  "workerClaimsHistoricalFd9AuthorityAuthentication": false
+}

@@ -1,0 +1,83 @@
+{
+  "format": "nano-main-http-persistence-plan-v1",
+  "ready": false,
+  "candidateSourceRevision": "c6cdf780c68eab8b06306d76257bda9028928ea3",
+  "mainPublicationReportedByRoot": "bc99b0ec2cf8bc6bcb21a26ec980ef2c4e8573a8",
+  "qualificationMainBeforeImport": "4388f77b9e9c1b3b94ba5da6f3e486eaa13a3f5c",
+  "bounds": {
+    "maximumSecondsPerArchitecture": 600,
+    "httpRequestsStrictlyLessThan": 60,
+    "requestTimeoutSeconds": 5,
+    "maximumServeStartOrJoinSeconds": 30,
+    "mineInternalTimeoutSeconds": 10,
+    "maximumProofVectors": 5
+  },
+  "serveConfig": {},
+  "serveArgv": [
+    "PINNED_NANO",
+    "serve",
+    "PINNED_GENESIS",
+    "NEW_ISOLATED_DB",
+    "0",
+    "127.0.0.1",
+    "LITERAL_EMPTY_CONFIG"
+  ],
+  "phases": [
+    {
+      "name": "genesis-http-admission",
+      "queries": [
+        "identity and genesis header",
+        "initial code/balance/nonce/storage",
+        "no unlocked accounts",
+        "dev mining refuses",
+        "submit existing signed raw",
+        "genesis proof"
+      ],
+      "then": "SIGTERM own child; successful terminal join and absence before DB reuse"
+    },
+    {
+      "name": "block-one-http-history",
+      "offlineArgv": [
+        "PINNED_NANO",
+        "mine",
+        "PINNED_GENESIS",
+        "NEW_ISOLATED_DB",
+        "PINNED_COINBASE",
+        "12",
+        "PINNED_SIGNED_RAW_ARRAY"
+      ],
+      "queries": [
+        "expected transaction hash",
+        "status/gas/nonce/code/storage",
+        "block one by number/hash",
+        "genesis historical reads/proof",
+        "block one proof"
+      ],
+      "then": "SIGTERM own child; successful terminal join and absence before DB reuse"
+    },
+    {
+      "name": "block-two-reopen-history",
+      "offlineArgv": [
+        "PINNED_NANO",
+        "mine",
+        "PINNED_GENESIS",
+        "NEW_ISOLATED_DB",
+        "PINNED_COINBASE",
+        "24"
+      ],
+      "queries": [
+        "empty block two",
+        "block one/receipt/transaction unchanged",
+        "current and historical code/balance/nonce/storage",
+        "block two proof",
+        "block one historical proof"
+      ],
+      "then": "successful terminal join, process/container absence, software/input fences and cleanup"
+    }
+  ],
+  "sourceSignatureReusedWithoutResigning": true,
+  "nodeOrRpcOrCliExecutedDuringPreparation": false,
+  "keccakVerifiedDuringPreparation": false,
+  "beaconFinalityQualified": false,
+  "productionQualified": false
+}

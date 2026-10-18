@@ -1,0 +1,23 @@
+--- a/host.py
++++ b/host.py
+@@ -18,8 +18,8 @@
+ import uuid
+ 
+ REPO = Path('/home/ubuntu/blockchain-nano-git')
+-TOOLS = Path('/home/ubuntu/main-http-persistence-tools-20261018-01')
+-OUT = Path('/home/ubuntu/main-http-amd-qualification-root-20261018-01')
++TOOLS = Path('/home/ubuntu/main-http-persistence-tools-20261018-02')
++OUT = Path('/home/ubuntu/main-http-amd-qualification-root-20261018-02')
+ OLD = Path('/home/ubuntu/rpc-candidate-amd-root-20261018-01')
+ NANO = OLD / 'outputs/nano'
+ OLD_CONTROL = Path('/home/ubuntu/rpc-candidate-amd-control-root-20261018-01/control.private.json')
+@@ -86,7 +86,8 @@
+         event['before'] = fdrow(before)
+         need(stat.S_ISREG(before.st_mode) and before.st_nlink == 1
+              and (0 <= before.st_size if allow_empty else 0 < before.st_size)
+-             and before.st_size <= 32 * 1024 * 1024, 'bounded single-link regular input')
++             and before.st_size <= (64 if path == Path('/usr/bin/docker') else 32) * 1024 * 1024,
++             'bounded single-link regular input')
+         data = bytearray()
+         while True:
+             chunk = os.read(fd, 1024 * 1024)

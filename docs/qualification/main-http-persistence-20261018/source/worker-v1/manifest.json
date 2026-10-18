@@ -1,0 +1,139 @@
+{
+  "cliRequired": [
+    "--nano",
+    "--genesis",
+    "--transactions",
+    "--expectations",
+    "--output"
+  ],
+  "consensusFinalityAuthenticated": false,
+  "expectationsExactFields": [
+    "baseFeePerGas",
+    "chainId",
+    "coinbase",
+    "consensus",
+    "evmFork",
+    "format",
+    "gasLimit",
+    "genesisValues",
+    "inputs",
+    "nano",
+    "postValues",
+    "ready",
+    "receipt",
+    "sender",
+    "senderBalanceAfter",
+    "senderBalanceBefore",
+    "senderNonceAfter",
+    "senderNonceBefore",
+    "storageKeys",
+    "target",
+    "targetBalance",
+    "targetCode",
+    "targetNonce",
+    "timestamps",
+    "txHash"
+  ],
+  "expectationsFormat": "nano-main-http-persistence-expectations-v1",
+  "expectationsProposalReady": false,
+  "externalRootHistoricalInputAuthoritiesRequired": true,
+  "format": "nano-main-http-persistence-worker-source-manifest-v1",
+  "independentVerificationByRootPending": true,
+  "noExternalRpc": true,
+  "noWalletOrSigningCommands": true,
+  "oldQualificationsReplayedByAuthor": 0,
+  "outputs": [
+    "result-public.json",
+    "input-final-fence-public.json",
+    "rpc-cases.jsonl",
+    "proof-vectors.jsonl",
+    "headers-public.json",
+    "phase-{0,1,2}-public.json",
+    "serve-{0,1,2}.{process,readiness,exit}-public.json",
+    "mine-{12,24}.{process,exit}-public.json",
+    "config-first-observation-N-public.json",
+    "config-first-admission-public.json",
+    "rpc-NNN.response.json",
+    "per-child stdout/stderr logs"
+  ],
+  "parents": [
+    {
+      "bytes": 4031,
+      "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/main-http-persistence-fixture-proposal-20261018/MANIFEST.json",
+      "sha256": "07f9258acabb8084f06a5cb986057e80667b65bfe79b1f06140855dfcbd0ce3e"
+    },
+    {
+      "bytes": 1399,
+      "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/main-http-persistence-fixture-proposal-20261018/expectations.json",
+      "sha256": "48e24ec04c7a7aef4a4011a2d92c0e756fcf1d7fe689bf74396db1368b038c70"
+    },
+    {
+      "bytes": 4434,
+      "file": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/verify-main-http-persistence-root-20261018.mjs",
+      "sha256": "d9900fc7e431e5e89ff90ed0a88f22cbd116b2eec52248595de63aaafb3e0c0f"
+    },
+    {
+      "bytes": 8051,
+      "file": "/Users/boris/Dev/blockchain-nano/src/main.cpp",
+      "sha256": "89a57ac849e71255295159a02937f0dbc5c3617f9b07e93454bf788f03867f74"
+    },
+    {
+      "bytes": 14676,
+      "file": "/Users/boris/Dev/blockchain-nano/src/http.cpp",
+      "sha256": "9012d3bfbe954326e4c7ac0348922358f53ac52fa0b39e7877b41fe2171aef06"
+    }
+  ],
+  "payloadBytes": 40186,
+  "payloadFiles": 1,
+  "payloads": [
+    {
+      "bytes": 40186,
+      "file": "worker.py",
+      "gitMode": "100644",
+      "sha256": "a37b706f13068d44c7dc95632adf0e484437b639175ac2f932471be13e67896c"
+    }
+  ],
+  "physicalDeliveryMode": "0400",
+  "productionQualified": false,
+  "prospectiveSuccessfulScenario": {
+    "actionDeadlineSeconds": 282,
+    "cleanServerStopsExit0": 3,
+    "cleanupReserveSeconds": 18,
+    "databaseReopens": 2,
+    "httpCalls": 57,
+    "maximumWallSeconds": 300,
+    "mineCommands": 2,
+    "mineTimestamps": [
+      12,
+      24
+    ],
+    "proofHeaderHeightOrder": [
+      0,
+      1,
+      0,
+      2,
+      1
+    ],
+    "proofVectors": 5,
+    "serverStarts": 3,
+    "totalPopenStarts": 5
+  },
+  "repositoryWritesByAuthor": 0,
+  "resultRequiredByRoot": [
+    "passed",
+    "httpCalls",
+    "processStarts",
+    "mineCommands",
+    "proofVectors",
+    "cleanStops",
+    "allOwnedProcessesJoined",
+    "databaseReopened",
+    "firstFailure",
+    "phases"
+  ],
+  "rootMustCreateNewReadyExpectationsWithNanoPin": true,
+  "sourceMainRevisionProvidedByRoot": "bc99b0ec2cf8bc6bcb21a26ec980ef2c4e8573a8",
+  "status": "FROZEN_SOURCE_ONLY_PENDING_ROOT_EXECUTION",
+  "testsOrRuntimeExecutedByAuthor": 0,
+  "workerClaimsHistoricalFd9AuthorityAuthentication": false
+}

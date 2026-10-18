@@ -1,0 +1,41 @@
+--- a/worker.py
++++ b/worker.py
+@@ -28,6 +28,7 @@
+                  'targetNonce', 'targetBalance', 'targetCode'}
+ HASH = re.compile(r'0x[0-9a-f]{64}\Z')
+ ADDRESS = re.compile(r'0x[0-9a-f]{40}\Z')
++ADDRESS_DATA = re.compile(r'0x[0-9a-fA-F]{40}\Z')
+ QUANTITY = re.compile(r'0x(?:0|[1-9a-f][0-9a-f]*)\Z')
+ HEX_BYTES = re.compile(r'0x(?:[0-9a-f]{2})*\Z')
+ MAX_RPC = 79  # A successful run has exactly 57, including admission of one raw.
+@@ -129,6 +130,11 @@
+     number = int(value, 16)
+     need(number < 1 << 256, 'uint256 quantity range')
+     return number
++
++
++def address_matches(actual, expected):
++    return (type(actual) is str and ADDRESS_DATA.fullmatch(actual) is not None
++            and actual.lower() == expected)
+ 
+ 
+ def genesis_amount(value):
+@@ -496,7 +502,7 @@
+         if number == 0:
+             need(value.get('baseFeePerGas') == self.e['baseFeePerGas'], 'known genesis base fee')
+         else:
+-            need(value.get('miner') == self.e['coinbase'], 'explicit CLI miner address')
++            need(address_matches(value.get('miner'), self.e['coinbase']), 'explicit CLI miner address')
+         return value
+ 
+     @staticmethod
+@@ -548,7 +554,8 @@
+     def transaction(self, child, header=None):
+         tx = self.rpc(child, 'eth_getTransactionByHash', [self.e['txHash']])
+         need(type(tx) is dict and tx.get('hash') == self.e['txHash']
+-             and tx.get('from') == self.e['sender'] and tx.get('to') == self.e['target']
++             and address_matches(tx.get('from'), self.e['sender'])
++             and address_matches(tx.get('to'), self.e['target'])
+              and tx.get('nonce') == self.e['senderNonceBefore'], 'actual transaction fields')
+         need(tx.get('blockHash') == (None if header is None else header['hash']),
+              'pending admission is distinct from mined inclusion')

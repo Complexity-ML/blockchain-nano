@@ -1,0 +1,36 @@
+{
+  "format": "nano-main-http-public-fixture-derivation-v1",
+  "sourcePin": {
+    "sha256": "a6524e0dffedf85740802755700d1984aa4bca40d880f5075751001514ba8f2e",
+    "bytes": 11527
+  },
+  "sourceCase": "tests/berlin/eip2929_gas_cost_increases/test_call.py::test_call_insufficient_balance[fork_Shanghai-blockchain_test_from_state_test]",
+  "signedFieldsCopiedWithoutResigning": true,
+  "rawRlpEqualsExactSourceBlockTransactionSpan": true,
+  "rawTransactionBytes": {
+    "sha256": "197439dfb3cdece42bec497e78c69adcc34842bd8b1ea7e8ad34d71e1e663f2c",
+    "bytes": 99
+  },
+  "sourceBlockTransactionSpan": [
+    543,
+    642
+  ],
+  "expectedEthereumTransactionHashFromSourceReceipt": "0x8d2e4fa292b46a6ae5cc2a0481c6b1447176b84613cb88f9e76c3b8a55ed4213",
+  "keccakComputedDuringPreparation": false,
+  "ecdsaSignatureOrSenderRecoveryVerifiedDuringPreparation": false,
+  "expectedEthereumTransactionHashVerifiedDuringPreparation": false,
+  "genesisAllocGasAndBaseFeeCopiedFromSource": true,
+  "sourceConsensus": "NoProof",
+  "derivedConsensus": "pow",
+  "intentionalChanges": [
+    "positive difficulty one for Nano PoW",
+    "Nano Shanghai domain/header codec; no Ethereum block hash claim",
+    "timestamps 12 and 24 instead of official block timestamp 1000",
+    "Nano PoW rewards; no complete EEST post-state root assertion"
+  ],
+  "sourceGenesisStateRootReferenceOnly": "0x17d8eba8dbca838514c8ebe082f970b0c2ebfbaf072a4bb92a5c1e37220beeca",
+  "sourcePostStateRootReferenceOnly": "0xe0004e8a3179716a51b4014140e54ed1270620dcf2ab207840a669dc84df7b83",
+  "completeEestPostStateRootAsserted": false,
+  "consensusOrFinalityQualified": false,
+  "productionQualified": false
+}

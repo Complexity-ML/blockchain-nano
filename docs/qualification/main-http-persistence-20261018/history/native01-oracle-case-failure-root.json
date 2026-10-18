@@ -1,0 +1,28 @@
+{
+  "format": "nano-main-http-native-case-oracle-failure-root-v1",
+  "actualRootSession": 55054,
+  "actualRootExitCode": 1,
+  "failedEnvelopePreserved": true,
+  "workerOriginalSha256": "a37b706f13068d44c7dc95632adf0e484437b639175ac2f932471be13e67896c",
+  "httpCallsCompleted": 16,
+  "serverStarts": 1,
+  "cliMineStarts": 0,
+  "proofVectorsProduced": 1,
+  "firstWorkerFailure": {
+    "message": "actual transaction fields",
+    "type": "ValueError"
+  },
+  "diagnosis": "Transaction from/to are valid checksum-case addresses; oracle compared lowercase strings byte-for-byte. Source src/transaction.cpp intentionally uses checksum_address and sender().",
+  "responsePin": {
+    "sha256": "34a9bae4dc03914b32553139b84257f8bd7709dcc3e48e7ca7c4d1ca1070fcc5",
+    "bytes": 548
+  },
+  "serverJoinedExit0": true,
+  "forcedKill": false,
+  "allOwnedGroupsClosed": true,
+  "originalAndCurrentInputFencesPassed": true,
+  "cppChangeRequiredByThisEvidence": false,
+  "oldCppTestsReplayed": 0,
+  "oldJsTestsReplayed": 0,
+  "productionQualified": false
+}
