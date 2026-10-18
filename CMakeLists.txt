@@ -2069,6 +2069,11 @@ set_tests_properties(consensus_capella_snapshot_account_primitives PROPERTIES TI
 add_executable(nano-storage-portability tests/qualification/storage-portability.cpp)
 target_link_libraries(nano-storage-portability PRIVATE nano_core)
 
+# Explicit synthetic stopped-cohort qualification tool; no automatic CTest.
+add_executable(nano-physical-cohort-portability tests/qualification/physical_cohort_portability.cpp)
+target_link_libraries(nano-physical-cohort-portability PRIVATE nano_core)
+target_compile_definitions(nano-physical-cohort-portability PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+
 add_test(NAME consensus_capella_historical_state_pruning COMMAND nano-capella-transition-tests --historical-state-pruning)
 set_tests_properties(consensus_capella_historical_state_pruning PROPERTIES TIMEOUT 300 LABELS "qualification_consensus_recovery")
 

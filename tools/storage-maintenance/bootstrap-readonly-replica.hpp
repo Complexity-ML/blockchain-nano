@@ -13,6 +13,11 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <iostream>
+#include <locale>
+#include <mutex>
+#include <source_location>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
@@ -22,22 +27,69 @@
 namespace nano::maintenance {
 namespace readonly_replica_detail {
 namespace fs=std::filesystem;
-inline void need(bool ok){if(!ok)throw std::invalid_argument("Readonly replica refused");}
-inline void io(bool ok){if(!ok)throw std::runtime_error("Readonly replica I/O refused");}
+// Failure-only diagnostic. The caller's already captured values are the only
+// stat inputs; this code never opens, reads, restats, repairs or reseals a tree.
+namespace diagnostic_v4_detail {
+struct Budget {std::mutex mutex;size_t records=0,bytes=0;};
+inline Budget& budget(){static Budget value;return value;}
+inline void captured_stat(std::ostream& out,const struct stat& s){
+#ifdef __APPLE__
+ const auto mt=s.st_mtimespec,ct=s.st_ctimespec;
+#else
+ const auto mt=s.st_mtim,ct=s.st_ctim;
+#endif
+ out<<"{\"st_dev\":\""<<std::uintmax_t(s.st_dev)<<"\",\"st_ino\":\""<<std::uintmax_t(s.st_ino)
+    <<"\",\"st_mode\":\""<<std::uintmax_t(s.st_mode)<<"\",\"st_nlink\":\""<<std::uintmax_t(s.st_nlink)
+    <<"\",\"st_uid\":\""<<std::uintmax_t(s.st_uid)<<"\",\"st_gid\":\""<<std::uintmax_t(s.st_gid)
+    <<"\",\"st_size\":\""<<std::intmax_t(s.st_size)
+    <<"\",\"st_mtime\":{\"seconds\":\""<<std::intmax_t(mt.tv_sec)<<"\",\"nanoseconds\":\""<<std::intmax_t(mt.tv_nsec)
+    <<"\"},\"st_ctime\":{\"seconds\":\""<<std::intmax_t(ct.tv_sec)<<"\",\"nanoseconds\":\""<<std::intmax_t(ct.tv_nsec)<<"\"}}";
+}
+inline void failure(const char* kind,const std::source_location& where,
+                    const struct stat* before=nullptr,const struct stat* after=nullptr,const std::uintmax_t* expected_euid=nullptr)noexcept{
+ try{
+  auto& state=budget();std::lock_guard lock(state.mutex);
+  constexpr size_t maximum_records=32,maximum_bytes=1024*1024;
+  if(state.records>=maximum_records||state.bytes>=maximum_bytes)return;
+  std::ostringstream out;out.imbue(std::locale::classic());
+  out<<"{\"diagnostic\":\"readonly-replica-source-failure-v4\",\"kind\":\""<<kind
+     <<"\",\"callerLine\":\""<<where.line()<<"\",\"result\":false";
+  if(before&&after){out<<",\"before\":";captured_stat(out,*before);out<<",\"after\":";captured_stat(out,*after);}
+  if(expected_euid)out<<",\"expectedEuid\":\""<<*expected_euid<<"\"";
+  out<<"}\n";if(!out)return;const auto text=out.str();
+  if(text.size()>maximum_bytes-state.bytes)return;
+  ++state.records;state.bytes+=text.size();
+  std::cerr.write(text.data(),std::streamsize(text.size()));std::cerr.flush();
+ }catch(...){/* The original predicate/refusal, outside this block, remains. */}
+}
+} // diagnostic_v4_detail
+inline void need(bool ok,const std::source_location& where=std::source_location::current()){
+ if(!ok){diagnostic_v4_detail::failure("need",where);throw std::invalid_argument("Readonly replica refused");}
+}
+inline void io(bool ok,const std::source_location& where=std::source_location::current()){
+ if(!ok){diagnostic_v4_detail::failure("io",where);throw std::runtime_error("Readonly replica I/O refused");}
+}
 struct Fd{
  int n=-1;explicit Fd(int fd):n(fd){io(n>=0);}~Fd(){if(n>=0)::close(n);}
  Fd(const Fd&)=delete;Fd& operator=(const Fd&)=delete;
  Fd(Fd&& x)noexcept:n(x.n){x.n=-1;}
 };
-inline bool identity(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_mode==b.st_mode&&a.st_nlink==b.st_nlink;}
-inline bool directory_identity(const struct stat& a,const struct stat& b){return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_mode==b.st_mode;}
-inline bool stable(const struct stat& a,const struct stat& b){
+inline bool identity(const struct stat& a,const struct stat& b,const std::source_location& where=std::source_location::current()){
+ const bool result=a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_mode==b.st_mode&&a.st_nlink==b.st_nlink;
+ if(!result)diagnostic_v4_detail::failure("identity",where,&a,&b);return result;
+}
+inline bool directory_identity(const struct stat& a,const struct stat& b,const std::source_location& where=std::source_location::current()){
+ const bool result=a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_mode==b.st_mode;
+ if(!result)diagnostic_v4_detail::failure("directory_identity",where,&a,&b);return result;
+}
+inline bool stable(const struct stat& a,const struct stat& b,const std::source_location& where=std::source_location::current()){
 #ifdef __APPLE__
  const bool times=a.st_mtimespec.tv_sec==b.st_mtimespec.tv_sec&&a.st_mtimespec.tv_nsec==b.st_mtimespec.tv_nsec&&a.st_ctimespec.tv_sec==b.st_ctimespec.tv_sec&&a.st_ctimespec.tv_nsec==b.st_ctimespec.tv_nsec;
 #else
  const bool times=a.st_mtim.tv_sec==b.st_mtim.tv_sec&&a.st_mtim.tv_nsec==b.st_mtim.tv_nsec&&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
 #endif
- return identity(a,b)&&a.st_size==b.st_size&&times;
+ const bool result=identity(a,b,where)&&a.st_size==b.st_size&&times;
+ if(!result)diagnostic_v4_detail::failure("stable",where,&a,&b);return result;
 }
 inline std::string hexadecimal(const unsigned char* p,size_t n){std::string out;out.reserve(2*n);for(size_t i=0;i<n;++i){out.push_back("0123456789abcdef"[p[i]>>4]);out.push_back("0123456789abcdef"[p[i]&15]);}return out;}
 struct Hash{
@@ -57,7 +109,12 @@ struct Directory{
    const auto name=component.string();need(!name.empty()&&name!="."&&name!="..");
    chain.emplace_back(::openat(chain.back().n,name.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));names.push_back(name);struct stat s{};io(::fstat(chain.back().n,&s)==0);stamps.push_back(s);
   }
-  const auto& leaf=stamps.back();need(S_ISDIR(leaf.st_mode)&&leaf.st_uid==::geteuid()&&(leaf.st_mode&0777)==0700);recheck();
+  const auto& leaf=stamps.back();
+  if(!(S_ISDIR(leaf.st_mode)&&leaf.st_uid==::geteuid()&&(leaf.st_mode&0777)==0700)){
+   const std::uintmax_t expected_euid=::geteuid();
+   diagnostic_v4_detail::failure("directory_leaf_policy",std::source_location::current(),&leaf,&leaf,&expected_euid);
+  }
+  need(S_ISDIR(leaf.st_mode)&&leaf.st_uid==::geteuid()&&(leaf.st_mode&0777)==0700);recheck();
  }
  int fd()const{return chain.back().n;}
  void recheck()const{
