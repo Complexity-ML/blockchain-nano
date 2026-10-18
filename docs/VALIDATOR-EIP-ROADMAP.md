@@ -9060,3 +9060,26 @@ duties/finalité commune, exploitation, CI/facturation, reproductibilité et rev
 indépendante restent ouverts dans leur périmètre ; économie Base–Nano/bridge
 USDC/Doppler/T0 non qualifiés. Aucun fonds, vente ou déploiement public. Préfixes
 historiques intégraux conservés ; objectif ACTIF, production non qualifiée.
+
+
+<!-- nano-lifecycle-known-new-linux-20261018 -->
+## Pilote lifecycle — complément Linux sur le VPS
+
+Après Git push/pull d75dd3d7, trois commandes Node sur le VPS terminent0 :
+8 groupes NEW-file, 6 driver guards et 18 cas runtime, zéro FAIL/SKIP ; les deux
+cas Linux et les 55 refus attendus sont couverts. Python3.12.3/Node18.19.1 déjà
+présents, aucune installation. Les 106 entrées sources/logiciels/projection
+restent inchangées et tous les groupes possédés sont fermés. Le reçu public
+persisté est relu et son SHA confirmé ; aucun C++/Core/image/runtime reconstruit
+ou redémarré. [Preuves et portée](qualification/lifecycle-new-file-admission-20261018/LINUX.md).
+
+La qualification Linux de ces helpers complète le bilan Mac fractionné ; aucun
+ancien test, refus, manifeste ou agrégat FAILED n'est effacé/requalifié. Cela ne
+qualifie ni CMake/CTest exécuté, fermeture complète des runtimes, tenue du vrai
+cycle, cohérence entière des opérateurs, ni reprise de duties/finalité commune.
+Campagne03 FAILED consommée, aucune04 autorisée ; supervision Source03 non
+intégrée, SIGABRT inexpliqué. Profil Paris/Shanghai inchangé, aucun EIP/fork ou
+production promu. Tous les autres critères normatifs, CI/facturation, revue
+indépendante non réalisée et économie Base–Nano/bridge USDC/Doppler/T0 restent
+ouverts dans leur périmètre. Aucun fonds, vente, signature, réseau de chaîne ou
+déploiement public. Préfixes historiques conservés ; objectif ACTIF.
