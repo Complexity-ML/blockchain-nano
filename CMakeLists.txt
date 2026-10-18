@@ -463,6 +463,11 @@ endif()
 
 if(APPLE)
  add_library(nano-test-sync-fault SHARED tests/support/sync_fault_macos.cpp)
+ # Keep copied recovery tools bound to the shim beside their executable.
+ set_target_properties(nano-test-sync-fault PROPERTIES
+  MACOSX_RPATH TRUE
+  INSTALL_NAME_DIR "@rpath"
+  BUILD_WITH_INSTALL_NAME_DIR TRUE)
 endif()
 
 if(TARGET nano-test-sync-fault)
@@ -1763,6 +1768,9 @@ set_tests_properties(ethereum_official_capella_slots PROPERTIES TIMEOUT 180 LABE
 
 add_executable(nano-capella-transition-tests tests/test_capella_transition.cpp)
 target_link_libraries(nano-capella-transition-tests PRIVATE nano_core nano_ckzg)
+if(APPLE)
+ set_target_properties(nano-capella-transition-tests PROPERTIES BUILD_RPATH "@loader_path")
+endif()
 if(TARGET nano-test-sync-fault)
  target_link_libraries(nano-capella-transition-tests PRIVATE nano-test-sync-fault)
  target_compile_definitions(nano-capella-transition-tests PRIVATE NANO_SYNC_FAULT=1)

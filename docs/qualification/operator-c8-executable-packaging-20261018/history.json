@@ -1,0 +1,74 @@
+{
+  "copySource01RefusedWithoutExecution": true,
+  "failures": [
+    {
+      "description": "ARM source02: old0400 copies refused because historical ctime differs; no new copies created",
+      "error": "RuntimeError: old immutable copy differs",
+      "productionQualified": false,
+      "rawReport": {
+        "bytes": 761,
+        "sha256": "d23cb66476a57692c4578339fed0a3ba3662ab2062a44a8cf3da7e934afa5706"
+      },
+      "reclassifiedAsPass": false,
+      "status": "FAILED"
+    },
+    {
+      "description": "ARM source03: new0500 copies refused before first admission when ctime settled; five original compiler products still passed final fences",
+      "error": "RuntimeError: new full-nine stability changed",
+      "productionQualified": false,
+      "rawReport": {
+        "bytes": 4325,
+        "sha256": "dfaaf6feb3b0c1ff593e09b78e7868898645b95fa88d956f7edcea1074b67beb"
+      },
+      "reclassifiedAsPass": false,
+      "status": "FAILED"
+    },
+    {
+      "description": "Native link source02: shim link0 and exporter link1; resolving clang++ without preserving C++ driver mode omitted standard C++ linking",
+      "error": "AssertionError: nano-capella-transition-tests-canonical-link",
+      "productionQualified": false,
+      "rawReport": {
+        "bytes": 6514,
+        "sha256": "baff1ba19c63dbbbd036ead78cf3d9608639a507f6b174e037589ea096ae4ad4"
+      },
+      "reclassifiedAsPass": false,
+      "status": "FAILED"
+    }
+  ],
+  "format": "nano-c8-executable-packaging-history-v1",
+  "linkLauncherMissingFileContextPreserved": true,
+  "linkSource01RefusedWithoutExecution": true,
+  "newSigningDomainsCreated": 0,
+  "productionQualified": false,
+  "retentionCtimeCauseProved": false,
+  "sourcePins": {
+    "c8-docker-executable-copies-root-20261018-01.py": {
+      "bytes": 8307,
+      "sha256": "d01f8de5e516ed041a5c07b2b6ea77aef93e7cda22d446afd815936d71c16171"
+    },
+    "c8-docker-executable-copies-root-20261018-02.py": {
+      "bytes": 9603,
+      "sha256": "240eb94703beb9f44404ccec76fd8bc3e7308f62556518c574c411f0af75e02c"
+    },
+    "c8-docker-executable-copies-root-20261018-03.py": {
+      "bytes": 10180,
+      "sha256": "f7f3be027d8b4bc2e6b01a770d5ef4a710aa76bdcf08548ac854c3cda7c78010"
+    },
+    "c8-docker-executable-copies-root-20261018-04.py": {
+      "bytes": 10641,
+      "sha256": "1e3086a1ed40f15ae3389a8e2ba7085ec6496e8e797053c927fd47932f960315"
+    },
+    "native-c8-canonical-packaging-links-root-20261018-01.py": {
+      "bytes": 11984,
+      "sha256": "e8cb56af87a42e8e91af90b80148d7ecd31b498afe061292eebbeaef4de9f57d"
+    },
+    "native-c8-canonical-packaging-links-root-20261018-02.py": {
+      "bytes": 13118,
+      "sha256": "d105dfb525dda88b3eada8312fb0989dbfca147a0a75346c5502a8a7e102cb58"
+    },
+    "native-c8-canonical-packaging-links-root-20261018-03.py": {
+      "bytes": 13800,
+      "sha256": "917b49b418c9f9a572b6826ef7a79d7c11c96dce727f6271318d2d49c7413ff2"
+    }
+  }
+}

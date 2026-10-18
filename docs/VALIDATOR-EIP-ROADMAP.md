@@ -9128,3 +9128,18 @@ duty. Campagne03 FAILED consommée, aucune04 autorisée ; Paris/Shanghai inchang
 aucun EIP/fork promu. Autres critères normatifs, revue indépendante non réalisée,
 Base–Nano proposé et bridge USDC/Doppler/T0 restent ouverts. Objectif ACTIF,
 production non qualifiée ; préfixes et tous les échecs historiques conservés.
+
+
+<!-- nano-c8-executable-packaging-20261018 -->
+## C8 — exécutables Docker et packaging macOS
+
+[Preuves et limites](qualification/operator-c8-executable-packaging-20261018/README.md) :
+neuf copies exécutables Docker neuves sont engagées ; les anciens refus ctime et
+copies0400 restent conservés. CMake déclare le shim colocalisé et @loader_path ;
+sept comparaisons de recettes, deux liens natifs et trois inspections Mach-O
+passent, avec53 entrées tenues et groupes fermés. Aucun TU/Core/image reconstruit,
+exporter exécuté ou duty repris. Index24/admissions entières, SDK/dyld global et
+autres critères normatifs restent ouverts. Campagne03 FAILED consommée, aucune04
+autorisée ; runtime1925, Paris/Shanghai et statuts EIP inchangés. Revue indépendante
+non réalisée et Base–Nano proposé/bridge USDC/Doppler/T0 restent ouverts. Aucun
+fonds, vente ou déploiement public ; préfixes intégraux conservés, objectif ACTIF.
