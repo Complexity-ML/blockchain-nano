@@ -1,0 +1,427 @@
+[
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 97,
+    "exitCode": 0,
+    "stderr": "",
+    "stdout": "{\"Id\":\"sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91\",\"RepoTags\":[],\"RepoDigests\":[],\"Comment\":\"buildkit.dockerfile.v0\",\"Created\":\"2026-10-18T10:55:03.83307546Z\",\"Config\":{\"User\":\"10001:10001\",\"Env\":[\"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"],\"Entrypoint\":[\"/usr/local/bin/nano\"],\"Cmd\":[\"--help\"],\"WorkingDir\":\"/var/lib/nano\",\"Labels\":{\"org.nanobees.runtime-base-id\":\"sha256:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883\",\"org.opencontainers.image.revision\":\"27b529410d26645d023a6c82c25fa7999972d9af\",\"org.opencontainers.image.version\":\"24.04\"},\"ArgsEscaped\":true},\"Architecture\":\"arm64\",\"Os\":\"linux\",\"Size\":301069365,\"RootFS\":{\"Type\":\"layers\",\"Layers\":[\"sha256:1e9178dc90058fa454a60803300219ee8c17e515be8718817ed824b96fa1207b\",\"sha256:013f0708b1720e23c4ba468c5db93039ff02ee4f0fb05d7b6d9705f08d48fa40\",\"sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef\",\"sha256:0069760005453e267c80f298b1f76637795265ac4a730004ab2f8aeff52cab1b\",\"sha256:961bb2a636c5372dd74c56bfd256132c5d724a2e8ecbcd0042a9ddfcb4bfb2f9\",\"sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef\",\"sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef\",\"sha256:32b99f10e2d992964706e5b1256b2d391d58a7ef72c18be04de169bad79924bf\",\"sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef\"]},\"Metadata\":{\"LastTagTime\":\"2026-10-18T10:55:04.348779794Z\"},\"Descriptor\":{\"mediaType\":\"application/vnd.oci.image.index.v1+json\",\"digest\":\"sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91\",\"size\":856},\"Identity\":{\"Build\":[{\"Ref\":\"u3krn3cew8olulk2cbpu1jso0\",\"CreatedAt\":\"2026-10-18T10:55:04.495051752Z\"}]}}\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-0",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 14,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-0\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--pull=never",
+      "--no-healthcheck",
+      "--name",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-0",
+      "--label",
+      "org.nanobees.argument-smoke.owner=fb2428980a6049ee8ebfb49e065445dc",
+      "--network",
+      "none",
+      "--read-only",
+      "--user",
+      "10001:10001",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--pids-limit",
+      "32",
+      "--workdir",
+      "/",
+      "--entrypoint",
+      "/usr/bin/env",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "-u",
+      "NANO_SUPERVISOR_PID",
+      "/usr/local/bin/nano",
+      "--help"
+    ],
+    "elapsedMs": 102,
+    "exitCode": 0,
+    "stderr": "",
+    "stdout": "Nano local chain tools\nUsage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]\n  wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]\n  wallet deployment-address <keyfile> [nonce]\n  wallet create-many <new-directory> [count] (default: 10)\n  wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]\n  rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]\n  rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>\n  rpc <URL> stake-withdraw <keyfile> <contract>\n  rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]\n  validator <config.json> [--once] (separate client)\n  init/status: show canonical chain status\n  mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]\n  audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)\n  beacon-journal init <identity.json> <new-database> <new-receipt-directory>\n  beacon-journal status <identity.json> <database> <expected-commitment.json>\n  beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>\n  beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>\n  migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>\n  import: <block.json> <current-timestamp>\n  run: [node-config.json] (RPC and P2P together)\n  serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-0",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-0\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-0",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-0\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-1",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-1\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--pull=never",
+      "--no-healthcheck",
+      "--name",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-1",
+      "--label",
+      "org.nanobees.argument-smoke.owner=fb2428980a6049ee8ebfb49e065445dc",
+      "--network",
+      "none",
+      "--read-only",
+      "--user",
+      "10001:10001",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--pids-limit",
+      "32",
+      "--workdir",
+      "/",
+      "--entrypoint",
+      "/usr/bin/env",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "-u",
+      "NANO_SUPERVISOR_PID",
+      "/usr/local/bin/nano-p2p"
+    ],
+    "elapsedMs": 93,
+    "exitCode": 1,
+    "stderr": "Usage: nano-p2p <core-rpc-port> <identity-file> <listen-multiaddress> [peer-multiaddress ...]\n",
+    "stdout": "",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-1",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-1\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-1",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 14,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-1\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-2",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-2\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--pull=never",
+      "--no-healthcheck",
+      "--name",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-2",
+      "--label",
+      "org.nanobees.argument-smoke.owner=fb2428980a6049ee8ebfb49e065445dc",
+      "--network",
+      "none",
+      "--read-only",
+      "--user",
+      "10001:10001",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--pids-limit",
+      "32",
+      "--workdir",
+      "/",
+      "--entrypoint",
+      "/usr/bin/env",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "-u",
+      "NANO_SUPERVISOR_PID",
+      "/usr/local/bin/nano-storage-maintenance"
+    ],
+    "elapsedMs": 112,
+    "exitCode": 1,
+    "stderr": "Usage: compact-owned-copy --offline-owned-copy COPY/chain\n",
+    "stdout": "",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-2",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-2\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-2",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-2\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-3",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-3\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--pull=never",
+      "--no-healthcheck",
+      "--name",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-3",
+      "--label",
+      "org.nanobees.argument-smoke.owner=fb2428980a6049ee8ebfb49e065445dc",
+      "--network",
+      "none",
+      "--read-only",
+      "--user",
+      "10001:10001",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--pids-limit",
+      "32",
+      "--workdir",
+      "/",
+      "--entrypoint",
+      "/usr/bin/env",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "-u",
+      "NANO_SUPERVISOR_PID",
+      "/usr/local/bin/nano-bootstrap-archive-maintenance"
+    ],
+    "elapsedMs": 93,
+    "exitCode": 1,
+    "stderr": "",
+    "stdout": "{\"completed\":false,\"productionQualified\":false,\"rawErrorsSuppressed\":true,\"refusedStage\":\"arguments\",\"runtimeStarted\":false}\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-3",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 12,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-3\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-3",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-3\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-4",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-4\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--pull=never",
+      "--no-healthcheck",
+      "--name",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-4",
+      "--label",
+      "org.nanobees.argument-smoke.owner=fb2428980a6049ee8ebfb49e065445dc",
+      "--network",
+      "none",
+      "--read-only",
+      "--user",
+      "10001:10001",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--pids-limit",
+      "32",
+      "--workdir",
+      "/",
+      "--entrypoint",
+      "/usr/bin/env",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "-u",
+      "NANO_SUPERVISOR_PID",
+      "/usr/local/bin/nano-capella-duty-readiness"
+    ],
+    "elapsedMs": 92,
+    "exitCode": 1,
+    "stderr": "",
+    "stdout": "{\"configuredKeys\":0,\"dutyElapsedMs\":null,\"elapsedBeforeDutiesMs\":null,\"format\":\"nano-capella-duty-readiness-typed-v1\",\"keysLoaded\":false,\"maximumRssKiB\":13156,\"newSignaturesCreated\":0,\"phaseElapsedMs\":{\"canonical-restoration\":null,\"closed-input-readback\":null,\"current-primary\":null,\"current-witness\":null,\"duty-preparation\":null,\"journal-evidence\":null,\"publication\":null,\"request\":0,\"source-inventories\":null},\"preparationCompletedBeforeRefusal\":false,\"probeCompleted\":false,\"productionQualified\":false,\"projectionWork\":null,\"reason\":\"validation_or_io_refused\",\"refusedStage\":\"request\",\"resumeAuthorized\":false,\"runtimeDutiesAuthorized\":false,\"runtimeStarted\":false,\"status\":\"REFUSED_NO_AUTOMATIC_RETRY\"}\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-4",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 13,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-4\n",
+    "stdout": "\n",
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-4",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 11,
+    "exitCode": 1,
+    "stderr": "Error response from daemon: No such container: nano-argument-smoke-fb2428980a6049ee8ebfb49e065445dc-4\n",
+    "stdout": "\n",
+    "timedOut": false
+  }
+]

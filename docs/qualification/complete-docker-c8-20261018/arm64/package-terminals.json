@@ -1,0 +1,282 @@
+[
+  {
+    "argv": [
+      "info",
+      "--format",
+      "{{.OSType}} {{.Architecture}}"
+    ],
+    "elapsedMs": 500,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "sha256:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 25,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "ls",
+      "--no-trunc",
+      "--filter",
+      "reference=nano-candidate-base:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883",
+      "--format",
+      "{{.ID}}"
+    ],
+    "elapsedMs": 25,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "nano-candidate-base:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 23,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "build",
+      "--target",
+      "complete",
+      "--network",
+      "none",
+      "--pull=false",
+      "--progress",
+      "plain",
+      "--iidfile",
+      "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/candidate-complete-arm-root-20261018-02/context-parent/nano-package-8iDEIX/image-id",
+      "--build-arg",
+      "NANO_RUNTIME_BASE=nano-candidate-base:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883",
+      "--build-arg",
+      "RUNTIME_BASE_ID=sha256:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883",
+      "--build-arg",
+      "SOURCE_REVISION=27b529410d26645d023a6c82c25fa7999972d9af",
+      "--build-arg",
+      "NANO_SHA256=45651c9cf7beb5ce26260a2edb23c452fdf1e924e50ca5263b3918b54448d4ec",
+      "--build-arg",
+      "P2P_SHA256=39efdc986056342b68226120eb48f3a2f93cc14324959929a257f2f1b9946ccf",
+      "--build-arg",
+      "STORAGE_MAINTENANCE_SHA256=4b1677a1c545e24f8e42b388b45c6c45ae9e8e9d650224886fb9d65180108aa1",
+      "--build-arg",
+      "BOOTSTRAP_ARCHIVE_MAINTENANCE_SHA256=19cffffda5443706ca69b8efb5ffcc18ef84a1fe0d6c993a59c700a09984918e",
+      "--build-arg",
+      "CAPELLA_DUTY_READINESS_SHA256=99e1d2b269ff22ddeff4189f3b5dd7ab75e0f13ac5306dd2b9b0b9c93a8edb5e",
+      "-f",
+      "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/candidate-complete-arm-root-20261018-02/context-parent/nano-package-8iDEIX/candidate.Dockerfile",
+      "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261012/candidate-complete-arm-root-20261018-02/context-parent/nano-package-8iDEIX"
+    ],
+    "elapsedMs": 1543,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "nano-candidate-base:6617aab24f18fb2836d85aaa31c0b6e47c38dda16dc98adeb2aa29b59896a883",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 20,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 25,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/sha256sum",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "/usr/local/bin/nano",
+      "/usr/local/bin/nano-p2p",
+      "/usr/local/bin/nano-storage-maintenance",
+      "/usr/local/bin/nano-bootstrap-archive-maintenance",
+      "/usr/local/bin/nano-capella-duty-readiness"
+    ],
+    "elapsedMs": 162,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "/usr/local/bin/nano"
+    ],
+    "elapsedMs": 100,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "/usr/local/bin/nano-p2p"
+    ],
+    "elapsedMs": 91,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "/usr/local/bin/nano-storage-maintenance"
+    ],
+    "elapsedMs": 114,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "/usr/local/bin/nano-bootstrap-archive-maintenance"
+    ],
+    "elapsedMs": 95,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "/usr/local/bin/nano-capella-duty-readiness"
+    ],
+    "elapsedMs": 100,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "sha256:44b81420f48760912d5c4b317c7035e61b5134a3986ed1702c5c0a8633dbef91",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 22,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-bfd5c496f4fe4375aa503fa160bc385b-0",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 12,
+    "exitCode": 1,
+    "timedOut": false
+  }
+]

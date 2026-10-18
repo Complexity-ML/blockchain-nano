@@ -73,7 +73,7 @@ export async function smokeCandidateRuntime(image,{invoke=runtimeDocker}={}){
   const executable=RUNTIME_NAMES[i],name='nano-argument-smoke-'+owner+'-'+i;let attempted=false;
   const inspectOwned=async()=>{
    const r=await call(['container','inspect',name,'--format','{{json .}}']);
-   if(r.code===1&&r.stdout===''&&/no such (?:object|container)/i.test(r.stderr)&&r.stderr.includes(name))return null;
+   if(r.code===1&&r.stdout.trim()===''&&/no such (?:object|container)/i.test(r.stderr)&&r.stderr.includes(name))return null;
    need(r.code===0,'Owned smoke container inspection refused');const c=JSON.parse(r.stdout);
    need(/^[0-9a-f]{64}$/.test(c.Id??'')&&c.Name==='/'+name&&c.Image===image&&c.Config?.Labels?.[label]===owner,'Smoke container ownership differs');return c;
   };

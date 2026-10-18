@@ -11,7 +11,7 @@ function terminal(name){
  const body=name==='nano-bootstrap-archive-maintenance'?{completed:false,refusedStage:'arguments',runtimeStarted:false,productionQualified:false}:{status:'REFUSED_NO_AUTOMATIC_RETRY',refusedStage:'request',reason:'validation_or_io_refused',probeCompleted:false,keysLoaded:false,runtimeStarted:false};
  return {code:1,stdout:JSON.stringify(body)+'\n',stderr:''};
 }
-function fixture({user='10001:10001',volumes=null,lie=null,mode=null}={}){
+function fixture({user='10001:10001',volumes=null,lie=null,mode=null,absentStdout=''}={}){
  const state={calls:[],containers:new Map(),runs:[],removed:[],foreign:{Id:'f'.repeat(64),Name:'/unrelated-foreign',Image:IMAGE,Config:{Labels:{[LABEL]:'unrelated-owner'}}}};
  const foreignBefore=structuredClone(state.foreign),timeout=Object.assign(Error('synthetic Docker run timeout'),{name:'TimeoutError'});
  const ok=(stdout='')=>({code:0,stdout,stderr:''});
@@ -19,7 +19,7 @@ function fixture({user='10001:10001',volumes=null,lie=null,mode=null}={}){
   const a=[...argv];state.calls.push(a);
   if(a[0]==='image'&&a[1]==='inspect')return ok(JSON.stringify({Id:IMAGE,Os:'linux',Architecture:'arm64',Config:{User:user,Volumes:volumes}}));
   if(a[0]==='container'&&a[1]==='inspect'){
-   const found=state.containers.get(a[2]);return found?ok(JSON.stringify(found)):{code:1,stdout:'',stderr:'Error response from daemon: No such container: '+a[2]+'\n'};
+   const found=state.containers.get(a[2]);return found?ok(JSON.stringify(found)):{code:1,stdout:absentStdout,stderr:'Error response from daemon: No such container: '+a[2]+'\n'};
   }
   if(a[0]==='run'){
    const name=a[a.indexOf('--name')+1],assignment=a[a.indexOf('--label')+1],separator=assignment.indexOf('=');assert.equal(assignment.slice(0,separator),LABEL);const owner=assignment.slice(separator+1);
@@ -69,4 +69,13 @@ test('runtime timeout preserves the first error and cleans only a verified owned
  const owned=fixture({mode:'timeout-owned'});await assert.rejects(owned.run(),error=>error===owned.timeout&&error.secondaryFailures.length===0);assert.equal(owned.state.runs.length,1);assert.deepEqual(owned.state.removed,[owned.state.runs[0].cid]);assert.equal(owned.state.containers.size,0);assert.deepEqual(owned.state.foreign,owned.foreignBefore);
  const foreign=fixture({mode:'timeout-foreign'});await assert.rejects(foreign.run(),error=>error===foreign.timeout&&error.secondaryFailures.length===1&&error.secondaryFailures[0].stage==='owned-cleanup'&&error.secondaryFailures[0].message==='Smoke container ownership differs');assert.equal(foreign.state.removed.length,0);assert.equal(foreign.state.containers.size,1);assert.equal([...foreign.state.containers.values()][0].Config.Labels[LABEL],'foreign-owner');assert.deepEqual(foreign.state.foreign,foreign.foreignBefore);
  const refused=fixture({mode:'timeout-rm-refused'});await assert.rejects(refused.run(),error=>error===refused.timeout&&error.secondaryFailures.length===1&&error.secondaryFailures[0].stage==='owned-cleanup'&&error.secondaryFailures[0].message==='Owned smoke container cleanup refused');assert.deepEqual(refused.state.removed,[refused.state.runs[0].cid]);assert.equal(refused.state.containers.size,1);assert.deepEqual(refused.state.foreign,refused.foreignBefore);
+});
+
+test('runtime absent-container inspection accepts only whitespace stdout with the exact refusal protocol',async()=>{
+ for(const absentStdout of ['\n','\r\n',' \t\r\n']){
+  const f=fixture({absentStdout}),r=await f.run();assert.equal(r.argumentOnlyVerified,true);assert.equal(r.executablesChecked,5);assert.equal(r.closures.length,5);assert.ok(r.closures.every(v=>v.ownedContainerAbsent===true));assert.equal(f.state.runs.length,5);assert.equal(f.state.containers.size,0);assert.deepEqual(f.state.foreign,f.foreignBefore);
+ }
+ for(const absentStdout of ['{}','\n{}\r\n','not empty\n']){
+  const f=fixture({absentStdout});await assert.rejects(f.run(),error=>error.message==='Owned smoke container inspection refused'&&error.secondaryFailures.length===0);assert.equal(f.state.calls.length,2);assert.equal(f.state.runs.length,0);assert.equal(f.state.removed.length,0);assert.equal(f.state.containers.size,0);assert.deepEqual(f.state.foreign,f.foreignBefore);
+ }
 });

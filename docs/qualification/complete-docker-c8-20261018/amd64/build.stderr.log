@@ -1,0 +1,91 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from candidate.Dockerfile
+#1 transferring dockerfile: 2.19kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8
+#2 DONE 0.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [node 1/5] FROM docker.io/library/nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8@sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8
+#4 resolve docker.io/library/nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8@sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 51.34MB 0.3s done
+#5 DONE 0.3s
+
+#4 [node 1/5] FROM docker.io/library/nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8@sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8
+#4 CACHED
+
+#6 [node 2/5] COPY nano nano-p2p /usr/local/bin/
+#6 DONE 0.1s
+
+#7 [node 3/5] COPY notices/ /usr/local/share/nano/licenses/
+#7 DONE 0.0s
+
+#8 [node 4/5] RUN cd /usr/local/share/nano/licenses && sha256sum -c notices.sha256
+#8 0.070 LICENSE.ethereumjs: OK
+#8 0.070 LICENSE.evm-codes: OK
+#8 0.070 bip39-LICENSE: OK
+#8 0.070 blst-LICENSE: OK
+#8 0.071 ckzg-LICENSE: OK
+#8 0.071 json-COPYRIGHTS: OK
+#8 0.071 json-LICENSE.MIT: OK
+#8 0.071 libp2p-LICENSE-APACHE: OK
+#8 0.071 libp2p-LICENSE-MIT: OK
+#8 0.071 mcl-COPYRIGHT: OK
+#8 0.071 secp256k1-LICENSE: OK
+#8 DONE 0.1s
+
+#9 [node 5/5] RUN chmod 0755 /usr/local/bin/nano /usr/local/bin/nano-p2p  && printf '%s  /usr/local/bin/nano\n%s  /usr/local/bin/nano-p2p\n' "aa9c4f1ceca684a0348622d768ff1fe1f11850d72ee17e555e276a73777a2d82" "99850b2c393d43d479505446bde9569013ea33b4693b86ad9695276a7380669a" | sha256sum -c -  && ldd /usr/local/bin/nano > /tmp/nano-candidate.libs  && ldd /usr/local/bin/nano-p2p >> /tmp/nano-candidate.libs  && ! grep -q 'not found' /tmp/nano-candidate.libs  && rm /tmp/nano-candidate.libs  && /usr/local/bin/nano --help
+#9 0.142 /usr/local/bin/nano: OK
+#9 0.186 /usr/local/bin/nano-p2p: OK
+#9 0.211 Nano local chain tools
+#9 0.211 Usage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]
+#9 0.211   wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]
+#9 0.211   wallet deployment-address <keyfile> [nonce]
+#9 0.211   wallet create-many <new-directory> [count] (default: 10)
+#9 0.211   wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]
+#9 0.211   rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]
+#9 0.211   rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>
+#9 0.211   rpc <URL> stake-withdraw <keyfile> <contract>
+#9 0.211   rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]
+#9 0.211   validator <config.json> [--once] (separate client)
+#9 0.211   init/status: show canonical chain status
+#9 0.211   mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]
+#9 0.211   audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)
+#9 0.211   beacon-journal init <identity.json> <new-database> <new-receipt-directory>
+#9 0.211   beacon-journal status <identity.json> <database> <expected-commitment.json>
+#9 0.211   beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>
+#9 0.211   beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>
+#9 0.211   migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>
+#9 0.211   import: <block.json> <current-timestamp>
+#9 0.211   run: [node-config.json] (RPC and P2P together)
+#9 0.211   serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)
+#9 DONE 0.2s
+
+#10 [complete 1/2] COPY nano-storage-maintenance nano-bootstrap-archive-maintenance nano-capella-duty-readiness /usr/local/bin/
+#10 DONE 0.0s
+
+#11 [complete 2/2] RUN chmod 0755 /usr/local/bin/nano-storage-maintenance /usr/local/bin/nano-bootstrap-archive-maintenance /usr/local/bin/nano-capella-duty-readiness  && printf '%s  /usr/local/bin/nano-storage-maintenance\n%s  /usr/local/bin/nano-bootstrap-archive-maintenance\n%s  /usr/local/bin/nano-capella-duty-readiness\n' "8b65b599475cc46cb61d0af443b6fd7cd358f45d452897e829bd46503fa8300f" "7abb274442e7f39965a12186df08102e12f9a842ca2a743aa747da980f3c8705" "6ec929bcf078b06c9a16eb6b584363061593d81669dd63252119fb03160b84ad" | sha256sum -c -  && ldd /usr/local/bin/nano-storage-maintenance > /tmp/nano-candidate-complete.libs  && ldd /usr/local/bin/nano-bootstrap-archive-maintenance >> /tmp/nano-candidate-complete.libs  && ldd /usr/local/bin/nano-capella-duty-readiness >> /tmp/nano-candidate-complete.libs  && ! grep -q 'not found' /tmp/nano-candidate-complete.libs  && rm /tmp/nano-candidate-complete.libs
+#11 0.114 /usr/local/bin/nano-storage-maintenance: OK
+#11 0.133 /usr/local/bin/nano-bootstrap-archive-maintenance: OK
+#11 0.147 /usr/local/bin/nano-capella-duty-readiness: OK
+#11 DONE 0.2s
+
+#12 exporting to image
+#12 exporting layers
+#12 exporting layers 1.5s done
+#12 exporting manifest sha256:35f72ccdbf7730c77ee3a4d26f1f2e49d785a1a97b9b748e0cdcd187885a7699 done
+#12 exporting config sha256:de1395b5c42e3c10a399a166a6591af1b70a14a262fe2e57c0984c8e1db0ba18 done
+#12 exporting attestation manifest sha256:6e61a572555460afdceada2cb9f6a5288a439682f3e1985c01c6f7d57247728a done
+#12 exporting manifest list sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702 done
+#12 naming to moby-dangling@sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702 done
+#12 unpacking to moby-dangling@sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702
+#12 unpacking to moby-dangling@sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702 0.3s done
+#12 DONE 1.9s

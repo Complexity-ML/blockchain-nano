@@ -1,0 +1,282 @@
+[
+  {
+    "argv": [
+      "info",
+      "--format",
+      "{{.OSType}} {{.Architecture}}"
+    ],
+    "elapsedMs": 102,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 57,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "ls",
+      "--no-trunc",
+      "--filter",
+      "reference=nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8",
+      "--format",
+      "{{.ID}}"
+    ],
+    "elapsedMs": 60,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 54,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "build",
+      "--target",
+      "complete",
+      "--network",
+      "none",
+      "--pull=false",
+      "--progress",
+      "plain",
+      "--iidfile",
+      "/home/ubuntu/candidate-complete-amd-root-20261018-01/context-parent/nano-package-dryPbb/image-id",
+      "--build-arg",
+      "NANO_RUNTIME_BASE=nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8",
+      "--build-arg",
+      "RUNTIME_BASE_ID=sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8",
+      "--build-arg",
+      "SOURCE_REVISION=27b529410d26645d023a6c82c25fa7999972d9af",
+      "--build-arg",
+      "NANO_SHA256=aa9c4f1ceca684a0348622d768ff1fe1f11850d72ee17e555e276a73777a2d82",
+      "--build-arg",
+      "P2P_SHA256=99850b2c393d43d479505446bde9569013ea33b4693b86ad9695276a7380669a",
+      "--build-arg",
+      "STORAGE_MAINTENANCE_SHA256=8b65b599475cc46cb61d0af443b6fd7cd358f45d452897e829bd46503fa8300f",
+      "--build-arg",
+      "BOOTSTRAP_ARCHIVE_MAINTENANCE_SHA256=7abb274442e7f39965a12186df08102e12f9a842ca2a743aa747da980f3c8705",
+      "--build-arg",
+      "CAPELLA_DUTY_READINESS_SHA256=6ec929bcf078b06c9a16eb6b584363061593d81669dd63252119fb03160b84ad",
+      "-f",
+      "/home/ubuntu/candidate-complete-amd-root-20261018-01/context-parent/nano-package-dryPbb/candidate.Dockerfile",
+      "/home/ubuntu/candidate-complete-amd-root-20261018-01/context-parent/nano-package-dryPbb"
+    ],
+    "elapsedMs": 3273,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "nano-candidate-base:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 58,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 62,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/sha256sum",
+      "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "/usr/local/bin/nano",
+      "/usr/local/bin/nano-p2p",
+      "/usr/local/bin/nano-storage-maintenance",
+      "/usr/local/bin/nano-bootstrap-archive-maintenance",
+      "/usr/local/bin/nano-capella-duty-readiness"
+    ],
+    "elapsedMs": 397,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "/usr/local/bin/nano"
+    ],
+    "elapsedMs": 225,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "/usr/local/bin/nano-p2p"
+    ],
+    "elapsedMs": 224,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "/usr/local/bin/nano-storage-maintenance"
+    ],
+    "elapsedMs": 226,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "/usr/local/bin/nano-bootstrap-archive-maintenance"
+    ],
+    "elapsedMs": 244,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "run",
+      "--rm",
+      "--network",
+      "none",
+      "--read-only",
+      "--cap-drop",
+      "ALL",
+      "--security-opt",
+      "no-new-privileges",
+      "--memory",
+      "512m",
+      "--cpus",
+      "1",
+      "--entrypoint",
+      "/usr/bin/ldd",
+      "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "/usr/local/bin/nano-capella-duty-readiness"
+    ],
+    "elapsedMs": 237,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "image",
+      "inspect",
+      "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 59,
+    "exitCode": 0,
+    "timedOut": false
+  },
+  {
+    "argv": [
+      "container",
+      "inspect",
+      "nano-argument-smoke-61b01aec28ed4c6b8646d31432e5413b-0",
+      "--format",
+      "{{json .}}"
+    ],
+    "elapsedMs": 37,
+    "exitCode": 1,
+    "timedOut": false
+  }
+]

@@ -1,0 +1,74 @@
+{
+  "failedWholeBatchPreserved": true,
+  "firstCombinedPackageAndSmoke": {
+    "architecture": "amd64",
+    "dockerCommands": 15,
+    "firstFailure": {
+      "message": "Owned smoke container inspection refused",
+      "name": "Error",
+      "secondaryFailures": []
+    },
+    "format": "nano-complete-candidate-root-v1",
+    "originalRowsUnchanged": 28,
+    "package": {
+      "architecture": "amd64",
+      "artifactBytes": 51271872,
+      "executables": {
+        "nano": {
+          "bytes": 14049504,
+          "file": "/home/ubuntu/cli-readonly-amd-root-20261018-01/outputs/nano",
+          "sha256": "aa9c4f1ceca684a0348622d768ff1fe1f11850d72ee17e555e276a73777a2d82"
+        },
+        "nano-bootstrap-archive-maintenance": {
+          "bytes": 6098424,
+          "file": "/home/ubuntu/candidate-tools-amd-root-20261018-02/outputs/nano-bootstrap-archive-maintenance",
+          "sha256": "7abb274442e7f39965a12186df08102e12f9a842ca2a743aa747da980f3c8705"
+        },
+        "nano-capella-duty-readiness": {
+          "bytes": 6203760,
+          "file": "/home/ubuntu/candidate-tools-amd-root-20261018-02/outputs/nano-capella-duty-readiness",
+          "sha256": "6ec929bcf078b06c9a16eb6b584363061593d81669dd63252119fb03160b84ad"
+        },
+        "nano-p2p": {
+          "bytes": 18969392,
+          "file": "/home/ubuntu/p2p-status-root-20261017-01/outputs/amd-candidate/build/nano-p2p",
+          "sha256": "99850b2c393d43d479505446bde9569013ea33b4693b86ad9695276a7380669a"
+        },
+        "nano-storage-maintenance": {
+          "bytes": 5949272,
+          "file": "/home/ubuntu/candidate-tools-amd-root-20261018-02/outputs/nano-storage-maintenance",
+          "sha256": "8b65b599475cc46cb61d0af443b6fd7cd358f45d452897e829bd46503fa8300f"
+        }
+      },
+      "format": "nano-candidate-artifacts-package-result-v2",
+      "iidFirstAdmission": {
+        "bytes": 71,
+        "metadataChanges": 0,
+        "samples": 3,
+        "sha256": "3c3d0e23df1533c7a285790aa571deff8882f095c7eb46d6d82fb938491a80c9",
+        "stableSamples": 3,
+        "stableSpanMs": 2004
+      },
+      "image": "sha256:3eeb59d688c951a8929ad164b51272097d3c89c40980827402ebf9a9b3aeb702",
+      "integrityVerified": true,
+      "manifestSha256": "8d8e869db214e43e37e689921cebd44d46d2c132a5382e824279abdbb480271b",
+      "noticeCount": 11,
+      "productionQualified": false,
+      "runtimeBase": "sha256:2e35327fba2050e4ed6e7ba1d93f0e85401fb2dbaefd369cee1ad68918cd4da8",
+      "sourceEvidence": {
+        "bytes": 1520,
+        "file": "/home/ubuntu/candidate-complete-amd-root-20261018-01/source-evidence-public.json",
+        "sha256": "459de42547b9ec80405836692b49e342f8f4049da701ef84881f0ea9a24e1eac"
+      },
+      "sourceProvenanceSemanticallyVerified": false,
+      "sourceRevision": "27b529410d26645d023a6c82c25fa7999972d9af",
+      "temporaryContextRemoved": true
+    },
+    "productionQualified": false,
+    "runtimeDutiesAuthorized": false,
+    "status": "FAILED"
+  },
+  "firstSmokeReason": "Docker absent-container stdout was LF, not empty; checker fixed without image rebuild",
+  "format": "nano-complete-candidate-historical-failures-v1",
+  "noRuntimeRunBeforeThisFirstRefusal": true
+}

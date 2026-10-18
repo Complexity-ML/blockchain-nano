@@ -1,0 +1,471 @@
+✖ split artifacts snapshot caller intent and retain original pins under async caller mutation (5.31325ms)
+✖ the independent raw manifest pin binds the exact input object before Docker (2.261125ms)
+✖ a symlink ancestor cannot substitute an executable (1.335583ms)
+✖ a wrong binary pin refuses before build and preserves every original (1.370083ms)
+✖ source growth after copying refuses and removes only the new context (1.254042ms)
+✖ same-byte inode replacement after copying cannot satisfy the original nine-field fence (1.15575ms)
+✖ an unresolved final-image library fails with original sources unchanged and context removed (1.151125ms)
+✖ default temporary root creates and removes a private owned parent (1.145125ms)
+✖ the file API pins its manifest and rejects post-read mutation (1.149875ms)
+✖ new IID output settles metadata before its first strict identity admission (1.210375ms)
+✖ complete v2 packages all five byte pins as executable copies and preserves caller intent (1.130375ms)
+✖ v1 and v2 inventories reject a missing role, extra role or cross-version inventory before Docker (1.099834ms)
+✖ v2 binary budget sums all five roles before any Docker call (1.119083ms)
+✖ v2 aggregate budget also includes the independent source proof (1.179125ms)
+✖ v2 refuses a hardlinked pair of maintenance roles before context assembly (1.226458ms)
+✖ v2 refuses the source evidence aliasing an executable FD identity (1.585916ms)
+✖ v2 validates the fifth input byte pin instead of only nano and transport (1.077875ms)
+✖ v2 image digest inventory refuses missing, duplicate, foreign and wrong fifth-role hashes (1.071417ms)
+✖ v2 checks the loader of the fifth role and cleans the context on refusal (1.063834ms)
+✖ v2 rejects a root-user final image without altering any input (0.990208ms)
+✖ v2 keeps the original fifth-role permission row strict after context copying (1.006875ms)
+✖ v2 preserves a build refusal as first error while still fencing and cleaning (1.021625ms)
+✖ v2 refuses to delete a replacement context directory after final inspection (1.038625ms)
+✖ isolated build is exported without copying it over root build (22.777958ms)
+✖ six-argument legacy export remains supported (9.477917ms)
+✔ unsafe subdirectory rejected before Docker is invoked (66.736834ms)
+✔ multiline revision hash or volume cannot pass single-line regex validation (25.492208ms)
+✖ wrong revision marker aborts before image assembly (9.241ms)
+✖ export failure is retained before image assembly (8.660875ms)
+✖ nonregular exported artifact is rejected before image assembly (8.700667ms)
+✔ architecture mismatch is rejected before artifact export (8.902666ms)
+✖ coherent core and P2P directories are explicitly selected together (8.819584ms)
+✔ unsafe network build directory is rejected before Docker calls (68.609167ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 4
+ℹ fail 29
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 390.324292
+
+✖ failing tests:
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:61:1
+✖ split artifacts snapshot caller intent and retain original pins under async caller mutation (5.31325ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-awffHz/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-awffHz/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:65:1
+✖ the independent raw manifest pin binds the exact input object before Docker (2.261125ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-bgsAv5/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-bgsAv5/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:68:1
+✖ a symlink ancestor cannot substitute an executable (1.335583ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-tFgdex/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-tFgdex/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:71:1
+✖ a wrong binary pin refuses before build and preserves every original (1.370083ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-QkAxGA/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-QkAxGA/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:74:1
+✖ source growth after copying refuses and removes only the new context (1.254042ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-kHL7je/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-kHL7je/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:77:1
+✖ same-byte inode replacement after copying cannot satisfy the original nine-field fence (1.15575ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-w1w7AE/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-w1w7AE/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:80:1
+✖ an unresolved final-image library fails with original sources unchanged and context removed (1.151125ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-KDTud9/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-KDTud9/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:83:1
+✖ default temporary root creates and removes a private owned parent (1.145125ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-iq0aLX/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-iq0aLX/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:86:1
+✖ the file API pins its manifest and rejects post-read mutation (1.149875ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-xMzySW/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-xMzySW/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:92:1
+✖ new IID output settles metadata before its first strict identity admission (1.210375ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-tQqYWF/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-tQqYWF/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:105:1
+✖ complete v2 packages all five byte pins as executable copies and preserves caller intent (1.130375ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-llPFV6/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-llPFV6/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:113:1
+✖ v1 and v2 inventories reject a missing role, extra role or cross-version inventory before Docker (1.099834ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-VIys9H/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-VIys9H/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:121:1
+✖ v2 binary budget sums all five roles before any Docker call (1.119083ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-X3snCw/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-X3snCw/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:125:1
+✖ v2 aggregate budget also includes the independent source proof (1.179125ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-gTV7gn/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-gTV7gn/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:129:1
+✖ v2 refuses a hardlinked pair of maintenance roles before context assembly (1.226458ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-SEA358/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-SEA358/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:134:1
+✖ v2 refuses the source evidence aliasing an executable FD identity (1.585916ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-hf04Uu/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-hf04Uu/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:138:1
+✖ v2 validates the fifth input byte pin instead of only nano and transport (1.077875ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-h7KMb4/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-h7KMb4/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:142:1
+✖ v2 image digest inventory refuses missing, duplicate, foreign and wrong fifth-role hashes (1.071417ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-VzJxqP/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async TestContext.<anonymous> (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:143:60)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-VzJxqP/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:148:1
+✖ v2 checks the loader of the fifth role and cleans the context on refusal (1.063834ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-9woJMr/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-9woJMr/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:152:1
+✖ v2 rejects a root-user final image without altering any input (0.990208ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-sde5Nn/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-sde5Nn/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:156:1
+✖ v2 keeps the original fifth-role permission row strict after context copying (1.006875ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-umFiAI/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-umFiAI/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:160:1
+✖ v2 preserves a build refusal as first error while still fencing and cleaning (1.021625ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-d9kHS1/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-d9kHS1/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:165:1
+✖ v2 refuses to delete a replacement context directory after final inspection (1.038625ms)
+  Error: ENOENT: no such file or directory, copyfile '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile' -> '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-ujqXKQ/repo/deploy/docker/candidate.Dockerfile'
+      at async copyFile (node:internal/fs/promises:1263:10)
+      at async fixture (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate-artifacts.test.mjs:18:179)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    errno: -2,
+    code: 'ENOENT',
+    syscall: 'copyfile',
+    path: '/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/deploy/docker/candidate.Dockerfile',
+    dest: '/private/tmp/nano-candidate-complete-unit-root-20261018-01/nano-package-test-ujqXKQ/repo/deploy/docker/candidate.Dockerfile'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:26:1
+✖ isolated build is exported without copying it over root build (22.777958ms)
+  AssertionError [ERR_ASSERTION]: sh: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/scripts/operations/package-candidate.sh: No such file or directory
+  
+  
+  127 !== 0
+  
+      at TestContext.<anonymous> (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:26:155)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:27:1
+✖ six-argument legacy export remains supported (9.477917ms)
+  AssertionError [ERR_ASSERTION]: sh: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/scripts/operations/package-candidate.sh: No such file or directory
+  
+  
+  127 !== 0
+  
+      at TestContext.<anonymous> (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:27:95)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:30:1
+✖ wrong revision marker aborts before image assembly (9.241ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /revision mismatch/. Input:
+  
+  'sh: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/scripts/operations/package-candidate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:30:150)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'sh: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/scripts/operations/package-candidate.sh: No such file or directory\n',
+    expected: /revision mismatch/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:31:1
+✖ export failure is retained before image assembly (8.660875ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  127 !== 17
+  
+      at TestContext.<anonymous> (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:31:122)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 17,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:32:1
+✖ nonregular exported artifact is rejected before image assembly (8.700667ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /regular build artifacts/. Input:
+  
+  'sh: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/scripts/operations/package-candidate.sh: No such file or directory\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:32:155)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'sh: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/scripts/operations/package-candidate.sh: No such file or directory\n',
+    expected: /regular build artifacts/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at ../../../../../../private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:35:1
+✖ coherent core and P2P directories are explicitly selected together (8.819584ms)
+  AssertionError [ERR_ASSERTION]: sh: /Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/scripts/operations/package-candidate.sh: No such file or directory
+  
+  
+  127 !== 0
+  
+      at TestContext.<anonymous> (file:///private/tmp/nano-candidate-complete-source-root-20261018-01/scripts/operations/package-candidate.test.mjs:35:191)
+      at async Test.run (node:internal/test_runner/test:1208:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:831:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 127,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
