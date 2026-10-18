@@ -172,6 +172,11 @@ bool Blockchain::restore(const Int& number,const Bytes& expected_hash){
 }
 Block Blockchain::tip()const{std::lock_guard lock(mutex_);require_execution_ready_locked();return tip_;}
 Header Blockchain::tip_header()const{std::lock_guard lock(mutex_);require_execution_ready_locked();return tip_.header;}
+std::pair<Header,std::optional<Header>> Blockchain::state_read_headers_locked()const{
+ const bool beacon=genesis_.consensus=="beacon";
+ if(beacon&&(!beacon_ready_||!beacon_finalized_))throw std::runtime_error("Beacon execution unavailable until checkpoint verification");
+ return {tip_.header,beacon&&beacon_finalized_?std::optional<Header>(beacon_finalized_->header):std::nullopt};
+}
 State Blockchain::state()const{std::lock_guard lock(mutex_);require_execution_ready_locked();return state_;}
 bool Blockchain::submit(const SignedTransaction& tx){
  std::lock_guard lock(mutex_);require_execution_ready_locked();

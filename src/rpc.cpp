@@ -633,13 +633,26 @@ std::function<Json()> Rpc::prepare_state_read(const std::string& method,const Js
  // Pending nonce retains its original mempool semantics. There is no persisted
  // pending state root to use for the other readers or a Merkle proof.
  if(method=="eth_getTransactionCount"&&selector.tag=="pending"){const auto nonce=chain_.pending_nonce(account);return [nonce,check,maximum=limits.state_read.maximum_output_bytes]{check();Json out=quantity(nonce);if(out.dump().size()>maximum)throw RpcError(-32005,"State-read response byte limit exceeded");return out;};}
- // Capture the selected header under the existing Rpc lock. The large serialized
- // state copy, decoding and all MPT work happen only in the returned worker job.
- auto selected=selector.hash_selected?chain_.store().block_by_hash(selector.hash):block(selector.tag);
- if(!selected)throw RpcError(selector.object?-32001:-32000,"Unknown block");check();
- const auto header=selected->header;const auto required=selector.canonical_required;const auto* store=&chain_.store();
- return [header,account,keys=std::move(keys),position,method,proof,storage,limits,check,required,store]{
-  check();SerializedExecutionState snapshot;
+ // Selection itself is part of the detached worker: even a legacy header may
+ // require a bounded scan of a large persisted body. No Block or transaction is
+ // cloned/decoded for these readers, and no storage callback runs under Rpc's
+ // mutex. All phases retain the same deadline established above.
+ const auto required=selector.canonical_required;const auto* chain=&chain_;const auto* store=&chain_.store();
+ return [selector,account,keys=std::move(keys),position,method,proof,storage,limits,check,required,chain,store]{
+  check();std::optional<Header> selected;
+  try{
+   const auto context=chain->state_read_context(limits.state_read.maximum_snapshot_bytes,check);
+   if(selector.hash_selected)selected=store->header_by_hash(selector.hash,limits.state_read.maximum_snapshot_bytes,check);
+   else{
+    const auto& tag=selector.tag;if(!tag.is_string())throw RpcError(-32602,"Expected block tag");const auto& text=tag.get_ref<const std::string&>();
+    if(text=="latest")selected=context.tip;
+    else if(text=="finalized"){if(!context.finalized)throw RpcError(-32000,"Finalized block is unavailable for this consensus");selected=context.finalized;}
+    else if(text=="pending"||text=="safe")throw RpcError(-32000,"Block tag is not available yet");
+    else selected=store->header_by_number(text=="earliest"?Int(0):quantity(tag),limits.state_read.maximum_snapshot_bytes,check);
+   }
+  }catch(const std::length_error&){throw RpcError(-32005,"Serialized execution header byte limit exceeded");}
+  if(!selected)throw RpcError(selector.object?-32001:-32000,"Unknown block");check();const auto header=std::move(*selected);
+  SerializedExecutionState snapshot;
   try{snapshot=store->serialized_state_at(header.number,header.hash(),limits.state_read.maximum_snapshot_bytes,check);}
   catch(const std::length_error&){throw RpcError(-32005,"Serialized execution state byte limit exceeded");}
   if(!snapshot.canonical)throw RpcError(-32000,required?"Selected block is not canonical":"Selected block state is unavailable");

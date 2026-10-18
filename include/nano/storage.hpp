@@ -43,6 +43,8 @@ class ChainStore {
  std::optional<VoteLock> voting_lock_impl(const std::string& prefix) const;
  std::optional<BlockCertificate> certificate_impl(const Int& height) const;
  void commit_impl(const Block& block,const State& state,const std::vector<Receipt>& receipts,const std::optional<Json>& consensus,const BlockCertificate* certificate);
+ enum class HeaderSelection { Number,Hash,UncertifiedTip };
+ std::optional<Header> header_impl(HeaderSelection,const Int&,const Bytes&,size_t,const std::function<void()>&) const;
  void reserve_vote_impl(const FinalityVote& vote,const Int& chain_id,const Bytes& genesis_hash,const VotingSet* validators,const std::vector<FinalityVote>& justification,const Block* proposal=nullptr);
 public:
  enum class OpenMode { ReadWrite, ReadOnly, ReadWriteExisting };
@@ -119,6 +121,15 @@ public:
  std::optional<Block> block_by_number(const Int& number) const;
  std::optional<Block> block_by_hash(const Bytes& hash) const;
  std::optional<Block> latest() const;
+ // Derived canonical header index, not body/certificate authentication. A legacy
+ // missing index uses a bounded projection; it never writes or repairs records.
+ // Snapshot reads, parsing and callbacks run outside the writer mutex. The cap
+ // bounds application input, not RocksDB's internal I/O/cache allocation.
+ std::optional<Header> header_by_number(const Int&,size_t maximum_serialized_bytes,const std::function<void()>& checkpoint={}) const;
+ std::optional<Header> header_by_hash(const Bytes&,size_t maximum_serialized_bytes,const std::function<void()>& checkpoint={}) const;
+ // Beacon-only readiness check: reject every legacy certified-chain marker or
+ // record. This deliberately does not replace latest()/certificate_at().
+ std::optional<Header> uncertified_tip_header(size_t maximum_serialized_bytes,const std::function<void()>& checkpoint={}) const;
  std::optional<State> state_at(const Int& number) const;
  // Pin state and its hash-index membership in one writer-serialized read. Copy
  // and caller checkpoints run after unlocking; no JSON/trie work under mutex.

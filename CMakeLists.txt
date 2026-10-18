@@ -171,6 +171,7 @@ set_tests_properties(rpc_get_proof PROPERTIES TIMEOUT 90 LABELS qualification_rp
 
 add_executable(nano-rpc-state-read-cost-tests tests/test_rpc_state_read_cost.cpp)
 target_link_libraries(nano-rpc-state-read-cost-tests PRIVATE nano_core)
+target_compile_definitions(nano-rpc-state-read-cost-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME rpc_state_read_cost COMMAND nano-rpc-state-read-cost-tests --state-read-cost-self-test)
 set_tests_properties(rpc_state_read_cost PROPERTIES TIMEOUT 90 LABELS qualification_rpc_state_proof)
 

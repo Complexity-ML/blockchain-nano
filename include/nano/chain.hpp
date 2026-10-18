@@ -31,6 +31,7 @@ class Blockchain {
  bool beacon_ready_=false;
  std::optional<Block> beacon_finalized_; // populated only by authenticated coordinator
  void require_execution_ready_locked() const;
+ std::pair<Header,std::optional<Header>> state_read_headers_locked() const;
  // Process-local proof: unknown on reopen; extended only by verified durable certificates.
  mutable std::optional<Bytes> audited_certified_tip_;
  Json audit_locked() const;
@@ -85,6 +86,10 @@ public:
  Block tip() const;
  Header tip_header() const;
  std::optional<Block> finalized_block() const;
+ struct StateReadContext {Header tip;std::optional<Header> finalized;};
+ // Request-owned header copies, no Block/body clone. Beacon durable readiness
+ // is checked without weakening the existing global body/certificate audits.
+ StateReadContext state_read_context(size_t maximum_serialized_bytes,const std::function<void()>& checkpoint={}) const;
  Json audit() const;
  void recover_voting_progress(ChainStore& journal,const std::string& signer) const;
  State state() const;

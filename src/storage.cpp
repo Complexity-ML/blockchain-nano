@@ -18,6 +18,9 @@
 #include <limits>
 #include <thread>
 #include <exception>
+#include <array>
+#include <iterator>
+#include <string_view>
 namespace nano {
 namespace {
 // ReadWriteExisting must never recreate a missing database directory. DB::Open
@@ -91,6 +94,71 @@ constexpr size_t proposal_chunk_size=1024*1024;
 const std::string proposal_chunk_tag="nano/proposal/chunks-v1\n";
 std::string proposal_chunk_key(const std::string& key,size_t index){return key+"/chunks/"+std::to_string(index);}
 std::string proposal_digest(const std::string& data){return hex(keccak(Bytes(data.begin(),data.end())));}
+// Input checkpoints also run inside a single large JSON string, before the SAX
+// lexer finishes allocating that token. Neither the input nor the block DOM is
+// copied here. A legacy lexer token can still use up to the bounded input size.
+class HeaderInputIterator {
+ const char* current_;const char* begin_;const std::function<void()>* checkpoint_;
+public:
+ using iterator_category=std::input_iterator_tag;using value_type=char;
+ using difference_type=std::ptrdiff_t;using pointer=const char*;using reference=const char&;
+ HeaderInputIterator(const char* current,const char* begin,const std::function<void()>& checkpoint):current_(current),begin_(begin),checkpoint_(&checkpoint){}
+ reference operator*()const{return *current_;}
+ HeaderInputIterator& operator++(){++current_;if((current_-begin_)%4096==0&&*checkpoint_)(*checkpoint_)();return *this;}
+ HeaderInputIterator operator++(int){auto old=*this;++*this;return old;}
+ bool operator==(const HeaderInputIterator& other)const{return current_==other.current_;}
+ bool operator!=(const HeaderInputIterator& other)const{return !(*this==other);}
+};
+class HeaderProjection final : public nlohmann::json_sax<Json> {
+ const bool indexed_;const size_t maximum_;size_t depth_=0,materialized_=0;
+ bool root_=false;std::string field_;std::set<std::string> seen_;
+ bool scalar()const{return depth_>0&&(depth_!=1||field_.empty());}
+ bool container(){if(depth_==1&&!field_.empty())return false;return ++depth_<=16;}
+public:
+ Json header=Json::object();
+ HeaderProjection(bool indexed,size_t maximum):indexed_(indexed),maximum_(maximum){}
+ bool null()override{return scalar();}bool boolean(bool)override{return scalar();}
+ bool number_integer(number_integer_t)override{return scalar();}
+ bool number_unsigned(number_unsigned_t)override{return scalar();}
+ bool number_float(number_float_t,const string_t&)override{return scalar();}
+ bool binary(binary_t&)override{return false;}
+ bool string(string_t& value)override{
+  if(!depth_)return false;
+  if(depth_==1&&!field_.empty()){
+   if(value.size()>maximum_-materialized_)return false;
+   materialized_+=value.size();header[field_]=std::move(value);field_.clear();
+  }
+  return true;
+ }
+ bool start_object(size_t)override{if(!depth_){if(root_)return false;root_=true;}return container();}
+ bool start_array(size_t)override{if(!depth_)return false;return container();}
+ bool end_object()override{if(!depth_)return false;--depth_;return true;}
+ bool end_array()override{if(!depth_)return false;--depth_;return true;}
+ bool key(string_t& value)override{
+  if(depth_!=1)return true;
+  static constexpr std::array<std::string_view,22> fields={"parentHash","sha3Uncles","miner","stateRoot","transactionsRoot","receiptsRoot","logsBloom","difficulty","number","gasLimit","gasUsed","timestamp","extraData","mixHash","nonce","hash","baseFeePerGas","withdrawalsRoot","blobGasUsed","excessBlobGas","parentBeaconBlockRoot","requestsHash"};
+  field_.clear();for(const auto name:fields)if(value==name){field_=value;break;}
+  if(field_.empty())return !indexed_;
+  return seen_.insert(field_).second;
+ }
+ bool parse_error(size_t,const std::string&,const nlohmann::detail::exception&)override{return false;}
+};
+Header project_execution_header(const rocksdb::PinnableSlice& value,bool indexed,size_t maximum_bytes,const std::function<void()>& checkpoint){
+ if(value.size()>maximum_bytes)throw std::length_error("Serialized execution header byte limit exceeded");
+ if(value.empty())throw std::runtime_error("Persisted execution header encoding invalid");
+ // This local materialization fuse is not a consensus header-size rule. It
+ // prevents a corrupt scalar from invoking an enormous GMP conversion after
+ // the byte-wise parser has finished. The configured cap can only lower it.
+ HeaderProjection projection(indexed,std::min(maximum_bytes,size_t(65536)));
+ if(checkpoint)checkpoint();
+ const auto begin=value.data(),end=begin+value.size();
+ if(!Json::sax_parse(HeaderInputIterator(begin,begin,checkpoint),HeaderInputIterator(end,begin,checkpoint),&projection)||!projection.header.contains("hash"))throw std::runtime_error("Persisted execution header encoding invalid");
+ if(checkpoint)checkpoint();
+ try{return Header::from_json(projection.header);}
+ catch(const Json::exception&){throw std::runtime_error("Persisted execution header fields invalid");}
+ catch(const std::invalid_argument&){throw std::runtime_error("Persisted execution header fields invalid");}
+ catch(const std::overflow_error&){throw std::runtime_error("Persisted execution header fields invalid");}
+}
 void put_proposal(rocksdb::WriteBatch& batch,const std::string& key,const std::string& data){
  if(data.size()<=proposal_inline_limit){batch.Put(key,data);return;}
  const size_t count=(data.size()-1)/proposal_chunk_size+1;
@@ -455,7 +523,7 @@ void ChainStore::rewind(const Int& number){
   auto key=height_key(cursor);auto block=read("block/"+key);if(!block)throw std::runtime_error("missing rewind block");
   total-=quantity(block->at("difficulty"));--blocks;
   for(const auto& transaction:block->at("transactions")){auto hash=transaction.at("hash").get<std::string>();batch.Delete("tx/"+hash);batch.Delete("receipt/"+hash);}
-  batch.Delete("hash/"+block->at("hash").get<std::string>());batch.Delete("block/"+key);batch.Delete("state/"+key);batch.Delete("consensus/"+key);
+  batch.Delete("hash/"+block->at("hash").get<std::string>());batch.Delete("block/"+key);batch.Delete("execution-header/v1/"+key);batch.Delete("state/"+key);batch.Delete("consensus/"+key);
  }
  batch.Put("meta/tip",height_key(number));batch.Put("meta/difficulty",total.get_str());batch.Put("meta/count",blocks.get_str());require_ok(db_->Write(durable_write(),&batch));
 }
@@ -493,7 +561,7 @@ void ChainStore::commit_impl(const Block& block,const State& state,const std::ve
  if(get("block/"+number)||get("hash/"+hex(hash)))throw std::invalid_argument("duplicate block");
  rocksdb::WriteBatch batch;
  if(consensus)batch.Put("consensus/"+number,consensus->dump());
- batch.Put("block/"+number,body);batch.Put("state/"+number,state_data);batch.Put("hash/"+hex(hash),number);
+ batch.Put("block/"+number,body);batch.Put("execution-header/v1/"+number,block.header.to_json().dump());batch.Put("state/"+number,state_data);batch.Put("hash/"+hex(hash),number);
  std::set<std::string> seen;
  for(size_t i=0;i<receipts.size();++i){
   auto txhash=hex(block.transactions[i].hash());
@@ -508,6 +576,57 @@ void ChainStore::commit_impl(const Block& block,const State& state,const std::ve
 std::optional<Block> ChainStore::block_by_number(const Int& n)const{std::lock_guard lock(mutex_);auto j=read("block/"+height_key(n));if(!j)return std::nullopt;auto block=Block::from_json(*j);if(block.header.number!=n)throw std::runtime_error("block height index mismatch");return block;}
 std::optional<Block> ChainStore::block_by_hash(const Bytes& hash)const{std::lock_guard lock(mutex_);auto number=get("hash/"+hex(hash));if(!number)return std::nullopt;auto j=read("block/"+*number);if(!j)throw std::runtime_error("broken block hash index");auto block=Block::from_json(*j);if(block.header.hash()!=hash||height_key(block.header.number)!=*number)throw std::runtime_error("block hash index mismatch");return block;}
 std::optional<Block> ChainStore::latest()const{std::lock_guard lock(mutex_);auto certified=certified_tip_impl();auto number=get("meta/tip");if(!number)return std::nullopt;auto j=read("block/"+*number);if(!j)throw std::runtime_error("missing chain tip");auto block=Block::from_json(*j);if(height_key(block.header.number)!=*number)throw std::runtime_error("chain tip height mismatch");if(certified&&(*certified!=*number||!certificate_impl(block.header.number)))throw std::runtime_error("certified tip mismatch");return block;}
+std::optional<Header> ChainStore::header_by_number(const Int& number,size_t maximum_bytes,const std::function<void()>& checkpoint)const{return header_impl(HeaderSelection::Number,number,{},maximum_bytes,checkpoint);}
+std::optional<Header> ChainStore::header_by_hash(const Bytes& hash,size_t maximum_bytes,const std::function<void()>& checkpoint)const{return header_impl(HeaderSelection::Hash,0,hash,maximum_bytes,checkpoint);}
+std::optional<Header> ChainStore::uncertified_tip_header(size_t maximum_bytes,const std::function<void()>& checkpoint)const{return header_impl(HeaderSelection::UncertifiedTip,0,{},maximum_bytes,checkpoint);}
+std::optional<Header> ChainStore::header_impl(HeaderSelection selection,const Int& number,const Bytes& expected_hash,size_t maximum_bytes,const std::function<void()>& checkpoint)const{
+ if(!maximum_bytes||maximum_bytes>256*1024*1024||(selection==HeaderSelection::Number&&(number<0||number>Int("18446744073709551615")))||(selection==HeaderSelection::Hash&&expected_hash.size()!=32))throw std::invalid_argument("Invalid execution header read policy");
+ if(checkpoint)checkpoint();
+ const rocksdb::Snapshot* captured;
+ {
+  std::lock_guard lock(mutex_);if(fork_checkpoint_write_uncertain_)throw std::runtime_error("checkpoint write uncertain; reopen required");
+  captured=db_->GetSnapshot();if(!captured)throw std::runtime_error("execution header snapshot unavailable");
+ }
+ const auto release=[this](const rocksdb::Snapshot* snapshot){db_->ReleaseSnapshot(snapshot);};
+ std::unique_ptr<const rocksdb::Snapshot,decltype(release)> lease(captured,release);
+ rocksdb::ReadOptions options;options.snapshot=captured;
+ if(checkpoint)checkpoint();
+ const auto read_value=[&](const std::string& key,rocksdb::PinnableSlice& value){if(checkpoint)checkpoint();const auto status=db_->Get(options,db_->DefaultColumnFamily(),key,&value);if(status.IsNotFound())return false;require_ok(status);return true;};
+ const auto height_value=[&](const std::string& key)->std::optional<std::string>{
+  rocksdb::PinnableSlice value;if(!read_value(key,value))return std::nullopt;
+  if(value.size()!=18)throw std::runtime_error("execution header height index invalid");
+  const std::string text(value.data(),value.size());
+  try{if(text!=height_key(integer(unhex(text))))throw std::runtime_error("execution header height index invalid");}
+  catch(const std::invalid_argument&){throw std::runtime_error("execution header height index invalid");}
+  return text;
+ };
+ const auto finish=[&](std::optional<Header> result){
+  {std::lock_guard lock(mutex_);if(fork_checkpoint_write_uncertain_)throw std::runtime_error("checkpoint write uncertain; reopen required");}
+  if(checkpoint)checkpoint();return result;
+ };
+ std::optional<std::string> key;
+ if(selection==HeaderSelection::Number)key=height_key(number);
+ else if(selection==HeaderSelection::Hash)key=height_value("hash/"+hex(expected_hash));
+ else{
+  rocksdb::PinnableSlice marker;if(read_value("meta/certified-tip",marker))throw std::runtime_error("Beacon execution has legacy certified metadata");
+  if(checkpoint)checkpoint();std::unique_ptr<rocksdb::Iterator> iterator(db_->NewIterator(options));iterator->Seek("certificate/");require_ok(iterator->status());
+  if(iterator->Valid()&&iterator->key().starts_with(rocksdb::Slice("certificate/")))throw std::runtime_error("Beacon execution has legacy certified records");
+  key=height_value("meta/tip");
+ }
+ if(!key)return finish(std::nullopt);
+ rocksdb::PinnableSlice value;const bool indexed=read_value("execution-header/v1/"+*key,value);
+ if(!indexed){
+  value.Reset();if(!read_value("block/"+*key,value)){
+   if(selection!=HeaderSelection::Number)throw std::runtime_error("execution header canonical record missing");
+   return finish(std::nullopt);
+  }
+ }
+ const auto header=project_execution_header(value,indexed,maximum_bytes,checkpoint);
+ const auto hash=header.hash();
+ if(header.number<0||header.number>Int("18446744073709551615")||height_key(header.number)!=*key||(selection==HeaderSelection::Hash&&hash!=expected_hash))throw std::runtime_error("execution header index mismatch");
+ const auto reverse=height_value("hash/"+hex(hash));if(!reverse||*reverse!=*key)throw std::runtime_error("execution header reverse index mismatch");
+ return finish(header);
+}
 std::optional<State> ChainStore::state_at(const Int& n)const{std::lock_guard lock(mutex_);auto j=read("state/"+height_key(n));if(!j)return std::nullopt;auto state=State::from_json(*j);auto body=read("block/"+height_key(n));if(!body||state.root()!=unhex(body->at("stateRoot")))throw std::runtime_error("corrupted persisted state");return state;}
 SerializedExecutionState ChainStore::serialized_state_at(const Int& number,const Bytes& expected_hash,size_t maximum_bytes,const std::function<void()>& checkpoint)const{
  if(expected_hash.size()!=32||!maximum_bytes||maximum_bytes>256*1024*1024)throw std::invalid_argument("Invalid serialized state policy");
@@ -626,7 +745,7 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint_with_blobs(const Int
  for(Int at=height;at>common_height;--at){
   const auto key=height_key(at);const auto old=read("block/"+key);if(!old||quantity(old->at("number"))!=at)throw std::runtime_error("missing execution checkpoint suffix");
   for(const auto& tx:old->at("transactions")){const auto hash=tx.at("hash").get<std::string>();removed.insert(hash);batch.Delete("tx/"+hash);batch.Delete("receipt/"+hash);}
-  batch.Delete("hash/"+old->at("hash").get<std::string>());batch.Delete("block/"+key);batch.Delete("state/"+key);batch.Delete("consensus/"+key);total-=quantity(old->at("difficulty"));--count;bounded();
+  batch.Delete("hash/"+old->at("hash").get<std::string>());batch.Delete("block/"+key);batch.Delete("execution-header/v1/"+key);batch.Delete("state/"+key);batch.Delete("consensus/"+key);total-=quantity(old->at("difficulty"));--count;bounded();
  }
  // History survives a canonical reorg. Conflicting bytes under an existing
  // consensus root are never replaced, including duplicates within one batch.
@@ -653,7 +772,7 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint_with_blobs(const Int
   for(size_t i=0;i<receipts.size();++i){const auto& receipt=receipts[i];cumulative+=receipt.gas_used;logs.insert(logs.end(),receipt.logs.begin(),receipt.logs.end());if(receipt.gas_used<0||receipt.transaction_hash!=block.transactions[i].hash()||receipt.block_hash!=hash||receipt.block_number!=h.number||receipt.index!=Int(i)||receipt.cumulative_gas_used!=cumulative)throw std::invalid_argument("execution checkpoint receipt binding");}
   if(cumulative!=h.gas_used||logs_bloom(logs)!=h.logs_bloom)throw std::invalid_argument("execution checkpoint gas/bloom binding");
   const auto key=height_key(h.number);auto body=block.to_json(true);body["uncleHeaders"]=Json::array();for(const auto& uncle:block.uncles)body["uncleHeaders"].push_back(uncle.to_json());
-  batch.Put("block/"+key,body.dump());batch.Put("state/"+key,record.state.to_json().dump());batch.Put("hash/"+hex(hash),key);
+  batch.Put("block/"+key,body.dump());batch.Put("execution-header/v1/"+key,h.to_json().dump());batch.Put("state/"+key,record.state.to_json().dump());batch.Put("hash/"+hex(hash),key);
   for(size_t i=0;i<receipts.size();++i){const auto txhash=hex(block.transactions[i].hash());if(!inserted.insert(txhash).second||(get("tx/"+txhash)&&!removed.contains(txhash)))throw std::invalid_argument("execution checkpoint duplicate transaction");auto tx=block.transactions[i].to_json();tx["blockHash"]=hex(hash);tx["blockNumber"]=quantity(h.number);tx["transactionIndex"]=quantity(Int(i));batch.Put("tx/"+txhash,tx.dump());batch.Put("receipt/"+txhash,receipts[i].to_json().dump());}
   total+=h.difficulty;++count;parent=h;bounded();
  }

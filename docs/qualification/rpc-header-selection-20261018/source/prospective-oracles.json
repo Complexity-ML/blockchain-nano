@@ -1,0 +1,155 @@
+{
+  "sourceBase": "801d793f0f05c3b46f97d34d86973f1487e36561",
+  "prospective": true,
+  "executionObserved": false,
+  "cases": [
+    {
+      "name": "rpc-state-read-cost",
+      "unit": "rpc-state-read-cost",
+      "args": [
+        "--state-read-cost-self-test"
+      ],
+      "timeoutSeconds": 90,
+      "expectedExit": 0,
+      "stdout": {
+        "kind": "json-field-records",
+        "records": [
+          {
+            "expectedFields": {
+              "scenario": "state-read-cost-summary",
+              "passed": true,
+              "groups": 1,
+              "checks": 47,
+              "expectedRefusals": 23,
+              "accounts": 128,
+              "slotsPerAccount": 16,
+              "headerSelectionCases": true,
+              "beaconReadyCases": true,
+              "fullBeaconAbaQualified": false,
+              "newTestOnlyBlsSignatures": 12,
+              "maximumTestBlsSignatures": 32,
+              "maximumRssKiB": 131072,
+              "runtimeDutiesAuthorized": false,
+              "privateInputsRead": false,
+              "externalNetwork": false
+            },
+            "integerFields": {
+              "actualPeakRssKiB": {
+                "minimum": 1,
+                "maximum": 131072
+              }
+            }
+          }
+        ]
+      },
+      "stderr": {
+        "kind": "empty"
+      }
+    },
+    {
+      "name": "rpc-state-block-id",
+      "unit": "rpc-state-block-id",
+      "args": [
+        "--state-readers-self-test"
+      ],
+      "timeoutSeconds": 90,
+      "expectedExit": 0,
+      "stdout": {
+        "kind": "json-field-records",
+        "records": [
+          {
+            "expectedFields": {
+              "scenario": "state-readers-canonical-selectors-paris-shanghai",
+              "passed": true,
+              "checks": 255,
+              "expectedRefusals": 14
+            },
+            "integerFields": {}
+          },
+          {
+            "expectedFields": {
+              "scenario": "state-readers-selector-error-precedence",
+              "passed": true,
+              "checks": 377,
+              "expectedRefusals": 126
+            },
+            "integerFields": {}
+          },
+          {
+            "expectedFields": {
+              "scenario": "state-readers-detached-capture-and-real-reorg",
+              "passed": true,
+              "checks": 674,
+              "expectedRefusals": 150
+            },
+            "integerFields": {}
+          },
+          {
+            "expectedFields": {
+              "scenario": "state-readers-real-retention-and-reopen",
+              "passed": true,
+              "checks": 750,
+              "expectedRefusals": 170
+            },
+            "integerFields": {}
+          },
+          {
+            "expectedFields": {
+              "scenario": "state-readers-http-object-selectors-and-batch",
+              "passed": true,
+              "checks": 805,
+              "expectedRefusals": 179
+            },
+            "integerFields": {}
+          },
+          {
+            "expectedFields": {
+              "scenario": "state-readers-summary",
+              "passed": true,
+              "groups": 5,
+              "checks": 805,
+              "expectedRefusals": 179,
+              "selectedGroup": "all",
+              "methods": 4,
+              "externalNetwork": false,
+              "consensusModified": false
+            },
+            "integerFields": {}
+          }
+        ]
+      },
+      "stderr": {
+        "kind": "empty"
+      }
+    },
+    {
+      "name": "rpc-get-proof",
+      "unit": "rpc-get-proof",
+      "args": [
+        "--get-proof-self-test"
+      ],
+      "timeoutSeconds": 90,
+      "expectedExit": 0,
+      "stdout": {
+        "kind": "get-proof-record-stream-v1"
+      },
+      "stderr": {
+        "kind": "empty"
+      }
+    }
+  ],
+  "sourceDerivation": {
+    "costChecks": "7 retained +21 header-selection assertions +19 real Beacon fixture assertions =47; setup du::check does not increment this counter.",
+    "costRefusals": "4 retained +11 header API/cap/cancellation refusals +8 Beacon readiness/refusal assertions =23.",
+    "stateReaderChecks": "Old group cumulative checks 202/322/521/597/650; two receipt-existence assertions per old Fixture, two derived-header checks per actual select, plus new checkpoint and body-budget fixtures produce cumulative 255/377/674/750/805.",
+    "stateReaderRefusals": "Unchanged cumulative 14/126/150/170/179.",
+    "proof": "Unchanged 24 published vectors, five ordered reports and strict summary 5 groups/63 refusals/24 vectors. New large-body proof checks use publish=false. Checks retain the existing bounded stream rule 1..10000000; no observation used to choose a count.",
+    "signatures": "Public durable_owned_fixture produces two BLS signatures. Five complete children produce two each =12. Child entry enforces <=30 before its two signs, and final equality12; no campaign or runtime signing journal.",
+    "resources": "Each existing CTest keeps timeout90. Fixture checkpoints also retain max RSS131072 KiB; final checkpoint precedes the RSS record. Gate waits are5/10 seconds with2-second independent progress deadlines.",
+    "coreScope": "Only the six changed production sources, three changed tests and one CMake macro definition; no general suite, old-Core baseline, image rebuild or private authority is requested."
+  },
+  "stillOpen": [
+    "Full Beacon A-to-B-to-A fork-choice scenario (linear child fixture does not qualify it).",
+    "Authenticating an independent consensus finality root; WAN/common-finality progression; campaign04; production readiness."
+  ]
+}

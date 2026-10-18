@@ -15,6 +15,31 @@ std::optional<Block> Blockchain::finalized_block()const{
  if(genesis_.consensus!="beacon")return std::nullopt;
  return beacon_finalized_;
 }
+Blockchain::StateReadContext Blockchain::state_read_context(size_t maximum_bytes,const std::function<void()>& checkpoint)const{
+ if(!maximum_bytes||maximum_bytes>256*1024*1024)throw std::invalid_argument("Invalid state-read header policy");
+ // Bounded local admission fuse, not a consensus retry/fork-choice rule. Every
+ // attempt also shares the caller's absolute deadline. No caller callback runs
+ // under ChainStore/Blockchain mutexes, including the durable-read checkpoints.
+ for(unsigned attempt=0;attempt<4;++attempt){
+  if(checkpoint)checkpoint();std::pair<Header,std::optional<Header>> captured;uint64_t sequence;
+  {std::lock_guard lock(mutex_);captured=state_read_headers_locked();sequence=event_sequence_;}
+  if(checkpoint)checkpoint();
+  if(genesis_.consensus!="beacon")return {std::move(captured.first),std::move(captured.second)};
+  const auto durable=store_.uncertified_tip_header(maximum_bytes,checkpoint);
+  if(checkpoint)checkpoint();bool changed;
+  {
+   std::lock_guard lock(mutex_);const auto current=state_read_headers_locked();
+   // The existing event generation also detects canonical A->B->A. Comparing
+   // only hashes would mislabel a durable B read during that race as corruption.
+   // Other events can conservatively cause a bounded retry, never acceptance.
+   changed=event_sequence_!=sequence||current.first.hash()!=captured.first.hash()||bool(current.second)!=bool(captured.second)||(current.second&&current.second->hash()!=captured.second->hash());
+  }
+  if(changed)continue;
+  if(!durable||durable->hash()!=captured.first.hash())throw std::runtime_error("Beacon canonical cache differs from durable head");
+  if(checkpoint)checkpoint();return {std::move(captured.first),std::move(captured.second)};
+ }
+ throw ExecutionCancelled("RPC state-read head changed during capture");
+}
 
 ForkCheckpointToken Blockchain::commit_beacon_checkpoint(const std::optional<ForkCheckpointToken>& expected,
  const Bytes& expected_tip,const Int& common_height,const Bytes& common_hash,

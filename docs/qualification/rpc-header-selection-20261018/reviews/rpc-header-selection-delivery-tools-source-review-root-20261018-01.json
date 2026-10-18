@@ -1,0 +1,29 @@
+{
+  "amdTerminalStillRequired": true,
+  "format": "nano-rpc-header-selection-delivery-tool-source-review-v1",
+  "importAuthorizedByThisReceipt": false,
+  "operationsPerformedByReview": 0,
+  "productionQualified": false,
+  "programs": {
+    "importAndPublish": {
+      "bytes": 11470,
+      "file": "deliver-rpc-header-selection-evidence-root-20261018.py",
+      "peerSourceGo": true,
+      "scope": "ten source blobs; four byte-exact preserved prefixes; public evidence; known-spec reconstruction before staging; indexed/committed blobs; hook guards; push/remote SHA and source-only VPS ff-pull",
+      "sha256": "e53c46a93c0b1dcc06a2f569adb829ba5b156fd970f96b6a6c33206975a765ec"
+    },
+    "publicCollectorV3": {
+      "bytes": 6967,
+      "file": "collect-rpc-header-selection-amd-public-root-v3-20261018.py",
+      "peerSourceGo": true,
+      "scope": "public-only whitelist, strict boolean/format guards, FD9 coherence and safe exact tar names",
+      "sha256": "aa9734091d8694aafa91a1b7fe9943701e74bc1f5d06e7762effd236d5b5d4e0"
+    }
+  },
+  "sourceOnly": true,
+  "unexecutedDraftFindings": {
+    "collectorV1": "truthiness guard; source only, not executed",
+    "collectorV2": "missing worker format admitted only as FAILED after V3 fix; source only, not executed",
+    "publisherDraft": "Q namespace and re-derivation from known spec plus two hook guards fixed before freeze"
+  }
+}

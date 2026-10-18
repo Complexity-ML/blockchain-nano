@@ -34,12 +34,12 @@ void emit(const char* name){++groups;std::cout<<Json{{"scenario",name},{"passed"
 struct Fixture {
  Bytes key=bytes(Int(777),32); // Existing public synthetic unit-test key, never a consensus/campaign key.
  std::string sender=public_address(public_key(key)),target=create_address(sender,0);
- Genesis genesis;std::unique_ptr<Blockchain> chain;Block a,b;State a_state,b_state;
+ Genesis genesis;std::unique_ptr<Blockchain> chain;Block a,b;State a_state,b_state;std::vector<Receipt> b_receipts;
  explicit Fixture(const std::filesystem::path& path,const char* fork="Shanghai"){
   genesis=Genesis::from_json({{"config",{{"chainId",1337},{"evmFork",fork}}},{"alloc",{{sender,{{"balance","0x100000000000000000000"}}}}}});
   chain=std::make_unique<Blockchain>(path/"canonical",genesis);
   a=publish(*chain,1,false);a_state=chain->state();
-  {Blockchain other(path/"other-branch",genesis);b=publish(other,2,true);b_state=other.state();}
+  {Blockchain other(path/"other-branch",genesis);b=publish(other,2,true);b_state=other.state();for(const auto& tx:b.transactions){const auto receipt=other.store().receipt(tx.hash());check(bool(receipt),"sibling checkpoint fixture receipt must exist");b_receipts.push_back(*receipt);}}
   check(a.header.number==1&&b.header.number==1&&a.header.parent_hash==genesis.block.header.hash()&&b.header.parent_hash==a.header.parent_hash&&a.header.hash()!=b.header.hash(),"fixture must contain two genuine sibling blocks");
   check(a_state.get(target).balance==1&&b_state.get(target).balance==2&&a_state.get_storage(target,0)==1&&b_state.get_storage(target,0)==2&&a_state.get(sender).nonce==1&&b_state.get(sender).nonce==2&&a_state.get(target).code!=b_state.get(target).code,"all four fixture values must distinguish the genuine branches");
  }
@@ -54,8 +54,42 @@ struct Fixture {
   const auto receipt=owner.store().receipt(creation.hash());check(receipt&&receipt->success&&receipt->contract_address==target&&owner.pending_count()==0,"deployment must really execute, persist a receipt and drain the pool");return block;
  }
  std::string account(size_t method) const{return method==2?sender:target;}
- void select(const Block& block){check(chain->restore(0,genesis.block.header.hash()),"fixture reorg must rewind through the real Blockchain API");chain->import_block(block,12);check(chain->tip().header.hash()==block.header.hash(),"fixture reorg must publish the exact imported sibling");}
+ void select(const Block& block){
+  check(chain->restore(0,genesis.block.header.hash()),"fixture reorg must rewind through the real Blockchain API");
+  check(!chain->store().header_by_number(1,65536)&&!chain->store().header_by_hash(a.header.hash(),65536)&&!chain->store().header_by_hash(b.header.hash(),65536),"ordinary rewind atomically removes the old derived header and its reverse membership");
+  chain->import_block(block,12);check(chain->tip().header.hash()==block.header.hash(),"fixture reorg must publish the exact imported sibling");
+  const auto header=chain->store().header_by_number(1,65536),hashed=chain->store().header_by_hash(block.header.hash(),65536);
+  check(header&&hashed&&header->to_json()==block.header.to_json()&&hashed->to_json()==header->to_json(),"ordinary replacement commit publishes the exact derived header and reverse membership");
+ }
 };
+
+void header_checkpoint_lifecycle(const std::filesystem::path& root){
+ stage="derived-header-checkpoint-suffix-and-reopen";Fixture fixture(root);fixture.chain.reset();
+ constexpr size_t budget=8*1024*1024;const auto genesis_hash=fixture.genesis.block.header.hash();ForkCheckpointToken token;
+ const auto snapshot=Json{{"format","synthetic-header-checkpoint-v1"},{"head",hex(fixture.b.header.hash())}}.dump();
+ {
+  ChainStore disk(root/"canonical",ChainStore::OpenMode::ReadWriteExisting);
+  token=disk.commit_execution_checkpoint(1337,genesis_hash,{},fixture.a.header.hash(),0,genesis_hash,{{fixture.b,fixture.b_state,fixture.b_receipts}},snapshot,budget,8);
+  const auto by_number=disk.header_by_number(1,65536),by_hash=disk.header_by_hash(fixture.b.header.hash(),65536);
+  check(by_number&&by_hash&&by_number->to_json()==fixture.b.header.to_json()&&by_hash->to_json()==by_number->to_json()&&!disk.header_by_hash(fixture.a.header.hash(),65536),"checkpoint suffix replacement atomically replaces derived headers and removes the previous hash membership");
+  check(disk.state_at(1)->root()==fixture.b_state.root(),"checkpoint header replacement stays coupled to the genuine sibling state");
+  token=disk.commit_execution_checkpoint(1337,genesis_hash,token,fixture.b.header.hash(),0,genesis_hash,{},snapshot,budget,8);
+  check(!disk.header_by_number(1,65536)&&!disk.header_by_hash(fixture.b.header.hash(),65536)&&disk.header_by_number(0,65536)->hash()==genesis_hash,"checkpoint suffix deletion removes its derived header while preserving Genesis");
+ }
+ {ChainStore disk(root/"canonical",ChainStore::OpenMode::ReadOnly);const auto checkpoint=disk.fork_checkpoint(1337,genesis_hash,budget,token);check(checkpoint&&checkpoint->snapshot==snapshot&&disk.header_by_hash(genesis_hash,65536)->to_json()==fixture.genesis.block.header.to_json()&&!disk.header_by_number(1,65536),"read-only reopen retains checkpoint/header deletion and the separately retained token");}
+}
+void indexed_body_budget(const std::filesystem::path& root){
+ stage="indexed-readers-body-larger-than-budget";const auto key=bytes(Int(777),32);const auto sender=public_address(public_key(key));const std::string target="0x00000000000000000000000000000000000000b1";
+ const auto genesis=Genesis::from_json({{"config",{{"chainId",1337},{"evmFork","Shanghai"}}},{"alloc",{{sender,{{"balance","0x100000000000000000000"}}}}}});
+ Blockchain chain(root,genesis);Transaction tx;tx.chain_id=1337;tx.to=target;tx.gas=600000;tx.gas_price=2000000000;tx.value=3;tx.data=Bytes(32768,0xa5);
+ const auto signed_tx=SignedTransaction::sign(tx,key);check(chain.submit(signed_tx),"large-body synthetic transfer must enter the normal pool");const auto block=chain.mine("0x00000000000000000000000000000000000000cc",12);const auto state=chain.state();const auto receipt=chain.store().receipt(signed_tx.hash());
+ constexpr size_t cap=8192;check(receipt&&receipt->success&&block.transactions.size()==1&&block.to_json(true).dump().size()>cap&&block.header.to_json().dump().size()<cap&&state.to_json().dump().size()<cap,"real committed body exceeds the cap while its derived header and state fit");
+ RpcSimulationLimits limits;limits.state_read.maximum_snapshot_bytes=cap;Rpc rpc(chain,{},AdmissionBudget::Clock::now,limits);const auto before=view(chain);
+ for(size_t method=0;method<methods.size();++method){const auto account=method==2?sender:target;for(const auto& selector:std::array<Json,4>{Json("latest"),Json("0x1"),Json{{"blockNumber","0x1"}},Json{{"blockHash",hex(block.header.hash())},{"requireCanonical",true}}})expected(rpc.handle(request(method,account,selector)),value_at(state,method,account));}
+ const auto context=chain.state_read_context(cap);check(context.tip.to_json()==block.header.to_json()&&!context.finalized,"header-only PoW context reports the exact ready head and no invented finality");
+ check(view(chain)==before,"large indexed reads do not mutate the real committed block/state/pool/events");
+}
+
 void selectors(){
  OwnedDirectory owned;
  for(const auto* fork:{"Paris","Shanghai"}){
@@ -73,6 +107,7 @@ void selectors(){
   for(size_t method=0;method<methods.size();++method){if(method!=2)refused(rpc.handle(request(method,fixture.account(method),"pending")),-32000);refused(rpc.handle(request(method,fixture.account(method),"safe")),-32000);}
   check(view(*fixture.chain)==pending,"legacy pending nonce and unavailable tags must leave the admitted pool unchanged");
  }
+ header_checkpoint_lifecycle(owned.path/"checkpoint-headers");indexed_body_budget(owned.path/"body-budget");
  emit("state-readers-canonical-selectors-paris-shanghai");
 }
 void errors(){
@@ -93,17 +128,18 @@ void reorg(){
  for(size_t method=0;method<methods.size();++method){const auto account=fixture.account(method);const auto a=value_at(fixture.a_state,method,account),b=value_at(fixture.b_state,method,account);check(a!=b,"each reader needs an independently distinct branch value");
   auto switch_during=[&](const Json& selector,unsigned at){unsigned polls=0;bool switched=false;auto reply=rpc.handle(request(method,account,selector),[&]{if(++polls==at){fixture.select(fixture.b);switched=true;}});check(switched,"real reorg must occur at the bounded capture checkpoint");return reply;};
   const Json hash={{"blockHash",hex(fixture.a.header.hash())},{"requireCanonical",true}};
-  refused(switch_during(hash,3),-32000,"Selected block is not canonical");fixture.select(fixture.a);
-  refused(switch_during(Json{{"blockHash",hex(fixture.a.header.hash())},{"requireCanonical",false}},3),-32000,"Selected block state is unavailable");fixture.select(fixture.a);
-  refused(switch_during(Json{{"blockNumber","0x1"}},3),-32000,"Selected block state is unavailable");fixture.select(fixture.a);
-  refused(switch_during("0x1",3),-32000,"Selected block state is unavailable");fixture.select(fixture.a);
-  // A real reorg after the raw value is pinned (poll six), or copied
-  // (poll seven), must not replace it. Both checkpoints run outside the
-  // Rpc/Store mutexes. No consensus hook is used.
-  expected(switch_during(hash,6),a);check(fixture.chain->tip().header.hash()==fixture.b.header.hash(),"capture test must finish on the replacement branch");fixture.select(fixture.a);
-  expected(switch_during("0x1",7),a);check(fixture.chain->tip().header.hash()==fixture.b.header.hash(),"detached read must complete after the real reorg");
+  refused(switch_during(hash,14),-32000,"Selected block is not canonical");fixture.select(fixture.a);
+  refused(switch_during(Json{{"blockHash",hex(fixture.a.header.hash())},{"requireCanonical",false}},14),-32000,"Selected block state is unavailable");fixture.select(fixture.a);
+  refused(switch_during(Json{{"blockNumber","0x1"}},13),-32000,"Selected block state is unavailable");fixture.select(fixture.a);
+  refused(switch_during("0x1",13),-32000,"Selected block state is unavailable");fixture.select(fixture.a);
+  // With an indexed header under 4096 bytes: one/prepare/worker=1/2/3,
+  // context=4/5; hash selection=6..13 and selected=14. Pre-pin is15,
+  // pinned-copy16. Number selection is one check shorter: copied16.
+  // Both real reorgs run outside Rpc/Chain/Store locks; no consensus hook.
+  expected(switch_during(hash,16),a);check(fixture.chain->tip().header.hash()==fixture.b.header.hash(),"capture test must finish on the replacement branch");fixture.select(fixture.a);
+  expected(switch_during("0x1",16),a);check(fixture.chain->tip().header.hash()==fixture.b.header.hash(),"detached read must complete after the real reorg");
   refused(rpc.handle(request(method,account,hash)),-32001,"Unknown block");expected(rpc.handle(request(method,account,Json{{"blockNumber","0x1"}})),b);fixture.select(fixture.a);
-  const auto before=view(*fixture.chain);unsigned polls=0;refused(rpc.handle(request(method,account,hash),[&]{if(++polls==3)throw ExecutionCancelled("synthetic state-reader cancellation");}),-32002,"synthetic state-reader cancellation");check(view(*fixture.chain)==before,"cancelled capture must not mutate canonical state");expected(rpc.handle(request(method,account,hash)),a);
+  const auto before=view(*fixture.chain);unsigned polls=0;refused(rpc.handle(request(method,account,hash),[&]{if(++polls==14)throw ExecutionCancelled("synthetic state-reader cancellation");}),-32002,"synthetic state-reader cancellation");check(view(*fixture.chain)==before,"cancelled capture must not mutate canonical state");expected(rpc.handle(request(method,account,hash)),a);
  }
  emit("state-readers-detached-capture-and-real-reorg");
 }
@@ -125,16 +161,16 @@ void retention(){
    refused(rpc.handle(request(method,account,Json{{"blockNumber","0x2"}})),-32000,"State unavailable");refused(rpc.handle(request(method,account,Json{{"blockHash",hex(blocks[2].header.hash())},{"requireCanonical",true}})),-32000,"State unavailable");
    expected(rpc.handle(request(method,account,Json{{"blockNumber","0x3"}})),value_at(*selected,method,account));latest[method]=result(rpc.handle(request(method,account,"latest")));
   }
-  unsigned polls=0;bool pruned=false;auto captured=rpc.handle(request(3,target,Json{{"blockHash",hex(blocks[3].header.hash())},{"requireCanonical",true}}),[&]{if(++polls==6){advance();pruned=true;}});check(pruned&&!chain->store().state_at(3),"second real retention batch must erase the captured historical state");expected(captured,value_at(*selected,3,target));
+  unsigned polls=0;bool pruned=false;auto captured=rpc.handle(request(3,target,Json{{"blockHash",hex(blocks[3].header.hash())},{"requireCanonical",true}}),[&]{if(++polls==16){advance();pruned=true;}});check(pruned&&!chain->store().state_at(3),"second real retention batch must erase the captured historical state");expected(captured,value_at(*selected,3,target));
   marker=chain->store().state_pruning();check(marker&&marker->before==5&&marker->anchor.number==6&&marker->anchor.hash==tip,"second retention batch must publish before five/anchor six");
   for(size_t method=0;method<methods.size();++method){const auto account=method==2?sender:target;
    refused(rpc.handle(request(method,account,Json{{"blockNumber","0x3"}})),-32000,"State unavailable");refused(rpc.handle(request(method,account,Json{{"blockHash",hex(blocks[3].header.hash())}})),-32000,"State unavailable");expected(rpc.handle(request(method,account,"latest")),latest[method]);expected(rpc.handle(request(method,account,"earliest")),value_at(genesis.state,method,account));
   }
   check(view(*chain)==original,"retention and detached readers must not change published head/state/pool/events");
-  for(size_t n=1;n<blocks.size();++n){const auto block=chain->store().block_by_number(Int(n));const auto receipt=chain->store().receipt(transactions[n-1]);const auto archive=chain->store().checkpoint_archive(blocks[n].header.hash(),budget);check(block&&block->header.hash()==blocks[n].header.hash()&&receipt&&receipt->block_hash==blocks[n].header.hash()&&chain->store().transaction(transactions[n-1])&&archive&&archive->payload==archives[n-1].payload,"state retention must preserve block/transaction/receipt/archive history");}
+  for(size_t n=1;n<blocks.size();++n){const auto block=chain->store().block_by_number(Int(n));const auto receipt=chain->store().receipt(transactions[n-1]);const auto archive=chain->store().checkpoint_archive(blocks[n].header.hash(),budget);const auto header=chain->store().header_by_number(Int(n),65536),hashed=chain->store().header_by_hash(blocks[n].header.hash(),65536);check(block&&block->header.hash()==blocks[n].header.hash()&&header&&hashed&&header->to_json()==blocks[n].header.to_json()&&hashed->to_json()==header->to_json()&&receipt&&receipt->block_hash==blocks[n].header.hash()&&chain->store().transaction(transactions[n-1])&&archive&&archive->payload==archives[n-1].payload,"state retention must preserve derived headers and block/transaction/receipt/archive history");}
  }
  chain.reset();
- {ChainStore reopened(path,ChainStore::OpenMode::ReadOnly);const auto retained=reopened.state_pruning();const auto checkpoint=reopened.fork_checkpoint(1337,genesis.block.header.hash(),budget,token);check(retained&&retained->before==5&&retained->anchor.hash==tip&&checkpoint&&checkpoint->snapshot==snapshot,"cold read-only reopen must preserve the real retention marker and checkpoint commitment");}
+ {ChainStore reopened(path,ChainStore::OpenMode::ReadOnly);const auto retained=reopened.state_pruning();const auto checkpoint=reopened.fork_checkpoint(1337,genesis.block.header.hash(),budget,token);check(retained&&retained->before==5&&retained->anchor.hash==tip&&checkpoint&&checkpoint->snapshot==snapshot&&reopened.header_by_number(3,65536)->to_json()==blocks[3].header.to_json()&&reopened.header_by_hash(tip,65536)->to_json()==blocks[6].header.to_json(),"cold read-only reopen must preserve pruned historical headers, retention marker and checkpoint commitment");}
  chain=std::make_unique<Blockchain>(path,genesis,ChainStore::OpenMode::ReadWriteExisting);
  {Rpc rpc(*chain);for(size_t method=0;method<methods.size();++method){const auto account=method==2?sender:target;refused(rpc.handle(request(method,account,Json{{"blockNumber","0x3"}})),-32000,"State unavailable");expected(rpc.handle(request(method,account,"latest")),latest[method]);}}
  emit("state-readers-real-retention-and-reopen");

@@ -84,6 +84,19 @@ void tries(){
  std::map<Bytes,Bytes> entries;for(unsigned i=0;i<128;++i)entries.emplace(keccak(bytes(Int(i),32)),Rlp(Int(i+1)).encode());unsigned polls=0;bool cancelled=false;try{MptProofTrie trie(entries,{},[&]{if(++polls==20)throw ExecutionCancelled("synthetic MPT cancellation");});}catch(const ExecutionCancelled&){cancelled=true;}check(cancelled&&polls==20,"MPT generation must stop at a cooperative checkpoint");++refusals;
  MptProofLimits limits;limits.maximum_entries=1;bool limited=false;try{MptProofTrie trie(entries,limits);}catch(const MptProofLimitExceeded&){limited=true;}check(limited,"entry budget must refuse before materializing a large trie");++refusals;emit("get-proof-native-mpt-shapes-and-canonical-rlp");
 }
+
+void indexed_proof_body_budget(const std::filesystem::path& root){
+ stage="indexed-proof-body-larger-than-budget";Fixture fixture(root);auto& chain=*fixture.chain;
+ Transaction tx;tx.chain_id=1337;tx.nonce=1;tx.to="0x00000000000000000000000000000000000000b1";tx.gas=600000;tx.gas_price=2000000000;tx.data=Bytes(32768,0xa5);
+ const auto signed_tx=SignedTransaction::sign(tx,fixture.key);check(chain.submit(signed_tx),"large-body proof fixture transfer must be admitted normally");const auto block=chain.mine("0x00000000000000000000000000000000000000cc",24);const auto state=chain.state();const auto receipt=chain.store().receipt(signed_tx.hash());
+ constexpr size_t cap=8192;check(receipt&&receipt->success&&block.to_json(true).dump().size()>cap&&block.header.to_json().dump().size()<cap&&state.to_json().dump().size()<cap,"proof fixture has a genuine large body and a bounded indexed header/state");
+ RpcSimulationLimits limits;limits.state_read.maximum_snapshot_bytes=cap;Rpc rpc(chain,{},AdmissionBudget::Clock::now,limits);const auto before=chain.state().to_json();const auto keys=Json::array({"0x0","0x1","0x2"});
+ // New checks use the same independent native walker without publishing extra
+ // vectors: the existing 24 actual-vector external-verifier contract is kept.
+ for(const auto& selector:std::array<Json,4>{Json("latest"),Json("0x2"),Json{{"blockNumber","0x2"}},Json{{"blockHash",hex(block.header.hash())},{"requireCanonical",true}}})verified(rpc.handle(request(fixture.target,keys,selector)),block.header,state,fixture.target,keys,false);
+ check(chain.state().to_json()==before&&chain.pending_count()==0,"bounded indexed proofs leave their committed state and pool unchanged");
+}
+
 void selectors(){
  stage="canonical-selectors";OwnedDirectory owned;
  for(const auto* fork:{"Paris","Shanghai"}){Fixture fixture(owned.path/fork,fork);Rpc rpc(*fixture.chain);const auto before=fixture.chain->state().to_json();const Json keys=Json::array({"0x0","0x1","0x2","0x0",hex(bytes(Int(0),32))});
@@ -93,6 +106,7 @@ void selectors(){
  }
  {auto genesis=Genesis::from_json({{"config",{{"chainId",1337},{"evmFork","Shanghai"}}},{"alloc",Json::object()}});Blockchain chain(owned.path/"empty",genesis);Rpc rpc(chain);const std::string absent="0x00000000000000000000000000000000000000ff";auto proof=verified(rpc.handle(request(absent,Json::array({"0x0"}),"earliest")),genesis.block.header,genesis.state,absent,Json::array({"0x0"}));check(proof["accountProof"].empty()&&proof["storageProof"][0]["proof"].empty(),"empty account and storage tries need empty proofs");}
  {const std::string ghost="0x00000000000000000000000000000000000000ee";auto genesis=Genesis::from_json({{"config",{{"chainId",1337},{"evmFork","Paris"}}},{"alloc",{{ghost,{{"storage",{{"0x0","0x9"}}}}}}}});Blockchain chain(owned.path/"unpersisted-empty",genesis);Rpc rpc(chain);verified(rpc.handle(request(ghost,Json::array({"0x0"}),"earliest")),genesis.block.header,genesis.state,ghost,Json::array({"0x0"}));}
+ indexed_proof_body_budget(owned.path/"body-budget");
  emit("get-proof-account-storage-and-object-selectors");
 }
 void errors_and_limits(){
@@ -114,19 +128,20 @@ void errors_and_limits(){
 }
 void reorg_and_retention(){
  stage="reorg-and-retention";OwnedDirectory owned;Fixture fixture(owned.path/"fork");Rpc rpc(*fixture.chain);const Json hash={{"blockHash",hex(fixture.a.header.hash())},{"requireCanonical",true}};
- unsigned polls=0;bool changed=false;auto before_capture=rpc.handle(request(fixture.target,Json::array(),hash),[&]{if(++polls==3){fixture.select(fixture.b);changed=true;}});check(changed,"first genuine reorg occurs after header selection");refused(before_capture,-32000,"Selected block is not canonical");fixture.select(fixture.a);
- // No keys means polls 1/2/3/4/5 reach one(), preparation, selected header,
- // unlocked worker, and pre-pin. Poll six is the first pinned-copy checkpoint.
- polls=0;changed=false;auto pinned=rpc.handle(request(fixture.target,Json::array(),hash),[&]{if(++polls==6){fixture.select(fixture.b);changed=true;}});check(changed&&fixture.chain->tip().header.hash()==fixture.b.header.hash(),"second genuine reorg must complete outside the Store mutex");verified(pinned,fixture.a.header,fixture.a_state,fixture.target,Json::array());refused(rpc.handle(request(fixture.target,Json::array(),hash)),-32001,"Unknown block");verified(rpc.handle(request(fixture.target,Json::array(),Json{{"blockNumber","0x1"}})),fixture.b.header,fixture.b_state,fixture.target,Json::array());
+ unsigned polls=0;bool changed=false;auto before_capture=rpc.handle(request(fixture.target,Json::array(),hash),[&]{if(++polls==14){fixture.select(fixture.b);changed=true;}});check(changed,"first genuine reorg occurs after header selection");refused(before_capture,-32000,"Selected block is not canonical");fixture.select(fixture.a);
+ // No keys and an indexed header under 4096 bytes: one/prepare/worker=1/2/3,
+ // context=4/5, hash header=6..13, selected14/pre-pin15/pinned-copy16.
+ // These reorgs therefore preserve the original before/after-state-pin oracle.
+ polls=0;changed=false;auto pinned=rpc.handle(request(fixture.target,Json::array(),hash),[&]{if(++polls==16){fixture.select(fixture.b);changed=true;}});check(changed&&fixture.chain->tip().header.hash()==fixture.b.header.hash(),"second genuine reorg must complete outside the Store mutex");verified(pinned,fixture.a.header,fixture.a_state,fixture.target,Json::array());refused(rpc.handle(request(fixture.target,Json::array(),hash)),-32001,"Unknown block");verified(rpc.handle(request(fixture.target,Json::array(),Json{{"blockNumber","0x1"}})),fixture.b.header,fixture.b_state,fixture.target,Json::array());
  stage="retention-and-reopen";const auto path=owned.path/"retained";const std::string account="0x00000000000000000000000000000000000000a1";
  auto genesis=Genesis::from_json({{"config",{{"chainId",1337},{"evmFork","Shanghai"}}},{"alloc",{{account,{{"balance","0x9"},{"code","0x00"},{"storage",{{"0x0","0x7"}}}}}}}});auto chain=std::make_unique<Blockchain>(path,genesis);std::vector<Block> blocks{genesis.block};for(unsigned n=1;n<=6;++n)blocks.push_back(chain->mine("0x00000000000000000000000000000000000000cc",Int(n*12)));
  const auto state3=chain->store().state_at(3);check(bool(state3),"retention fixture state three exists");const auto tip=blocks.back().header.hash();const auto snapshot=Json{{"format","synthetic-get-proof-checkpoint-v1"},{"head",hex(tip)}}.dump();constexpr size_t budget=8*1024*1024;ForkCheckpointToken token;auto& store=const_cast<ChainStore&>(chain->store());token=store.commit_execution_checkpoint(1337,genesis.block.header.hash(),{},tip,6,tip,{},snapshot,budget,8);
  const auto prune=[&]{token=store.commit_execution_checkpoint(1337,genesis.block.header.hash(),token,tip,6,tip,{},snapshot,budget,2,{},ExecutionStateRetentionAnchor{6,tip});};prune();const auto marker=store.state_pruning();check(marker&&marker->before==3&&marker->anchor.hash==tip,"first real retention frontier is three with anchor six");
  {
   Rpc reader(*chain);refused(reader.handle(request(account,Json::array(),Json{{"blockNumber","0x2"}})),-32000,"State unavailable");refused(reader.handle(request(account,Json::array(),Json{{"blockHash",hex(blocks[2].header.hash())}})),-32000,"State unavailable");
-  polls=0;bool pruned=false;auto retained=reader.handle(request(account,Json::array(),Json{{"blockHash",hex(blocks[3].header.hash())},{"requireCanonical",true}}),[&]{if(++polls==6){prune();pruned=true;}});check(pruned&&!store.state_at(3),"real pruning writer must finish while a pinned proof snapshot is detached");verified(retained,blocks[3].header,*state3,account,Json::array());refused(reader.handle(request(account,Json::array(),Json{{"blockNumber","0x3"}})),-32000,"State unavailable");check(store.block_by_number(3)->header.hash()==blocks[3].header.hash(),"state pruning preserves canonical block history");
+  polls=0;bool pruned=false;auto retained=reader.handle(request(account,Json::array(),Json{{"blockHash",hex(blocks[3].header.hash())},{"requireCanonical",true}}),[&]{if(++polls==16){prune();pruned=true;}});check(pruned&&!store.state_at(3),"real pruning writer must finish while a pinned proof snapshot is detached");verified(retained,blocks[3].header,*state3,account,Json::array());refused(reader.handle(request(account,Json::array(),Json{{"blockNumber","0x3"}})),-32000,"State unavailable");check(store.block_by_number(3)->header.hash()==blocks[3].header.hash()&&store.header_by_number(3,65536)->to_json()==blocks[3].header.to_json()&&store.header_by_hash(blocks[3].header.hash(),65536)->hash()==blocks[3].header.hash(),"state pruning preserves canonical block/header history and reverse membership");
  }
- chain.reset();{ChainStore disk(path,ChainStore::OpenMode::ReadOnly);const auto info=disk.state_pruning();const auto checkpoint=disk.fork_checkpoint(1337,genesis.block.header.hash(),budget,token);check(info&&info->before==5&&checkpoint&&checkpoint->snapshot==snapshot,"cold reopen must retain frontier and externally held checkpoint token");}
+ chain.reset();{ChainStore disk(path,ChainStore::OpenMode::ReadOnly);const auto info=disk.state_pruning();const auto checkpoint=disk.fork_checkpoint(1337,genesis.block.header.hash(),budget,token);check(info&&info->before==5&&checkpoint&&checkpoint->snapshot==snapshot&&disk.header_by_number(3,65536)->hash()==blocks[3].header.hash(),"cold read-only reopen retains pruned historical headers, frontier and externally held checkpoint token");}
  chain=std::make_unique<Blockchain>(path,genesis,ChainStore::OpenMode::ReadWriteExisting);{Rpc reader(*chain);refused(reader.handle(request(account,Json::array({"0x0"}),Json{{"blockHash",hex(blocks[3].header.hash())}})),-32000,"State unavailable");verified(reader.handle(request(account,Json::array({"0x0"}))),blocks[6].header,chain->state(),account,Json::array({"0x0"}));}
  emit("get-proof-pinned-reorg-real-retention-and-reopen");
 }
