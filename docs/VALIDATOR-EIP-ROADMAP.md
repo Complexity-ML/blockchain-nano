@@ -9163,3 +9163,9 @@ autorisée ; runtime1925, Paris/Shanghai et statuts EIP inchangés. Autres crit�
 normatifs, revue indépendante non réalisée et CI/facturation restent ouverts.
 Base–Nano reste proposé, non adopté ; bridge USDC/Doppler/T0 non qualifiés.
 Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non qualifiée.
+
+
+<!-- nano-c8-core-main-join-20261018 -->
+## C8 — raccord des logiciels, sans nouvelle qualification de validateurs
+
+[Native/ARM64/AMD64 : collectes Core/main0](qualification/operator-c8-core-main-join-20261018/README.md),519/1074/1075 fichiers clôturés, sans nouvelle compilation ou duty. Ce raccord source/recette ne modifie aucun statut EIP, cycle de validateur, sanction, restauration ou finalité réseau. Les admissions complètes C8 restent à composer ;03 FAILED/consommée, aucune04 autorisée. Tous les critères et échecs antérieurs, CI et revue indépendante non réalisée restent ouverts selon leur portée. Production non qualifiée.

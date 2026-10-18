@@ -8601,3 +8601,9 @@ autorisée ; runtime1925, Paris/Shanghai et statuts EIP inchangés. Autres crit�
 normatifs, revue indépendante non réalisée et CI/facturation restent ouverts.
 Base–Nano reste proposé, non adopté ; bridge USDC/Doppler/T0 non qualifiés.
 Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non qualifiée.
+
+
+<!-- nano-c8-core-main-join-20261018 -->
+## C8 — clôture du raccord source/recette Core/main
+
+[Collectes Native/ARM64/AMD640](qualification/operator-c8-core-main-join-20261018/README.md) :519/1074/1075 fichiers tenus jusqu’aux clôtures ; aucune compilation, image ou répétition de test C++. Le résultat porte sur la provenance des produits sélectionnés, pas sur de nouvelles implémentations EIP. Aucun statut EIP/fork n’est promu ; Paris/Shanghai et toutes les limites antérieures restent inchangés. Admissions complètes C8, restauration/duties/finalité, autres critères de production et revue indépendante non réalisée demeurent ouverts. Historique intégral conservé.

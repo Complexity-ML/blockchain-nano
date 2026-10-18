@@ -6136,3 +6136,9 @@ autorisée ; runtime1925, Paris/Shanghai et statuts EIP inchangés. Autres crit�
 normatifs, revue indépendante non réalisée et CI/facturation restent ouverts.
 Base–Nano reste proposé, non adopté ; bridge USDC/Doppler/T0 non qualifiés.
 Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non qualifiée.
+
+
+<!-- nano-c8-core-main-join-20261018 -->
+## C8 — provenance Core/main, profil EVM inchangé
+
+[Les raccords Native/ARM64/AMD64 terminent0](qualification/operator-c8-core-main-join-20261018/README.md), sans réexécuter les suites EVM ni compiler de nouveau Core. Recettes canoniques et contenus sélectionnés se composent aux preuves antérieures ; aucune conformité EIP/fork ou parité RPC supplémentaire n’est déduite. Paris/Shanghai reste activé ; production et revue indépendante restent ouvertes. Tous les préfixes, statuts et échecs sont conservés.

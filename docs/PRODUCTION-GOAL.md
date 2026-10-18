@@ -5811,3 +5811,9 @@ autorisée ; runtime1925, Paris/Shanghai et statuts EIP inchangés. Autres crit�
 normatifs, revue indépendante non réalisée et CI/facturation restent ouverts.
 Base–Nano reste proposé, non adopté ; bridge USDC/Doppler/T0 non qualifiés.
 Aucun fonds, vente ou déploiement public ; objectif ACTIF, production non qualifiée.
+
+
+<!-- nano-c8-core-main-join-20261018 -->
+## C8 — raccord Core/main terminé sur les trois environnements
+
+[Résultats et portée](qualification/operator-c8-core-main-join-20261018/README.md) : les collectes Native, ARM64 et AMD64 terminent0, avec519/1074/1075 fichiers tenus et clôturés. Les sources projet et recettes présentes se raccordent aux builds qualifiés ; aucun nouveau build, test C++, scan SDK ou image. Native conserve son build CMake143 ; Docker réutilise les preuves143/1/142 et l’ancien header à différence de commentaire fermée. Cela ferme le raccord Core/main sélectionné ; wrapper24/admissions C8 complètes, restauration/duties/finalité commune et tous les critères normatifs restent ouverts. Runtime1925 inchangé, Paris/Shanghai activé,03 FAILED/consommée et aucune04 autorisée. Base–Nano1:1 reste une proposition non adoptée ; réserve/conversion, bridge USDC/Doppler/T0 non qualifiés. CI/reproductibilité/exploitation et revue indépendante non réalisée restent ouvertes. Aucun fonds, vente, signature, nouvelle campagne ni déploiement public ; préfixes et échecs historiques conservés, objectif ACTIF.
