@@ -111,6 +111,10 @@ public:
         auto out=envelope();out["executionStateRoot"]=hex(state_.root());out["executionStep"]=quantity(Int(std::to_string(step_)));
         if(action=="account"){
             fields(request,{"id","chain","action","address"});auto addr=input_address(request.at("address"));const auto& account=static_cast<const State&>(state_).get(addr);
+            require(account.storage.size()<=1024&&account.code.size()<=256*1024,"bounded readonly account diagnostic");
+            Json storage=Json::object();for(const auto& [slot,value]:account.storage){checkpoint();storage[quantity(slot)]=quantity(value);}
+            checkpoint();const auto storage_root=account.storage_root();checkpoint();
+            out["storageRoot"]=hex(storage_root);out["storage"]=storage;
             out["address"]=addr;out["balance"]=quantity(account.balance);out["nonce"]=quantity(account.nonce);out["code"]=hex(account.code);out["codeHash"]=hex(keccak(account.code));out["exists"]=state_.exists(addr);return out;
         }
         fields(request,{"id","chain","action"});require(action=="root"||action=="metadata","unknown test action");out["chainId"]="0x7a69";
