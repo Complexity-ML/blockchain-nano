@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import {nativeRuntimeEnvironment} from './native-runtime-env.mjs';
+import {createCampaignDeadline} from './campaign-deadline.mjs';
+import {createCampaignCommands} from './campaign-commands.mjs';
 import {selectNativeExporterLoaderGuard} from './native-loader-guard.mjs';
 import {linuxSourceFiles,createMacLinuxFiles,linuxInventory,linuxBootstrapProof} from './linux-owned-files.mjs';
 import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest,publishLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,createLifecycleStopReceipts,admitNewLifecycleOutput} from './lifecycle-runtime.mjs';
@@ -7,7 +9,8 @@ import {createTerminalEvidenceSequence} from './terminal-evidence.mjs';
 import {lifecycleWholeCopyProgram,lifecycleOwnerProjection} from './lifecycle-owner.mjs';
 import {deriveLifecycleParameters,validateLifecycleDeposit} from './lifecycle.mjs';
 import {freshSoftwareLocators,freshSoftwareFileMounts} from './program-locators.mjs';
-import {createNativeRotationCopies,linuxRotationCopy,validateRotationCopySummary} from './rotation-owned-copy.mjs';
+import {createNativeRotationCopies,createNativeOwnerCopies,linuxRotationCopy,validateRotationCopySummary} from './rotation-owned-copy.mjs';
+import {relocateOwnerRuntimeConfiguration,compareOwnerRecoveryCaptures,runMacOwnerRecoveries,minimumMacOwnerRecoveryMs} from './owner-recovery.mjs';
 import {monotonicClockConfiguration} from './local-clock.mjs';
 import {capturePeerSyncing} from './peer-syncing.mjs';
 import {pruningRestoreMode,pruningRestoreConfiguration,verifyPrunedRestoreAudit,validateBackupRestoreMode} from './pruning-restore.mjs';
@@ -48,7 +51,7 @@ import {createIsolatedBootstrapPlan} from '../capella/isolated-bootstrap-plan.mj
 import {isolatedBootstrapStateCheckpoint,isolatedRuntimeObservation,isolatedPendingObservation} from '../capella/isolated-runtime-observation.mjs';
 const freshArguments=process.argv.slice(2);
 if(freshArguments[3]==='--fresh-campaign'){
- if(freshArguments.length!==7||freshArguments[5]!=='--fresh-campaign-sha')throw Error('Usage: run.mjs user@IPv4 source-base-revision new-output --fresh-campaign reviewed-spec.json --fresh-campaign-sha SHA256');
+ if((freshArguments.length!==7&&!(freshArguments.length===9&&freshArguments[7]==='--closeout-reserve-ms'))||freshArguments[5]!=='--fresh-campaign-sha')throw Error('Usage: run.mjs user@IPv4 source-base-revision new-output --fresh-campaign reviewed-spec.json --fresh-campaign-sha SHA256 [--closeout-reserve-ms MS]');
  await runFreshCampaign(freshArguments);
 }else{
 const exec=promisify(execFile),[target,revision,outputArg]=process.argv.slice(2);
@@ -487,7 +490,9 @@ if(pinnedRestart&&!process.exitCode){
 // NEW synthetic-domain branch of this launcher. Legacy modes above are not
 // silently rebound to new binaries, keys, archives or source revisions.
 async function runFreshCampaign(args){
- const [target,revision,outputArg,,specFile,,specSha]=args,exec=promisify(execFile);
+ const campaignStartedAt=performance.now(),[target,revision,outputArg,,specFile,,specSha]=args,legacyExec=promisify(execFile);
+ let campaignBudget,campaignCommands,campaignCloseoutReserve,campaignCloseoutStartedAt,interrupted;
+ const exec=(program,argv,options={})=>campaignCommands?campaignCommands.exec(program,argv,options):legacyExec(program,argv,options);
  const need=(ok,why)=>{if(!ok)throw Error(why);},sha=b=>createHash('sha256').update(b).digest('hex');
  const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
  const names=['mac-native','mac-docker','vps-docker'],output=resolve(outputArg),harnessRoot=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
@@ -527,6 +532,11 @@ async function runFreshCampaign(args){
  const spec=validateFreshCampaignSpec(JSON.parse(await observe(resolve(specFile),{sha256:specSha},true)),{target,sourceBaseRevision:revision});
  need(!spec.lifecycle||spec.lifecycle.runtimeDriverEnabled,'Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required');
  if(spec.lifecycle)requireLifecycleRuntimeAuthority(spec);
+ if(spec.format==='nano-fresh-capella-three-owner-campaign-c8-v2'){
+  need(spec.lifecycle&&args.length===9&&args[7]==='--closeout-reserve-ms'&&/^[1-9][0-9]*$/.test(args[8]),'C8 lifecycle requires explicit closeout reserve');
+  const reserve=Number(args[8]);need(Number.isSafeInteger(reserve)&&reserve>0&&reserve<spec.lifecycle.deadlines.maximumRunMs,'Finite C8 closeout reserve below total budget');
+  campaignCloseoutReserve=reserve;
+ }else need(args.length===7,'Legacy campaign does not accept C8 closeout reserve');
  // One frozen environment for every fresh native executable, before seed/ledger reads.
  const nativeEnv=nativeRuntimeEnvironment(process.env);
  const nativeExec=(program,args,options={})=>exec(program,args,{...options,env:nativeRuntimeEnvironment(options.env===undefined?nativeEnv:options.env)});
@@ -549,12 +559,27 @@ async function runFreshCampaign(args){
  // never enter argv or the run log; timed-out owned containers are retained for
  // the existing exact UUID/image cleanup and the campaign remains FAILED.
  async function dockerInput(args,input,timeout){
-  need(Buffer.isBuffer(input)&&input.length>0&&input.length<=134217728,'Bounded known stdin');const child=tracked(spawn('docker',args,{stdio:['pipe','pipe','pipe']})),parts=[[],[]],sizes=[0,0];let timed=false,overflow=false;
+  need(Buffer.isBuffer(input)&&input.length>0&&input.length<=134217728,'Bounded known stdin');
+  if(campaignCommands)return (await exec('docker',args,{input,timeout,maxBuffer:67108864,encoding:'buffer'})).stdout;
+  const child=tracked(spawn('docker',args,{stdio:['pipe','pipe','pipe']})),parts=[[],[]],sizes=[0,0];let timed=false,overflow=false;
   const done=new Promise(resolve=>{child.once('error',()=>resolve({code:null,signal:null}));child.once('close',(code,signal)=>resolve({code,signal}));});
   for(const [i,stream]of [child.stdout,child.stderr].entries())stream.on('data',b=>{sizes[i]+=b.length;if(sizes[i]<=67108864)parts[i].push(b);else{overflow=true;child.kill('SIGKILL');}});child.stdin.on('error',()=>{});child.stdin.end(input);
   const timer=setTimeout(()=>{timed=true;child.kill('SIGKILL');},timeout);let exit;try{exit=await done;}finally{clearTimeout(timer);}need(!timed&&!overflow&&exit.code===0&&exit.signal===null,'Known stdin operation refused');return Buffer.concat(parts[0]);
  }
- const ownedRuns=[];let operation=0;const docker=async(a,remote=false,timeout=30000,input=null)=>{need(input===null||!remote,'Local stdin transport only');if(a[0]==='run'){a=[...a];const at=a.indexOf('--name'),name=at>=0?a[at+1]:'nano-qualification-op-'+uuid+'-'+(++operation);if(at<0)a.splice(1,0,'--name',name);a.splice(1,0,'--label',label);ownedRuns.push({name,remote});}return remote?sh(['sudo','-n','docker',...a],timeout):input===null?(await exec('docker',a,{timeout,maxBuffer:16*1024*1024})).stdout:dockerInput(a,input,timeout);};
+ const ownedRuns=[];let operation=0;
+ function exactOwnedCleanup(argv,remote){
+  if(campaignBudget?.phase!=='closeout')return false;
+  const owned=new Set([...Object.entries(containers).filter(([name])=>(name==='vps-docker')===remote).map(([,name])=>name),...ownedRuns.filter(x=>x.remote===remote).map(x=>x.name)]);
+  if(argv.length===4&&argv[0]==='inspect'&&owned.has(argv[1])&&argv[2]==='--format'&&['{{json .}}','{{json .State}}'].includes(argv[3]))return true;
+  if(argv.length===4&&argv[0]==='stop'&&argv[1]==='--time'&&['10','20'].includes(argv[2])&&owned.has(argv[3]))return true;
+  if(argv.join('\0')===['ps','--filter','label='+label,'--format','{{.Names}}'].join('\0'))return true;
+  return argv.length===6&&argv[0]==='ps'&&argv[1]==='-a'&&argv[2]==='--filter'&&[...owned].some(name=>argv[3]==='name=^/'+name+'$')&&argv[4]==='--format'&&argv[5]==='{{.Names}}';
+ }
+ const docker=async(a,remote=false,timeout=30000,input=null)=>{
+  need(input===null||!remote,'Local stdin transport only');if(a[0]==='run'){a=[...a];const at=a.indexOf('--name'),name=at>=0?a[at+1]:'nano-qualification-op-'+uuid+'-'+(++operation);if(at<0)a.splice(1,0,'--name',name);a.splice(1,0,'--label',label);ownedRuns.push({name,remote});}
+  if(campaignCommands&&input===null&&exactOwnedCleanup(a,remote)){const command=remote?'ssh':'docker',argv=remote?[...sshArgs,target,['sudo','-n','docker',...a].map(quote).join(' ')]:a;return (await campaignCommands.execOwnedCleanup(command,argv,{timeout,maxBuffer:16*1024*1024})).stdout;}
+  return remote?sh(['sudo','-n','docker',...a],timeout):input===null?(await exec('docker',a,{timeout,maxBuffer:16*1024*1024})).stdout:dockerInput(a,input,timeout);
+ };
  const uuid=randomUUID(),remoteRoot='/home/'+target.split('@')[0]+'/nano-fresh-'+uuid,containers={ 'mac-docker':'nano-qualification-mac-'+uuid,'vps-docker':'nano-qualification-vps-'+uuid};
  const label='nano.fresh.campaign='+uuid,assets=join(output,'assets'),prepared=join(output,'prepared'),journals=join(output,'imported-journals'),proof=join(output,'bootstrap-proof'),partitionNetwork=containers['vps-docker']+'-net';
  let partitionNetworkCreated=false,partitionNetworkAbsent=true,freshRotationProof;const freshPeerIds=new Map();
@@ -599,23 +624,28 @@ async function runFreshCampaign(args){
  async function initialRuntimeLaunch(name,launch){
   need(!initialRuntimeClockChecks.has(name),'Initial runtime clock gate is one-shot per owner');const input=await initialClockInput(name);
   if(interrupted)throw interrupted;
+  campaignBudget?.check();
   return launchFreshInitialRuntime(input,()=>BigInt(Date.now()),proof=>{initialRuntimeClockChecks.set(name,proof);return launch();});
  }
  const started=new Set(),volumes=new Map(),originalVolumes=new Map(),lifecycleStopReceipts=createLifecycleStopReceipts();let native,tunnel,failure,bodyFailureRecordError,manifest,plan,preparedManifest,remotePeer,restoreReceipt,restoreStopEnvelope,restoreAudit,restoredMounts;
- let lifecycleNativeLog=join(output,'native.log');let interrupted;const onSignal=()=>{interrupted??=Error('Fresh campaign interrupted');};process.once('SIGINT',onSignal);process.once('SIGTERM',onSignal);
- const lifecycleWholeTimer=spec.lifecycle?setTimeout(()=>{interrupted??=Error('Fresh lifecycle whole-run deadline');},spec.lifecycle.deadlines.maximumRunMs):null;
+ if(campaignCloseoutReserve!==undefined){campaignBudget=createCampaignDeadline({startedAt:campaignStartedAt,maximumRunMs:spec.lifecycle.deadlines.maximumRunMs,closeoutReserveMs:campaignCloseoutReserve,onExpire:({phase})=>{interrupted??=Error('Fresh campaign '+phase+' deadline');}});campaignCommands=createCampaignCommands({deadline:campaignBudget,execFile});}
+ let lifecycleNativeLog=join(output,'native.log');const onSignal=()=>{interrupted??=Error('Fresh campaign interrupted');if(campaignBudget?.phase==='work')campaignCommands.cancelAll(interrupted);};if(campaignBudget){for(const signal of ['SIGINT','SIGTERM','SIGHUP'])process.on(signal,onSignal);}else{process.once('SIGINT',onSignal);process.once('SIGTERM',onSignal);}
+ const lifecycleWholeTimer=spec.lifecycle&&!campaignBudget?setTimeout(()=>{interrupted??=Error('Fresh lifecycle whole-run deadline');},spec.lifecycle.deadlines.maximumRunMs):null;
  // Track close from spawn time: exitCode alone does not join stdio/handles.
  const closedChildren=new WeakSet(),exited=child=>child.exitCode!==null||child.signalCode!==null;
  const childAbsent=child=>!child||exited(child)&&closedChildren.has(child);
- function tracked(child){child.once('close',()=>closedChildren.add(child));return child;}
+ function tracked(child){child.once('close',()=>closedChildren.add(child));return campaignCommands?campaignCommands.ownPersistent(child):child;}
  async function waitJoined(child,milliseconds){const until=performance.now()+milliseconds;while(!childAbsent(child)&&performance.now()<until)await delay(50);return childAbsent(child);}
  async function terminateJoined(child,name,termMilliseconds){
-  if(!child)return false;let forced=false;if(!exited(child))child.kill('SIGTERM');
+  if(!child)return false;if(campaignCommands)return campaignCommands.terminatePersistent(child,()=>childAbsent(child),termMilliseconds);
+  let forced=false;if(!exited(child))child.kill('SIGTERM');
   if(!await waitJoined(child,termMilliseconds)){if(!exited(child)){child.kill('SIGKILL');forced=true;}need(await waitJoined(child,5000),name+' exit/close join deadline');}
   need(childAbsent(child),name+' still has an unjoined process handle');return forced;
  }
- const runtimeRoot=name=>name==='mac-native'?join(prepared,name):'/var/lib/nano-data',rootFor=(name,role)=>name==='mac-native'?preparedManifest.nodes.find(n=>n.name===name)[role==='data'?'dataRoot':'witnessRoot']:join(role==='data'?'/var/lib/nano-data':'/var/lib/nano-witness',plan.campaignNamespace,name);
- const dataMount=(name,readOnly=false)=>['--mount',`type=volume,src=${volumes.get(name).data},dst=/var/lib/nano-data${readOnly?',readonly':''}`,'--mount',`type=volume,src=${volumes.get(name).witness},dst=/var/lib/nano-witness${readOnly?',readonly':''}`];
+ const activeOwnerRoots=new Map(),ownerRecoverySourceFences=[],ownerRecoveryRecords=new Map();let macOwnerRecovery=null;
+ const nativeNodePath=name=>activeOwnerRoots.get(name)?.configPath??join(prepared,name,'node.json');
+ const runtimeRoot=name=>name==='mac-native'?join(prepared,name):'/var/lib/nano-data',rootFor=(name,role)=>activeOwnerRoots.has(name)?activeOwnerRoots.get(name)[role==='data'?'dataRoot':'witnessRoot']:name==='mac-native'?preparedManifest.nodes.find(n=>n.name===name)[role==='data'?'dataRoot':'witnessRoot']:join(role==='data'?'/var/lib/nano-data':'/var/lib/nano-witness',plan.campaignNamespace,name);
+ const dataMount=(name,readOnly=false)=>activeOwnerRoots.get(name)?.mounts?activeOwnerRoots.get(name).mounts.map(x=>readOnly&&x.startsWith('type=')&&!x.endsWith(',readonly')?x+',readonly':x):['--mount',`type=volume,src=${volumes.get(name).data},dst=/var/lib/nano-data${readOnly?',readonly':''}`,'--mount',`type=volume,src=${volumes.get(name).witness},dst=/var/lib/nano-witness${readOnly?',readonly':''}`];
  const lifecycleStopRootBinding=name=>canonical({dataRoot:rootFor(name,'data'),witnessRoot:rootFor(name,'witness'),mounts:name==='mac-native'?[]:name==='vps-docker'&&restoredMounts?restoredMounts:dataMount(name)});
  const rememberLifecycleStop=(name,value)=>{if(spec.lifecycle)lifecycleStopReceipts.stopped(name,value.receipt,lifecycleStopRootBinding(name));started.delete(name);return value;};
  const logs=async name=>{if(name==='mac-native')return spec.lifecycle?lifecycleLogTail(lifecycleNativeLog):readFile(lifecycleNativeLog,'utf8');need(name!=='vps-docker','VPS raw logs remain in situ');const x=await exec('docker',['logs',containers[name]],{timeout:30000,maxBuffer:16*1024*1024});return x.stdout+x.stderr;};
@@ -955,11 +985,11 @@ except BaseException:
   }
   for(const r of audits)for(const key of ['campaignId','boundarySlot','minimumInclusionSlot','finalized','beforeBoundaryCommitteeHash','rotatedCommitteeHash','beforeBoundaryTotalEffectiveBalance','macIslandEffectiveBalance','vpsIslandEffectiveBalance'])need(canonical(r[key])===canonical(audits[0][key]),'Stopped canonical rotation audits disagree');await save(join(output,'partition-rotation-audits.json'),audits);
  }
- async function startDocker(name,restoredMounts,lifecycleLaunch=null,initial=false){if(interrupted)throw interrupted;need(!(await docker(['ps','-a','--filter','name=^/'+containers[name]+'$','--format','{{.Names}}'],name==='vps-docker')).trim(),'New runtime exact name absence');const a=owner(name),launch=()=>docker(['run','--pull=never','--init','-d','--name',containers[name],'--label',label,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,'--user',a.uid+':'+a.gid,'--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','3g','--cpus','2','--ulimit','nofile=65536:65536','--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=64m',...mounts(name),...(name==='vps-docker'?['-p','127.0.0.1:30307:30303',...(spec.partitionRotation?['--network',partitionNetwork]:[])]:spec.partitionRotation?['-p','127.0.0.1:30306:30303']:[]),...configMount(name),...(restoredMounts??dataMount(name)),...(lifecycleLaunch?.mounts??[]),...(lifecycleLaunch?.env??[]),'--env-file',configAt(name)+'/fixture.env',a.image,a.programs.nano.path,'run','/config/genesis.json',rootFor(name,'data')+'/chain','/config/node.json'],name==='vps-docker');if(initial)await initialRuntimeLaunch(name,launch);else await launch();started.add(name);}
- async function captureOwner(name,stop,path,mountOverride){if(interrupted)throw interrupted;const bytes=await save(path,stop),a=owner(name);let raw;
-  if(name==='mac-native')raw=(await nativeExec(a.programs.stoppedCapture.path,['--capture',join(prepared,name,'isolated-domain.json'),join(prepared,name,'node.json'),path,rootFor(name,'data'),rootFor(name,'witness'),name],{timeout:180000,maxBuffer:16*1024*1024})).stdout;
+ async function startDocker(name,restoredMounts,lifecycleLaunch=null,initial=false,beforeLaunch=null){if(interrupted)throw interrupted;need(beforeLaunch===null||typeof beforeLaunch==='function','Optional retained-copy launch fence');need(!(await docker(['ps','-a','--filter','name=^/'+containers[name]+'$','--format','{{.Names}}'],name==='vps-docker')).trim(),'New runtime exact name absence');const a=owner(name),launch=async()=>{if(beforeLaunch)await beforeLaunch();return docker(['run','--pull=never','--init','-d','--name',containers[name],'--label',label,'--label','nano.qualification=multihost','--label','org.opencontainers.image.revision='+revision,'--user',a.uid+':'+a.gid,'--read-only','--cap-drop','ALL','--security-opt','no-new-privileges','--memory','3g','--cpus','2','--ulimit','nofile=65536:65536','--tmpfs','/tmp:rw,nosuid,nodev,noexec,size=64m',...mounts(name),...(name==='vps-docker'?['-p','127.0.0.1:30307:30303',...(spec.partitionRotation?['--network',partitionNetwork]:[])]:spec.partitionRotation?['-p','127.0.0.1:30306:30303']:[]),...configMount(name),...(restoredMounts??dataMount(name)),...(lifecycleLaunch?.mounts??[]),...(lifecycleLaunch?.env??[]),'--env-file',configAt(name)+'/fixture.env',a.image,a.programs.nano.path,'run','/config/genesis.json',rootFor(name,'data')+'/chain','/config/node.json'],name==='vps-docker');};if(initial)await initialRuntimeLaunch(name,launch);else await launch();started.add(name);}
+ async function captureOwner(name,stop,path,mountOverride,rootOverride=null,stopBytes=null){if(interrupted)throw interrupted;const bytes=await save(path,stopBytes??stop),a=owner(name),observedData=rootOverride?.dataRoot??rootFor(name,'data'),observedWitness=rootOverride?.witnessRoot??rootFor(name,'witness');let raw;
+  if(name==='mac-native')raw=(await nativeExec(a.programs.stoppedCapture.path,['--capture',join(prepared,name,'isolated-domain.json'),nativeNodePath(name),path,observedData,observedWitness,name],{timeout:180000,maxBuffer:16*1024*1024})).stdout;
   else{need(name==='mac-docker'&&macBootstrap,'VPS complete capsules stay in situ');const remote=false,stopPin=(await macLinux.write(macBootstrap.proofVolume,'/proof',[{name:basename(path),bytes}],'capture-stop'))[0],stopFile=stopPin.path;await macLinux.verifyAll();const selected=mountOverride??(remote&&restoredMounts?restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x):dataMount(name,true));
-   raw=await docker(['run','--rm',...safe(name),...selected,...configMount(name),...macLinux.mount(macBootstrap.proofVolume,'/proof'),'--entrypoint',a.programs.stoppedCapture.path,a.image,'--capture','/config/isolated-domain.json','/config/node.json',stopFile,rootFor(name,'data'),rootFor(name,'witness'),name],remote,180000);
+   raw=await docker(['run','--rm',...safe(name),...selected,...configMount(name),...macLinux.mount(macBootstrap.proofVolume,'/proof'),'--entrypoint',a.programs.stoppedCapture.path,a.image,'--capture','/config/isolated-domain.json','/config/node.json',stopFile,observedData,observedWitness,name],remote,180000);
   }
   if(name==='mac-docker')await macLinux.verifyAll();const result=JSON.parse(raw);need(result.passed===true&&result.owner===name&&result.campaignId===manifest.campaignId&&result.manifestSha256===sha(await readFile(join(assets,'isolated-domain.json')))&&result.externalStopReceiptSha256===sha(bytes)&&result.canonicalStoreSnapshotVerified===true&&result.primaryAndWitnessBlobClosuresVerified===true,'Complete stopped P/W capture and exact public inputs required');return result;
  }
@@ -972,7 +1002,7 @@ except BaseException:
 
  // Lifecycle-only adapter. Ordinary recovery/rotation branches do not call it.
  const lifecycleArtifacts=new Map(),lifecycleSourceFences=[],lifecycleTerminalCaptures=new Map(),lifecycleRemoteIndexes=[],lifecycleRemoteFiles=[];let lifecyclePending,lifecycleQualified=false,lifecycleSequence=0;
- const lifecycleCheck=()=>{if(interrupted)throw interrupted;};
+ const lifecycleCheck=()=>{if(interrupted)throw interrupted;if(campaignBudget?.phase==='work')campaignBudget.check();};
  async function lifecycleLogTail(path,strict=true){const f=await open(path,fsConstants.O_RDONLY|fsConstants.O_NOFOLLOW|fsConstants.O_NONBLOCK);try{const a=await f.stat({bigint:true});need(a.isFile()&&a.nlink===1n&&a.uid===BigInt(process.getuid())&&(Number(a.mode)&0o7777)===0o600,'Private managed log');const size=Number(a.size>16777216n?16777216n:a.size),bytes=Buffer.alloc(size),start=a.size-BigInt(size);let at=0;while(at<size){const x=await f.read(bytes,at,size-at,Number(start)+at);need(x.bytesRead>0,'Managed log truncated');at+=x.bytesRead;}if(strict)need(canonical(material(a))===canonical(material(await f.stat({bigint:true})))&&canonical(material(a))===canonical(material(await lstat(path,{bigint:true}))),'Stopped managed log changed');return bytes.toString();}finally{await f.close();}}
  const lifecyclePrefix=label=>'lifecycle-'+label+'-'+(++lifecycleSequence);
  const lifecycleJson=v=>Buffer.from(canonical(v));
@@ -980,21 +1010,22 @@ except BaseException:
  const lifecycleRemoteGuest=p=>{need(within(p,remoteRoot)&&p!==remoteRoot,'Only owner-local lifecycle artifact');return '/lifecycle-remote'+p.slice(remoteRoot.length);};
  async function lifecycleRemote(x,timeout=650000){need(spec.lifecycle.privateVpsLifecycleTransferAuthorized===true,'Private VPS lifecycle transfer not authorized');const r=JSON.parse(await sh(['python3','-c',lifecycleOwnerProjection,remoteRoot,JSON.stringify(x)],timeout));need(r.format==='nano-fresh-lifecycle-owner-public-v1'&&r.passed===true&&r.result,'Owner-local lifecycle refusal; private details remain VPS');return r.result;}
  async function lifecycleWriteRemote(path,bytes){const pin={path,sha256:sha(bytes),bytes:bytes.length};const r=await lifecycleRemote({mode:'write-known',path,hex:bytes.toString('hex'),sha256:pin.sha256,bytes:pin.bytes},40000);need(r.written===true&&r.knownBytesPinnedBeforeWrite===true&&r.sha256===pin.sha256&&r.bytes===pin.bytes,'Known remote output pin');pin.materialSha256=r.materialSha256;lifecycleRemoteFiles.push(pin);return pin;}
- async function lifecycleRuntimeConfig(name,receipt,shim=false){const path=join(prepared,name,'node.json'),previous=JSON.parse(name==='mac-docker'?macNodeBytes():await readFile(path,'utf8')),identities=preparedManifest.nodes.find(n=>n.name===name).signerIdentities;
-  const configured=pinnedRestoreConfiguration(previous,receipt,identities);configured.p2p_binary=owner(name).programs[shim?'lifecycleSubmit':'p2p'].path;const bytes=Buffer.from(JSON.stringify(configured,null,2)+'\n');if(name==='mac-docker'){await macConfigGeneration(bytes);return configured;}await writeFile(path,bytes,{mode:0o600});await observe(path,{sha256:sha(bytes),bytes:bytes.length},false,false);
+ async function lifecycleRuntimeConfig(name,receipt,shim=false){const path=nativeNodePath(name),previous=JSON.parse(name==='mac-docker'?macNodeBytes():await readFile(path,'utf8')),identities=preparedManifest.nodes.find(n=>n.name===name).signerIdentities;
+  let configured=pinnedRestoreConfiguration(previous,receipt,identities);const relocation=activeOwnerRoots.get(name);if(relocation?.configurationPending)configured=relocateOwnerRuntimeConfiguration(configured,relocation);configured.p2p_binary=owner(name).programs[shim?'lifecycleSubmit':'p2p'].path;const bytes=Buffer.from(JSON.stringify(configured,null,2)+'\n');if(name==='mac-docker'){await macConfigGeneration(bytes);if(relocation)relocation.configurationPending=false;return configured;}if(name==='mac-native'&&nativeLoader){const next=join(prepared,name,lifecyclePrefix('runtime-config')+'.json');await save(next,bytes);if(relocation){relocation.configPath=next;relocation.configurationPending=false;}else activeOwnerRoots.set(name,{dataRoot:rootFor(name,'data'),witnessRoot:rootFor(name,'witness'),configPath:next});return configured;}await writeFile(path,bytes,{mode:0o600});await observe(path,{sha256:sha(bytes),bytes:bytes.length},false,false);
   if(name==='vps-docker'){need(spec.lifecycle.privateVpsLifecycleTransferAuthorized===true,'Private configuration transfer not authorized');await exec('scp',['-q',path,target+':'+configAt(name)+'/node.json'],{timeout:10000});await observe(path,{sha256:sha(bytes),bytes:bytes.length},false,false);}return configured;
  }
- async function lifecycleResume(name,receipt,control=null){
-  lifecycleStopReceipts.resuming(name);
+ async function lifecycleResume(name,receipt,control=null,beforeLaunch=null){
+  need(beforeLaunch===null||typeof beforeLaunch==='function','Optional retained-copy launch fence');lifecycleStopReceipts.resuming(name);
   await lifecycleRuntimeConfig(name,receipt,Boolean(control));const a=owner(name);if(name!=='mac-native'){await ownedRuntime(name,false);await docker(['rm',containers[name]],name==='vps-docker');}
   const launch=control?{mounts:control.mounts??['--mount',`type=bind,src=${control.directory},dst=/lifecycle-owner`,...(control.extraMounts??[])],env:['--env','NANO_TEST_FRESH_SUBMISSION_PLAN='+control.planPath,'--env','NANO_TEST_FRESH_SUBMISSION_PLAN_SHA256='+control.planSha256]}:null;
   if(name==='mac-native'){
+   campaignBudget?.check();
    const nd=join(prepared,name),environment=Object.fromEntries((await readFile(join(nd,'fixture.env'),'utf8')).trim().split('\n').map(s=>{const at=s.indexOf('=');return [s.slice(0,at),s.slice(at+1)];})),logPath=join(output,lifecyclePrefix('native-runtime')+'.private.log'),fd=openSync(logPath,'wx',0o600);
-   lifecycleNativeLog=logPath;try{native=tracked(spawn(a.programs.nano.path,['run',join(nd,'genesis.json'),rootFor(name,'data')+'/chain',join(nd,'node.json')],{env:nativeRuntimeEnvironment(nativeEnv,{...environment,...(control?{NANO_TEST_FRESH_SUBMISSION_PLAN:control.planPath,NANO_TEST_FRESH_SUBMISSION_PLAN_SHA256:control.planSha256}:{})}),stdio:['ignore',fd,fd]}));}finally{closeSync(fd);}let error;native.once('error',e=>{error=e;});await delay(50);need(native.pid&&!error,'Actual lifecycle managed supervisor spawn');started.add(name);
-  }else await startDocker(name,name==='vps-docker'?restoredMounts:null,launch);
+   lifecycleNativeLog=logPath;try{if(beforeLaunch)await beforeLaunch();if(campaignBudget){if(interrupted)throw interrupted;campaignBudget.check();}native=tracked(spawn(a.programs.nano.path,['run',join(nd,'genesis.json'),rootFor(name,'data')+'/chain',nativeNodePath(name)],{env:nativeRuntimeEnvironment(nativeEnv,{...environment,...(control?{NANO_TEST_FRESH_SUBMISSION_PLAN:control.planPath,NANO_TEST_FRESH_SUBMISSION_PLAN_SHA256:control.planSha256}:{})}),stdio:['ignore',fd,fd],...(campaignBudget?{detached:true}:{})}));}finally{closeSync(fd);}let error;native.once('error',e=>{error=e;});await delay(50);need(native.pid&&!error,'Actual lifecycle managed supervisor spawn');started.add(name);
+  }else await startDocker(name,name==='vps-docker'?restoredMounts:null,launch,false,beforeLaunch);
   const until=performance.now()+60000;let peer;while(performance.now()<until){lifecycleCheck();try{peer=(await rpc(name,'nno_getNetworkInfo')).node?.peerId;if(peer)break;}catch{lifecycleCheck();}await delay(500);}need(peer===freshPeerIds.get(name),'Resumed managed child must expose same real P2P identity');
  }
- async function lifecycleCapture(name,receipt,prefix,mountOverride=null,external=null){
+ async function lifecycleCapture(name,receipt,prefix,mountOverride=null,external=null,rootOverride=null){
   const commit=value=>publishLifecycleStoppedCapture(value,{campaignId:manifest.campaignId,publish:projection=>save(join(output,prefix+'-capture-commitment-public.json'),projection)});
   if(name==='vps-docker'){
    const before=join(output,prefix+'-stop-first.json'),stopFile=external?external.stopPath:remoteRoot+'/'+prefix+'-stop-first.json';if(!external){await save(before,receipt);await exec('scp',['-q',before,target+':'+stopFile],{timeout:10000});}const r=await remotePublic({mode:external?'capture-once':'capture-pair',prefix,stopFile,argv:captureVmArgv(stopFile,mountOverride)});need(r.externalWitnessTokensMatched&&r.rawCapsuleExported===false&&r.campaignId===manifest.campaignId,'Lifecycle complete VPS P/W capture');
@@ -1003,9 +1034,15 @@ except BaseException:
    const publicCapture=await commit({name,receipt,firstCaptureSha256:r.firstCaptureSha256,stopArtifact,captureArtifact,capture:r});
    return {name,receipt,stopPath,capturePath,stopArtifact,captureArtifact,headSlot:pins.headSlot,finalized:pins.finalized,publicCapture};
   }
-  const pins=await capturePair(name,receipt,prefix),stopPath=join(output,prefix+'-stop-second.json'),capturePath=join(output,prefix+'-capture-second.json'),sp=newFiles.get(stopPath),cp=newFiles.get(capturePath);need(sp&&cp,'Known stopped capture output buffers');
+  let pins,stopPath,capturePath;
+  if(external){
+   need(external.name===name&&external.stopArtifact&&external.captureArtifact,'same external source owner');
+   const stopBytes=await observe(external.stopPath,external.stopArtifact,true,false),stop=JSON.parse(stopBytes);stopPath=join(output,prefix+'-stop-second.json');capturePath=join(output,prefix+'-capture-second.json');
+   const captured=await captureOwner(name,stop,stopPath,mountOverride,rootOverride,stopBytes);need(captured.externalWitnessTokensMatched===true&&captured.externalWitnessPinOriginExternallyRequired===true,'restored capture must retain original external witnesses');await save(capturePath,captured);pins={witnessCommitments:{sourceCaptureSha256:external.publicCapture.firstCaptureSha256}};
+  }else{pins=await capturePair(name,receipt,prefix);stopPath=join(output,prefix+'-stop-second.json');capturePath=join(output,prefix+'-capture-second.json');}
+  const sp=newFiles.get(stopPath),cp=newFiles.get(capturePath);need(sp&&cp,'Known stopped capture output buffers');
   const stopArtifact={path:stopPath,...sp},captureArtifact={path:capturePath,...cp},firstCaptureSha256=pins.witnessCommitments.sourceCaptureSha256,capture=JSON.parse(await observe(capturePath,cp,true,false));
-  const publicCapture=await commit({name,receipt,firstCaptureSha256,stopArtifact,captureArtifact,capture:{...capture,firstCaptureSha256,lastCaptureSha256:cp.sha256}});return {name,receipt,pins,stopPath,capturePath,stopArtifact,captureArtifact,publicCapture};
+  const publicCapture=await commit({name,receipt,firstCaptureSha256,stopArtifact,captureArtifact,capture:{...capture,firstCaptureSha256,lastCaptureSha256:cp.sha256}});return {name,receipt,pins,stopPath,capturePath,stopArtifact,captureArtifact,publicCapture,capture,headSlot:capture.headSlot,finalized:capture.finalized};
  }
  async function lifecycleCoreCopy(name,prefix){
   if(name==='mac-native'){const directory=await lifecyclePrivateDirectory('nano-lifecycle-core-'),copy=await createNativeRotationCopies({dataRoot:rootFor(name,'data'),witnessRoot:rootFor(name,'witness'),destination:join(directory,'owned-core'),checkpoint:lifecycleCheck});return {data:copy.dataRoot,witness:copy.witnessRoot,mounts:[],verify:copy.verify};}
@@ -1021,7 +1058,7 @@ except BaseException:
    const controlVolume=await macLinux.create(prefix+'-controls'),resultVolume=await macLinux.create(prefix+'-results'),node=macNodeBytes(),stop=await observe(captured.stopPath,captured.stopArtifact,true,false),manifestBytes=await observe(join(assets,'isolated-domain.json'),null,true),docs=[{name:'isolated-domain.json',bytes:manifestBytes},...await Promise.all(Object.values(manifest.files).map(async d=>({name:d.path,bytes:await observe(join(assets,d.path),d,true)}))),{name:'node.json',bytes:node},{name:'stop.json',bytes:stop}];
    await macLinux.write(controlVolume,'/known',docs,'lifecycle-control');await macLinux.verifyAll();return {name,directory:null,base:'/lifecycle-owner',node,stopPin:{sha256:sha(stop),bytes:stop.length},resultDirectory:null,resultBase:'/lifecycle-results',controlVolume,resultVolume,manifest:{path:'/lifecycle-owner/isolated-domain.json',sha256:sha(manifestBytes),bytes:manifestBytes.length},mounts:[...macLinux.mount(controlVolume,'/lifecycle-owner'),...macLinux.mount(resultVolume,'/lifecycle-results',false)]};
   }
-  const a=owner(name),remote=name==='vps-docker',directory=remote?remoteRoot+'/'+prefix:await lifecyclePrivateDirectory('nano-lifecycle-control-'),base=name==='mac-native'?directory:'/lifecycle-owner',node=Buffer.from(await readFile(join(prepared,name,'node.json')));
+  const a=owner(name),remote=name==='vps-docker',directory=remote?remoteRoot+'/'+prefix:await lifecyclePrivateDirectory('nano-lifecycle-control-'),base=name==='mac-native'?directory:'/lifecycle-owner',node=Buffer.from(await readFile(nativeNodePath(name)));
   // Public domain files remain bound to the previously held manifest pins.
   const docs=[['isolated-domain.json',await observe(join(assets,'isolated-domain.json'),null,true)],...Object.values(manifest.files).map(z=>[z.path,null]),['node.json',node]];
   for(const row of docs)if(row[1]===null)row[1]=await observe(join(assets,row[0]),manifest.files[Object.keys(manifest.files).find(k=>manifest.files[k].path===row[0])],true);
@@ -1072,6 +1109,71 @@ except BaseException:
   while(performance.now()<until){lifecycleCheck();const h=await request(name,'/eth/v1/beacon/headers/finalized');need(h.execution_optimistic===false&&h.data?.root,'Finalized header');const got=await lifecycleWalk(name,h.data.root,minimumSlot,find,Math.max(1,until-performance.now()));if(got)return got;await delay(3000);}throw Error('Actual finalized lifecycle event deadline');
  }
  function lifecycleOwnerCopyResult(r,after){need(r.format==='nano-fresh-lifecycle-owner-copy-v1'&&r.passed===true&&r.roleRoots===2&&r.copiesUnchangedAfterAudit===after&&r.sourceNineFieldAndShaUnchanged===true&&r.sourceNamespaceUnchanged===true&&r.copiesMatchSourceBytes===true&&r.independentInodes===true&&r.privateDirectoryModes===true&&r.privateFileModes===true&&r.rawInventoryExported===false&&r.productionQualified===false,'Whole independent owner-copy scope');for(const key of ['sourceFiles','sourceDirectories','payloadBytes'])need(Number.isSafeInteger(r[key])&&r[key]>=0,'Safe actual owner-copy counter');return r;}
+ const ownerRecoveryBaseNodes=new Map();
+ async function ownerRecoveryAudit(name,receipt,binding,requiredFinalized=null){
+  const original=ownerRecoveryBaseNodes.get(name);need(original,'Independent pre-recovery profile/anchor configuration');
+  const request={...restoreAuditRequest(original,receipt),maximumBlocks:'0x'+BigInt(spec.lifecycle.resources.maximumHistoryBlocks).toString(16),maximumArchiveBytes:'0x'+BigInt(spec.lifecycle.resources.maximumArchiveBytes).toString(16)};if(requiredFinalized)request.requiredFinalized={epoch:'0x'+BigInt(requiredFinalized.epoch).toString(16),root:requiredFinalized.root};
+  const bytes=Buffer.from(JSON.stringify(request,null,2)+'\n'),prefix=lifecyclePrefix('owner-audit-'+name),a=owner(name);let audit;
+  if(name==='mac-native'){
+   const file=join(output,prefix+'-request.private.json');await save(file,bytes);
+   audit=JSON.parse((await nativeExec(a.programs.nano.path,['audit-capella',join(prepared,name,'genesis.json'),binding.dataRoot+'/chain',file],{env:nativeEnv,timeout:180000,maxBuffer:1048576})).stdout);
+  }else if(name==='mac-docker'){
+   const proof=await macLinux.create(prefix),known=await macLinux.write(proof,'/proof',[{name:'request.json',bytes}],'owner-audit');need(known.length===1,'One exact external audit request');
+   audit=JSON.parse(await macLinux.job([a.programs.nano.path,'audit-capella','/config/genesis.json',binding.dataRoot+'/chain','/proof/request.json'],[...binding.mounts.map(x=>x.startsWith('type=')&&!x.endsWith(',readonly')?x+',readonly':x),...configMount(name),...macLinux.mount(proof,'/proof')],180000));await macLinux.verifyAll();
+  }else{
+   const file=remoteRoot+'/'+prefix+'-request.private.json';await lifecycleWriteRemote(file,bytes);
+   audit=await remotePublic({mode:'audit-run',prefix,argv:lifecycleRemoteDocker(['run','--rm',...safe(name),...(restoredMounts??dataMount(name)).map(x=>x.startsWith('type=')&&!x.endsWith(',readonly')?x+',readonly':x),...configMount(name),'--mount',`type=bind,src=${file},dst=/request.json,readonly`,'--entrypoint',a.programs.nano.path,a.image,'audit-capella','/config/genesis.json',rootFor(name,'data')+'/chain','/request.json'])});
+  }
+  verifyRestoredFinalityAudit(request,receipt,audit);await save(join(output,prefix+'-public.json'),audit);return audit;
+ }
+ async function restoreMacOwner(name,duty){
+  need(['mac-native','mac-docker'].includes(name)&&!ownerRecoveryRecords.has(name),'One complete restore per Mac owner');
+  const began=performance.now(),prefix=lifecyclePrefix('whole-'+name),oldDataRoot=rootFor(name,'data'),oldWitnessRoot=rootFor(name,'witness'),before=await stopped(name,prefix+'-runtime-stop'),source=await lifecycleCapture(name,before.receipt,prefix+'-source');let binding,verify,verifySource;
+  if(name==='mac-native'){
+   const directory=await lifecyclePrivateDirectory('nano-owner-recovery-'),copy=await createNativeOwnerCopies({dataRoot:oldDataRoot,witnessRoot:oldWitnessRoot,destination:join(directory,'restored'),namespace:plan.campaignNamespace,owner:name,resources:spec.lifecycle.resources,checkpoint:lifecycleCheck});
+   binding={dataRoot:copy.dataRoot,witnessRoot:copy.witnessRoot,mounts:[]};verify=()=>copy.verify();verifySource=()=>copy.verifySource();await save(join(output,prefix+'-copy-public.json'),copy.summary);
+  }else{
+   const volume=await macLinux.create(prefix),program=lifecycleWholeCopyProgram(plan.campaignNamespace,name,spec.lifecycle.resources),copyMount=ro=>macLinux.mount(volume,'/rotation-audit',ro),sourceMounts=dataMount(name,true);
+   const command=async(mode,pin,code=program)=>JSON.parse(await macLinux.job(['perl','-e',code,oldDataRoot,oldWitnessRoot,'/rotation-audit',mode,pin],[...sourceMounts,...copyMount(mode==='verify')],190000));
+   const raw=await command('create','-');need(raw?.format==='nano-fresh-rotation-owned-copy-v1'&&raw.databaseRoles===2,'Exact whole-owner copy backend');const {format:unusedFormat,databaseRoles:unusedRoles,...rest}=raw,copy=lifecycleOwnerCopyResult({...rest,format:'nano-fresh-lifecycle-owner-copy-v1',roleRoots:2},false);for(const key of ['sourceFiles','sourceDirectories'])need(copy[key]<=2*Number(BigInt(spec.lifecycle.resources.maximumInventoryFiles)),'Whole-owner inventory bound');need(copy.payloadBytes<=2*Number(BigInt(spec.lifecycle.resources.maximumInventoryBytes)),'Whole-owner byte bound');need(/^[0-9a-f]{64}$/.test(copy.copyProofSha256)&&Number.isSafeInteger(copy.stabilityProbeCount)&&copy.stabilityProbeCount>=3&&Number.isSafeInteger(copy.stabilitySpanMs)&&Number.isSafeInteger(copy.stabilityElapsedMs)&&copy.stabilitySpanMs>=2000&&copy.stabilitySpanMs<=copy.stabilityElapsedMs&&copy.stabilityElapsedMs<=30000,'Prospective whole-owner copy admission');await save(join(output,prefix+'-copy-public.json'),copy);
+   binding={dataRoot:'/restored-owner/data/'+plan.campaignNamespace+'/'+name,witnessRoot:'/restored-owner/witness/'+plan.campaignNamespace+'/'+name,mounts:macLinux.mount(volume,'/restored-owner',false)};
+   verify=()=>command('verify',copy.copyProofSha256);verifySource=()=>command('verify',copy.copyProofSha256,lifecycleSourceOnlyCopyFence(program));
+  }
+  ownerRecoverySourceFences.push({name,verifySource});
+  let copied,copyFailure;try{copied=await lifecycleCapture(name,before.receipt,prefix+'-copy',binding.mounts.map(x=>x.startsWith('type=')&&!x.endsWith(',readonly')?x+',readonly':x),source,binding);compareOwnerRecoveryCaptures(source.capture,copied.capture);await ownerRecoveryAudit(name,before.receipt,binding);}catch(error){copyFailure=error;throw error;}finally{try{await verify();}catch(error){if(copyFailure){try{await record({event:'owner-recovery-copy-fence-failed',owner:name,message:error.message,productionQualified:false});}catch{} }else throw error;}}
+  need(performance.now()-began<spec.lifecycle.deadlines.restoreMs&&performance.now()-began<=Number(BigInt(spec.clock.maximumDowntimeMs)),'Mac owner restore preparation clock budget');
+  activeOwnerRoots.set(name,{...binding,oldDataRoot,oldWitnessRoot,configurationPending:true});await lifecycleResume(name,before.receipt,null,async()=>{await verify();lifecycleCheck();need(performance.now()-began<spec.lifecycle.deadlines.restoreMs&&performance.now()-began<=Number(BigInt(spec.clock.maximumDowntimeMs)),'Mac owner restore launch clock budget');});
+  need(performance.now()-began<spec.lifecycle.deadlines.restoreMs&&performance.now()-began<=Number(BigInt(spec.clock.maximumDowntimeMs)),'Mac owner restore launch clock budget');
+  const result={owner:name,cutoffSlot:'0x'+BigInt(source.headSlot).toString(16),sourceCapture:source.captureArtifact,restoredCapture:copied.captureArtifact,finalized:before.receipt.finalized,copiesVerifiedBeforeResume:true,peerIdentityUnchanged:true};
+  ownerRecoveryRecords.set(name,{before:before.receipt,source,copied,binding,result,duty});return result;
+ }
+ async function runMacOwnerRecoveryPhase(initial,profileBytes){
+  for(const name of names)ownerRecoveryBaseNodes.set(name,JSON.parse(name==='mac-docker'?macNodeBytes():await readFile(nativeNodePath(name),'utf8')));
+  const slots=BigInt(JSON.parse(profileBytes).common[0].ffg[0]);
+  return runMacOwnerRecoveries({initialFinality:initial,ops:{check:lifecycleCheck,
+   selectDuty:async(name,checkpoint)=>{
+    const phaseEnd=performance.now()+spec.lifecycle.deadlines.finalityMs,check=()=>{lifecycleCheck();need(performance.now()<phaseEnd,'Whole owner duty selection deadline');};check();
+    const head=await request(name,'/eth/v1/beacon/headers/head');check();need(head.execution_optimistic===false&&/^0x[0-9a-f]{64}$/.test(head.data?.header?.message?.state_root),'Sealed non-optimistic owner head');const h=head.data.header.message,state=h.state_root,epoch=BigInt(h.slot)/slots,node=preparedManifest.nodes.find(n=>n.name===name);let selected;
+    for(const id of node.signerIdentities){check();const r=(await request(name,'/eth/v1/beacon/states/'+state+'/validators/'+id.publicKey)).data;check();const v=r.validator;if(v.pubkey===id.publicKey&&v.slashed===false&&BigInt(v.activation_epoch)<=epoch&&epoch<BigInt(v.exit_epoch)){selected={owner:name,publicKey:id.publicKey,index:'0x'+BigInt(r.index).toString(16)};break;}}
+    check();need(selected,'Existing unslashed active owner key required');const remaining=Math.floor(phaseEnd-performance.now());need(remaining>0,'Whole owner duty selection deadline');const proposal=await lifecycleFindFinalized(name,checkpoint,0n,x=>BigInt(x.message.proposer_index)===BigInt(selected.index)?{root:x.root,slot:'0x'+x.slot.toString(16)}:null,remaining);check();return {...selected,beforeProposalRoot:proposal.root};
+   },restore:restoreMacOwner,finality:(baseline,label)=>finality({epoch:BigInt(baseline.epoch).toString(),root:baseline.root},label,false,spec.lifecycle.deadlines.finalityMs),
+   finalizedProposal:async(name,duty,checkpoint,cutoff)=>{
+    const phaseEnd=performance.now()+spec.lifecycle.deadlines.finalityMs;lifecycleCheck();const remaining=Math.floor(phaseEnd-performance.now());need(remaining>0,'Whole owner post-recovery proposal deadline');
+    const proposal=await lifecycleFindFinalized(name,checkpoint,cutoff,x=>BigInt(x.message.proposer_index)===BigInt(duty.index)&&x.slot>cutoff?{root:x.root,slot:'0x'+x.slot.toString(16)}:null,remaining);
+    lifecycleCheck();need(performance.now()<phaseEnd,'Whole owner post-recovery proposal deadline');return proposal;
+   },
+   record:async row=>{await save(join(output,'owner-recovery-'+row.owner+'-private.json'),row);const artifact=x=>({sha256:x.sha256,bytes:x.bytes});await save(join(output,'owner-recovery-'+row.owner+'-public.json'),{...row,sourceCapture:artifact(row.sourceCapture),restoredCapture:artifact(row.restoredCapture)});}
+  }});
+ }
+ async function auditOwnerRecoveryTerminal(terminal){
+  need(macOwnerRecovery?.passed===true&&ownerRecoveryRecords.size===2&&lifecycleQualified&&lifecyclePending?.evidence?.restarts?.length===2,'Two Mac restores and unchanged two-stage VPS proof required');
+  const required=lifecyclePending.evidence.requiredFinalized;need(terminal.length===3,'Three stopped terminal owner receipts required');
+  for(const name of names){const z=terminal.find(x=>x.name===name);need(z,'Exact terminal owner');if(name!=='vps-docker')validateRestoredFinality(ownerRecoveryRecords.get(name).before,macOwnerRecovery.records.find(x=>x.owner===name).stable,z.receipt);else need(z.receipt.validator.proposalsAdmitted>0,'VPS actual resumed proposals');
+   const binding={dataRoot:rootFor(name,'data'),witnessRoot:rootFor(name,'witness'),mounts:name==='mac-native'?[]:dataMount(name,true)};await ownerRecoveryAudit(name,z.receipt,binding,required);
+  }
+  await save(join(output,'three-owner-restoration-public.json'),{format:'nano-fresh-three-owner-restoration-v1',passed:true,restoredOwners:names,macRestoresExecuted:2,vpsLifecycleRestoresExecuted:2,commonRequiredFinalized:required,terminalCanonicalAudits:3,originalJournalAuthoritiesRefreshed:false,simultaneousThreeHostDisasterQualified:false,productionQualified:false});
+ }
+
  async function lifecycleRestore(phase,id,beforeProposal){
   const phaseBegan=performance.now(),name='vps-docker',a=owner(name),prefix=lifecyclePrefix('restore-'+phase),before=await stopped(name,prefix+'-runtime-stop'),captured=await lifecycleCapture(name,before.receipt,prefix+'-source'),destination=remoteRoot+'/'+prefix;await sh(['mkdir','-m','700',destination]);
   const fullCopy=lifecycleWholeCopyProgram(plan.campaignNamespace,name,spec.lifecycle.resources),sourceMounts=restoredMounts?restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x):dataMount(name,true),copyMount=readOnly=>['--mount',`type=bind,src=${destination},dst=/rotation-audit${readOnly?',readonly':''}`],cmd=(mode,pin)=>lifecycleRemoteDocker(['run','--rm',...safe(name),...sourceMounts,...copyMount(mode==='verify'),'--entrypoint','perl',a.image,'-e',fullCopy,rootFor(name,'data'),rootFor(name,'witness'),'/rotation-audit',mode,pin]);
@@ -1164,15 +1266,16 @@ except BaseException:
   const transportInventory=verifyFreshBootstrapTransportInventory(JSON.parse(inventoryBytes),originalInventory);await save(join(proof,'source-inventory-after-transport.json'),originalInventory);await save(join(proof,'bootstrap-transport-inventory-check.json'),transportInventory);
   const exportAge=BigInt(Date.now())-BigInt(plan.anchor.genesisTimeMs);need(exportAge>=0n&&exportAge<=BigInt(spec.clock.maximumDowntimeMs),'New fixture exceeded explicitly approved startup catch-up age');
   const preparedClockChecks=[];for(const name of names)preparedClockChecks.push({owner:name,...checkFreshInitialRuntimeClock({...await initialClockInput(name),nowMs:BigInt(Date.now())})});await save(join(output,'initial-prepared-clock-checks.json'),{format:'nano-fresh-prepared-initial-clocks-v1',owners:preparedClockChecks,runtimeStarted:false,productionQualified:false});
+  if(campaignBudget){const parameters=deriveLifecycleParameters(await observe(join(assets,'profile.json'),manifest.files.profile,true),spec.lifecycle,{maximumBootstrapAgeMs:Number(BigInt(spec.clock.maximumDowntimeMs))});const requiredWork=BigInt(parameters.minimumWholeRunMs)+minimumMacOwnerRecoveryMs(spec.lifecycle.deadlines);need(BigInt(Math.floor(campaignBudget.workEnd-performance.now()))>=requiredWork,'Remaining global work budget cannot fit lifecycle and two full Mac owner recoveries; consensus profile unchanged');campaignBudget.check();}
   if(spec.partitionRotation){partitionNetworkCreated=true;partitionNetworkAbsent=false;await docker(['network','create','--label',label,partitionNetwork],true);}
   await startDocker('vps-docker',undefined,null,true);for(let i=0;i<60;i++){if(interrupted)throw interrupted;try{remotePeer=(await rpc('vps-docker','nno_getNetworkInfo')).node?.peerId;if(remotePeer)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}if(interrupted)throw interrupted;need(/^[A-Za-z0-9]+$/.test(remotePeer??''),'VPS private peer identity unavailable');
-  const tunnelFd=openSync(join(output,'tunnel.log'),'wx',0o600);try{tunnel=tracked(spawn('ssh',[...sshArgs,'-N','-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=15','-L','127.0.0.1:30307:127.0.0.1:30307',target],{stdio:['ignore',tunnelFd,tunnelFd]}));}finally{closeSync(tunnelFd);}let tunnelError;tunnel.on('error',e=>{tunnelError=e;});await delay(1000);need(!tunnelError&&tunnel.exitCode===null&&tunnel.signalCode===null,'Private SSH tunnel unavailable');
+  campaignBudget?.check();const tunnelFd=openSync(join(output,'tunnel.log'),'wx',0o600);try{tunnel=tracked(spawn('ssh',[...sshArgs,'-N','-o','ExitOnForwardFailure=yes','-o','ServerAliveInterval=15','-L','127.0.0.1:30307:127.0.0.1:30307',target],{stdio:['ignore',tunnelFd,tunnelFd],...(campaignBudget?{detached:true}:{})}));}finally{closeSync(tunnelFd);}let tunnelError;tunnel.on('error',e=>{tunnelError=e;});await delay(1000);need(!tunnelError&&tunnel.exitCode===null&&tunnel.signalCode===null,'Private SSH tunnel unavailable');
   for(const name of ['mac-native','mac-docker']){const path=join(prepared,name,'node.json'),c=JSON.parse(await readFile(path,'utf8'));c.bootnodes=[name==='mac-native'?'/ip4/127.0.0.1/tcp/30307/p2p/'+remotePeer:'/dns4/host.docker.internal/tcp/30307/p2p/'+remotePeer];await writeFile(path,JSON.stringify(c,null,2)+'\n',{mode:0o600});}
-  await macConfigGeneration();await startDocker('mac-docker',undefined,null,true);if(spec.partitionRotation){let localPeer;for(let i=0;i<60;i++){if(interrupted)throw interrupted;try{localPeer=(await rpc('mac-docker','nno_getNetworkInfo')).node?.peerId;if(localPeer)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}need(/^[A-Za-z0-9]+$/.test(localPeer??''),'Mac Docker direct-island identity required');const path=join(prepared,'mac-native','node.json'),c=JSON.parse(await readFile(path,'utf8'));c.bootnodes.push('/ip4/127.0.0.1/tcp/30306/p2p/'+localPeer);await writeFile(path,JSON.stringify(c,null,2)+'\n',{mode:0o600});}const nd=join(prepared,'mac-native'),env=Object.fromEntries((await readFile(join(nd,'fixture.env'),'utf8')).trim().split('\n').map(s=>{const at=s.indexOf('=');return [s.slice(0,at),s.slice(at+1)];}));const fd=openSync(join(output,'native.log'),'wx',0o600);let nativeError;try{await initialRuntimeLaunch('mac-native',()=>{native=tracked(spawn(a.programs.nano.path,['run',join(nd,'genesis.json'),rootFor('mac-native','data')+'/chain',join(nd,'node.json')],{env:nativeRuntimeEnvironment(nativeEnv,env),stdio:['ignore',fd,fd]}));native.on('error',e=>{nativeError=e;});});}finally{closeSync(fd);}await delay(50);need(native.pid&&!nativeError,'Native runtime spawn failed');started.add('mac-native');
+  await macConfigGeneration();await startDocker('mac-docker',undefined,null,true);if(spec.partitionRotation){let localPeer;for(let i=0;i<60;i++){if(interrupted)throw interrupted;try{localPeer=(await rpc('mac-docker','nno_getNetworkInfo')).node?.peerId;if(localPeer)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}need(/^[A-Za-z0-9]+$/.test(localPeer??''),'Mac Docker direct-island identity required');const path=join(prepared,'mac-native','node.json'),c=JSON.parse(await readFile(path,'utf8'));c.bootnodes.push('/ip4/127.0.0.1/tcp/30306/p2p/'+localPeer);await writeFile(path,JSON.stringify(c,null,2)+'\n',{mode:0o600});}const nd=join(prepared,'mac-native'),env=Object.fromEntries((await readFile(join(nd,'fixture.env'),'utf8')).trim().split('\n').map(s=>{const at=s.indexOf('=');return [s.slice(0,at),s.slice(at+1)];}));const fd=openSync(join(output,'native.log'),'wx',0o600);let nativeError;try{await initialRuntimeLaunch('mac-native',()=>{if(campaignBudget){if(interrupted)throw interrupted;campaignBudget.check();}native=tracked(spawn(a.programs.nano.path,['run',join(nd,'genesis.json'),rootFor('mac-native','data')+'/chain',join(nd,'node.json')],{env:nativeRuntimeEnvironment(nativeEnv,env),stdio:['ignore',fd,fd],...(campaignBudget?{detached:true}:{})}));native.on('error',e=>{nativeError=e;});});}finally{closeSync(fd);}await delay(50);need(native.pid&&!nativeError,'Native runtime spawn failed');started.add('mac-native');
   need(initialRuntimeClockChecks.size===3&&names.every(name=>initialRuntimeClockChecks.has(name)),'All three first spawns passed distinct fresh clock checks');await save(join(output,'initial-first-spawn-clock-checks.json'),{format:'nano-fresh-first-spawn-clock-checks-v1',owners:names.map(name=>({owner:name,...initialRuntimeClockChecks.get(name)})),runtimeStartupVerified:false,productionQualified:false});
   const peerIds=[];for(const name of names){const until=Date.now()+60000;let info;while(Date.now()<until){if(interrupted)throw interrupted;try{info=await rpc(name,'nno_getNetworkInfo');if(info?.node?.peerId)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}if(interrupted)throw interrupted;need(info?.node?.peerId&&!peerIds.includes(info.node.peerId),'Distinct three runtime peer identities required');peerIds.push(info.node.peerId);freshPeerIds.set(name,info.node.peerId);need((await rpc(name,'eth_getBlockByNumber',['0x0',false]))?.hash===manifest.executionGenesisHash,'Fresh execution genesis mismatch');}
   await record({event:'fresh-started',campaignId:manifest.campaignId,sourceBaseRevision:revision,overlayManifestSha256:spec.overlayManifest.sha256,physicalHosts:2,runtimes:3,registeredValidators:64,pendingValidators:1,validatorAllocation:[16,16,33],productionQualified:false});
-  const initialFinality=await finality({epoch:'0',root:manifest.initialHeadRoot},'initial',true);if(spec.partitionRotation)await runFreshPartitionRotation(initialFinality,publicFiles.get('profile.json'));if(spec.lifecycle)await lifecycleBranch(initialFinality,publicFiles.get('profile.json'));
+  let initialFinality=await finality({epoch:'0',root:manifest.initialHeadRoot},'initial',true);if(spec.lifecycle&&nativeLoader){macOwnerRecovery=await runMacOwnerRecoveryPhase(initialFinality,publicFiles.get('profile.json'));initialFinality=macOwnerRecovery.finality;}if(spec.partitionRotation)await runFreshPartitionRotation(initialFinality,publicFiles.get('profile.json'));if(spec.lifecycle)await lifecycleBranch(initialFinality,publicFiles.get('profile.json'));
   if(spec.backupRestore){
    const before=await stopped('vps-docker');restoreReceipt=before.receipt;const nonce=randomUUID();restoreStopEnvelope={format:'nano-fresh-capella-independent-stop-v1',stopNonce:nonce,receipt:restoreReceipt};const stopBytes=await save(join(output,'independent-stop.json'),restoreStopEnvelope),stopSha=sha(stopBytes);
    const withWitness=await capturePair('vps-docker',restoreReceipt,'backup-source');
@@ -1194,9 +1297,12 @@ except BaseException:
   }
  }catch(e){failure=e instanceof Error?e:Error('Fresh campaign threw a non-Error value',{cause:e});try{await record({event:'fresh-failed',message:failure.stack,productionQualified:false});}catch(recordError){bodyFailureRecordError=recordError instanceof Error?recordError:Error('Campaign failure recorder threw a non-Error value',{cause:recordError});}}
  finally{
+  if(campaignBudget){campaignCloseoutStartedAt=performance.now();campaignBudget.enterCloseout();}
   const closeout=createTerminalEvidenceSequence({firstFailure:failure??null,recordFailure:async({stage,error})=>record({event:'fresh-terminal-stage-failed',stage,message:error?.message??String(error),publicInputDiagnostic:error?.publicInputDiagnostic??null,productionQualified:false})});
   const terminal=[],ownersRequiringStop=new Set(started),confirmedStops=new Set(),cleanJoins=new Set(),completedCaptures=new Set();let capturesPublished=false;
   const terminalStage=async(stage,run)=>{publicCheckStage=stage;return closeout.attempt(stage,run);};
+  try{
+  if(campaignCommands)await terminalStage('join-owned-inflight-clients',()=>campaignCommands.closeAll());
   if(bodyFailureRecordError)await terminalStage('campaign-failure-record',async()=>{throw bodyFailureRecordError;});
   for(const name of ownersRequiringStop)await terminalStage('stop-'+name,async()=>{const x=await stopped(name);confirmedStops.add(name);if(!spec.lifecycle)terminal.push({name,receipt:x.receipt});});
   if(spec.lifecycle)await terminalStage('collect-stopped-receipts',async()=>{terminal.push(...lifecycleStopReceipts.collect(Object.fromEntries(names.map(name=>[name,lifecycleStopRootBinding(name)]))));});
@@ -1217,6 +1323,8 @@ except BaseException:
   if(spec.backupRestore)await terminalStage('audit-restored-finality',async()=>{need(completedCaptures.size===3,'Three stopped owner captures required before journal audit');const restored=terminal.find(z=>z.name==='vps-docker')?.receipt,stable=JSON.parse(await readFile(join(output,'restored-finality.json'),'utf8')).result;validateRestoredFinality(restoreReceipt,stable,restored);
     const original=JSON.parse(await readFile(join(prepared,'vps-docker','node.json'),'utf8')),request=restoredFinalityAuditRequest(original,restoreReceipt,stable,restored,preparedManifest.nodes[2].signerIdentities),requestPath=join(output,'restored-finalized-audit-request.json');await save(requestPath,request);await exec('scp',['-q',requestPath,target+':'+remoteRoot+'/restore/finalized-audit-request.json'],{timeout:10000});const a=owner('vps-docker');const auditName='nano-qualification-op-'+uuid+'-'+(++operation);ownedRuns.push({name:auditName,remote:true});const audit=await remotePublic({mode:'audit-run',prefix:'restored-finalized-audit',argv:['sudo','-n','docker','run','--name',auditName,'--label',label,'--rm',...safe('vps-docker'),...restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x),'--mount',`type=bind,src=${configAt('vps-docker')},dst=/config,readonly`,'--mount',`type=bind,src=${remoteRoot}/restore/finalized-audit-request.json,dst=/request.json,readonly`,'--entrypoint',a.programs.nano.path,a.image,'audit-capella','/config/genesis.json',rootFor('vps-docker','data')+'/chain','/request.json']});verifyRestoredFinalityAudit(request,restored,audit);await save(join(output,'restored-finalized-audit.json'),audit);
   });
+  if(macOwnerRecovery)await terminalStage('audit-three-owner-restoration',()=>auditOwnerRecoveryTerminal(terminal));
+  for(const {name,verifySource} of ownerRecoverySourceFences)await terminalStage('owner-recovery-original-source-fence-'+name,verifySource);
   const linuxFence=async()=>{need(macLinux,'Initial Linux software admission required');await macLinux.verifyAll();};
   const softwareFence=async()=>{need(initialSoftware,'Initial software admission required');const current=await software();need(canonical(current)===canonical(initialSoftware),'Exact public software changed');};
   const outputsFence=async()=>{for(const [path,z] of newFiles)await observe(path,z,false,false);};
@@ -1250,6 +1358,7 @@ except BaseException:
    for(const [i,admission] of lifecycleRemoteIndexes.entries())await terminalStage('lifecycle-index-fence-'+i,()=>lifecycleRemote({mode:'fence-index',admission},35000));
    await terminalStage('lifecycle-known-files-fence',()=>lifecycleRemote({mode:'fence-known',files:lifecycleRemoteFiles},35000));
   }
+  for(const {name,verifySource} of ownerRecoverySourceFences)await terminalStage('owner-recovery-final-source-fence-'+name,verifySource);
   // Only newly owned readonly fence operations may be inspected/stopped here.
   // A late stop is FAILED; do not rerun software or any previous qualification.
   for(const [i,x] of [...ownedRuns].entries())if(i>=readonlyFenceOperationStart)await terminalStage('readonly-fence-cleanup-'+i,async()=>{const raw=await docker(['ps','-a','--filter','name=^/'+x.name+'$','--format','{{.Names}}'],x.remote);if(raw.trim()){const inspect=JSON.parse(await docker(['inspect',x.name,'--format','{{json .}}'],x.remote));need(inspect.Name==='/'+x.name&&inspect.Image===owner(x.remote?'vps-docker':'mac-docker').image&&inspect.Config.Labels?.['nano.fresh.campaign']===uuid,'Cleanup owner image/label mismatch');if(inspect.State.Running){await docker(['stop','--time','10',x.name],x.remote,20000);throw Error('Late owned readonly fence operation required cleanup');}}});
@@ -1257,13 +1366,16 @@ except BaseException:
   await terminalStage('post-cleanup-held-fence',fence);
   await terminalStage('post-cleanup-new-output-fence',outputsFence);
   const nativeProcessAbsent=childAbsent(native),tunnelProcessAbsent=childAbsent(tunnel);await terminalStage('post-cleanup-process-join',async()=>{need(nativeProcessAbsent&&tunnelProcessAbsent,'Native runtime/tunnel exit and close join required at terminal');});
-  if(interrupted)await terminalStage('terminal-interruption',async()=>{throw interrupted;});process.removeListener('SIGINT',onSignal);process.removeListener('SIGTERM',onSignal);if(lifecycleWholeTimer)clearTimeout(lifecycleWholeTimer);
+  if(interrupted)await terminalStage('terminal-interruption',async()=>{throw interrupted;});if(!campaignBudget){process.removeListener('SIGINT',onSignal);process.removeListener('SIGTERM',onSignal);}if(lifecycleWholeTimer)clearTimeout(lifecycleWholeTimer);
+  if(campaignBudget)await terminalStage('global-deadline-before-publication',()=>campaignBudget.check());
   await terminalStage('publish-terminal-stage-report',()=>save(join(output,'terminal-evidence-stages.json'),closeout.report()));
   await terminalStage('published-terminal-report-fence',outputsFence);
   // Publication is deliberately outside its own report, avoiding a circular
   // admission. Its failure still preserves the original error and actual exit.
-  await terminalStage('campaign-result-publication',async()=>{failure=closeout.firstFailure;await save(join(output,'result.json'),{format:'nano-fresh-capella-three-owner-result-v1',passed:closeout.report().passed,sourceBaseRevision:revision,overlayManifestSha256:spec.overlayManifest.sha256,campaignId:manifest?.campaignId??null,runtimes:3,physicalHosts:2,registeredSyntheticKeys:64,pendingSyntheticKeys:1,backupRestoreRequested:spec.backupRestore,lifecycleRequested:Boolean(spec.lifecycle),freshSyntheticLifecycleQualified:Boolean(spec.lifecycle)&&lifecycleQualified&&closeout.report().passed,partitionRotationRequested:Boolean(spec.partitionRotation),partitionRotationQualified:Boolean(spec.partitionRotation)&&closeout.report().passed,partitionNetworkAbsent,nativeProcessAbsent,tunnelProcessAbsent,terminalEvidence:closeout.report(),originalOperationalRecoveryQualified:false,networkProductionQualified:false,productionQualified:false});});
+  await terminalStage('campaign-result-publication',async()=>{failure=closeout.firstFailure;const ready=closeout.report().passed,provisional=Boolean(campaignBudget);await save(join(output,'result.json'),{format:'nano-fresh-capella-three-owner-result-v1',passed:!provisional&&ready,...(provisional?{terminalEvidenceReady:ready,terminalVerdictProvisional:true,effectiveTerminalExitRequired:true}:{}),sourceBaseRevision:revision,overlayManifestSha256:spec.overlayManifest.sha256,campaignId:manifest?.campaignId??null,runtimes:3,physicalHosts:2,registeredSyntheticKeys:64,pendingSyntheticKeys:1,backupRestoreRequested:spec.backupRestore,lifecycleRequested:Boolean(spec.lifecycle),freshSyntheticLifecycleQualified:!provisional&&Boolean(spec.lifecycle)&&lifecycleQualified&&ready,partitionRotationRequested:Boolean(spec.partitionRotation),partitionRotationQualified:!provisional&&Boolean(spec.partitionRotation)&&ready,partitionNetworkAbsent,nativeProcessAbsent,tunnelProcessAbsent,terminalEvidence:closeout.report(),...(nativeLoader?{threeOwnerRestorationRequested:Boolean(spec.lifecycle),threeOwnerRestorationQualified:!provisional&&Boolean(macOwnerRecovery)&&lifecycleQualified&&ownerRecoveryRecords.size===2&&ready}:{}),originalOperationalRecoveryQualified:false,networkProductionQualified:false,productionQualified:false});});
+  if(campaignBudget){await terminalStage('global-deadline-after-publication',()=>campaignBudget.check());await terminalStage('publish-global-closeout-duration',()=>save(join(output,'campaign-deadline-result.json'),{format:'nano-fresh-campaign-global-deadline-result-v1',maximumRunMs:spec.lifecycle.deadlines.maximumRunMs,closeoutReserveMs:campaignCloseoutReserve,elapsedMs:Math.ceil(performance.now()-campaignStartedAt),closeoutDurationMs:Math.ceil(performance.now()-campaignCloseoutStartedAt),durationMeasuredBeforeThisPublication:true,globalDeadlineExceeded:performance.now()>=campaignBudget.overallEnd,forcedDeadlineExtensionAuthorized:false,campaignAuthorizedByThisReport:false,productionQualified:false}));await terminalStage('global-final-deadline-check',()=>{if(interrupted)throw interrupted;campaignBudget.check();});}
   failure=closeout.firstFailure;
+  }finally{if(campaignBudget){campaignBudget.dispose();process.removeListener('SIGINT',onSignal);process.removeListener('SIGTERM',onSignal);process.removeListener('SIGHUP',onSignal);}}
  }
  if(failure)throw failure;
 }

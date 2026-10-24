@@ -34,9 +34,10 @@ const generation20261018=Object.freeze({
 });
 const generation20261018NativeLoader=Object.freeze({...generation20261018,'run.mjs':'47e45e602ecd5242d8f6784d9244afe7488688f1ee0061b5bdf70811a97bb565','prepare.mjs':'fdebaf486276bc3fd5ccd452da9fbba063556453d480f3000f20a20ee156b92f','native-loader-guard.mjs':'7b484108927236da8f1b5373d1f8d1338bbafa14a1d9495285c9598f6d16e69b'});
 const generation20261018NativeLoopback=Object.freeze({...generation20261018NativeLoader,'prepare.mjs':'a3735e0bb6d306ef83482483fee2aec44463fab23fd6b4ff53f7157c53c94297'});
+const generation20261024CampaignControls=Object.freeze({...generation20261018NativeLoopback,'run.mjs':'d0c0b8c5e093253117875f5a289adacfbf0c361cada180c6e9ec9ad36de2428f','campaign-deadline.mjs':'e23f6cbad812f4316f24bf94880308c72371769b5549b5e190d5276158f1ddd0','campaign-commands.mjs':'dc5e84146081147d8cac962d194ae2a8b0bb4defdca57803bfe9ce8efb983af9','owner-recovery.mjs':'2d8bc4649aca1b5266e163e1b04e8712465af5ab57cf006bcd85be7e48365494','rotation-owned-copy.mjs':'a1c8c6c03fcf5dc8b2655bb737e86a650edc3e36457bdd5e997a4072972ac000'});
 Object.freeze(historicalSourcePins);
-const sourcePinGeneration='generation20261018NativeLoopback';
-const sourcePins=Object.freeze({...historicalSourcePins,...generation20261018NativeLoopback});
+const sourcePinGeneration='generation20261024CampaignControls';
+const sourcePins=Object.freeze({...historicalSourcePins,...generation20261024CampaignControls});
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
 const material=s=>fields.map(k=>String(s[k]));
@@ -60,12 +61,14 @@ async function writeAndAdmitFixture(path,bytes){
  }
 }
 const absent=async path=>{try{await lstat(path);}catch(e){if(e.code==='ENOENT')return;throw e;}assert.fail('Forbidden fixture path was created: '+path);};
-test('actual lifecycle driver generation20261018 gates default mode and private authorizations before absent seed/output/network',{timeout:35000},async()=>{
- assert.equal(sourcePinGeneration,'generation20261018NativeLoopback');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
+test('actual lifecycle driver generation20261024 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network',{timeout:45000},async()=>{
+ assert.equal(sourcePinGeneration,'generation20261024CampaignControls');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
  assert.deepEqual(Object.keys(generation20261018NativeLoader).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs','native-loader-guard.mjs','prepare.mjs','run.mjs']);
  assert.deepEqual(Object.keys(generation20261018NativeLoopback).sort(),Object.keys(generation20261018NativeLoader).sort());
  assert.deepEqual(Object.keys(generation20261018NativeLoopback).filter(leaf=>generation20261018NativeLoopback[leaf]!==generation20261018NativeLoader[leaf]),['prepare.mjs']);
- for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261018NativeLoopback,leaf)?generation20261018NativeLoopback[leaf]:pin,'Only the explicitly named source generation may override historical pins');
+ assert.deepEqual(Object.keys(generation20261018NativeLoopback).filter(leaf=>generation20261024CampaignControls[leaf]!==generation20261018NativeLoopback[leaf]),['run.mjs']);
+ assert.deepEqual(Object.keys(generation20261024CampaignControls).filter(leaf=>!Object.hasOwn(generation20261018NativeLoopback,leaf)).sort(),['campaign-commands.mjs','campaign-deadline.mjs','owner-recovery.mjs','rotation-owned-copy.mjs']);
+ for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261024CampaignControls,leaf)?generation20261024CampaignControls[leaf]:pin,'Only the explicitly named source generation may override historical pins');
  const run=resolve(process.argv[2]??fileURLToPath(new URL('./run.mjs',import.meta.url))),source=dirname(run),before={};
  for(const [leaf,expected] of Object.entries(sourcePins)){before[leaf]=await stable(join(source,leaf));assert.equal(before[leaf].sha256,expected,'Exact frozen source required');}
  const parent=await realpath(await mkdtemp(join(tmpdir(),'nano-lifecycle-unavailable-'))),missing=[];
@@ -82,10 +85,16 @@ test('actual lifecycle driver generation20261018 gates default mode and private 
   const spec={format:'nano-fresh-capella-three-owner-campaign-v1',sourceBaseRevision:'b5a48e0f2a05bc392f7604edb6214ee6b0078d67',overlayManifest:artifact(join(parent,'missing-overlay.json')),owners,fixture:{seedFile:join(parent,'missing-seed'),ledgerDirectory:join(parent,'missing-ledger'),legacyPublicIdentity:artifact(join(parent,'missing-legacy.json'))},clock:{maximumStartupElapsedMs:'0x1',maximumDowntimeMs:'0x1',maximumSteps:'0x1'},backupRestore:false,productionQualified:false,lifecycle:{format:'nano-fresh-validator-lifecycle-v1',identities:{voluntaryExit:id('vps-docker','A','1'),slashing:id('mac-native','B','2')},deadlines:{registrationMs:100000,activationMs:100000,finalityMs:10000,restoreMs:10000,actionMs:30000,auditMs:30000,maximumEpochsAfterActivation:400,maximumRunMs:20000000},resources:{maximumWallSeconds:q(30),maximumHistoryBlocks:q(4000),maximumArchiveBytes:q(50000000),maximumIndexBytes:q(500000),maximumInventoryFiles:q(10000),maximumInventoryBytes:q(512*1024*1024)},syntheticActionAuthorized:true,intentionallyAuthorConflictingHeaders:true,privateVpsLifecycleTransferAuthorized:false}};
   const output=join(parent,'missing-output');missing.push(spec.fixture.seedFile,spec.fixture.ledgerDirectory,output);for(const p of missing)await absent(p);
   const env=Object.fromEntries(Object.entries(process.env).filter(([k])=>!k.startsWith('NANO_TEST_')));
-  const cases=[{message,edit:()=>{}},{message:'specific human authorization for private VPS transfer is required before export',edit:x=>{x.lifecycle.runtimeDriverEnabled=true;}},{message:'specific human authorization for cross-owner action/job evidence transfer is required before export',edit:x=>{x.lifecycle.runtimeDriverEnabled=true;x.lifecycle.privateVpsLifecycleTransferAuthorized=true;}}];
-  for(let i=0;i<cases.length;++i){const selected=structuredClone(spec);cases[i].edit(selected);if(selected.lifecycle.runtimeDriverEnabled)for(const [name,o] of Object.entries(selected.owners))o.programs.lifecycleSubmit={path:(name==='mac-native'?o.coreBuildRoot:'/outputs')+'/nano-capella-lifecycle-submit',sha256:'d'.repeat(64),bytes:1};
+  const gateCases=[{message,edit:()=>{}},{message:'specific human authorization for private VPS transfer is required before export',edit:x=>{x.lifecycle.runtimeDriverEnabled=true;}},{message:'specific human authorization for cross-owner action/job evidence transfer is required before export',edit:x=>{x.lifecycle.runtimeDriverEnabled=true;x.lifecycle.privateVpsLifecycleTransferAuthorized=true;}}];
+  const legacy='nano-fresh-capella-three-owner-campaign-v1',c8='nano-fresh-capella-three-owner-campaign-c8-v2';
+  const cases=[legacy,c8].flatMap(format=>gateCases.map(row=>({...row,format,tail:format===c8?['--closeout-reserve-ms','600000']:[]})));
+  const authorize=x=>{x.lifecycle.runtimeDriverEnabled=true;x.lifecycle.privateVpsLifecycleTransferAuthorized=true;x.lifecycle.crossOwnerEvidenceTransferAuthorized=true;};
+  for(const [tail,message]of [[[],'C8 lifecycle requires explicit closeout reserve'],[['--closeout-reserve-ms','0'],'C8 lifecycle requires explicit closeout reserve'],[['--closeout-reserve-ms','20000000'],'Finite C8 closeout reserve below total budget'],[['--closeout-reserve-ms','9007199254740993'],'Finite C8 closeout reserve below total budget']])cases.push({format:c8,tail,message,edit:authorize});
+  cases.push({format:legacy,tail:['--closeout-reserve-ms','600000'],message:'Legacy campaign does not accept C8 closeout reserve',edit:authorize});
+  assert.equal(cases.length,11);
+  for(let i=0;i<cases.length;++i){const selected=structuredClone(spec);selected.format=cases[i].format;cases[i].edit(selected);if(selected.lifecycle.runtimeDriverEnabled)for(const [name,o] of Object.entries(selected.owners))o.programs.lifecycleSubmit={path:(name==='mac-native'?o.coreBuildRoot:'/outputs')+'/nano-capella-lifecycle-submit',sha256:'d'.repeat(64),bytes:1};
    const file=join(parent,'synthetic-spec-'+i+'.json'),bytes=Buffer.from(JSON.stringify(selected)),specBefore=await writeAndAdmitFixture(file,bytes);
-   const child=spawnSync(process.execPath,['--max-old-space-size=32','--max-semi-space-size=1',run,'ubuntu@127.0.0.1',selected.sourceBaseRevision,output,'--fresh-campaign',file,'--fresh-campaign-sha',sha(bytes)],{env,encoding:'utf8',timeout:4000,maxBuffer:262144});
+   const child=spawnSync(process.execPath,['--max-old-space-size=32','--max-semi-space-size=1',run,'ubuntu@127.0.0.1',selected.sourceBaseRevision,output,'--fresh-campaign',file,'--fresh-campaign-sha',sha(bytes),...cases[i].tail],{env,encoding:'utf8',timeout:4000,maxBuffer:262144});
    assert.ifError(child.error);assert.equal(child.signal,null);assert.equal(child.status,1);assert.equal(child.stdout,'');assert(child.stderr.includes(cases[i].message),'A parser/import/ENOENT refusal is not this guard: '+JSON.stringify({caseIndex:i,status:child.status,stderr:child.stderr}));assert(!child.stderr.includes('ENOENT'));
    for(const p of missing)await absent(p);assert.deepEqual(await stable(file),specBefore);for(const leaf of Object.keys(sourcePins))assert.deepEqual(await stable(join(source,leaf)),before[leaf]);
   }

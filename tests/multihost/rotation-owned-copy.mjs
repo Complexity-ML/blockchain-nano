@@ -1,4 +1,5 @@
-// Stopped synthetic core copies only. This module never opens RocksDB.
+// Stopped synthetic copies only. This module never opens RocksDB.
+// The legacy export copies two Core DBs; the owner export copies both full roots.
 import {open,mkdir,lstat,readdir,realpath} from 'node:fs/promises';
 import {constants} from 'node:fs';
 import {join,resolve,dirname} from 'node:path';
@@ -23,26 +24,46 @@ export function validateRotationCopySummary(r,afterAudit){
  return r;
 }
 
-export async function createNativeRotationCopies({dataRoot,witnessRoot,destination,checkpoint=()=>{}}){
+export async function createNativeRotationCopies(options){return createNativeStoppedCopies(options);}
+export async function createNativeOwnerCopies({dataRoot,witnessRoot,destination,namespace,owner,resources,checkpoint=()=>{}}){
+ need(/^isolated-capella-[0-9a-f]{64}$/.test(namespace)&&owner==='mac-native');
+ for(const p of [dataRoot,witnessRoot])need(p.endsWith('/'+namespace+'/'+owner));
+ const files=BigInt(resources.maximumInventoryFiles),bytes=BigInt(resources.maximumInventoryBytes);
+ need(files>0n&&files<=BigInt(Number.MAX_SAFE_INTEGER)&&bytes>0n&&bytes<=BigInt(Number.MAX_SAFE_INTEGER));
+ return createNativeStoppedCopies({dataRoot,witnessRoot,destination,checkpoint,wholeOwner:{namespace,owner,files:Number(files),bytes:Number(bytes)}});
+}
+async function createNativeStoppedCopies({dataRoot,witnessRoot,destination,checkpoint=()=>{},wholeOwner=null}){
  let until=performance.now()+180000;const check=()=>{checkpoint();need(performance.now()<until);};
- const roots=[join(dataRoot,'chain'),join(witnessRoot,'chain-witness')];
+ const roots=wholeOwner?[dataRoot,witnessRoot]:[join(dataRoot,'chain'),join(witnessRoot,'chain-witness')];
+ const maximumFiles=wholeOwner?wholeOwner.files:20000,maximumBytes=wholeOwner?wholeOwner.bytes:536870912;
  const within=(a,b)=>a===b||b.startsWith(a+'/');
  need([dataRoot,witnessRoot,destination].every(p=>resolve(p)===p));
  need(!within(dataRoot,witnessRoot)&&!within(witnessRoot,dataRoot));
  for(const p of [dataRoot,witnessRoot])need(!within(p,destination)&&!within(destination,p));
  const canonicalDirectory=async p=>{const s=await lstat(p,{bigint:true});need(await realpath(p)===p&&s.isDirectory()&&s.uid===BigInt(process.getuid()));return s;};
- const rows=new Map(),sourceIds=new Set();
+ const rows=new Map(),sourceIds=new Set(),creatorFiles=new Map(),creatorDirectories=new Map(),newAnchors=new Map();
+ const directoryIdentity=s=>[s.dev,s.ino,s.mode,s.uid,s.gid].map(String);
+ async function newDirectory(p){
+  await mkdir(p,{mode:0o700});if(!wholeOwner)return;
+  const f=await open(p,constants.O_RDONLY|constants.O_DIRECTORY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+  try{const z=await f.stat({bigint:true});need(z.isDirectory()&&z.uid===BigInt(process.getuid())&&(Number(z.mode)&0o7777)===0o700&&same(material(z),material(await lstat(p,{bigint:true}))));creatorDirectories.set(p,directoryIdentity(z));}finally{await f.close();}
+ }
+ function checkNewAnchors(root,copy){
+  if(!wholeOwner)return;need(copy.entries&&Object.keys(copy.entries).length>0);
+  for(const [rel,z] of Object.entries(copy.entries)){const p=rel?join(root,rel):root,a=newAnchors.get(p);need(a&&a.kind===z.kind&&same(a.material,z.material.slice(0,8))&&(z.kind==='directory'||a.sha256===z.sha256&&a.bytes===z.bytes));}
+ }
+
  async function scan(root,{privateModes=false,forbiddenIds=new Set()}={}){
   const entries=Object.create(null),seen=new Set();let files=0,dirs=0,bytes=0;
   async function visit(p,rel){
    check();const before=await lstat(p,{bigint:true});need(await realpath(p)===p&&before.uid===BigInt(process.getuid())&&(before.isDirectory()||before.isFile()));
    const id=before.dev+':'+before.ino;need(!seen.has(id)&&!forbiddenIds.has(id));seen.add(id);
    if(before.isDirectory()){
-    need(++dirs<=20000&&(!privateModes||(Number(before.mode)&0o7777)===0o700));const names=(await readdir(p)).sort();
+    need(++dirs<=maximumFiles&&(!privateModes||(Number(before.mode)&0o7777)===0o700));const names=(await readdir(p)).sort();
     for(const name of names){need(name!=='.'&&name!=='..'&&!/[\0\r\n]/.test(name));await visit(join(p,name),rel?rel+'/'+name:name);}
     need(same(material(before),material(await lstat(p,{bigint:true}))));entries[rel]={kind:'directory',material:material(before)};
    }else{
-    need(before.nlink===1n&&before.size>=0n&&++files<=20000&&(!privateModes||(Number(before.mode)&0o7777)===0o600));bytes+=Number(before.size);need(bytes<=536870912);
+    need(before.nlink===1n&&before.size>=0n&&++files<=maximumFiles&&(!privateModes||(Number(before.mode)&0o7777)===0o600));bytes+=Number(before.size);need(bytes<=maximumBytes);
     const f=await open(p,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);const hash=createHash('sha256');let total=0;
     try{need(same(material(before),material(await f.stat({bigint:true}))));const chunk=Buffer.alloc(65536);for(;;){check();const {bytesRead:n}=await f.read(chunk,0,chunk.length,null);if(!n)break;total+=n;need(BigInt(total)<=before.size);hash.update(chunk.subarray(0,n));}need(BigInt(total)===before.size&&same(material(before),material(await f.stat({bigint:true})))&&same(material(before),material(await lstat(p,{bigint:true}))));}finally{await f.close();}
     entries[rel]={kind:'file',material:material(before),sha256:hash.digest('hex'),bytes:total};
@@ -51,24 +72,34 @@ export async function createNativeRotationCopies({dataRoot,witnessRoot,destinati
   await visit(root,'');return {entries,files,dirs,bytes};
  }
  for(const root of roots){await canonicalDirectory(root);const row=await scan(root);rows.set(root,row);for(const z of Object.values(row.entries)){const id=identity(z);need(!sourceIds.has(id));sourceIds.add(id);}}
- await canonicalDirectory(dirname(destination));await mkdir(destination,{mode:0o700});need((Number((await lstat(destination,{bigint:true})).mode)&0o7777)===0o700);
- const destinations=[join(destination,'data','chain'),join(destination,'witness','chain-witness')];
+ await canonicalDirectory(dirname(destination));await newDirectory(destination);need((Number((await lstat(destination,{bigint:true})).mode)&0o7777)===0o700);
+ const destinations=wholeOwner?[join(destination,'data',wholeOwner.namespace,wholeOwner.owner),join(destination,'witness',wholeOwner.namespace,wholeOwner.owner)]:[join(destination,'data','chain'),join(destination,'witness','chain-witness')];
+ if(wholeOwner)for(const role of ['data','witness']){await newDirectory(join(destination,role));await newDirectory(join(destination,role,wholeOwner.namespace));}
  for(let i=0;i<2;++i){
-  const source=roots[i],target=destinations[i],snapshot=rows.get(source);await mkdir(dirname(target),{mode:0o700});need((Number((await canonicalDirectory(dirname(target))).mode)&0o7777)===0o700);
-  for(const [rel,z] of Object.entries(snapshot.entries).filter(([,z])=>z.kind==='directory').sort((a,b)=>a[0].split('/').length-b[0].split('/').length||a[0].localeCompare(b[0]))){check();await mkdir(rel?join(target,rel):target,{mode:0o700});}
+  const source=roots[i],target=destinations[i],snapshot=rows.get(source);if(!wholeOwner)await mkdir(dirname(target),{mode:0o700});need((Number((await canonicalDirectory(dirname(target))).mode)&0o7777)===0o700);
+  for(const [rel,z] of Object.entries(snapshot.entries).filter(([,z])=>z.kind==='directory').sort((a,b)=>a[0].split('/').length-b[0].split('/').length||a[0].localeCompare(b[0]))){check();await newDirectory(rel?join(target,rel):target);}
   for(const [rel,z] of Object.entries(snapshot.entries).filter(([,z])=>z.kind==='file')){
    check();const src=join(source,rel),dst=join(target,rel),input=await open(src,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);let output;
    try{
     need(same(z.material,material(await input.stat({bigint:true})))&&same(z.material,material(await lstat(src,{bigint:true}))));output=await open(dst,constants.O_RDWR|constants.O_CREAT|constants.O_EXCL|constants.O_NOFOLLOW,0o600);const hash=createHash('sha256'),chunk=Buffer.alloc(65536);let total=0;
     for(;;){check();const {bytesRead:n}=await input.read(chunk,0,chunk.length,null);if(!n)break;total+=n;need(total<=z.bytes);hash.update(chunk.subarray(0,n));for(let at=0;at<n;){check();const {bytesWritten:w}=await output.write(chunk,at,n-at,null);need(w>0);at+=w;}}
-    need(total===z.bytes&&hash.digest('hex')===z.sha256&&same(z.material,material(await input.stat({bigint:true})))&&same(z.material,material(await lstat(src,{bigint:true}))));await output.sync();const d=await output.stat({bigint:true});need(d.isFile()&&d.nlink===1n&&d.uid===BigInt(process.getuid())&&(Number(d.mode)&0o7777)===0o600&&!sourceIds.has(d.dev+':'+d.ino)&&same(material(d),material(await lstat(dst,{bigint:true}))));
+    need(total===z.bytes&&hash.digest('hex')===z.sha256&&same(z.material,material(await input.stat({bigint:true})))&&same(z.material,material(await lstat(src,{bigint:true}))));await output.sync();const d=await output.stat({bigint:true});need(d.isFile()&&d.nlink===1n&&d.uid===BigInt(process.getuid())&&(Number(d.mode)&0o7777)===0o600&&!sourceIds.has(d.dev+':'+d.ino)&&same(material(d),material(await lstat(dst,{bigint:true}))));if(wholeOwner)creatorFiles.set(dst,{kind:'file',material:material(d).slice(0,8),sha256:z.sha256,bytes:z.bytes});
    }finally{if(output)await output.close();await input.close();}
   }
   for(const [rel,z] of Object.entries(snapshot.entries).filter(([,z])=>z.kind==='directory')){const f=await open(rel?join(target,rel):target,'r');try{await f.sync();}finally{await f.close();}}const parent=await open(dirname(target),'r');try{await parent.sync();}finally{await parent.close();}
  }
+ if(wholeOwner){
+  // New directory link counts/size/mtime settle only while constructing children.
+  // Creation identity is immutable; after construction all eight fields are fixed.
+  for(const p of [...creatorDirectories.keys()].sort((a,b)=>b.length-a.length)){
+   const f=await open(p,constants.O_RDONLY|constants.O_DIRECTORY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+   try{await f.sync();const z=await f.stat({bigint:true});need(same(creatorDirectories.get(p),directoryIdentity(z))&&same(material(z),material(await lstat(p,{bigint:true}))));newAnchors.set(p,{kind:'directory',material:material(z).slice(0,8)});}finally{await f.close();}
+  }
+  for(const [p,z] of creatorFiles)newAnchors.set(p,z);
+ }
  let copies=[];const copyIds=new Set(sourceIds);
  for(let i=0;i<2;++i){
-  const source=rows.get(roots[i]),copy=await scan(destinations[i],{privateModes:true,forbiddenIds:copyIds});need(same(Object.keys(source.entries).sort(),Object.keys(copy.entries).sort()));
+  const source=rows.get(roots[i]),copy=await scan(destinations[i],{privateModes:true,forbiddenIds:copyIds});checkNewAnchors(destinations[i],copy);need(same(Object.keys(source.entries).sort(),Object.keys(copy.entries).sort()));
   for(const [rel,z] of Object.entries(copy.entries)){copyIds.add(identity(z));const old=source.entries[rel];need(z.kind===old.kind&&(z.kind==='directory'||z.sha256===old.sha256&&z.bytes===old.bytes));}copies.push(copy);
   need(same(source,await scan(roots[i])));
  }
@@ -77,8 +108,8 @@ export async function createNativeRotationCopies({dataRoot,witnessRoot,destinati
  const stableBegan=performance.now(),stableUntil=stableBegan+30000;let previous=null,consecutive=0,seriesAt=0,probeCount=0,stableSpan=0;
  while(performance.now()<stableUntil){
   check();const sample=[];
-  for(let i=0,ids=new Set(sourceIds);i<2;++i){need(same(rows.get(roots[i]),await scan(roots[i])));const copy=await scan(destinations[i],{privateModes:true,forbiddenIds:ids}),source=rows.get(roots[i]);need(same(Object.keys(source.entries).sort(),Object.keys(copy.entries).sort()));for(const [rel,z] of Object.entries(copy.entries)){ids.add(identity(z));const old=source.entries[rel];need(z.kind===old.kind&&(z.kind==='directory'||z.sha256===old.sha256&&z.bytes===old.bytes));}sample.push(copy);}
-  const now=performance.now();need(now<stableUntil);++probeCount;
+  for(let i=0,ids=new Set(sourceIds);i<2;++i){need(same(rows.get(roots[i]),await scan(roots[i])));const copy=await scan(destinations[i],{privateModes:true,forbiddenIds:ids}),source=rows.get(roots[i]);checkNewAnchors(destinations[i],copy);need(same(Object.keys(source.entries).sort(),Object.keys(copy.entries).sort()));for(const [rel,z] of Object.entries(copy.entries)){ids.add(identity(z));const old=source.entries[rel];need(z.kind===old.kind&&(z.kind==='directory'||z.sha256===old.sha256&&z.bytes===old.bytes));}sample.push(copy);}
+  if(wholeOwner)for(const root of roots)need(same(rows.get(root),await scan(root)));const now=performance.now();need(now<stableUntil);++probeCount;
   if(previous&&same(previous,sample)){++consecutive;}else{consecutive=1;seriesAt=now;}
   previous=sample;stableSpan=now-seriesAt;
   if(consecutive>=3&&stableSpan>=2000){copies=sample;break;}
@@ -87,14 +118,15 @@ export async function createNativeRotationCopies({dataRoot,witnessRoot,destinati
  need(consecutive>=3&&stableSpan>=2000&&performance.now()<stableUntil);
  const stability={stabilityProbeCount:probeCount,stabilityElapsedMs:Math.ceil(performance.now()-stableBegan),stabilitySpanMs:Math.floor(stableSpan)};
  for(let i=0;i<2;++i){need(same(rows.get(roots[i]),await scan(roots[i])));need(same(copies[i],await scan(destinations[i],{privateModes:true,forbiddenIds:sourceIds})));}
- const privateProof={format:'nano-fresh-rotation-owned-copy-private-proof-v1',sources:roots.map(root=>({root,...rows.get(root)})),copies:destinations.map((root,i)=>({root,...copies[i]}))};
+ const privateProof={format:wholeOwner?'nano-fresh-native-owner-copy-private-proof-v1':'nano-fresh-rotation-owned-copy-private-proof-v1',sources:roots.map(root=>({root,...rows.get(root)})),copies:destinations.map((root,i)=>({root,...copies[i]}))};
  const raw=Buffer.from(JSON.stringify(privateProof)+'\n');need(raw.length<=67108864);const proofPath=join(destination,'physical-copy.private.json'),f=await open(proofPath,'wx',0o600);try{await f.writeFile(raw);await f.sync();}finally{await f.close();}const d=await open(destination,'r');try{await d.sync();}finally{await d.close();}
  async function proofFence(){const f=await open(proofPath,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);try{const before=await f.stat({bigint:true});need(before.isFile()&&before.nlink===1n&&before.uid===BigInt(process.getuid())&&(Number(before.mode)&0o7777)===0o600&&before.size===BigInt(raw.length));const h=createHash('sha256'),chunk=Buffer.alloc(65536);let n=0;for(;;){check();const {bytesRead:z}=await f.read(chunk,0,chunk.length,null);if(!z)break;n+=z;need(n<=raw.length);h.update(chunk.subarray(0,z));}need(n===raw.length&&h.digest('hex')===digest(raw)&&same(material(before),material(await f.stat({bigint:true})))&&same(material(before),material(await lstat(proofPath,{bigint:true}))));}finally{await f.close();}}await proofFence();
  const summary={format,passed:true,databaseRoles:2,sourceFiles:[...rows.values()].reduce((n,z)=>n+z.files,0),sourceDirectories:[...rows.values()].reduce((n,z)=>n+z.dirs,0),payloadBytes:[...rows.values()].reduce((n,z)=>n+z.bytes,0),sourceNineFieldAndShaUnchanged:true,sourceNamespaceUnchanged:true,copiesMatchSourceBytes:true,independentInodes:true,privateDirectoryModes:true,privateFileModes:true,copiesUnchangedAfterAudit:false,copyProofSha256:digest(raw),...stability,rawInventoryExported:false,productionQualified:false};
- return {dataRoot:dirname(destinations[0]),witnessRoot:dirname(destinations[1]),summary:validateRotationCopySummary(summary,false),async verify(){
+ const checked=after=>{if(!wholeOwner)return validateRotationCopySummary({...summary,copiesUnchangedAfterAudit:after},after);const {databaseRoles,...rest}=summary;need(summary.sourceFiles<=maximumFiles&&summary.payloadBytes<=maximumBytes);return {...rest,format:'nano-fresh-native-owner-copy-v1',roleRoots:2,copiesUnchangedAfterAudit:after};};
+ return {dataRoot:wholeOwner?destinations[0]:dirname(destinations[0]),witnessRoot:wholeOwner?destinations[1]:dirname(destinations[1]),summary:checked(false),async verifySource(){until=performance.now()+180000;for(let i=0;i<2;++i)need(same(rows.get(roots[i]),await scan(roots[i])));await proofFence();return {sourceNineFieldAndShaUnchanged:true,sourceNamespaceUnchanged:true,copyProofSha256:digest(raw)};},async verify(){
   until=performance.now()+180000;
   for(let i=0;i<2;++i){need(same(rows.get(roots[i]),await scan(roots[i])));need(same(copies[i],await scan(destinations[i],{privateModes:true,forbiddenIds:sourceIds})));}
-  await proofFence();return validateRotationCopySummary({...summary,copiesUnchangedAfterAudit:true},true);
+  await proofFence();return checked(true);
  }};
 }
 
