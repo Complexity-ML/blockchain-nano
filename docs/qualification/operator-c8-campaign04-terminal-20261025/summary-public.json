@@ -1,0 +1,36 @@
+{
+  "format": "nano-campaign04-terminal-summary-v1",
+  "status": "FAILED",
+  "campaignId": "938f484d6bf7bddb6c37181b86642142d92d1ed41dba4a74c3cf3c6f9ecda4bf",
+  "candidateSourceBase": "d23409b3c032be87de303c4864ec7dac557ced34",
+  "javascriptTestedRevision": "ed651411",
+  "sourceLaunchRevision": "f572653d9692e35f2602e73b268c95a0520f755e",
+  "primaryFailure": {
+    "timeMs": 1792876202528,
+    "message": "Bounded finalized lifecycle ancestry",
+    "phase": "wait for same validator64 new finalized proposal after first VPS restore",
+    "phaseBudgetMs": 480000,
+    "newProposalCriterionSatisfied": false,
+    "classification": "event not observed before search deadline; old error conflates deadline and ancestry bound"
+  },
+  "terminalStages": 301,
+  "failedTerminalStages": [
+    "lifecycle-closing",
+    "audit-three-owner-restoration"
+  ],
+  "terminalWrapperExitCode": 1,
+  "terminalControllerExitCode": 1,
+  "twoMacWholeRestoresAndNewFinalizedProposals": true,
+  "depositRegisteredAndActivated": true,
+  "firstVpsWholeRestore": true,
+  "commonFinalityAfterFirstVpsRestore": true,
+  "sameKeyPostVpsRestoreProposalQualified": false,
+  "secondVpsRestoreQualified": false,
+  "exitsWithdrawalsSlashQualified": false,
+  "completeLifecycleQualified": false,
+  "threeOwnerCompleteRestorationQualified": false,
+  "oldDomainsAndJournalsPreserved": true,
+  "campaign04Restarted": false,
+  "campaign05Authorized": false,
+  "productionQualified": false
+}

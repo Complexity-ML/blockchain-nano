@@ -9250,3 +9250,45 @@ Bindings G2 d234, code JavaScript testé ed651411 et sources de lancement f57265
 Le [lot des deux restaurations Mac](qualification/operator-c8-campaign04-mac-recovery-20261024/README.md) lie pour chaque propriétaire 16 paires de journaux/témoins et 34 bases en lecture seule à des engagements externes, avec copies complètes vérifiées avant reprise. La même clé a ensuite proposé un nouveau bloc réellement finalisé : Native slot 90 après tête 79 / journal 60 ; Docker Mac slot 232 après tête 177 / journal 160. Trois nouvelles avancées de finalité commune et le même bloc d’exécution finalisé suivent chaque restauration (époques 8→12 puis 20→24). Les observations Root excluent un simple rejeu d’une proposition présignée plus récente que la tête arrêtée.
 
 Le cycle validateur et les deux restaurations VPS prévues continuent dans le même domaine 04 signé, sans re-export ni reset, sous budget réduit et borne initiale inchangée. Les dernières fences de sources originales, la clôture canonique, les sorties réelles et absences d’acteurs demeurent nécessaires avant qualification complète. Ce lot ne qualifie ni la reprise des anciennes données opérationnelles ni la production globale. C++/images et Paris/Shanghai inchangés ; aucun EIP promu. Tous critères et échecs précédents sont conservés, ainsi que les écarts résiduels consensus/WAN, charge, exploitation/CI/reproductibilité, revue indépendante non réalisée et Base–Nano/USDC/Doppler/T0. Aucun fonds, vente ou déploiement public ; objectif actif.
+
+
+<!-- nano-c8-campaign04-terminal-failed-20261025 -->
+## 25 octobre 2026 — campagne 04 terminée FAILED, reprises partielles conservées
+
+La campagne 04 est terminée **FAILED**, avec sorties effectives du contrôleur et
+du wrapper à 1. Ce constat remplace son état « en cours » dans les addenda datés
+précédents ; les preuves acquises et tous les échecs restent conservés. Les deux
+restaurations entières Mac ont repris une proposition réellement finalisée de
+la même clé : Native slot 90 après tête 79/journal 60, Docker Mac slot 232 après
+tête 177/journal 160. Le dépôt a enregistré puis activé le validateur d’index 64 ;
+le registre compte 65 entrées. La première restauration entière VPS est suivie
+de trois avancées de finalité commune (45, 49, 50 depuis 44), puis de trois lectures
+stables et du même checkpoint sur les trois propriétaires.
+
+Le critère suivant échoue : aucune nouvelle proposition finalisée de l’index 64
+n’est observée dans les 480 000 ms (8 min) prévus après cette restauration VPS.
+Son journal de proposition reste au slot 342, tandis que sa cible d’attestation
+avance de 46 à 61. Cette activité ne remplace pas la proposition exigée et ne
+prouve pas, seule, une attestation canonique finalisée. L’ancien message
+`Bounded finalized lifecycle ancestry` regroupe le délai et la borne d’ascendance ;
+il ne suffit pas à identifier une panne du consensus ou sa cause. Le cycle
+complet, la seconde restauration VPS, les sorties/retraits et la sanction ne
+sont donc pas qualifiés.
+
+La clôture conserve 301 étapes, dont deux refusées : `lifecycle-closing` et
+`audit-three-owner-restoration`. Les trois captures arrêtées publient 65 paires
+primaire/témoin et 136 rôles de bases lus en lecture seule ; elles rapportent
+le même checkpoint finalisé, époque 60,
+`0xa2f2e649b94ecda019aa8e64ef6726090eeb983e275a7d50e63320da65c2ced7`.
+Leur portée reste une capture avec engagements, sans audit terminal complet du
+cycle. Les contrôles d’absence Root ne retrouvent aucun acteur/sampler Mac,
+aucun conteneur acteur VPS actif ni aucun processus possédé du contrôleur,
+du nœud natif ou du tunnel ; les volumes ne sont pas supprimés.
+
+Les correctifs prospectifs du scanner ne changent pas ce verdict historique.
+La candidate C++, les images et Paris/Shanghai gardent leurs périmètres ; aucun
+EIP n’est promu. Tous les critères résiduels consensus/WAN, exploitation,
+CI/reproductibilité et revue de sécurité indépendante non réalisée restent
+ouverts. Base–Nano, bridge USDC, Doppler et visibilité T0 ne sont pas qualifiés ;
+aucun ratio, fonds réel, vente, déploiement public ou nouvel accord de campagne
+n’est créé par ce constat. Objectif actif, **production non qualifiée**.

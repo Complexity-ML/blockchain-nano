@@ -1,0 +1,87 @@
+{
+  "timeMs": 1792875719451,
+  "event": "fresh-finality-sample",
+  "phase": "lifecycle-after-first-restore",
+  "rows": [
+    {
+      "name": "mac-native",
+      "peers": "0x1",
+      "checkpoint": {
+        "epoch": "50",
+        "root": "0x19c20ac5209d8c2aeff2c1fc54717f63df3e6a078848890b24cf78ff75eba4c3"
+      },
+      "source": "matching-head-state-and-finalized-header",
+      "ancestryVerified": true
+    },
+    {
+      "name": "mac-docker",
+      "peers": "0x1",
+      "checkpoint": {
+        "epoch": "50",
+        "root": "0x19c20ac5209d8c2aeff2c1fc54717f63df3e6a078848890b24cf78ff75eba4c3"
+      },
+      "source": "matching-head-state-and-finalized-header",
+      "ancestryVerified": true
+    },
+    {
+      "name": "vps-docker",
+      "peers": "0x2",
+      "checkpoint": {
+        "epoch": "50",
+        "root": "0x19c20ac5209d8c2aeff2c1fc54717f63df3e6a078848890b24cf78ff75eba4c3"
+      },
+      "source": "matching-head-state-and-finalized-header",
+      "ancestryVerified": true
+    }
+  ],
+  "progress": {
+    "format": "nano-isolated-runtime-observation-v1",
+    "baseline": {
+      "epoch": "44",
+      "root": "0xeac9dcc6e9117621f60cc468065690ddddffbd6dedc39920233f443c0a16dfb6"
+    },
+    "distinctAdvances": [
+      {
+        "epoch": "45",
+        "root": "0xd9d112e3f61701d69aef651b83077e4ee16d5f7a48c14e723e2d2b57acfe602c"
+      },
+      {
+        "epoch": "49",
+        "root": "0x65b16ced4a0df63854a92096f56309275da177a49e598a30ab5bcceacb4a8c6e"
+      },
+      {
+        "epoch": "50",
+        "root": "0x19c20ac5209d8c2aeff2c1fc54717f63df3e6a078848890b24cf78ff75eba4c3"
+      }
+    ],
+    "stableSamples": 3,
+    "requiredAdvances": 3,
+    "requiredStableSamples": 3,
+    "knownCompletedCheckpoints": [
+      {
+        "epoch": "44",
+        "root": "0xeac9dcc6e9117621f60cc468065690ddddffbd6dedc39920233f443c0a16dfb6"
+      },
+      {
+        "epoch": "45",
+        "root": "0xd9d112e3f61701d69aef651b83077e4ee16d5f7a48c14e723e2d2b57acfe602c"
+      },
+      {
+        "epoch": "49",
+        "root": "0x65b16ced4a0df63854a92096f56309275da177a49e598a30ab5bcceacb4a8c6e"
+      },
+      {
+        "epoch": "50",
+        "root": "0x19c20ac5209d8c2aeff2c1fc54717f63df3e6a078848890b24cf78ff75eba4c3"
+      }
+    ],
+    "perOwnerPreviousEpoch": {
+      "mac-native": "50",
+      "mac-docker": "50",
+      "vps-docker": "50"
+    },
+    "bootstrapStateCheckpoint": null,
+    "networkQualified": false,
+    "productionQualified": false
+  }
+}
