@@ -1,0 +1,275 @@
+TAP version 13
+# Subtest: real owned command joins its process group and captures exact stdin/stdout/stderr
+ok 1 - real owned command joins its process group and captures exact stdin/stdout/stderr
+  ---
+  duration_ms: 191.387281
+  ...
+# Subtest: real owned command preserves caller cancellation and joins a child that ignores TERM via KILL
+ok 2 - real owned command preserves caller cancellation and joins a child that ignores TERM via KILL
+  ---
+  duration_ms: 3168.324259
+  ...
+# Subtest: real owned command does not treat leader exit as closure while a same-group descendant holds stdio
+ok 3 - real owned command does not treat leader exit as closure while a same-group descendant holds stdio
+  ---
+  duration_ms: 195.358667
+  ...
+# Subtest: real owned command timeout terminates and joins its own process group
+ok 4 - real owned command timeout terminates and joins its own process group
+  ---
+  duration_ms: 1030.626319
+  ...
+# Subtest: command adapter clamps the timeout, owns a detached child and preserves stdout, options and known stdin
+ok 5 - command adapter clamps the timeout, owns a detached child and preserves stdout, options and known stdin
+  ---
+  duration_ms: 12.619033
+  ...
+# Subtest: caller cancellation preserves its error and waits for close plus group absence; leader exit alone is insufficient
+ok 6 - caller cancellation preserves its error and waits for close plus group absence; leader exit alone is insufficient
+  ---
+  duration_ms: 8.777468
+  ...
+# Subtest: timeout escalates only its owned group and preserves the first error when TERM fails before KILL and join
+ok 7 - timeout escalates only its owned group and preserves the first error when TERM fails before KILL and join
+  ---
+  duration_ms: 3.068221
+  ...
+# Subtest: closeout uses a fresh signal and expired global time permits only the explicit owned-cleanup capability
+ok 8 - closeout uses a fresh signal and expired global time permits only the explicit owned-cleanup capability
+  ---
+  duration_ms: 1.277121
+  ...
+# Subtest: owned cleanup begun before global expiry keeps its bounded join grace while audits remain refused
+ok 9 - owned cleanup begun before global expiry keeps its bounded join grace while audits remain refused
+  ---
+  duration_ms: 1.405593
+  ...
+# Subtest: reserved PIDs and unregistered persistent handles can never trigger a foreign signal
+ok 10 - reserved PIDs and unregistered persistent handles can never trigger a foreign signal
+  ---
+  duration_ms: 3.675041
+  ...
+# Subtest: campaign budget includes preparation elapsed since the supplied start
+ok 11 - campaign budget includes preparation elapsed since the supplied start
+  ---
+  duration_ms: 5.942259
+  ...
+# Subtest: expired work still permits a separate closeout signal until the original overall end
+ok 12 - expired work still permits a separate closeout signal until the original overall end
+  ---
+  duration_ms: 0.927567
+  ...
+# Subtest: early or repeated closeout never resets the global deadline or replaces its signal twice
+ok 13 - early or repeated closeout never resets the global deadline or replaces its signal twice
+  ---
+  duration_ms: 0.780344
+  ...
+# Subtest: command budgets are positive integers and refuse before invocation; dispose cancels the unique timer
+ok 14 - command budgets are positive integers and refuse before invocation; dispose cancels the unique timer
+  ---
+  duration_ms: 1.342286
+  ...
+# Subtest: actual runner inventory covers restored audit and transitive finality/monitor dependencies
+ok 15 - actual runner inventory covers restored audit and transitive finality/monitor dependencies
+  ---
+  duration_ms: 83.050726
+  ...
+# Subtest: dependency-only edit changes its hash while entry hash remains identical
+ok 16 - dependency-only edit changes its hash while entry hash remains identical
+  ---
+  duration_ms: 9.836551
+  ...
+# Subtest: multiline imports, side effects and cycles are included once
+ok 17 - multiline imports, side effects and cycles are included once
+  ---
+  duration_ms: 8.416137
+  ...
+# Subtest: missing imported dependency fails rather than making a partial manifest
+ok 18 - missing imported dependency fails rather than making a partial manifest
+  ---
+  duration_ms: 4.885273
+  ...
+# Subtest: import outside repository is rejected
+ok 19 - import outside repository is rejected
+  ---
+  duration_ms: 6.493445
+  ...
+# Subtest: symlink to external source is rejected
+ok 20 - symlink to external source is rejected
+  ---
+  duration_ms: 4.886617
+  ...
+# Subtest: actual lifecycle driver generation20261024 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+ok 21 - actual lifecycle driver generation20261024 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+  ---
+  duration_ms: 25241.982894
+  ...
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 22 - new output admission: actual save rejects transient ctime sample before stable first admission
+  ---
+  duration_ms: 9.869203
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 23 - new output admission: three strict samples span two seconds and ctime change resets the run
+  ---
+  duration_ms: 5.360118
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 24 - new output admission: every known-byte and creation-identity mismatch refuses without retry
+  ---
+  duration_ms: 17.39416
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 25 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+  ---
+  duration_ms: 10.096444
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 26 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+  ---
+  duration_ms: 4.741896
+  ...
+# Subtest: whole owner filesystem copy retains peer identity and all sixteen signer journals and witnesses, with independent private files
+ok 27 - whole owner filesystem copy retains peer identity and all sixteen signer journals and witnesses, with independent private files
+  ---
+  duration_ms: 3119.004564
+  ...
+# Subtest: whole owner filesystem copy refuses source symlinks and multiply linked files before admitting any replacement
+ok 28 - whole owner filesystem copy refuses source symlinks and multiply linked files before admitting any replacement
+  ---
+  duration_ms: 62.859693
+  ...
+# Subtest: owner relocation remaps peer, core witness and all16 journal pairs without changing consensus or floors
+ok 29 - owner relocation remaps peer, core witness and all16 journal pairs without changing consensus or floors
+  ---
+  duration_ms: 8.56829
+  ...
+# Subtest: relocation refuses aliases, overlapping roots, changed domain/owner or an incomplete original journal mapping
+ok 30 - relocation refuses aliases, overlapping roots, changed domain/owner or an incomplete original journal mapping
+  ---
+  duration_ms: 6.012017
+  ...
+# Subtest: capture comparison preserves complete semantic commitments while physical copies have different inventories and config paths
+ok 31 - capture comparison preserves complete semantic commitments while physical copies have different inventories and config paths
+  ---
+  duration_ms: 6.772726
+  ...
+# Subtest: capture comparison refuses changed tokens, archives, signing history, owner and incomplete or writable role claims
+ok 32 - capture comparison refuses changed tokens, archives, signing history, owner and incomplete or writable role claims
+  ---
+  duration_ms: 17.545407
+  ...
+# Subtest: coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff
+ok 33 - coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff
+  ---
+  duration_ms: 2.467388
+  ...
+# Subtest: coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails
+ok 34 - coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails
+  ---
+  duration_ms: 5.441051
+  ...
+# Subtest: additional Mac recovery budget includes two restores and six full finality phases without changing existing audits
+ok 35 - additional Mac recovery budget includes two restores and six full finality phases without changing existing audits
+  ---
+  duration_ms: 0.850587
+  ...
+# Subtest: actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid
+ok 36 - actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid
+  ---
+  duration_ms: 14.825794
+  ...
+# Subtest: terminal sequence preserves first error and separates recorder failures without skipping later checks
+ok 37 - terminal sequence preserves first error and separates recorder failures without skipping later checks
+  ---
+  duration_ms: 5.345648
+  ...
+# Subtest: terminal sequence refuses duplicate, invalid and concurrent stage execution before callback
+ok 38 - terminal sequence refuses duplicate, invalid and concurrent stage execution before callback
+  ---
+  duration_ms: 1.355476
+  ...
+# Subtest: actual finally closes handles before captures, commits before replay, and fences after owned cleanup
+ok 39 - actual finally closes handles before captures, commits before replay, and fences after owned cleanup
+  ---
+  duration_ms: 12.683131
+  ...
+# Subtest: actual finally records incomplete lifecycle independently while all terminal fences still execute
+ok 40 - actual finally records incomplete lifecycle independently while all terminal fences still execute
+  ---
+  duration_ms: 9.957667
+  ...
+# Subtest: actual finally retains body error through secondary cleanup, software and recording failures
+ok 41 - actual finally retains body error through secondary cleanup, software and recording failures
+  ---
+  duration_ms: 3.691036
+  ...
+# Subtest: actual finally never captures after an unjoined child and still attempts cleanup and fences
+ok 42 - actual finally never captures after an unjoined child and still attempts cleanup and fences
+  ---
+  duration_ms: 2.586107
+  ...
+# Subtest: actual finally requires both successful clean joins even when a forced or throwing join already closed its child
+ok 43 - actual finally requires both successful clean joins even when a forced or throwing join already closed its child
+  ---
+  duration_ms: 17.768577
+  ...
+# Subtest: actual finally refuses stale stopped receipts and journal audits when an owner stop or stopped-state check fails
+ok 44 - actual finally refuses stale stopped receipts and journal audits when an owner stop or stopped-state check fails
+  ---
+  duration_ms: 5.675874
+  ...
+# Subtest: actual finally fences original sources and all retained families after the final software probes and their cleanup
+ok 45 - actual finally fences original sources and all retained families after the final software probes and their cleanup
+  ---
+  duration_ms: 8.201108
+  ...
+# Subtest: actual finally cleans only new readonly fence operations under owner guards and treats a late stop as failure
+ok 46 - actual finally cleans only new readonly fence operations under owner guards and treats a late stop as failure
+  ---
+  duration_ms: 4.414896
+  ...
+# Subtest: actual finally keeps individual owner commitments if one capture fails, without closing an incomplete set
+ok 47 - actual finally keeps individual owner commitments if one capture fails, without closing an incomplete set
+  ---
+  duration_ms: 1.465822
+  ...
+# Subtest: actual finally refuses post-cleanup software, retained source and retained output mutation separately
+ok 48 - actual finally refuses post-cleanup software, retained source and retained output mutation separately
+  ---
+  duration_ms: 7.848334
+  ...
+# Subtest: actual finally refuses absent initial admission and enforces owned image before stopping a late container
+ok 49 - actual finally refuses absent initial admission and enforces owned image before stopping a late container
+  ---
+  duration_ms: 4.083943
+  ...
+# Subtest: actual finally retains original failure when terminal publication itself fails
+ok 50 - actual finally retains original failure when terminal publication itself fails
+  ---
+  duration_ms: 5.428119
+  ...
+# Subtest: C8 actual finally joins clients before runtime cleanup and publishes only a provisional result
+ok 51 - C8 actual finally joins clients before runtime cleanup and publishes only a provisional result
+  ---
+  duration_ms: 2.817875
+  ...
+# Subtest: C8 actual finally preserves an effective late deadline failure after a ready provisional publication
+ok 52 - C8 actual finally preserves an effective late deadline failure after a ready provisional publication
+  ---
+  duration_ms: 45.763603
+  ...
+# Subtest: C8 actual finally retains a client-join failure while stopping owners and attempting all original fences
+ok 53 - C8 actual finally retains a client-join failure while stopping owners and attempting all original fences
+  ---
+  duration_ms: 4.202381
+  ...
+1..53
+# tests 53
+# suites 0
+# pass 53
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 35311.74826

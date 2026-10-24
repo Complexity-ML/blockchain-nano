@@ -1,0 +1,48 @@
+TAP version 13
+# Subtest: real owned command joins its process group and captures exact stdin/stdout/stderr
+ok 1 - real owned command joins its process group and captures exact stdin/stdout/stderr
+  ---
+  duration_ms: 190.011178
+  ...
+# Subtest: real owned command preserves caller cancellation and joins a child that ignores TERM via KILL
+not ok 2 - real owned command preserves caller cancellation and joins a child that ignores TERM via KILL
+  ---
+  duration_ms: 10163.334845
+  location: 'file:///case/tests/multihost/campaign-commands-runtime.test.mjs:35:1'
+  failureType: 'testCodeFailure'
+  error: 'known caller cancellation'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    TestContext.<anonymous> (file:///case/tests/multihost/campaign-commands-runtime.test.mjs:36:58)
+    Test.runInAsyncScope (node:async_hooks:203:9)
+    Test.run (node:internal/test_runner/test:631:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:374:18)
+    Test.postRun (node:internal/test_runner/test:715:19)
+    Test.run (node:internal/test_runner/test:673:12)
+    process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    async startSubtest (node:internal/test_runner/harness:214:3)
+  ...
+# Subtest: real owned command does not treat leader exit as closure while a same-group descendant holds stdio
+not ok 3 - real owned command does not treat leader exit as closure while a same-group descendant holds stdio
+  ---
+  duration_ms: 10171.267805
+  location: 'file:///case/tests/multihost/campaign-commands-runtime.test.mjs:47:1'
+  failureType: 'testCodeFailure'
+  error: 'Fresh campaign cancelled owned in-flight command'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    Object.closeAll (file:///case/tests/multihost/campaign-commands.mjs:71:43)
+    Object.dispose (file:///case/tests/multihost/campaign-commands-runtime.test.mjs:18:85)
+    TestContext.<anonymous> (file:///case/tests/multihost/campaign-commands-runtime.test.mjs:57:19)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+# Subtest: real owned command timeout terminates and joins its own process group
+not ok 4 - real owned command timeout terminates and joins its own process group
+  ---
+  duration_ms: 10000.837253
+  location: 'file:///case/tests/multihost/campaign-commands-runtime.test.mjs:60:1'
+  failureType: 'testTimeoutFailure'
+  error: 'test timed out after 10000ms'
+  code: 'ERR_TEST_FAILURE'
+  ...
