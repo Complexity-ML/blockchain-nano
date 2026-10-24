@@ -6187,3 +6187,9 @@ CI/facturation, reproductibilité et revue indépendante non réalisée restent
 ouverts selon leurs portées. Base–Nano1:1 reste proposé/non adopté ; bridge USDC,
 Doppler et visibilitéT0 non qualifiés. Aucun fonds, vente ou déploiement public ;
 préfixes historiques intégraux conservés, objectif actif et production non qualifiée.
+
+
+<!-- nano-c8-g2-native-durable-cold-20261024 -->
+## Addendum du 24 octobre 2026 — admissions G2 et copie Native durable
+
+Le [lot G2/Native03](qualification/operator-c8-g2-native-cold-20261024/README.md) valide 24 actifs/trois admissions et une copie physique Native arrêtée avec audit canonique indépendant : 373 fichiers, 36 répertoires, 16 paires primaire/témoin et 694 blocs dont l’ancre. Contrôleur réel 0, quatre commandes C++ jointes à 0, vérification externe 0 au moins 287 s après la borne conservatrice de sortie ; neuf champs/SHA intacts, 834 descripteurs fermés. Création directe dans un dossier durable hors Documents, sans rebase ni nouvelle compilation. Documents01 reste FAILED après mutation des dates de 36 répertoires ; les 746 fichiers réguliers restent exacts et la sonde publique reproduit le phénomène, sans identifier l’acteur. Tous refus/NO_GO historiques sont conservés. Cela ferme ce cas Native hors ligne ; portabilité entre architectures, reprise effective des duties/finalité commune, grands historiques et stabilité continue restent hors preuve. Campagne03 signée/échouée, accord consommé ; aucune04 autorisée. Paris/Shanghai seul profil activé, aucun EIP promu. Les critères résiduels consensus/WAN, exploitation, CI facturation/plafond avant étapes, reproductibilité et revue indépendante non réalisée restent ouverts selon leurs portées. Base–Nano1:1 proposé/non adopté ; bridge USDC, Doppler et T0 non qualifiés. Aucun fonds, vente, signature, dépense ou déploiement public ; objectif actif, production non qualifiée.
