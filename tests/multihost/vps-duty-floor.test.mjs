@@ -2,12 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-import {readFileSync,mkdtempSync,writeFileSync,lstatSync,rmSync,unlinkSync,linkSync,renameSync} from 'node:fs';
+import {readFileSync,mkdtempSync,writeFileSync,lstatSync,rmSync,unlinkSync,linkSync,renameSync,realpathSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join as joinPath} from 'node:path';
 import {vpsProposalFloor,validateVpsDutyFloorPair,vpsDutyFloorProjectionPython} from './vps-duty-floor.mjs';
 import {lifecycleOwnerProjection} from './lifecycle-owner.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
+const requireVpsWorker=process.env.NANO_REQUIRE_VPS_DUTY_WORKER_TEST;
+assert([undefined,'1'].includes(requireVpsWorker),'NANO_REQUIRE_VPS_DUTY_WORKER_TEST must be absent or exactly 1');
+const realVpsWorker=process.platform==='linux'&&typeof process.getuid==='function'&&typeof process.geteuid==='function'&&process.getuid()===1000&&process.geteuid()===1000;
+if(requireVpsWorker==='1')assert(realVpsWorker,'required VPS worker test needs actual Linux real/effective UID1000; skipping is forbidden');
 const j=v=>JSON.stringify(v),clone=v=>structuredClone(v),root=n=>'0x'+BigInt(n).toString(16).padStart(64,'0'),pub=n=>'0x'+BigInt(n+1).toString(16).padStart(96,'0'),token=n=>({sequence:'0x1',digest:root(n)});
 const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v!==null&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
 const metadata=source=>{const start=source.indexOf('def need(v):'),end=source.indexOf('# Creator anchors');assert(start>=0&&end>start);return source.slice(start,end);};
@@ -16,7 +20,7 @@ const metadata=source=>{const start=source.indexOf('def need(v):'),end=source.in
 const python=String.raw`import os,sys,json,hashlib,stat,pathlib,re,tempfile
 payload=json.loads(sys.stdin.buffer.read())
 with tempfile.TemporaryDirectory(prefix='nano-vps-floor-unit-') as directory:
- root=pathlib.Path(directory);fields=('st_dev','st_ino','st_mode','st_uid','st_gid','st_nlink','st_size','st_mtime_ns','st_ctime_ns')
+ root=pathlib.Path(directory).resolve();fields=('st_dev','st_ino','st_mode','st_uid','st_gid','st_nlink','st_size','st_mtime_ns','st_ctime_ns')
  exec(payload['reader'],globals());exec(payload['projection'],globals())
  request=payload['request'];paths={}
  for key,raw in payload['files'].items():
@@ -114,8 +118,12 @@ test('real proposed caller binds prepared identity and both captures before publ
  await assert.rejects(build()({...id,publicKey:pub(1)},before,captured,restored,'phase'));
 });
 
-test('entire owner dispatcher publishes original capture-pin fingerprints and consumes them in the pair route',()=>{
+test('entire owner dispatcher publishes original capture-pin fingerprints and consumes them in the pair route',{
+ skip:realVpsWorker?false:'requires actual Linux UID1000; run the mandatory vps-duty-worker CI lane'
+},()=>{
+ assert.equal(process.platform,'linux','the REAL owner dispatcher qualification is Linux-specific');
  assert.equal(process.getuid(),1000,'the REAL owner dispatcher requires uid1000; do not mock geteuid');
+ assert.equal(process.geteuid(),1000,'the REAL Python owner dispatcher requires effective uid1000');
  const keys=['sourceCapture','restoredCapture','stop','manifest'],statFields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
  const fullNineSha=path=>sha(JSON.stringify(statFields.map(k=>String(lstatSync(path,{bigint:true})[k]))));
  const dispatch=(directory,request)=>{
@@ -123,7 +131,7 @@ test('entire owner dispatcher publishes original capture-pin fingerprints and co
   const value=JSON.parse(stdout);assert.equal(value.format,'nano-fresh-lifecycle-owner-public-v1');assert(!stdout.includes(root(9999)),'no proposal signing root');assert(!stdout.includes('"snapshot"'),'no capsule snapshot');assert(!stdout.includes('witnessSnapshot'),'no witness snapshot');assert(!stdout.includes(directory),'no owner path');return value;
  };
  for(const mutation of ['none','same-bytes-substitution','hardlink-alias']){
-  const f=fixture(),directory=mkdtempSync(joinPath(tmpdir(),'nano-vps-floor-dispatch-'));
+  const f=fixture(),directory=realpathSync(mkdtempSync(joinPath(tmpdir(),'nano-vps-floor-dispatch-')));
   try{
    for(const key of keys){const path=joinPath(directory,key+'.json');writeFileSync(path,f.files[key],{flag:'wx',mode:0o600});f.request[key].path=path;assert.equal(f.request[key].sha256,sha(readFileSync(path)));assert.equal(f.request[key].bytes,readFileSync(path).length);}
    const original=Object.fromEntries(keys.map(key=>[key,fullNineSha(f.request[key].path)]));

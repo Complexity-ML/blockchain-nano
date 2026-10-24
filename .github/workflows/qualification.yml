@@ -54,6 +54,48 @@ jobs:
           path: ci-reports/
           retention-days: 7
           if-no-files-found: error
+  vps-duty-worker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    container:
+      image: ubuntu@sha256:008173c23f95b170204355c12626cb5a965d779a7e1283b09e9cffbb1bf33ca3 # existing 24.04 manifest
+      options: --cpus 2 --memory 1g
+    steps:
+      - name: Install existing test prerequisites
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git ca-certificates python3 util-linux
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '25.9.0'
+          package-manager-cache: false
+      - name: Execute the real worker under UID1000 (no skip allowed)
+        shell: sh
+        run: |
+          set -eu
+          mkdir -p ci-reports
+          node --version > ci-reports/vps-worker-node-version.txt
+          python3 --version > ci-reports/vps-worker-python-version.txt
+          git -c safe.directory="$PWD" rev-parse HEAD > ci-reports/vps-worker-revision.txt
+          node_path=$(command -v node)
+          setpriv --reuid 1000 --regid 1000 --clear-groups \
+            env NANO_REQUIRE_VPS_DUTY_WORKER_TEST=1 TMPDIR=/tmp \
+            "$node_path" --test tests/multihost/vps-duty-floor.test.mjs \
+            > ci-reports/vps-duty-worker.log 2>&1 || {
+              cat ci-reports/vps-duty-worker.log
+              exit 1
+            }
+          cat ci-reports/vps-duty-worker.log
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: vps-duty-worker-${{ github.sha }}
+          path: ci-reports/
+          retention-days: 7
+          if-no-files-found: error
   core:
     needs: changes
     if: needs.changes.outputs.core == 'true'

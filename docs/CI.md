@@ -1,5 +1,38 @@
 # CI et limites de qualification
 
+## VPS duty worker : portabilité des tests et lane dédiée
+
+`vps-duty-floor.test.mjs` conserve six groupes exécutables dans le contexte
+ordinaire ; son septième groupe exerce le dispatcher Python entier et exige
+réellement Linux, UID1000 et EUID1000. Ailleurs (dont Mac UID501 ou runner
+UID1001), seul ce groupe est marqué **SKIP avec motif visible**. Ce skip ne
+qualifie pas le dispatcher et n'efface pas ses preuves Linux antérieures.
+Les racines temporaires synthétiques sont résolues avant toute création/pin,
+pour que les alias usuels de répertoire temporaire ne violent pas le vrai
+lecteur à chemins canoniques. Aucune garde du worker de production n'est changée.
+
+Le job `vps-duty-worker` réutilise le conteneur Ubuntu24 épinglé et Node25.9.0
+déjà employés par le workflow, avec Python3 et util-linux. `setpriv` fait tourner
+le vrai Node/Python en UID/GID1000 sans modifier `geteuid` ni les données du dépôt.
+`NANO_REQUIRE_VPS_DUTY_WORKER_TEST=1` transforme un contexte absent/incorrect en
+échec avant tests, jamais en skip. Les sept groupes doivent y passer réellement.
+Le script operations et ses globs restent inchangés ; le job dédié archive ses
+versions, révision et logs, y compris en cas d'échec. Aucun build d'image Nano,
+Docker imbriqué, clé, capsule ou accès VPS ne fait partie de ces tests.
+
+Commande ciblée dans un contexte Linux UID1000 préparé :
+
+```sh
+NANO_REQUIRE_VPS_DUTY_WORKER_TEST=1 node --test tests/multihost/vps-duty-floor.test.mjs
+```
+
+Cette modification est à qualifier par Root : six exécutions + un skip visible
+hors contexte, refus explicite du mode obligatoire hors contexte, et sept vrais
+succès en Linux UID1000. Une exécution CI GitHub reste requise et peut rester
+bloquée par la facturation ; aucun succès de cette nouvelle lane n'est présumé.
+Le routeur actuel considère une modification de workflow comme pertinente pour
+Core et Network : cette politique n'est pas affaiblie par la nouvelle lane.
+
 CI du lot d’outillage livré8e053d99 : run38313225000 terminé avant toute étape ; operations/changes refusés, core/network skipped. Les annotations indiquent un paiement récent échoué ou une limite de dépenses, sans préciser lequel. Zéro test CI exécuté, aucun réglage de facturation modifié. [Reçu terminal actuel](qualification/isolated-recovery-tooling-ci-20261012/ci-8e053d99-terminal.json). Sources livrées sur main et récupérées sur VPS ; reprise des duties, finalité commune et toutes les exigences restantes restent ouvertes.
 
 
