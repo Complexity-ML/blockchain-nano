@@ -36,9 +36,10 @@ const generation20261018NativeLoader=Object.freeze({...generation20261018,'run.m
 const generation20261018NativeLoopback=Object.freeze({...generation20261018NativeLoader,'prepare.mjs':'a3735e0bb6d306ef83482483fee2aec44463fab23fd6b4ff53f7157c53c94297'});
 const generation20261024CampaignControls=Object.freeze({...generation20261018NativeLoopback,'run.mjs':'d0c0b8c5e093253117875f5a289adacfbf0c361cada180c6e9ec9ad36de2428f','campaign-deadline.mjs':'e23f6cbad812f4316f24bf94880308c72371769b5549b5e190d5276158f1ddd0','campaign-commands.mjs':'dc5e84146081147d8cac962d194ae2a8b0bb4defdca57803bfe9ce8efb983af9','owner-recovery.mjs':'2d8bc4649aca1b5266e163e1b04e8712465af5ab57cf006bcd85be7e48365494','rotation-owned-copy.mjs':'a1c8c6c03fcf5dc8b2655bb737e86a650edc3e36457bdd5e997a4072972ac000'});
 const generation20261024SpawnCommands=Object.freeze({...generation20261024CampaignControls,'run.mjs':'50c8c80d6a96b60184810299fdeb790aa4fae8871256ead1197eb21f5f62cdd2','campaign-commands.mjs':'8c742afb61c2e7ead17721bc572a83ed1be95bc886f24af6ac4e21bbe16a5ec4'});
+const generation20261024OperatorOwnership=Object.freeze({...generation20261024SpawnCommands,'run.mjs':'eedb13521088e68401f7b638c4a28967aa0122fe4f9a47bdcc182fabaf5b32e9','operator-ownership.test.mjs':'54f788fc6872e0baf8354706cbabdb1c629c61d13b44b997a1ac83ed4aa3c97c'});
 Object.freeze(historicalSourcePins);
-const sourcePinGeneration='generation20261024SpawnCommands';
-const sourcePins=Object.freeze({...historicalSourcePins,...generation20261024SpawnCommands});
+const sourcePinGeneration='generation20261024OperatorOwnership';
+const sourcePins=Object.freeze({...historicalSourcePins,...generation20261024OperatorOwnership});
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
 const material=s=>fields.map(k=>String(s[k]));
@@ -63,7 +64,7 @@ async function writeAndAdmitFixture(path,bytes){
 }
 const absent=async path=>{try{await lstat(path);}catch(e){if(e.code==='ENOENT')return;throw e;}assert.fail('Forbidden fixture path was created: '+path);};
 test('actual lifecycle driver generation20261024 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network',{timeout:45000},async()=>{
- assert.equal(sourcePinGeneration,'generation20261024SpawnCommands');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
+ assert.equal(sourcePinGeneration,'generation20261024OperatorOwnership');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
  assert.deepEqual(Object.keys(generation20261018NativeLoader).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs','native-loader-guard.mjs','prepare.mjs','run.mjs']);
  assert.deepEqual(Object.keys(generation20261018NativeLoopback).sort(),Object.keys(generation20261018NativeLoader).sort());
  assert.deepEqual(Object.keys(generation20261018NativeLoopback).filter(leaf=>generation20261018NativeLoopback[leaf]!==generation20261018NativeLoader[leaf]),['prepare.mjs']);
@@ -71,7 +72,9 @@ test('actual lifecycle driver generation20261024 gates legacy and C8 authorizati
  assert.deepEqual(Object.keys(generation20261024CampaignControls).filter(leaf=>!Object.hasOwn(generation20261018NativeLoopback,leaf)).sort(),['campaign-commands.mjs','campaign-deadline.mjs','owner-recovery.mjs','rotation-owned-copy.mjs']);
  assert.deepEqual(Object.keys(generation20261024SpawnCommands).sort(),Object.keys(generation20261024CampaignControls).sort());
  assert.deepEqual(Object.keys(generation20261024SpawnCommands).filter(leaf=>generation20261024SpawnCommands[leaf]!==generation20261024CampaignControls[leaf]).sort(),['campaign-commands.mjs','run.mjs']);
- for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261024SpawnCommands,leaf)?generation20261024SpawnCommands[leaf]:pin,'Only the explicitly named source generation may override historical pins');
+ assert.deepEqual(Object.keys(generation20261024SpawnCommands).filter(leaf=>generation20261024OperatorOwnership[leaf]!==generation20261024SpawnCommands[leaf]),['run.mjs']);
+ assert.deepEqual(Object.keys(generation20261024OperatorOwnership).filter(leaf=>!Object.hasOwn(generation20261024SpawnCommands,leaf)),['operator-ownership.test.mjs']);
+ for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261024OperatorOwnership,leaf)?generation20261024OperatorOwnership[leaf]:pin,'Only the explicitly named source generation may override historical pins');
  const run=resolve(process.argv[2]??fileURLToPath(new URL('./run.mjs',import.meta.url))),source=dirname(run),before={};
  for(const [leaf,expected] of Object.entries(sourcePins)){before[leaf]=await stable(join(source,leaf));assert.equal(before[leaf].sha256,expected,'Exact frozen source required');}
  const parent=await realpath(await mkdtemp(join(tmpdir(),'nano-lifecycle-unavailable-'))),missing=[];
