@@ -1,6 +1,7 @@
 // Owner-local files only. Python runs on the VPS host, never inside an image.
 // No stdout mode returns an action, Job/session, capture, environment or DB bytes.
 import {linuxRotationCopy} from './rotation-owned-copy.mjs';
+import {vpsDutyFloorProjectionPython} from './vps-duty-floor.mjs';
 const need=(v,m)=>{if(!v)throw Error('Lifecycle owner: '+m);};
 export const lifecycleLinuxStatx=String.raw`use Config qw(%Config);use Math::BigInt ();
 sub lifecycle_statx_abi{my($os,$arch,$iv,$ptr,$order)=@_;need(defined($os)&&defined($arch)&&defined($iv)&&defined($ptr)&&defined($order)&&$os eq 'linux'&&$iv eq '8'&&$ptr eq '8'&&$order eq '12345678');return 332 if $arch=~m{\Ax86_64-linux(?:-|\z)};return 291 if $arch=~m{\Aaarch64-linux(?:-|\z)};need(0);}
@@ -121,6 +122,7 @@ def run(argv,prefix,seconds):
  finally:
   for f in fs:os.fsync(f.fileno());f.close()
  stable([write(root/(prefix+'-exit.json'),canon({'exitCode':result.returncode}))]);need(result.returncode==0);raw,_=read(out);return json.loads(raw),raw
+${vpsDutyFloorProjectionPython}
 try:
  need(root==root.resolve() and os.geteuid()==1000);parent(root)
  if mode=='stage':
@@ -142,7 +144,9 @@ try:
   need(type(r['stabilityProbeCount']) is int and r['stabilityProbeCount']>=3 and type(r['stabilitySpanMs']) is int and type(r['stabilityElapsedMs']) is int and 2000<=r['stabilitySpanMs']<=r['stabilityElapsedMs']<=30000 and re.fullmatch('[0-9a-f]{64}',r['copyProofSha256']))
   r={k:v for k,v in r.items() if k not in ('format','databaseRoles')};r['format']='nano-fresh-lifecycle-owner-copy-v1';r['roleRoots']=2
  elif mode=='capture-pin':
-  b,row=read(x['capturePath'],{'sha256':x['captureSha256']});c=json.loads(b);need(c['passed'] is True and c['externalWitnessTokensMatched'] is True and c['canonicalStoreSnapshotVerified'] is True and c['primaryAndWitnessBlobClosuresVerified'] is True);stop,sr=read(x['stopPath'],{'sha256':c['externalStopReceiptSha256']});r={'captureBytes':row['bytes'],'stopSha256':sr['sha256'],'stopBytes':sr['bytes'],'headSlot':c['headSlot'],'finalized':c['finalized']}
+  b,row=read(x['capturePath'],{'sha256':x['captureSha256']});c=json.loads(b);need(c['passed'] is True and c['externalWitnessTokensMatched'] is True and c['canonicalStoreSnapshotVerified'] is True and c['primaryAndWitnessBlobClosuresVerified'] is True);stop,sr=read(x['stopPath'],{'sha256':c['externalStopReceiptSha256']});r={'captureBytes':row['bytes'],'captureMaterialSha256':sha(canon(row['material'])),'stopSha256':sr['sha256'],'stopBytes':sr['bytes'],'stopMaterialSha256':sha(canon(sr['material'])),'headSlot':c['headSlot'],'finalized':c['finalized']}
+ elif mode=='vps-duty-floor-pair':
+  r=vps_floor_project_pair(x)
  elif mode=='tool':
   rows=json.loads(read(x['controlAdmission']['path'],x['controlAdmission'])[0]);[read(z['path'],z) for z in rows]
   try:r,raw=run(x['argv'],x['prefix'],x['seconds'])

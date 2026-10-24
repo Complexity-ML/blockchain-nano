@@ -39,9 +39,10 @@ const generation20261024SpawnCommands=Object.freeze({...generation20261024Campai
 const generation20261024OperatorOwnership=Object.freeze({...generation20261024SpawnCommands,'run.mjs':'eedb13521088e68401f7b638c4a28967aa0122fe4f9a47bdcc182fabaf5b32e9','operator-ownership.test.mjs':'54f788fc6872e0baf8354706cbabdb1c629c61d13b44b997a1ac83ed4aa3c97c'});
 const generation20261024RuntimeSupervision=Object.freeze({...generation20261024OperatorOwnership,'run.mjs':'dc6ec843511ac9f3dffae25bba457475ffcb0d9c108a3c1c842f0d43019935c3','docker-runtime-restart-guard.mjs':'b0e71925aa51c1ca51266059d8dc4a16c58ec9c0111aded49c7f5641341b4fe9'});
 const generation20261025FinalizedScanner=Object.freeze({...generation20261024RuntimeSupervision,'run.mjs':'66424ecb30e3347c9e4efc2066efa0e2d891ae7c9944b152450e9c067ee21896','finalized-lifecycle-scanner.mjs':'c70e6519c496228e901cefe619aeab77db37327c0b44198b51a6f906043bb581'});
+const generation20261025VpsDutyFloor=Object.freeze({...generation20261025FinalizedScanner,'run.mjs':'afb7864031b843d898e30cb3b8d91f378f061498ba7c7f02b5367ae15ddbc3e4','lifecycle-owner.mjs':'9c53d42a4eb26ea245fb7b05372464d371321735fcd8c11c99780a7abc1c649e','vps-duty-floor.mjs':'02576882669855504430b7134f112a4394a4e2c4cace797d39dfc1212b33302b'});
 Object.freeze(historicalSourcePins);
-const sourcePinGeneration='generation20261025FinalizedScanner';
-const sourcePins=Object.freeze({...historicalSourcePins,...generation20261025FinalizedScanner});
+const sourcePinGeneration='generation20261025VpsDutyFloor';
+const sourcePins=Object.freeze({...historicalSourcePins,...generation20261025VpsDutyFloor});
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
 const material=s=>fields.map(k=>String(s[k]));
@@ -66,7 +67,7 @@ async function writeAndAdmitFixture(path,bytes){
 }
 const absent=async path=>{try{await lstat(path);}catch(e){if(e.code==='ENOENT')return;throw e;}assert.fail('Forbidden fixture path was created: '+path);};
 test('actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network',{timeout:45000},async()=>{
- assert.equal(sourcePinGeneration,'generation20261025FinalizedScanner');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
+ assert.equal(sourcePinGeneration,'generation20261025VpsDutyFloor');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
  assert.deepEqual(Object.keys(generation20261018NativeLoader).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs','native-loader-guard.mjs','prepare.mjs','run.mjs']);
  assert.deepEqual(Object.keys(generation20261018NativeLoopback).sort(),Object.keys(generation20261018NativeLoader).sort());
  assert.deepEqual(Object.keys(generation20261018NativeLoopback).filter(leaf=>generation20261018NativeLoopback[leaf]!==generation20261018NativeLoader[leaf]),['prepare.mjs']);
@@ -80,7 +81,9 @@ test('actual lifecycle driver generation20261025 gates legacy and C8 authorizati
  assert.deepEqual(Object.keys(generation20261024RuntimeSupervision).filter(leaf=>!Object.hasOwn(generation20261024OperatorOwnership,leaf)),['docker-runtime-restart-guard.mjs']);
  assert.deepEqual(Object.keys(generation20261024RuntimeSupervision).filter(leaf=>generation20261025FinalizedScanner[leaf]!==generation20261024RuntimeSupervision[leaf]),['run.mjs']);
  assert.deepEqual(Object.keys(generation20261025FinalizedScanner).filter(leaf=>!Object.hasOwn(generation20261024RuntimeSupervision,leaf)),['finalized-lifecycle-scanner.mjs']);
- for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261025FinalizedScanner,leaf)?generation20261025FinalizedScanner[leaf]:pin,'Only the explicitly named source generation may override historical pins');
+ assert.deepEqual(Object.keys(generation20261025FinalizedScanner).filter(leaf=>generation20261025VpsDutyFloor[leaf]!==generation20261025FinalizedScanner[leaf]).sort(),['lifecycle-owner.mjs','run.mjs']);
+ assert.deepEqual(Object.keys(generation20261025VpsDutyFloor).filter(leaf=>!Object.hasOwn(generation20261025FinalizedScanner,leaf)),['vps-duty-floor.mjs']);
+ for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261025VpsDutyFloor,leaf)?generation20261025VpsDutyFloor[leaf]:pin,'Only the explicitly named source generation may override historical pins');
  const run=resolve(process.argv[2]??fileURLToPath(new URL('./run.mjs',import.meta.url))),source=dirname(run),before={};
  for(const [leaf,expected] of Object.entries(sourcePins)){before[leaf]=await stable(join(source,leaf));assert.equal(before[leaf].sha256,expected,'Exact frozen source required');}
  const parent=await realpath(await mkdtemp(join(tmpdir(),'nano-lifecycle-unavailable-'))),missing=[];

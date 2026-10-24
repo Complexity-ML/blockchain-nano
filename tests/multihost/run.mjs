@@ -8,6 +8,7 @@ import {linuxSourceFiles,createMacLinuxFiles,linuxInventory,linuxBootstrapProof}
 import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest,publishLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,createLifecycleStopReceipts,admitNewLifecycleOutput} from './lifecycle-runtime.mjs';
 import {createTerminalEvidenceSequence} from './terminal-evidence.mjs';
 import {lifecycleWholeCopyProgram,lifecycleOwnerProjection} from './lifecycle-owner.mjs';
+import {validateVpsDutyFloorPair} from './vps-duty-floor.mjs';
 import {deriveLifecycleParameters,validateLifecycleDeposit} from './lifecycle.mjs';
 import {freshSoftwareLocators,freshSoftwareFileMounts} from './program-locators.mjs';
 import {createNativeRotationCopies,createNativeOwnerCopies,linuxRotationCopy,validateRotationCopySummary} from './rotation-owned-copy.mjs';
@@ -1076,7 +1077,7 @@ except BaseException:
    const capturePath=remoteRoot+'/'+prefix+(external?'-first-stdout.private.json':'-second-stdout.private.json'),stopPath=external?external.stopPath:remoteRoot+'/'+prefix+'-stop-second.private.json',pins=await lifecycleRemote({mode:'capture-pin',capturePath,captureSha256:r.lastCaptureSha256,stopPath});
    const stopArtifact={path:stopPath,sha256:pins.stopSha256,bytes:pins.stopBytes},captureArtifact={path:lifecycleRemoteGuest(capturePath),sha256:r.lastCaptureSha256,bytes:pins.captureBytes};need(r.externalStopReceiptSha256===pins.stopSha256&&r.headSlot===pins.headSlot&&canonical(r.finalized)===canonical(pins.finalized),'VPS capture public metadata must match independently pinned capsule');
    const publicCapture=await commit({name,receipt,firstCaptureSha256:r.firstCaptureSha256,stopArtifact,captureArtifact,capture:r});
-   return {name,receipt,stopPath,capturePath,stopArtifact,captureArtifact,headSlot:pins.headSlot,finalized:pins.finalized,publicCapture};
+   return {name,receipt,stopPath,capturePath,stopArtifact,captureArtifact,captureMaterialSha256:pins.captureMaterialSha256,stopMaterialSha256:pins.stopMaterialSha256,headSlot:pins.headSlot,finalized:pins.finalized,publicCapture};
   }
   let pins,stopPath,capturePath;
   if(external){
@@ -1222,6 +1223,12 @@ except BaseException:
   await save(join(output,'three-owner-restoration-public.json'),{format:'nano-fresh-three-owner-restoration-v1',passed:true,restoredOwners:names,macRestoresExecuted:2,vpsLifecycleRestoresExecuted:2,commonRequiredFinalized:required,terminalCanonicalAudits:3,originalJournalAuthoritiesRefreshed:false,simultaneousThreeHostDisasterQualified:false,productionQualified:false});
  }
 
+ async function lifecycleVpsDutyFloor(id,beforeProposal,captured,restored,prefix){
+  lifecycleCheck();need(id.owner==='vps-docker'&&captured.name===id.owner&&restored.name===id.owner&&preparedManifest.nodes.find(n=>n.name===id.owner)?.signerIdentities.some(k=>k.publicKey===id.publicKey),'Exact prepared VPS signer ownership');
+  const selected=manifest.publicKeys.filter(k=>k.publicKey===id.publicKey);need(selected.length===1&&Number.isSafeInteger(selected[0].index)&&selected[0].index>=0,'Unique public manifest identity');
+  const bytes=await observe(join(assets,'isolated-domain.json'),null,true),request={mode:'vps-duty-floor-pair',sourceCapture:{path:captured.capturePath,sha256:captured.captureArtifact.sha256,bytes:captured.captureArtifact.bytes,materialSha256:captured.captureMaterialSha256},restoredCapture:{path:restored.capturePath,sha256:restored.captureArtifact.sha256,bytes:restored.captureArtifact.bytes,materialSha256:restored.captureMaterialSha256},stop:{...captured.stopArtifact,materialSha256:captured.stopMaterialSha256},manifest:{path:configAt(id.owner)+'/isolated-domain.json',sha256:sha(bytes),bytes:bytes.length},campaignId:manifest.campaignId,selectedPublicKey:id.publicKey,selectedPreparedPublicKeyIndex:selected[0].index,selectedIsPending:id.publicKey===manifest.bootstrapSigningHistory.deposit.publicKey,resolvedIndex:beforeProposal.resolvedIndex,expectedHeadSlot:captured.headSlot,expectedFinalized:captured.finalized,witnessOriginSha256:captured.publicCapture.firstCaptureSha256};
+  const result=validateVpsDutyFloorPair(await lifecycleRemote(request,35000),request);lifecycleCheck();await save(join(output,prefix+'-duty-floor-public.json'),result);lifecycleCheck();return result;
+ }
  async function lifecycleRestore(phase,id,beforeProposal){
   const phaseBegan=performance.now(),name='vps-docker',a=owner(name),prefix=lifecyclePrefix('restore-'+phase),before=await stopped(name,prefix+'-runtime-stop'),captured=await lifecycleCapture(name,before.receipt,prefix+'-source'),destination=remoteRoot+'/'+prefix;await sh(['mkdir','-m','700',destination]);
   const fullCopy=lifecycleWholeCopyProgram(plan.campaignNamespace,name,spec.lifecycle.resources),sourceMounts=restoredMounts?restoredMounts.map(x=>x.startsWith('type=')?x+',readonly':x):dataMount(name,true),copyMount=readOnly=>['--mount',`type=bind,src=${destination},dst=/rotation-audit${readOnly?',readonly':''}`],cmd=(mode,pin)=>lifecycleRemoteDocker(['run','--rm',...safe(name),...sourceMounts,...copyMount(mode==='verify'),'--entrypoint','perl',a.image,'-e',fullCopy,rootFor(name,'data'),rootFor(name,'witness'),'/rotation-audit',mode,pin]);
@@ -1232,9 +1239,10 @@ except BaseException:
   // Both captures independently authenticate the same external P/W pins. They
   // remain owner-local and are compared byte/token-for-byte by closing C++.
   const verified=lifecycleOwnerCopyResult(await lifecycleRemote({mode:'owner-copy',prefix:prefix+'-verify',afterAudit:true,resources:spec.lifecycle.resources,argv:cmd('verify',copy.copyProofSha256)},195000),true);
+  const dutyFloor=await lifecycleVpsDutyFloor(id,beforeProposal,captured,restored,prefix);
   lifecycleSourceFences.push({prefix,program:lifecycleSourceOnlyCopyFence(fullCopy),argv:pin=>lifecycleRemoteDocker(['run','--rm',...safe(name),...sourceMounts,...copyMount(true),'--entrypoint','perl',a.image,'-e',lifecycleSourceOnlyCopyFence(fullCopy),rootFor(name,'data'),rootFor(name,'witness'),'/rotation-audit','verify',pin]),pin:copy.copyProofSha256});
   need(performance.now()-phaseBegan<spec.lifecycle.deadlines.restoreMs,'Whole restore phase deadline before resumed writer');need(performance.now()-phaseBegan<=Number(BigInt(spec.clock.maximumDowntimeMs)),'Restore preparation exceeded original clock catch-up authority');restoredMounts=replacement;await lifecycleResume(name,before.receipt);need(performance.now()-phaseBegan<spec.lifecycle.deadlines.restoreMs,'Whole restore phase deadline');need(performance.now()-phaseBegan<=Number(BigInt(spec.clock.maximumDowntimeMs)),'Whole restore exceeded original clock catch-up authority');
-  return {cutoffSlot:'0x'+BigInt(captured.headSlot).toString(16),beforeProposalRoot:beforeProposal.root,afterProposalRoot:null,dutyPublicKey:id.publicKey,sourceCapture:captured.captureArtifact,restoredCapture:restored.captureArtifact,finalized:before.receipt.finalized};
+  return {cutoffSlot:dutyFloor.source.cutoffSlot,beforeProposalRoot:beforeProposal.root,afterProposalRoot:null,dutyPublicKey:id.publicKey,sourceCapture:captured.captureArtifact,restoredCapture:restored.captureArtifact,finalized:before.receipt.finalized};
  }
  function lifecycleSourceOnlyCopyFence(program){
   // Same original proof rows and scans; resumed copies are EXPECTED to change.
@@ -1262,7 +1270,7 @@ except BaseException:
   lifecyclePending=await runFreshLifecycle({spec,domain:manifest,prepared:preparedManifest,profileBytes,depositDocument,initialFinality:initial,ops:{
    check:lifecycleCheck,sleep:delay,record,header:(name,selector)=>request(name,'/eth/v1/beacon/headers/'+selector),validator:async(name,state,pub)=>{try{return await request(name,'/eth/v1/beacon/states/'+state+'/validators/'+pub);}catch(e){if(e.status===404)return null;throw e;}},submitDeposit:(name,raw)=>rpc(name,'eth_sendRawTransaction',[raw]),
    finality:(baseline,phase,timeout)=>finality({epoch:BigInt(baseline.epoch).toString(),root:baseline.root},phase,false,timeout),
-   finalizedProposal:async(id,index,checkpoint,after,ms)=>lifecycleFindFinalized(id.owner,checkpoint,after,x=>BigInt(x.message.proposer_index)===BigInt(index)?{root:x.root,slot:'0x'+x.slot.toString(16)}:null,ms),
+   finalizedProposal:async(id,index,checkpoint,after,ms)=>lifecycleFindFinalized(id.owner,checkpoint,after,x=>BigInt(x.message.proposer_index)===BigInt(index)?{root:x.root,slot:'0x'+x.slot.toString(16),resolvedIndex:'0x'+BigInt(index).toString(16)}:null,ms),
    restore:lifecycleRestore,prepareAndSubmit:lifecyclePrepareAndSubmit,
    finalizedOperation:async(name,kind,action,checkpoint,ms)=>(await lifecycleFindFinalized(name,checkpoint,BigInt(action.preparedHead.slot),x=>{const list=x.message.body[kind==='voluntary_exit'?'voluntary_exits':'proposer_slashings'];need(Array.isArray(list),'Actual operation list');const occurrences=list.filter(op=>lifecycleOperationDigest(kind,op)===action.payloadDigest);need(occurrences.length<=1,'Duplicate exact action');return occurrences.length?{root:x.root}:null;},ms)).root,
    finalizedWithdrawal:async(id,row,checkpoint,ms)=>lifecycleFindFinalized(id.owner,checkpoint,0n,x=>{if(x.slot/BigInt(lifecyclePending?.parameters?.slotsPerEpoch??JSON.parse(profileBytes).common[0].ffg[0])<BigInt(row.withdrawableEpoch))return null;const list=x.message.body.execution_payload.withdrawals;need(Array.isArray(list),'Actual execution withdrawals');const found=list.find(w=>BigInt(w.validator_index)===BigInt(row.resolvedIndex)&&BigInt(w.amount)>0n);return found?{root:x.root,slot:'0x'+x.slot.toString(16),withdrawalIndex:'0x'+BigInt(found.index).toString(16)}:null;},ms),
