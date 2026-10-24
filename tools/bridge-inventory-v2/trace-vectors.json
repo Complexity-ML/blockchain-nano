@@ -1,0 +1,85 @@
+{
+  "format": "nano-inventory-v2-independent-trace-vectors-v1",
+  "fixtureOnly": true,
+  "economicTermsAdopted": false,
+  "sourceFinalityAuthenticated": false,
+  "productionQualified": false,
+  "parameters": {
+    "fixtureOnly": true,
+    "controller": "0x4444444444444444444444444444444444444444",
+    "routeId": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "termsHash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "baseLot": "2",
+    "nativeLot": "7",
+    "totalBaseSupply": "1000",
+    "base": {
+      "chainId": "8453",
+      "domain": "0x1111111111111111111111111111111111111111111111111111111111111111",
+      "endpoint": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "verifierDomain": "0x3333333333333333333333333333333333333333333333333333333333333333",
+      "decimals": 6
+    },
+    "native": {
+      "chainId": "9000",
+      "domain": "0x2222222222222222222222222222222222222222222222222222222222222222",
+      "endpoint": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "verifierDomain": "0x5555555555555555555555555555555555555555555555555555555555555555",
+      "decimals": 18
+    },
+    "baseBalances": {
+      "0x1111111111111111111111111111111111111111": "600",
+      "0x2222222222222222222222222222222222222222": "400"
+    },
+    "nativeBalances": {
+      "0x1111111111111111111111111111111111111111": "1000",
+      "0x2222222222222222222222222222222222222222": "1000",
+      "0x3333333333333333333333333333333333333333": "5000"
+    }
+  },
+  "events": [
+    {"label":"closed route rejects before transfer", "event":{"op":"lockBase","id":"0x0000000000000000000000000000000000000000000000000000000000000001","actor":"0x1111111111111111111111111111111111111111","recipient":"0x1111111111111111111111111111111111111111","baseAmount":"200","nonce":"2"},"expectError":"closed route"},
+    {"label":"test gate Base", "event":{"op":"setGate","actor":"0x4444444444444444444444444444444444444444","side":"base","enabled":true}},
+    {"label":"test gate Native", "event":{"op":"setGate","actor":"0x4444444444444444444444444444444444444444","side":"native","enabled":true}},
+    {"label":"whole preissued supply declared", "event":{"op":"declareSupply","actor":"0x4444444444444444444444444444444444444444","observedSupply":"1000","nonce":"1"}},
+    {"label":"underbacked opening refuses before fund", "event":{"op":"bootstrapNative","actor":"0x3333333333333333333333333333333333333333","value":"3499","message":"base:1","nonce":"1"},"expectError":"exact bootstrap value"},
+    {"label":"entire1000 backed by3500 synthetic native units", "event":{"op":"bootstrapNative","actor":"0x3333333333333333333333333333333333333333","value":"3500","message":"base:1","nonce":"1"},"expectedFinancial":{"nativeBalance":"3500","accountedReserve":"3500","pendingFunds":"0","baseInventory":"0"}},
+    {"label":"opening cannot be repeated", "event":{"op":"bootstrapNative","actor":"0x3333333333333333333333333333333333333333","value":"3500","message":"base:1","nonce":"2"},"expectError":"one-shot backing"},
+    {"label":"backing acknowledged on Base", "event":{"op":"confirmBacking","message":"native:1"}},
+    {"label":"empty inventory cannot accept future native purchase", "event":{"op":"reserveBase","id":"0x0000000000000000000000000000000000000000000000000000000000000009","actor":"0x1111111111111111111111111111111111111111","recipient":"0x1111111111111111111111111111111111111111","baseAmount":"2","nonce":"2"},"expectError":"reserve before funding"},
+    {"label":"Base return quarantines stock until paymentack", "event":{"op":"lockBase","id":"0x0000000000000000000000000000000000000000000000000000000000000001","actor":"0x1111111111111111111111111111111111111111","recipient":"0x1111111111111111111111111111111111111111","baseAmount":"200","nonce":"2"},"expectedFinancial":{"baseInventory":"200","pendingNative":"700","freeBase":"0","quarantinedBase":"200"}},
+    {"label":"receiver rejection preserves native payment retry", "event":{"op":"payNative","message":"base:2","nonce":"2","receiver":"revert"},"expectError":"native receiver rejected"},
+    {"label":"uncaught reentry has no committed economic effect", "event":{"op":"payNative","message":"base:2","nonce":"2","receiver":"reenter-revert"},"expectError":"native receiver rejected"},
+    {"label":"one outer payment after caught refused reentry", "event":{"op":"payNative","message":"base:2","nonce":"2","receiver":"reenter-caught"},"expectedFinancial":{"nativeBalance":"2800","accountedReserve":"2800","pendingNative":"0","quarantinedBase":"200","freeBase":"0"}},
+    {"label":"duplicate payment rejected with no second debit", "event":{"op":"payNative","message":"base:2","nonce":"3"},"expectError":"source already consumed"},
+    {"label":"payment ack alone frees stock", "event":{"op":"ackNativePaid","message":"native:2"},"expectedFinancial":{"baseInventory":"200","freeBase":"200","quarantinedBase":"0"}},
+    {"label":"first client reserves60 before funding210", "event":{"op":"reserveBase","id":"0x0000000000000000000000000000000000000000000000000000000000000002","actor":"0x1111111111111111111111111111111111111111","recipient":"0x1111111111111111111111111111111111111111","baseAmount":"60","nonce":"3"}},
+    {"label":"exact native funding remains refundable", "event":{"op":"fundNative","message":"base:3","actor":"0x1111111111111111111111111111111111111111","value":"210","nonce":"3"},"expectedFinancial":{"nativeBalance":"3010","pendingFunds":"210","accountedReserve":"2800","pendingBase":"60"}},
+    {"label":"Base payout transfers existing token only", "event":{"op":"payBase","message":"native:3","nonce":"4"},"expectedFinancial":{"baseInventory":"140","freeBase":"140","pendingFunds":"210","pendingBase":"0","accountedReserve":"2800"}},
+    {"label":"only payout ack capitalizes pending native", "event":{"op":"ackBasePaid","message":"base:4"},"expectedFinancial":{"nativeBalance":"3010","pendingFunds":"0","accountedReserve":"3010"}},
+    {"label":"client Bob reserves40", "event":{"op":"reserveBase","id":"0x0000000000000000000000000000000000000000000000000000000000000003","actor":"0x2222222222222222222222222222222222222222","recipient":"0x2222222222222222222222222222222222222222","baseAmount":"40","nonce":"5"}},
+    {"label":"client Alice concurrently reserves20", "event":{"op":"reserveBase","id":"0x0000000000000000000000000000000000000000000000000000000000000004","actor":"0x1111111111111111111111111111111111111111","recipient":"0x1111111111111111111111111111111111111111","baseAmount":"20","nonce":"6"},"expectedFinancial":{"freeBase":"80","pendingBase":"60"}},
+    {"label":"remaining stock cannot be oversubscribed", "event":{"op":"reserveBase","id":"0x0000000000000000000000000000000000000000000000000000000000000005","actor":"0x1111111111111111111111111111111111111111","recipient":"0x1111111111111111111111111111111111111111","baseAmount":"82","nonce":"7"},"expectError":"reserve before funding"},
+    {"label":"Bob requests cancel but no stock released", "event":{"op":"requestCancel","id":"0x0000000000000000000000000000000000000000000000000000000000000003","actor":"0x2222222222222222222222222222222222222222","nonce":"7"},"expectedFinancial":{"freeBase":"80","pendingBase":"60"}},
+    {"label":"fund can win race before Native sees cancel", "event":{"op":"fundNative","message":"base:5","actor":"0x2222222222222222222222222222222222222222","value":"140","nonce":"4"},"expectedFinancial":{"nativeBalance":"3150","pendingFunds":"140","accountedReserve":"3010"}},
+    {"label":"funded cancellation is not unfundedack", "event":{"op":"ackCancelUnfunded","message":"base:7","nonce":"5"},"expectError":"native confirms no funds"},
+    {"label":"cancel request excludes payout even when funded", "event":{"op":"payBase","message":"native:4","nonce":"8"},"expectError":"cancel request excludes base payout"},
+    {"label":"Alice requests pre-fund cancellation", "event":{"op":"requestCancel","id":"0x0000000000000000000000000000000000000000000000000000000000000004","actor":"0x1111111111111111111111111111111111111111","nonce":"8"}},
+    {"label":"Native seals Alice unfunded cancellation", "event":{"op":"ackCancelUnfunded","message":"base:8","nonce":"5"}},
+    {"label":"fund after Native cancellation cannot debit payer", "event":{"op":"fundNative","message":"base:6","actor":"0x1111111111111111111111111111111111111111","value":"70","nonce":"6"},"expectError":"fund once before native cancellation"},
+    {"label":"only verified unfundedack releases Alice stock", "event":{"op":"cancelUnfundedBase","message":"native:5"},"expectedFinancial":{"pendingBase":"40","freeBase":"100","pendingFunds":"140"}},
+    {"label":"Bob irreversible Base cancellation freesstock notfunds", "event":{"op":"cancelFundedBase","message":"native:4","actor":"0x2222222222222222222222222222222222222222","nonce":"9"},"expectedFinancial":{"pendingBase":"0","freeBase":"140","pendingFunds":"140","nativeBalance":"3150"}},
+    {"label":"refund receiver rejection retains right to retry", "event":{"op":"refundNative","message":"base:9","nonce":"6","receiver":"reenter-revert"},"expectError":"native receiver rejected"},
+    {"label":"one native refund", "event":{"op":"refundNative","message":"base:9","nonce":"6"},"expectedFinancial":{"nativeBalance":"3010","pendingFunds":"0","accountedReserve":"3010"}},
+    {"label":"refund never repeats", "event":{"op":"refundNative","message":"base:9","nonce":"7"},"expectError":"source already consumed"},
+    {"label":"optional refund trace terminalack", "event":{"op":"ackNativeRefunded","message":"native:6"}},
+    {"label":"Base donation creates no free stock or payout", "event":{"op":"donateBase","actor":"0x2222222222222222222222222222222222222222","amount":"2"},"expectedFinancial":{"baseInventory":"142","freeBase":"140","donatedBase":"2","pendingNative":"0"}},
+    {"label":"Native donation creates no accounted rights", "event":{"op":"donateNative","actor":"0x3333333333333333333333333333333333333333","amount":"7"},"expectedFinancial":{"nativeBalance":"3017","accountedReserve":"3010","pendingFunds":"0","donatedNative":"7"}}
+  ],
+  "finalFinancial": {
+    "totalSupply":"1000", "baseInventory":"142", "nativeBalance":"3017",
+    "freeBase":"140", "quarantinedBase":"0", "pendingNative":"0", "pendingBase":"0",
+    "pendingFunds":"0", "accountedReserve":"3010", "donatedBase":"2", "donatedNative":"7", "executionFees":"0",
+    "baseBalances":{"0x1111111111111111111111111111111111111111":"460","0x2222222222222222222222222222222222222222":"398"},
+    "nativeBalances":{"0x1111111111111111111111111111111111111111":"1490","0x2222222222222222222222222222222222222222":"1000","0x3333333333333333333333333333333333333333":"1493"}
+  }
+}
