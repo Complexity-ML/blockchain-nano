@@ -12,11 +12,14 @@ function uniqueBetween(text,start,end){
  assert.equal(text.split(start).length,2,'One exact source boundary');const offset=text.indexOf(start),until=text.indexOf(end,offset+start.length);assert(until>offset,'Exact source end boundary');return text.slice(offset,until);
 }
 // The complete actual fresh finally body, not a second model of its ordering.
-const terminalBody=uniqueBetween(source,'\n finally{\n  const closeout=','\n }\n if(failure)throw failure;\n}').replace(/^\n finally\{\n/,'');
+const terminalBody=uniqueBetween(source,'\n finally{\n  if(campaignBudget){campaignCloseoutStartedAt=','\n }\n if(failure)throw failure;\n}').replace(/^\n finally\{\n/,'');
 const fenceDeclaration=uniqueBetween(source,' async function fence(){','\n async function save(');
 const canonical=JSON.stringify;
 function terminalFixture(options={}){
- const events=[],writes=new Map(),recorded=[],state={lifecycleQualified:false,softwareCalls:0,afterCleanup:false};
+ const events=[],writes=new Map(),recorded=[],state={lifecycleQualified:false,softwareCalls:0,afterCleanup:false,budgetChecks:0,budgetDisposals:0,removedSignals:[]};
+ let clock=100;
+ const deadlineError=options.deadlineError??Error('injected C8 deadline'),campaignBudget=options.c8?{phase:'work',overallEnd:10000,enterCloseout(){events.push('budget-closeout');this.phase='closeout';},check(){events.push('budget-check:'+(++state.budgetChecks));if(state.budgetChecks===options.deadlineFailureAt){clock=this.overallEnd;throw deadlineError;}if(clock>=this.overallEnd)throw deadlineError;},dispose(){events.push('budget-dispose');++state.budgetDisposals;}}:null;
+ const campaignCommands=options.c8?{async closeAll(){events.push('close-inflight-clients');if(options.commandCloseFailure)throw options.commandCloseFailure;}}:null;
  const error=options.bodyFailure??null,closingError=options.closingError??null;
  const expectedSoftware=[{owner:'mac-native',role:'nano',sha256:'a'.repeat(64),bytes:1}],initialSoftware=options.noInitialSoftware?undefined:structuredClone(expectedSoftware);
  const terminal=names.map(name=>({name,receipt:{owner:name,clockHealthy:true,validator:{healthy:true,failure:null,attestationsAdmitted:1,proposalsAdmitted:1}}}));
@@ -48,7 +51,11 @@ function terminalFixture(options={}){
  }
  const deps={
   createTerminalEvidenceSequence,failure:error,bodyFailureRecordError:options.bodyFailureRecordError,
-  spec:{lifecycle:true,partitionRotation:options.partitionRequested??false,backupRestore:options.backupRequested??false,overlayManifest:{sha256:'e'.repeat(64)}},
+  spec:{lifecycle:{deadlines:{maximumRunMs:10000}},partitionRotation:options.partitionRequested??false,backupRestore:options.backupRequested??false,overlayManifest:{sha256:'e'.repeat(64)}},
+  campaignBudget,campaignCommands,campaignCloseoutStartedAt:null,campaignStartedAt:0,campaignCloseoutReserve:1000,performance:{now:()=>clock},
+  nativeLoader:options.c8?{}:null,macOwnerRecovery:options.c8?{passed:true}:null,ownerRecoveryRecords:new Map(options.c8?names.slice(0,2).map(name=>[name,{}]):[]),
+  ownerRecoverySourceFences:options.c8?names.slice(0,2).map(name=>({name,verifySource:async()=>{events.push('owner-source:'+name);if(options.ownerSourceFailure===name)throw options.ownerSourceError;}})):[],
+  auditOwnerRecoveryTerminal:async()=>{events.push('owner-recovery-audit');if(options.ownerAuditFailure)throw options.ownerAuditFailure;},
   started:new Set(names),names,stopped:async name=>{events.push('stop:'+name);if(options.stopFailure===name)throw Error('injected stop failure');return terminal.find(row=>row.name===name);},
   lifecycleStopReceipts:{collect(){events.push('collect-stops');return terminal.filter(row=>options.staleStoppedReceipt||row.name!==options.stopFailure);}},lifecycleStopRootBinding:name=>'synthetic roots '+name,
   native,tunnel,terminateJoined:async(child,name)=>{events.push('join:'+name);if(options.joinFailure===name)throw options.joinError;child.joined=true;if(options.throwAfterClose===name)throw options.joinError;return options.forcedJoin===name;},childAbsent:child=>!child||child.joined,need,
@@ -70,7 +77,7 @@ function terminalFixture(options={}){
   macLinux:{verifyAll:async()=>{events.push('linux-fence');}},macBootstrap:{fenceSource:async()=>{events.push('bootstrap-fence');}},initialSoftware,
   software:async()=>{++state.softwareCalls;events.push('software:'+state.softwareCalls);if(options.addProbeOperations)ownedRuns.push({name:'probe-'+state.softwareCalls,remote:false});return state.softwareMutated?[{...expectedSoftware[0],sha256:'0'.repeat(64)}]:structuredClone(expectedSoftware);},canonical,fence,newFiles,observe,ownedRuns,docker,
   owner:name=>({image:'image-'+name}),uuid,label,partitionNetworkCreated:false,partitionNetworkAbsent:true,partitionNetwork:'unused-network',containers:{'vps-docker':'unused-vps'},
-  interrupted:options.interrupted,process:{removeListener:()=>{events.push('remove-listener');}},onSignal:()=>{},lifecycleWholeTimer:null,clearTimeout:()=>assert.fail('No timer created'),revision:'1'.repeat(40),
+  interrupted:options.interrupted,process:{removeListener:signal=>{events.push('remove-listener');state.removedSignals.push(signal);}},onSignal:()=>{},lifecycleWholeTimer:null,clearTimeout:()=>assert.fail('No timer created'),revision:'1'.repeat(40),
   record:async row=>{events.push('record:'+row.stage);recorded.push(row);if(options.recordFailure)throw options.recordFailure;},state,
   close:async()=>{events.push('closing');if(closingError)throw closingError;state.lifecycleQualified=!options.incompleteLifecycle;}
  };
@@ -150,4 +157,35 @@ test('actual finally retains original failure when terminal publication itself f
  for(const leaf of ['lifecycle-stopped-captures-public.json','terminal-evidence-stages.json','result.json']){
   const first=Error('body failure'),publicationError=Error('publication '+leaf),f=terminalFixture({bodyFailure:first,publicationFailure:leaf,publicationError}),result=await f.run();assert.equal(result.failure,first);assert(result.failures.some(row=>row.error===publicationError));assert(f.events.includes('absence:vps'));if(leaf==='lifecycle-stopped-captures-public.json')assert.equal(f.events.includes('closing'),false);if(f.result())assert.equal(f.result().passed,false);
  }
+});
+
+test('C8 actual finally joins clients before runtime cleanup and publishes only a provisional result',async()=>{
+ const f=terminalFixture({c8:true}),result=await f.run(),published=f.result();
+ assert.equal(result.failure,null);assert.equal(result.report.passed,true);
+ assert.equal(f.events.filter(event=>event==='budget-closeout').length,1);
+ assert.equal(f.events.filter(event=>event==='close-inflight-clients').length,1);
+ assert(f.events.indexOf('budget-closeout')<f.events.indexOf('close-inflight-clients'));
+ assert(f.events.indexOf('close-inflight-clients')<f.events.indexOf('stop:mac-native'));
+ assert(f.events.indexOf('owner-recovery-audit')>f.events.indexOf('closing'));
+ assert.equal(published.passed,false);assert.equal(published.terminalEvidenceReady,true);assert.equal(published.terminalVerdictProvisional,true);assert.equal(published.effectiveTerminalExitRequired,true);
+ assert.equal(published.freshSyntheticLifecycleQualified,false);assert.equal(published.threeOwnerRestorationRequested,true);assert.equal(published.threeOwnerRestorationQualified,false);assert.equal(published.productionQualified,false);
+ for(const name of names.slice(0,2))assert.equal(f.events.filter(event=>event==='owner-source:'+name).length,2,'Both original-source fence stages remain present');
+ assert.equal(f.state.budgetChecks,3);assert.equal(f.state.budgetDisposals,1);assert.deepEqual(f.state.removedSignals,['SIGINT','SIGTERM','SIGHUP']);
+ assert.equal(f.events.at(-4),'budget-dispose');
+ const duration=f.writes.get('/synthetic/output/campaign-deadline-result.json');assert.equal(duration.globalDeadlineExceeded,false);assert.equal(duration.forcedDeadlineExtensionAuthorized,false);assert.equal(duration.campaignAuthorizedByThisReport,false);
+});
+test('C8 actual finally preserves an effective late deadline failure after a ready provisional publication',async()=>{
+ const first=Error('deadline after provisional publication'),f=terminalFixture({c8:true,deadlineFailureAt:2,deadlineError:first}),result=await f.run();
+ assert.equal(f.result().terminalEvidenceReady,true,'The prior ready snapshot is deliberately not a terminal verdict');assert.equal(f.result().passed,false);assert.equal(f.result().freshSyntheticLifecycleQualified,false);assert.equal(f.result().threeOwnerRestorationQualified,false);
+ assert.equal(result.failure,first);assert.equal(result.report.passed,false);assert(failedStages(result).includes('global-deadline-after-publication'));assert(failedStages(result).includes('global-final-deadline-check'));
+ assert(f.events.indexOf('save:result.json')<f.events.indexOf('budget-check:2'));assert.equal(f.writes.get('/synthetic/output/campaign-deadline-result.json').globalDeadlineExceeded,true);
+ assert.equal(f.state.budgetDisposals,1);assert.deepEqual(f.state.removedSignals,['SIGINT','SIGTERM','SIGHUP']);
+});
+test('C8 actual finally retains a client-join failure while stopping owners and attempting all original fences',async()=>{
+ const first=Error('owned command join failed'),sourceError=Error('original Native source changed'),f=terminalFixture({c8:true,commandCloseFailure:first,ownerSourceFailure:'mac-native',ownerSourceError:sourceError,addProbeOperations:true,addReadonlyOperations:true}),result=await f.run();
+ assert.equal(result.failure,first);assert(result.failures.some(row=>row.error===sourceError));assert(failedStages(result).includes('join-owned-inflight-clients'));
+ for(const name of names)assert(f.events.includes('stop:'+name));
+ assert(f.events.includes('cleanup:operation-b'));assert(f.events.includes('cleanup:probe-2'));assert(f.events.includes('remote:fence-index:1'));assert(f.events.includes('artifact:1'));assert(f.events.includes('absence:mac'));assert(f.events.includes('absence:vps'));
+ for(const name of names.slice(0,2))assert.equal(f.events.filter(event=>event==='owner-source:'+name).length,2,'A failed source cannot skip the other owner or the later source fence');
+ assert.equal(f.result().passed,false);assert.equal(f.result().terminalEvidenceReady,false);assert.equal(f.result().threeOwnerRestorationQualified,false);assert.equal(f.state.budgetDisposals,1);
 });

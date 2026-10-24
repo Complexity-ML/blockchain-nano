@@ -1,7 +1,7 @@
 // Only processes created by this test, inside its Docker PID namespace.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {execFile} from 'node:child_process';
+import {spawn} from 'node:child_process';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {createCampaignDeadline} from './campaign-deadline.mjs';
 import {createCampaignCommands} from './campaign-commands.mjs';
@@ -10,8 +10,8 @@ function owned(){
  const deadline=createCampaignDeadline({startedAt:performance.now(),maximumRunMs:20000,closeoutReserveMs:2000}),children=[];
  let readyResolve,exitResolve;
  const ready=new Promise(resolve=>{readyResolve=resolve;}),exited=new Promise(resolve=>{exitResolve=resolve;});
- const commands=createCampaignCommands({deadline,execFile:(program,args,options,callback)=>{
-  const child=execFile(program,args,options,callback);children.push(child);
+ const commands=createCampaignCommands({deadline,spawn:(program,args,options)=>{
+  const child=spawn(program,args,options);children.push(child);
   child.stdout?.on('data',bytes=>{if(String(bytes).includes('ready'))readyResolve();});
   child.once('exit',exitResolve);return child;
  }});
