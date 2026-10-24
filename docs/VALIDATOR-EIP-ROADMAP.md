@@ -9187,3 +9187,30 @@ Le [lot ciblé du générateur](qualification/operator-c8-native-loopback-202610
 ## Addendum du 24 octobre 2026 — pilote de restauration et budget global C8
 
 Le [lot C8](qualification/operator-c8-campaign-controls-20261024/README.md) implémente les restaurations entières Native puis DockerMac, conserve les deux restaurations VPS et leurs preuves distinctes, impose les engagements source avant reprise et réserve une clôture dans le budget monotone. Le défaut réel de groupes de processus a été corrigé par spawn direct. La candidate9a3eb5ea a réellement passé53 tests Docker AMD64/Node (exitDocker0, stderr0), dont copies de fichiers synthétiques Linux et processus OS. Les contrôleurs01/02 restent FAILED, respectivement pour défaut réel/timeout et compteur43+10ignorés face à53passés. Les53 noms sont vérifiés séparément contre Git et les clôtures ; aucun test rejoué pour le compteur, aucun ancien échec réécrit. Cela ne qualifie ni stockage RocksDB réel restauré, ni système de fichiers Native, ni duties/finalité commune effective des trois nœuds, ni borne murale globale de campagne. Ces preuves opérateur restent ouvertes. Aucun build d’image, nœud, signature ou nouvelle identité ; campagne03 signée/échouée, accord consommé, aucune04 autorisée. Paris/Shanghai reste activé sans promotion EIP. Consensus/WAN, exploitation, CI (dernier refus vérifié avant toute étape pour facturation/plafond), reproductibilité et revue de sécurité indépendante gardent leurs exigences intégrales. Base–Nano1:1 reste proposé/non adopté ; bridge USDC, Doppler, visibilitéT0 et termes économiques restent ouverts. Aucun fonds réel, vente, déploiement public ou dépense.
+
+
+<!-- nano-c8-ownership-and-cold-software-20261024 -->
+## Addendum du 24 octobre 2026 — suivi opérateur et refus logiciel à froid
+
+Le [lot opérateur](qualification/operator-c8-ownership-cold-audit-20261024/README.md)
+publie les intentions d’appartenance avant les commandes externes. La candidate
+3f2a4a29 passe cinq groupes ciblés Docker AMD64 (0échec,10ignorés, sortie réelle0),
+dont trois nouveaux groupes, le garde des onze refus et l’inventaire transitif.
+194 fichiers tenus sont clôturés, le CID de test est absent ; aucun ancien test
+rejoué sans lien, aucun build d’image ni nœud de chaîne. Mocks et ordre source ne
+prouvent pas le fsync de ces nouveaux reçus, l’identité OS, la quiescence distante,
+la borne murale ou les restaurations/duties/finalité des trois propriétaires.
+
+L’audit froid strict est FAILED et conservé : les 24 logiciels plus le shim ont
+leurs SHA/tailles connus, mais les 18 fichiers locaux ont un st_dev différent
+(16777231→16777229), seul changement des neuf champs. Les sept VPS restent
+full9+SHA conformes. Cause précise non démontrée, aucun ancien reçu actualisé ;
+une génération distincte de carriers/admissions reste à établir avant campagne.
+Docker Mac reste arrêté. Le budget de recette 7h39 et l’exemple8h/10min ne sont
+ni une durée adoptée, ni une autorisation, ni une borne garantie de clôture.
+03 a signé/échoué, accord consommé ; aucune04 autorisée. Paris/Shanghai demeure
+activé sans promotion EIP. Tous critères normatifs consensus/WAN, exploitation,
+CI/facturation, reproductibilité et revue indépendante non réalisée restent
+ouverts selon leurs portées. Base–Nano1:1 reste proposé/non adopté ; bridge USDC,
+Doppler et visibilitéT0 non qualifiés. Aucun fonds, vente ou déploiement public ;
+préfixes historiques intégraux conservés, objectif actif et production non qualifiée.
