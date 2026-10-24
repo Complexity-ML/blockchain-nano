@@ -1,0 +1,226 @@
+{"actualDockerExitCode": 1, "candidateRevision": "b0b2e17b24ff74536df1068166a7fddfb1603f36", "chainRuntimeStarted": false, "counts": null, "dockerInitEnabled": true, "dockerNetwork": "none", "economicTermsAdopted": false, "elapsedMs": 2592, "firstFailure": {"reason": "Docker selected test batch failed", "type": "ValueError"}, "format": "nano-root-vps-duty-floor-docker-tests-v1", "heldFilesClosed": 83, "heldFilesOpened": 83, "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14", "imageBuilds": 0, "keysCreated": false, "nativeMacFilesystemQualified": false, "nativeNanoActivityTested": false, "nodeRuntimeProviderFiles": 19, "nodeSystemResourcesMountedReadOnly": true, "nodeVersion": "v18.19.1", "passed": false, "productionQualified": false, "runtimeAndSourceFilesStrictlyFenced": false, "runtimeMountedReadOnly": true, "secondaryFailures": [], "sourceFinalityAuthenticated": false, "sourceMainUnchanged": "e2404c56026603d0d57abf8b0399bf15586f66f0", "stderr.log": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "stdout.log": {"bytes": 11208, "sha256": "ee20b0a710faea005e7d80e02a9551eaf005562028c8e2bac25c47c8c7bfd503"}, "threeOwnerRuntimeRecoveryQualified": false, "wholeNodeRuntimeClosureQualified": false}
+TAP version 13
+# Subtest: actual runner inventory covers restored audit and transitive finality/monitor dependencies
+ok 1 - actual runner inventory covers restored audit and transitive finality/monitor dependencies
+  ---
+  duration_ms: 68.643944
+  ...
+# Subtest: dependency-only edit changes its hash while entry hash remains identical
+ok 2 - dependency-only edit changes its hash while entry hash remains identical # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.263386
+  ...
+# Subtest: multiline imports, side effects and cycles are included once
+ok 3 - multiline imports, side effects and cycles are included once # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.098432
+  ...
+# Subtest: missing imported dependency fails rather than making a partial manifest
+ok 4 - missing imported dependency fails rather than making a partial manifest # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.124417
+  ...
+# Subtest: import outside repository is rejected
+ok 5 - import outside repository is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.133758
+  ...
+# Subtest: symlink to external source is rejected
+ok 6 - symlink to external source is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.114583
+  ...
+# Subtest: actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+not ok 7 - actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+  ---
+  duration_ms: 31.625944
+  location: 'file:///case/tests/multihost/lifecycle-driver-guard.test.mjs:69:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, open '/case/tests/multihost/operator-ownership.test.mjs'"
+  code: 'ENOENT'
+  ...
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 8 - new output admission: actual save rejects transient ctime sample before stable first admission # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.267483
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 9 - new output admission: three strict samples span two seconds and ctime change resets the run # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.116021
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 10 - new output admission: every known-byte and creation-identity mismatch refuses without retry # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.141694
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 11 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.126479
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 12 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.111621
+  ...
+# Subtest: known NEW writer durably records creation before sampling; transient intra-FD ctime does not count
+ok 13 - known NEW writer durably records creation before sampling; transient intra-FD ctime does not count # SKIP test name does not match pattern
+  ---
+  duration_ms: 2.203583
+  ...
+# Subtest: NEW ctime change between stable reads resets the full three-sample two-second run
+ok 14 - NEW ctime change between stable reads resets the full three-sample two-second run # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.130335
+  ...
+# Subtest: known bytes and each of eight creation fields refuse immediately, even during ctime churn
+ok 15 - known bytes and each of eight creation fields refuse immediately, even during ctime churn # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.097469
+  ...
+# Subtest: continuous NEW ctime churn is bounded; unrelated reader error remains the first error
+ok 16 - continuous NEW ctime churn is bounded; unrelated reader error remains the first error # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.285688
+  ...
+# Subtest: adopted creator rows and strict retained reads never reset ctime or another old field
+ok 17 - adopted creator rows and strict retained reads never reset ctime or another old field # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.114701
+  ...
+# Subtest: NEW intra-read mtime or path inode mutation cannot masquerade as ctime stabilization
+ok 18 - NEW intra-read mtime or path inode mutation cannot masquerade as ctime stabilization # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.099343
+  ...
+# Subtest: caller-supplied old material remains strict and the immediate post-adoption fence is inside the deadline
+ok 19 - caller-supplied old material remains strict and the immediate post-adoption fence is inside the deadline # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.100811
+  ...
+# Subtest: VPS Python exact write/sample/stable/read helpers obey the same NEW-only and retained full9 contract
+not ok 20 - VPS Python exact write/sample/stable/read helpers obey the same NEW-only and retained full9 contract
+  ---
+  duration_ms: 14.902821
+  location: 'file:///case/tests/multihost/lifecycle-new-file-admission.test.mjs:171:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, realpath '/usr/bin/python3'"
+  code: 'ENOENT'
+  ...
+# Subtest: VPS floor arithmetic consumes safe numeric C++ heads and canonical journal slots only
+ok 21 - VPS floor arithmetic consumes safe numeric C++ heads and canonical journal slots only
+  ---
+  duration_ms: 3.143021
+  ...
+# Subtest: actual owner Python projects registered pending and provisioned identities without exporting signing roots
+not ok 22 - actual owner Python projects registered pending and provisioned identities without exporting signing roots
+  ---
+  duration_ms: 11.713616
+  location: 'file:///case/tests/multihost/vps-duty-floor.test.mjs:61:1'
+  failureType: 'testCodeFailure'
+  error: 'spawnSync python3 ENOENT'
+  code: 'ENOENT'
+  stack: |-
+    Object.spawnSync (node:internal/child_process:1117:20)
+    spawnSync (node:child_process:876:24)
+    execFileSync (node:child_process:919:15)
+    project (file:///case/tests/multihost/vps-duty-floor.test.mjs:52:53)
+    accepted (file:///case/tests/multihost/vps-duty-floor.test.mjs:53:28)
+    TestContext.<anonymous> (file:///case/tests/multihost/vps-duty-floor.test.mjs:62:16)
+    Test.runInAsyncScope (node:async_hooks:203:9)
+    Test.run (node:internal/test_runner/test:631:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:374:18)
+    Test.postRun (node:internal/test_runner/test:715:19)
+  ...
+# Subtest: actual owner Python refuses substituted, duplicate, unregistered and unwitnessed selected journals
+not ok 23 - actual owner Python refuses substituted, duplicate, unregistered and unwitnessed selected journals
+  ---
+  duration_ms: 7.104187
+  location: 'file:///case/tests/multihost/vps-duty-floor.test.mjs:68:1'
+  failureType: 'testCodeFailure'
+  error: 'spawnSync python3 ENOENT'
+  code: 'ENOENT'
+  stack: |-
+    Object.spawnSync (node:internal/child_process:1117:20)
+    spawnSync (node:child_process:876:24)
+    execFileSync (node:child_process:919:15)
+    project (file:///case/tests/multihost/vps-duty-floor.test.mjs:52:53)
+    TestContext.<anonymous> (file:///case/tests/multihost/vps-duty-floor.test.mjs:76:104)
+    Test.runInAsyncScope (node:async_hooks:203:9)
+    Test.run (node:internal/test_runner/test:631:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:374:18)
+    Test.postRun (node:internal/test_runner/test:715:19)
+    Test.run (node:internal/test_runner/test:673:12)
+  ...
+# Subtest: actual owner reader and parser refuse duplicate JSON, changed pins, aliases and late source modification
+not ok 24 - actual owner reader and parser refuse duplicate JSON, changed pins, aliases and late source modification
+  ---
+  duration_ms: 5.955705
+  location: 'file:///case/tests/multihost/vps-duty-floor.test.mjs:84:1'
+  failureType: 'testCodeFailure'
+  error: 'spawnSync python3 ENOENT'
+  code: 'ENOENT'
+  stack: |-
+    Object.spawnSync (node:internal/child_process:1117:20)
+    spawnSync (node:child_process:876:24)
+    execFileSync (node:child_process:919:15)
+    project (file:///case/tests/multihost/vps-duty-floor.test.mjs:52:53)
+    TestContext.<anonymous> (file:///case/tests/multihost/vps-duty-floor.test.mjs:85:317)
+    Test.runInAsyncScope (node:async_hooks:203:9)
+    Test.run (node:internal/test_runner/test:631:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:374:18)
+    Test.postRun (node:internal/test_runner/test:715:19)
+    Test.run (node:internal/test_runner/test:673:12)
+  ...
+# Subtest: public typed validator refuses replay, altered floor, changed identity and extra authority
+not ok 25 - public typed validator refuses replay, altered floor, changed identity and extra authority
+  ---
+  duration_ms: 7.637031
+  location: 'file:///case/tests/multihost/vps-duty-floor.test.mjs:94:1'
+  failureType: 'testCodeFailure'
+  error: 'spawnSync python3 ENOENT'
+  code: 'ENOENT'
+  stack: |-
+    Object.spawnSync (node:internal/child_process:1117:20)
+    spawnSync (node:child_process:876:24)
+    execFileSync (node:child_process:919:15)
+    project (file:///case/tests/multihost/vps-duty-floor.test.mjs:52:53)
+    accepted (file:///case/tests/multihost/vps-duty-floor.test.mjs:53:28)
+    TestContext.<anonymous> (file:///case/tests/multihost/vps-duty-floor.test.mjs:95:25)
+    Test.runInAsyncScope (node:async_hooks:203:9)
+    Test.run (node:internal/test_runner/test:631:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:374:18)
+    Test.postRun (node:internal/test_runner/test:715:19)
+  ...
+# Subtest: real proposed caller binds prepared identity and both captures before publication and resume
+not ok 26 - real proposed caller binds prepared identity and both captures before publication and resume
+  ---
+  duration_ms: 7.988237
+  location: 'file:///case/tests/multihost/vps-duty-floor.test.mjs:101:1'
+  failureType: 'testCodeFailure'
+  error: 'spawnSync python3 ENOENT'
+  code: 'ENOENT'
+  stack: |-
+    Object.spawnSync (node:internal/child_process:1117:20)
+    spawnSync (node:child_process:876:24)
+    execFileSync (node:child_process:919:15)
+    project (file:///case/tests/multihost/vps-duty-floor.test.mjs:52:53)
+    accepted (file:///case/tests/multihost/vps-duty-floor.test.mjs:53:28)
+    TestContext.<anonymous> (file:///case/tests/multihost/vps-duty-floor.test.mjs:107:68)
+    Test.runInAsyncScope (node:async_hooks:203:9)
+    Test.run (node:internal/test_runner/test:631:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:374:18)
+    Test.postRun (node:internal/test_runner/test:715:19)
+  ...
+1..26
+# tests 26
+# suites 0
+# pass 2
+# fail 7
+# cancelled 0
+# skipped 17
+# todo 0
+# duration_ms 1052.408766
+
+

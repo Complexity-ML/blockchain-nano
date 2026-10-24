@@ -1,0 +1,74 @@
+{
+  "format": "nano-vps-duty-floor-source-generation-v2",
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "previousSourceManifest": {
+    "path": "../vps-duty-floor-source-01/MANIFEST.source.json",
+    "sha256": "6ff55bcaafc8f4bfa9dfb40fa83338d6551525b9ee12544aaff09ef9f47d9c20",
+    "bytes": 3823,
+    "immutable": true
+  },
+  "change": "One appended full-dispatch synthetic test and required builtin imports only; four production source files byte-identical to GEN01",
+  "preparedTestGroups": 7,
+  "addedGroups": 1,
+  "requires": {
+    "python3": true,
+    "nodeAndPythonUid": 1000,
+    "mockedGeteuid": false
+  },
+  "peerReview": {
+    "reviewer": "recovery_source_audit",
+    "result": "GO_SOURCE_SCOPED_NEW_GROUP",
+    "executionPerformed": false
+  },
+  "testsExecutedByAuthor": false,
+  "nodeExecutedByAuthor": false,
+  "pythonExecutedByAuthor": false,
+  "dockerExecutedByAuthor": false,
+  "privateInputsReadByAuthor": false,
+  "rootRepositoryModifiedByAuthor": false,
+  "productionSourcesChanged": false,
+  "originalQualificationFailureRetained": true,
+  "campaign04": "SIGNED_CLOSED_FAILED_UNCHANGED",
+  "newCampaignCreated": false,
+  "runtimeQualified": false,
+  "productionQualified": false,
+  "payloadFiles": 7,
+  "payloadBytes": 317396,
+  "files": [
+    {
+      "path": "README.source.md",
+      "sha256": "e6c0c32efac520016a47762cb8eb7e04bb2bfe3998d93c2931f6883cee4bbfb3",
+      "bytes": 2852
+    },
+    {
+      "path": "tests.patch",
+      "sha256": "4241ad818564df3b88ff50bcc2e59ed674b1330b4f9f2575277a6163a16515c0",
+      "bytes": 4958
+    },
+    {
+      "path": "source/tests/multihost/vps-duty-floor.mjs",
+      "sha256": "02576882669855504430b7134f112a4394a4e2c4cace797d39dfc1212b33302b",
+      "bytes": 15909
+    },
+    {
+      "path": "source/tests/multihost/lifecycle-owner.mjs",
+      "sha256": "9c53d42a4eb26ea245fb7b05372464d371321735fcd8c11c99780a7abc1c649e",
+      "bytes": 20296
+    },
+    {
+      "path": "source/tests/multihost/rotation-owned-copy.mjs",
+      "sha256": "a1c8c6c03fcf5dc8b2655bb737e86a650edc3e36457bdd5e997a4072972ac000",
+      "bytes": 24548
+    },
+    {
+      "path": "source/tests/multihost/run.mjs",
+      "sha256": "afb7864031b843d898e30cb3b8d91f378f061498ba7c7f02b5367ae15ddbc3e4",
+      "bytes": 228576
+    },
+    {
+      "path": "source/tests/multihost/vps-duty-floor.test.mjs",
+      "sha256": "74bc0dbee486d07b0dffcedfef137ffed8d405aca88b620f5f39e18e01dfa724",
+      "bytes": 20257
+    }
+  ]
+}
