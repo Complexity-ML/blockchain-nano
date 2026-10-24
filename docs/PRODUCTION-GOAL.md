@@ -5958,3 +5958,15 @@ C++/CMake/binaires et images restent inchangés, Paris/Shanghai seul profil acti
 Le [lot de seuil de proposition VPS](qualification/vps-duty-floor-20261025/README.md) relie désormais la clé au manifeste/registre capturé, les snapshots aux tokens externes, et le seuil àmax(tête arrêtée,slot du journal). Les métadonnées source/copie/stop/manifeste sont vérifiées avant reprise ; des fingerprints full9 sont produits prospectivement dès capture-pin. Sept nouveaux groupes et trois gardes passent dans Docker AMD64 avec Python VPS existant montéRO, UID1000 réel, sorties0 et87FD fermés. Le dispatcher entier est exercé sur fichiers synthétiques ; les refus initiaux de montage restent conservés. Aucune image ni aucun domaine signé lancé. Ni quiescence globale de la base, ni nouvelle reprise réelle, ni qualification des capsules04 ne sont inférées ; une nouvelle admission/campagne autorisée reste nécessaire. La génération de source/pins est explicite, les précédentes et04FAILED restent intactes.
 
 C++ et Paris/Shanghai inchangés, aucun EIP promu. Rejeu V2 sur EVM C++ réelle, cycle validateur complet, budget futur des propositions, autres critères consensus/WAN, exploitation/CI/reproductibilité et revue indépendante non réalisée restent ouverts selon leurs portées. Base–Nano/USDC/Doppler/T0 non qualifiés ; aucun terme économique, fonds réel, vente, déploiement public, flood, machine ou dépense. Tous critères et échecs historiques conservés ; objectif actif, production non qualifiée.
+
+
+<!-- nano-inventory-v2-native-differential-20261025 -->
+### 25 octobre 2026 — InventoryBridge V2 : exécution native limitée, divergence ouverte
+
+Le lot fermé a réussi **24 cas Solidity, 65 transactions et 22 comparaisons d’oracle** dans le moteur C++ Shanghai en processus sur AMD64. Le cœur existant est réutilisé ; seul le programme de test a été compilé. Les sorties effectives Docker/C++ à zéro sont jointes à une adoption indépendante en lecture seule. L’échec initial du post-vérificateur, dû à un mauvais nom de fichier, reste conservé et n’a provoqué aucun rejeu.
+
+Le rejeu Anvil des **mêmes transactions signées** reste **FAILED** : deux racines correspondent, puis la transaction 3 présente une racine d’état différente malgré le même statut, gas, hash, nonce et les mêmes soldes contrôlés. La cause reste indéterminée ; les transactions suivantes ne sont pas qualifiées par ce préfixe. [Preuves, révisions et limites](qualification/inventory-v2-native-raw-differential-20261025/README.md).
+
+Aucune promotion d’EIP, conformité générale EVM/RPC, reprise de consensus ou qualification de production n’en découle. Les historiques d’échec sont conservés ; bridge/finalité source, réserve, allocations, ratio de conversion et termes Doppler restent ouverts, sans adoption implicite de 1:1 ni fonds réels.
+
+Tous les critères normatifs antérieurs restent ouverts selon leur périmètre, dont le cycle complet de consensus, CI/reproductibilité et la revue de sécurité indépendante non réalisée. Objectif actif, production non qualifiée.
