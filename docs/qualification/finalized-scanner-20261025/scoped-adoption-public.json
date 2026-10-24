@@ -1,0 +1,100 @@
+{
+  "format": "nano-finalized-scanner-scoped-adoption-v1",
+  "sourceCandidate": "06ac0bc3f5a23ea1baba3c36121ae4c55f346e4d",
+  "combinedPassingChecks": 15,
+  "newScannerGroups": 10,
+  "affectedExistingGuards": 5,
+  "sameCandidateAllBatches": true,
+  "passingNamesLastBatch": {
+    "candidate is accepted only after the actual common checkpoint was traversed; older canonical candidates also work": "02",
+    "same tip needs no block fetch; an extension joins the cursor without refetching old history": "02",
+    "rolling authenticated checkpoint refresh spans more than2048slots without larger windows and joins all refresh branches": "02",
+    "false common root, conflicting checkpoint or non-descendant finalized extension refuse without cache replacement": "02",
+    "parent loops, self parent, equal/reversed slots and unauthenticated projections cannot produce a candidate": "02",
+    "declared history byte and slot capacities fail distinctly from a searched deadline with no event": "02",
+    "absolute phase deadline refuses late header block callback result and sleep; Promise predicates never pass": "02",
+    "owner selection resolves all sixteen at one sealed state and chooses an actual finalized proposer independently of first key": "02",
+    "strict future duty floor is max stopped head and authenticated journal slot, never the signing root": "02",
+    "caller integration persists the exact decision before returning to STOP and shares one selection deadline": "02",
+    "coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff": "02",
+    "coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails": "02",
+    "actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid": "02",
+    "actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network": "03",
+    "actual runner inventory covers restored audit and transitive finality/monitor dependencies": "05"
+  },
+  "batches": [
+    {
+      "batch": "01",
+      "actualDockerExitCode": null,
+      "passedNames": [],
+      "failedNames": [],
+      "preparationFailure": {
+        "reason": "relative import missing",
+        "type": "ValueError"
+      }
+    },
+    {
+      "batch": "02",
+      "actualDockerExitCode": 1,
+      "passedNames": [
+        "candidate is accepted only after the actual common checkpoint was traversed; older canonical candidates also work",
+        "same tip needs no block fetch; an extension joins the cursor without refetching old history",
+        "rolling authenticated checkpoint refresh spans more than2048slots without larger windows and joins all refresh branches",
+        "false common root, conflicting checkpoint or non-descendant finalized extension refuse without cache replacement",
+        "parent loops, self parent, equal/reversed slots and unauthenticated projections cannot produce a candidate",
+        "declared history byte and slot capacities fail distinctly from a searched deadline with no event",
+        "absolute phase deadline refuses late header block callback result and sleep; Promise predicates never pass",
+        "owner selection resolves all sixteen at one sealed state and chooses an actual finalized proposer independently of first key",
+        "strict future duty floor is max stopped head and authenticated journal slot, never the signing root",
+        "caller integration persists the exact decision before returning to STOP and shares one selection deadline",
+        "coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff",
+        "coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails",
+        "actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid"
+      ],
+      "failedNames": [
+        "actual runner inventory covers restored audit and transitive finality/monitor dependencies",
+        "actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network"
+      ],
+      "preparationFailure": null
+    },
+    {
+      "batch": "03",
+      "actualDockerExitCode": 1,
+      "passedNames": [
+        "actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network"
+      ],
+      "failedNames": [
+        "actual runner inventory covers restored audit and transitive finality/monitor dependencies"
+      ],
+      "preparationFailure": null
+    },
+    {
+      "batch": "04",
+      "actualDockerExitCode": null,
+      "passedNames": [],
+      "failedNames": [],
+      "preparationFailure": {
+        "reason": "[Errno 2] No such file or directory: '/home/ubuntu/nano-finalized-scanner-test-root-20261025-04/source/tests/multihost/finalized-lifecycle-scanner.test.mjs'",
+        "type": "FileNotFoundError"
+      }
+    },
+    {
+      "batch": "05",
+      "actualDockerExitCode": 0,
+      "passedNames": [
+        "actual runner inventory covers restored audit and transitive finality/monitor dependencies"
+      ],
+      "failedNames": [],
+      "preparationFailure": null
+    }
+  ],
+  "originalBatchVerdictsPreserved": true,
+  "all15ChecksExecutedInOneSuccessfulBatch": false,
+  "newValidatorKeysCreated": false,
+  "campaign04Resumed": false,
+  "campaign05Authorized": false,
+  "nativeChainStarted": false,
+  "nativeThreeOwnerRecoveryQualified": false,
+  "vpsJournalFloorQualified": false,
+  "productionQualified": false
+}

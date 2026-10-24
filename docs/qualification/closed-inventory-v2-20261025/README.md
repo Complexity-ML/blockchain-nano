@@ -1,0 +1,11 @@
+# Closed inventory conversion — scoped qualification
+
+Three separate source-bound batches pass: seven independent-model tests, six offline Doppler review tests, and 24 Solidity assertions on an isolated Anvil reference EVM. The latter mined65 transactions, compared22 accounting checkpoints, checked65 actual wallet debits and retained three expected mined status-zero refusals. Its real Docker/controller exits are0; the owned Anvil group closed and its container is absent. No new image was built.
+
+The initial monolithic assertion suite compiled but failed EIP-170:27918 runtime bytes >24576. The split preserves the15 economic case bodies and leaves the four abstract V2 contracts unchanged. Final suites are18919/16613 runtime bytes; fixture creation44005 fits EIP-3860. Both limits, Shanghai, optimizer200 and viaIR:false remained fixed. The failing attempt is retained.
+
+The pure model and offline proposal use synthetic2:7 lots; the contract trace uses2:3. These are atomic test units, not adopted economic terms. Coverage is over the entire preissued supply; allocations/vesting/LP/unsold are declarative coverage terms, not proven SDK execution. The retained real-Base synthetic simulation rejection is not promoted into success. `passed:false` in the driver's provisional evidence remains unchanged; Root's observed terminal and outer report establish this scoped exit result.
+
+Endpoints remain abstract/closed. The harness uses a digest mock, not an authenticated cross-chain verifier. No Nano-native runtime, real Base transaction, source-finality/reorg/compromise protection, real reserve, public bridge, sale, liquidity migration, T0 indexing or production readiness is qualified. Compiler/Node transitive OS closure is not fully attested. V1, C++ binaries/images and the activated Paris/Shanghai profile are unchanged.
+
+`reference-argv-public.json` records the actual Docker invocation, including the external Linux Node binary and shared-library mounts. It contains public test paths only. The image alone is not a Node runtime. Existing source/dependency/artifact inputs must be authenticated separately before reproduction. No private configuration, key or campaign capsule is included.

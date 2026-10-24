@@ -1,0 +1,58 @@
+{
+  "base": "2731ec7dfb076432b045596ba4d696186a820e3e",
+  "candidateRevision": "06ac0bc3f5a23ea1baba3c36121ae4c55f346e4d",
+  "bundleRef": "refs/qualifications/finalized-scanner-20261025-01",
+  "bundle": {
+    "sha256": "f4e706aba1bd3ca568a4a5fceec6ebb50040268e7e6e64eabb1f5beb90118c63",
+    "bytes": 74648
+  },
+  "sourcePins": {
+    "tests/multihost/finalized-lifecycle-scanner.mjs": {
+      "sha256": "c70e6519c496228e901cefe619aeab77db37327c0b44198b51a6f906043bb581",
+      "bytes": 18138
+    },
+    "tests/multihost/finalized-lifecycle-scanner.test.mjs": {
+      "sha256": "760d8e080bee16cb85dfa6ca0e9690b31abcdd93a69d19bb0ad309ff414d5ce0",
+      "bytes": 20830
+    },
+    "tests/multihost/run.mjs": {
+      "sha256": "66424ecb30e3347c9e4efc2066efa0e2d891ae7c9944b152450e9c067ee21896",
+      "bytes": 226584
+    },
+    "tests/multihost/lifecycle-driver-guard.test.mjs": {
+      "sha256": "e7ff3635c10acb4e777e98be8015b0d4d1ce00ec1fe4ad448d3cbf5a0c55aa13",
+      "bytes": 23791
+    }
+  },
+  "testFiles": [
+    "tests/multihost/finalized-lifecycle-scanner.test.mjs",
+    "tests/multihost/lifecycle-driver-guard.test.mjs",
+    "tests/multihost/harness-manifest.test.mjs",
+    "tests/multihost/owner-recovery.test.mjs"
+  ],
+  "testNamePattern": "^(?:candidate\\ is\\ accepted\\ only\\ after\\ the\\ actual\\ common\\ checkpoint\\ was\\ traversed;\\ older\\ canonical\\ candidates\\ also\\ work|same\\ tip\\ needs\\ no\\ block\\ fetch;\\ an\\ extension\\ joins\\ the\\ cursor\\ without\\ refetching\\ old\\ history|rolling\\ authenticated\\ checkpoint\\ refresh\\ spans\\ more\\ than2048slots\\ without\\ larger\\ windows\\ and\\ joins\\ all\\ refresh\\ branches|false\\ common\\ root,\\ conflicting\\ checkpoint\\ or\\ non\\-descendant\\ finalized\\ extension\\ refuse\\ without\\ cache\\ replacement|parent\\ loops,\\ self\\ parent,\\ equal/reversed\\ slots\\ and\\ unauthenticated\\ projections\\ cannot\\ produce\\ a\\ candidate|declared\\ history\\ byte\\ and\\ slot\\ capacities\\ fail\\ distinctly\\ from\\ a\\ searched\\ deadline\\ with\\ no\\ event|absolute\\ phase\\ deadline\\ refuses\\ late\\ header\\ block\\ callback\\ result\\ and\\ sleep;\\ Promise\\ predicates\\ never\\ pass|owner\\ selection\\ resolves\\ all\\ sixteen\\ at\\ one\\ sealed\\ state\\ and\\ chooses\\ an\\ actual\\ finalized\\ proposer\\ independently\\ of\\ first\\ key|strict\\ future\\ duty\\ floor\\ is\\ max\\ stopped\\ head\\ and\\ authenticated\\ journal\\ slot,\\ never\\ the\\ signing\\ root|caller\\ integration\\ persists\\ the\\ exact\\ decision\\ before\\ returning\\ to\\ STOP\\ and\\ shares\\ one\\ selection\\ deadline|actual\\ lifecycle\\ driver\\ generation20261025\\ gates\\ legacy\\ and\\ C8\\ authorizations\\ and\\ explicit\\ closeout\\ reserve\\ before\\ absent\\ seed/output/network|actual\\ runner\\ inventory\\ covers\\ restored\\ audit\\ and\\ transitive\\ finality/monitor\\ dependencies|coordinator\\ restores\\ Native\\ then\\ DockerMac\\ and\\ binds\\ each\\ new\\ proposal\\ to\\ the\\ same\\ duty\\ beyond\\ its\\ cutoff|coordinator\\ refuses\\ before\\ later\\ effects\\ when\\ a\\ copy,\\ finality,\\ postcutoff\\ proposal\\ or\\ required\\ capability\\ fails|actual\\ Mac\\ post\\-recovery\\ proposal\\ adapter\\ refuses\\ exact\\ or\\ late\\ phase\\ completion\\ even\\ while\\ the\\ global\\ budget\\ remains\\ valid)$",
+  "expectedTestNames": [
+    "candidate is accepted only after the actual common checkpoint was traversed; older canonical candidates also work",
+    "same tip needs no block fetch; an extension joins the cursor without refetching old history",
+    "rolling authenticated checkpoint refresh spans more than2048slots without larger windows and joins all refresh branches",
+    "false common root, conflicting checkpoint or non-descendant finalized extension refuse without cache replacement",
+    "parent loops, self parent, equal/reversed slots and unauthenticated projections cannot produce a candidate",
+    "declared history byte and slot capacities fail distinctly from a searched deadline with no event",
+    "absolute phase deadline refuses late header block callback result and sleep; Promise predicates never pass",
+    "owner selection resolves all sixteen at one sealed state and chooses an actual finalized proposer independently of first key",
+    "strict future duty floor is max stopped head and authenticated journal slot, never the signing root",
+    "caller integration persists the exact decision before returning to STOP and shares one selection deadline",
+    "actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network",
+    "actual runner inventory covers restored audit and transitive finality/monitor dependencies",
+    "coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff",
+    "coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails",
+    "actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid"
+  ],
+  "expectedCounts": {
+    "tests": 30,
+    "pass": 15,
+    "fail": 0,
+    "skipped": 15,
+    "cancelled": 0
+  }
+}

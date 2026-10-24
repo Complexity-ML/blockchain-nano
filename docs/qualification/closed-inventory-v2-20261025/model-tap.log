@@ -1,0 +1,45 @@
+TAP version 13
+# Subtest: exact rational lots, explicit 6/18 atomic units, remainders and uint256 bounds
+ok 1 - exact rational lots, explicit 6/18 atomic units, remainders and uint256 bounds
+  ---
+  duration_ms: 20.714227
+  ...
+# Subtest: hand-calculated interleaving vector, every refusal atomic, full paired final checkpoint
+ok 2 - hand-calculated interleaving vector, every refusal atomic, full paired final checkpoint
+  ---
+  duration_ms: 30.437981
+  ...
+# Subtest: all wire fields are bound and one source nonce cannot describe two payloads
+ok 3 - all wire fields are bound and one source nonce cannot describe two payloads
+  ---
+  duration_ms: 38.5867
+  ...
+# Subtest: two independent returns are delivered and acknowledged out of order without early inventory credit
+ok 4 - two independent returns are delivered and acknowledged out of order without early inventory credit
+  ---
+  duration_ms: 8.710646
+  ...
+# Subtest: refundable funds cannot be spent as collateral before irreversible Base payout ack
+ok 5 - refundable funds cannot be spent as collateral before irreversible Base payout ack
+  ---
+  duration_ms: 5.623847
+  ...
+# Subtest: recipient creates/cancels reservation, distinct funder is bound, payout and refund cannot both occur
+ok 6 - recipient creates/cancels reservation, distinct funder is bound, payout and refund cannot both occur
+  ---
+  duration_ms: 6.405172
+  ...
+# Subtest: freeze evidence stops new risk, keeps already-created refund rights and makes no postcorruption supply claim
+ok 7 - freeze evidence stops new risk, keeps already-created refund rights and makes no postcorruption supply claim
+  ---
+  duration_ms: 5.899577
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 424.794592

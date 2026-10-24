@@ -1,0 +1,77 @@
+{"actualDockerExitCode": 1, "candidateRevision": "06ac0bc3f5a23ea1baba3c36121ae4c55f346e4d", "chainRuntimeStarted": false, "counts": null, "dockerInitEnabled": true, "dockerNetwork": "none", "economicTermsAdopted": false, "elapsedMs": 27144, "firstFailure": {"reason": "Docker selected test batch failed", "type": "ValueError"}, "format": "nano-root-finalized-scanner-docker-tests-v1", "heldFilesClosed": 46, "heldFilesOpened": 46, "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14", "imageBuilds": 0, "keysCreated": false, "nativeMacFilesystemQualified": false, "nativeNanoActivityTested": false, "nodeRuntimeProviderFiles": 19, "nodeSystemResourcesMountedReadOnly": true, "nodeVersion": "v18.19.1", "passed": false, "productionQualified": false, "runtimeAndSourceFilesStrictlyFenced": false, "runtimeMountedReadOnly": true, "secondaryFailures": [], "sourceFinalityAuthenticated": false, "sourceMainUnchanged": "2731ec7dfb076432b045596ba4d696186a820e3e", "stderr.log": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "stdout.log": {"bytes": 3396, "sha256": "c3b2417c1860f1a5d6cb00ccc209a0920b1d02db7e0b6a5dd499eb4c868b7850"}, "threeOwnerRuntimeRecoveryQualified": false, "wholeNodeRuntimeClosureQualified": false}
+TAP version 13
+# Subtest: actual runner inventory covers restored audit and transitive finality/monitor dependencies
+not ok 1 - actual runner inventory covers restored audit and transitive finality/monitor dependencies
+  ---
+  duration_ms: 45.594983
+  location: 'file:///case/tests/multihost/harness-manifest.test.mjs:12:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, realpath '/case/tests/assertoor/stability.mjs'"
+  code: 'ENOENT'
+  ...
+# Subtest: dependency-only edit changes its hash while entry hash remains identical
+ok 2 - dependency-only edit changes its hash while entry hash remains identical # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.284465
+  ...
+# Subtest: multiline imports, side effects and cycles are included once
+ok 3 - multiline imports, side effects and cycles are included once # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.108762
+  ...
+# Subtest: missing imported dependency fails rather than making a partial manifest
+ok 4 - missing imported dependency fails rather than making a partial manifest # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.128286
+  ...
+# Subtest: import outside repository is rejected
+ok 5 - import outside repository is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.108299
+  ...
+# Subtest: symlink to external source is rejected
+ok 6 - symlink to external source is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.09019
+  ...
+# Subtest: actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+ok 7 - actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+  ---
+  duration_ms: 25052.696752
+  ...
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 8 - new output admission: actual save rejects transient ctime sample before stable first admission # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.267275
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 9 - new output admission: three strict samples span two seconds and ctime change resets the run # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.163208
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 10 - new output admission: every known-byte and creation-identity mismatch refuses without retry # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.123562
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 11 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.092732
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 12 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.094916
+  ...
+1..12
+# tests 12
+# suites 0
+# pass 1
+# fail 1
+# cancelled 0
+# skipped 10
+# todo 0
+# duration_ms 25612.617705
+
+

@@ -1,0 +1,179 @@
+{"actualDockerExitCode": 1, "candidateRevision": "06ac0bc3f5a23ea1baba3c36121ae4c55f346e4d", "chainRuntimeStarted": false, "counts": null, "dockerInitEnabled": true, "dockerNetwork": "none", "economicTermsAdopted": false, "elapsedMs": 5099, "firstFailure": {"reason": "Docker selected test batch failed", "type": "ValueError"}, "format": "nano-root-finalized-scanner-docker-tests-v1", "heldFilesClosed": 23, "heldFilesOpened": 23, "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14", "imageBuilds": 0, "keysCreated": false, "nativeMacFilesystemQualified": false, "nativeNanoActivityTested": false, "nodeRuntimeProviderFiles": 19, "nodeSystemResourcesMountedReadOnly": true, "nodeVersion": "v18.19.1", "passed": false, "productionQualified": false, "runtimeAndSourceFilesStrictlyFenced": false, "runtimeMountedReadOnly": true, "secondaryFailures": [], "sourceFinalityAuthenticated": false, "sourceMainUnchanged": "2731ec7dfb076432b045596ba4d696186a820e3e", "stderr.log": {"bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, "stdout.log": {"bytes": 10103, "sha256": "25f1052eb00f72668c70e539763bb2a8bafc8fafb4737cd830ba7c07427cef90"}, "threeOwnerRuntimeRecoveryQualified": false, "wholeNodeRuntimeClosureQualified": false}
+TAP version 13
+# Subtest: candidate is accepted only after the actual common checkpoint was traversed; older canonical candidates also work
+ok 1 - candidate is accepted only after the actual common checkpoint was traversed; older canonical candidates also work
+  ---
+  duration_ms: 12.375716
+  ...
+# Subtest: same tip needs no block fetch; an extension joins the cursor without refetching old history
+ok 2 - same tip needs no block fetch; an extension joins the cursor without refetching old history
+  ---
+  duration_ms: 5.041403
+  ...
+# Subtest: rolling authenticated checkpoint refresh spans more than2048slots without larger windows and joins all refresh branches
+ok 3 - rolling authenticated checkpoint refresh spans more than2048slots without larger windows and joins all refresh branches
+  ---
+  duration_ms: 234.694732
+  ...
+# Subtest: false common root, conflicting checkpoint or non-descendant finalized extension refuse without cache replacement
+ok 4 - false common root, conflicting checkpoint or non-descendant finalized extension refuse without cache replacement
+  ---
+  duration_ms: 2.389633
+  ...
+# Subtest: parent loops, self parent, equal/reversed slots and unauthenticated projections cannot produce a candidate
+ok 5 - parent loops, self parent, equal/reversed slots and unauthenticated projections cannot produce a candidate
+  ---
+  duration_ms: 3.534831
+  ...
+# Subtest: declared history byte and slot capacities fail distinctly from a searched deadline with no event
+ok 6 - declared history byte and slot capacities fail distinctly from a searched deadline with no event
+  ---
+  duration_ms: 3.376854
+  ...
+# Subtest: absolute phase deadline refuses late header block callback result and sleep; Promise predicates never pass
+ok 7 - absolute phase deadline refuses late header block callback result and sleep; Promise predicates never pass
+  ---
+  duration_ms: 5.579189
+  ...
+# Subtest: owner selection resolves all sixteen at one sealed state and chooses an actual finalized proposer independently of first key
+ok 8 - owner selection resolves all sixteen at one sealed state and chooses an actual finalized proposer independently of first key
+  ---
+  duration_ms: 4.69364
+  ...
+# Subtest: strict future duty floor is max stopped head and authenticated journal slot, never the signing root
+ok 9 - strict future duty floor is max stopped head and authenticated journal slot, never the signing root
+  ---
+  duration_ms: 49.550682
+  ...
+# Subtest: caller integration persists the exact decision before returning to STOP and shares one selection deadline
+ok 10 - caller integration persists the exact decision before returning to STOP and shares one selection deadline
+  ---
+  duration_ms: 9.103734
+  ...
+# Subtest: actual runner inventory covers restored audit and transitive finality/monitor dependencies
+not ok 11 - actual runner inventory covers restored audit and transitive finality/monitor dependencies
+  ---
+  duration_ms: 38.764922
+  location: 'file:///case/tests/multihost/harness-manifest.test.mjs:12:1'
+  failureType: 'testCodeFailure'
+  error: "ENOENT: no such file or directory, realpath '/case/scripts/operations/finality-monitor.mjs'"
+  code: 'ENOENT'
+  ...
+# Subtest: dependency-only edit changes its hash while entry hash remains identical
+ok 12 - dependency-only edit changes its hash while entry hash remains identical # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.2837
+  ...
+# Subtest: multiline imports, side effects and cycles are included once
+ok 13 - multiline imports, side effects and cycles are included once # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.123292
+  ...
+# Subtest: missing imported dependency fails rather than making a partial manifest
+ok 14 - missing imported dependency fails rather than making a partial manifest # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.139841
+  ...
+# Subtest: import outside repository is rejected
+ok 15 - import outside repository is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.108988
+  ...
+# Subtest: symlink to external source is rejected
+ok 16 - symlink to external source is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.099661
+  ...
+# Subtest: actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+not ok 17 - actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+  ---
+  duration_ms: 2281.291166
+  location: 'file:///case/tests/multihost/lifecycle-driver-guard.test.mjs:68:1'
+  failureType: 'testCodeFailure'
+  error: `A parser/import/ENOENT refusal is not this guard: {"caseIndex":0,"status":1,"stderr":"node:internal/errors:496\\n    ErrorCaptureStackTrace(err);\\n    ^\\n\\nError [ERR_MODULE_NOT_FOUND]: Cannot find module '/case/scripts/operations/finality-monitor.mjs' imported from /case/tests/multihost/alert-fault.mjs\\n    at new NodeError (node:internal/errors:405:5)\\n    at finalizeResolution (node:internal/modules/esm/resolve:327:11)\\n    at moduleResolve (node:internal/modules/esm/resolve:980:10)\\n    at defaultResolve (node:internal/modules/esm/resolve:1193:11)\\n    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:403:12)\\n    at ModuleLoader.resolve (node:internal/modules/esm/loader:372:25)\\n    at ModuleLoader.getModuleJob (node:internal/modules/esm/loader:249:38)\\n    at ModuleWrap.<anonymous> (node:internal/modules/esm/module_job:76:39)\\n    at link (node:internal/modules/esm/module_job:75:36) {\\n  url: 'file:///case/scripts/operations/finality-monitor.mjs',\\n  code: 'ERR_MODULE_NOT_FOUND'\\n}\\n\\nNode.js v18.19.1\\n"}`
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    TestContext.<anonymous> (file:///case/tests/multihost/lifecycle-driver-guard.test.mjs:110:123)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async startSubtest (node:internal/test_runner/harness:214:3)
+  ...
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 18 - new output admission: actual save rejects transient ctime sample before stable first admission # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.314148
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 19 - new output admission: three strict samples span two seconds and ctime change resets the run # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.126992
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 20 - new output admission: every known-byte and creation-identity mismatch refuses without retry # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.122672
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 21 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.124974
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 22 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.140657
+  ...
+# Subtest: owner relocation remaps peer, core witness and all16 journal pairs without changing consensus or floors
+ok 23 - owner relocation remaps peer, core witness and all16 journal pairs without changing consensus or floors # SKIP test name does not match pattern
+  ---
+  duration_ms: 2.201653
+  ...
+# Subtest: relocation refuses aliases, overlapping roots, changed domain/owner or an incomplete original journal mapping
+ok 24 - relocation refuses aliases, overlapping roots, changed domain/owner or an incomplete original journal mapping # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.131081
+  ...
+# Subtest: capture comparison preserves complete semantic commitments while physical copies have different inventories and config paths
+ok 25 - capture comparison preserves complete semantic commitments while physical copies have different inventories and config paths # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.10069
+  ...
+# Subtest: capture comparison refuses changed tokens, archives, signing history, owner and incomplete or writable role claims
+ok 26 - capture comparison refuses changed tokens, archives, signing history, owner and incomplete or writable role claims # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.316189
+  ...
+# Subtest: coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff
+ok 27 - coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff
+  ---
+  duration_ms: 4.788803
+  ...
+# Subtest: coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails
+ok 28 - coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails
+  ---
+  duration_ms: 6.56143
+  ...
+# Subtest: additional Mac recovery budget includes two restores and six full finality phases without changing existing audits
+ok 29 - additional Mac recovery budget includes two restores and six full finality phases without changing existing audits # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.152957
+  ...
+# Subtest: actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid
+ok 30 - actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid
+  ---
+  duration_ms: 16.738483
+  ...
+1..30
+# tests 30
+# suites 0
+# pass 13
+# fail 2
+# cancelled 0
+# skipped 15
+# todo 0
+# duration_ms 3569.447446
+
+
