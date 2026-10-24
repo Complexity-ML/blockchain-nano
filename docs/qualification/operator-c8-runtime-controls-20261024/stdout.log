@@ -1,0 +1,150 @@
+TAP version 13
+# Subtest: v2 typed budget, exact bindings, real CLI and long-lived readonly sampler contract
+ok 1 - v2 typed budget, exact bindings, real CLI and long-lived readonly sampler contract
+  ---
+  duration_ms: 20.596076
+  ...
+# Subtest: closeout phase binds actual child PID, source, spec, budgets and canonical bounded bytes
+ok 2 - closeout phase binds actual child PID, source, spec, budgets and canonical bounded bytes
+  ---
+  duration_ms: 2.482181
+  ...
+# Subtest: v2 phase-aware closeout shares the same overall deadline and refuses late terminal zero
+ok 3 - v2 phase-aware closeout shares the same overall deadline and refuses late terminal zero
+  ---
+  duration_ms: 6.420027
+  ...
+# Subtest: v2 publication remains provisional and refuses late sync, interruption or publication failure
+ok 4 - v2 publication remains provisional and refuses late sync, interruption or publication failure
+  ---
+  duration_ms: 1.25757
+  ...
+# Subtest: actual run publishes its phase receipt before cleanup, only for C8 budget mode
+ok 5 - actual run publishes its phase receipt before cleanup, only for C8 budget mode
+  ---
+  duration_ms: 9.603094
+  ...
+# Subtest: synthetic receipt files enforce absence, no-follow, owner modes and unique regular inode
+ok 6 - synthetic receipt files enforce absence, no-follow, owner modes and unique regular inode
+  ---
+  duration_ms: 13.205177
+  ...
+# Subtest: Mac memory is explicitly free+inactive+speculative, not purgeable or os.freemem
+ok 7 - Mac memory is explicitly free+inactive+speculative, not purgeable or os.freemem # SKIP test name does not match pattern
+  ---
+  duration_ms: 3.964482
+  ...
+# Subtest: Linux df/MemAvailable parse exactly and fail closed on missing/duplicate/overflow
+ok 8 - Linux df/MemAvailable parse exactly and fail closed on missing/duplicate/overflow # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.478726
+  ...
+# Subtest: startup and running boundaries, all three surfaces, freshness and metric identity
+ok 9 - startup and running boundaries, all three surfaces, freshness and metric identity # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.235082
+  ...
+# Subtest: owned stop latch sends one SIGINT only; never protected/global PID or identity replacement
+ok 10 - owned stop latch sends one SIGINT only; never protected/global PID or identity replacement # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.865991
+  ...
+# Subtest: three probe-only samples never call launcher; failed startup never spawns
+ok 11 - three probe-only samples never call launcher; failed startup never spawns # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.307357
+  ...
+# Subtest: lost SSH while running signals only owned child once and waits for cleanup close
+ok 12 - lost SSH while running signals only owned child once and waits for cleanup close
+  ---
+  duration_ms: 4.559626
+  ...
+# Subtest: wall timeout and unjoined grace remain failures, with no SIGTERM/SIGKILL escalation
+ok 13 - wall timeout and unjoined grace remain failures, with no SIGTERM/SIGKILL escalation
+  ---
+  duration_ms: 23.996414
+  ...
+# Subtest: a normal joined exit can pass; a stop request before spawn cannot
+ok 14 - a normal joined exit can pass; a stop request before spawn cannot
+  ---
+  duration_ms: 1.895002
+  ...
+# Subtest: Docker runtime no-restart parser rejects policy/state/identity/projection/CID violations
+ok 15 - Docker runtime no-restart parser rejects policy/state/identity/projection/CID violations
+  ---
+  duration_ms: 10.620721
+  ...
+# Subtest: Docker runtime guarded create→inspect→fence/clock→CID start→inspect transitions and actual run integration
+ok 16 - Docker runtime guarded create→inspect→fence/clock→CID start→inspect transitions and actual run integration
+  ---
+  duration_ms: 22.827212
+  ...
+# Subtest: actual runner inventory covers restored audit and transitive finality/monitor dependencies
+ok 17 - actual runner inventory covers restored audit and transitive finality/monitor dependencies
+  ---
+  duration_ms: 84.727799
+  ...
+# Subtest: dependency-only edit changes its hash while entry hash remains identical
+ok 18 - dependency-only edit changes its hash while entry hash remains identical # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.252995
+  ...
+# Subtest: multiline imports, side effects and cycles are included once
+ok 19 - multiline imports, side effects and cycles are included once # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.100982
+  ...
+# Subtest: missing imported dependency fails rather than making a partial manifest
+ok 20 - missing imported dependency fails rather than making a partial manifest # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.149305
+  ...
+# Subtest: import outside repository is rejected
+ok 21 - import outside repository is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.099413
+  ...
+# Subtest: symlink to external source is rejected
+ok 22 - symlink to external source is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.088121
+  ...
+# Subtest: actual lifecycle driver generation20261024 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+ok 23 - actual lifecycle driver generation20261024 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+  ---
+  duration_ms: 25343.357393
+  ...
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 24 - new output admission: actual save rejects transient ctime sample before stable first admission # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.439807
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 25 - new output admission: three strict samples span two seconds and ctime change resets the run # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.19758
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 26 - new output admission: every known-byte and creation-identity mismatch refuses without retry # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.202144
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 27 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.161768
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 28 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.186383
+  ...
+1..28
+# tests 28
+# suites 0
+# pass 13
+# fail 0
+# cancelled 0
+# skipped 15
+# todo 0
+# duration_ms 26775.851601

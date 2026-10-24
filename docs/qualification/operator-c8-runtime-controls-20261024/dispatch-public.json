@@ -1,0 +1,85 @@
+{
+  "base": "159e595b0a11ba3de2083af31f590e72bb6178ce",
+  "bundle": {
+    "bytes": 31431,
+    "sha256": "1aa64efd5e5c15e25e061e0a81cd5e02df386d89c152e94fe03fd5547256273c"
+  },
+  "candidateRevision": "ed651411285dcbd653f158d1d3bc73186331d5f9",
+  "chainRuntimeAuthorized": false,
+  "expectedCounts": {
+    "cancelled": 0,
+    "fail": 0,
+    "pass": 13,
+    "skipped": 15,
+    "tests": 28
+  },
+  "expectedTestNames": [
+    "Docker runtime no-restart parser rejects policy/state/identity/projection/CID violations",
+    "Docker runtime guarded create\u2192inspect\u2192fence/clock\u2192CID start\u2192inspect transitions and actual run integration",
+    "v2 typed budget, exact bindings, real CLI and long-lived readonly sampler contract",
+    "closeout phase binds actual child PID, source, spec, budgets and canonical bounded bytes",
+    "v2 phase-aware closeout shares the same overall deadline and refuses late terminal zero",
+    "v2 publication remains provisional and refuses late sync, interruption or publication failure",
+    "actual run publishes its phase receipt before cleanup, only for C8 budget mode",
+    "synthetic receipt files enforce absence, no-follow, owner modes and unique regular inode",
+    "lost SSH while running signals only owned child once and waits for cleanup close",
+    "wall timeout and unjoined grace remain failures, with no SIGTERM/SIGKILL escalation",
+    "a normal joined exit can pass; a stop request before spawn cannot",
+    "actual lifecycle driver generation20261024 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network",
+    "actual runner inventory covers restored audit and transitive finality/monitor dependencies"
+  ],
+  "format": "nano-root-reviewed-public-test-dispatch-v1",
+  "keysOrPrivateInputsIncluded": false,
+  "preparationCountRefusalPreserved": {
+    "failedBeforeBundleOrDocker": true,
+    "firstTotalAssumption": 23,
+    "reviewedLiteralGroups": 28
+  },
+  "productionQualified": false,
+  "sourcePins": {
+    "scripts/operations/campaign-resource-guard-c8.test.mjs": {
+      "bytes": 13964,
+      "sha256": "4bb50fc5d4a12941acddb0ccd7dfecbdf877b8e31c5daf3edcab444eca649c98"
+    },
+    "scripts/operations/campaign-resource-guard.mjs": {
+      "bytes": 36412,
+      "sha256": "9310c3a6bd8b87240847039bc35e386ffac6cc831e17619cfe97b8ba22656899"
+    },
+    "scripts/operations/campaign-resource-guard.test.mjs": {
+      "bytes": 6853,
+      "sha256": "36e80bdfdc8285562dc46115228de49346ea311bce4864a1fb8073d1fe01f0fd"
+    },
+    "tests/multihost/docker-runtime-restart-guard.integration.mjs": {
+      "bytes": 7621,
+      "sha256": "f6f6c5ca190a2b3d05a068c2295f8b06fdf4254d04f3200c039a681cf44c212b"
+    },
+    "tests/multihost/docker-runtime-restart-guard.mjs": {
+      "bytes": 8551,
+      "sha256": "b0e71925aa51c1ca51266059d8dc4a16c58ec9c0111aded49c7f5641341b4fe9"
+    },
+    "tests/multihost/docker-runtime-restart-guard.test.mjs": {
+      "bytes": 19319,
+      "sha256": "7e1d52691cbf9c7b5e9e5e89b7c590f8dea396e86e86bdc9394576b4a31e5450"
+    },
+    "tests/multihost/harness-manifest.test.mjs": {
+      "bytes": 3501,
+      "sha256": "6c3c00a024efe360510de4b26048a88feee4731031a7a040a0b358e80fd36b24"
+    },
+    "tests/multihost/lifecycle-driver-guard.test.mjs": {
+      "bytes": 23166,
+      "sha256": "46c01c3a8bea6fa26e4818b890d673d27e90aeaaa9d53135e0772eafd5fa26c7"
+    },
+    "tests/multihost/run.mjs": {
+      "bytes": 225125,
+      "sha256": "dc6ec843511ac9f3dffae25bba457475ffcb0d9c108a3c1c842f0d43019935c3"
+    }
+  },
+  "testFiles": [
+    "tests/multihost/docker-runtime-restart-guard.test.mjs",
+    "scripts/operations/campaign-resource-guard-c8.test.mjs",
+    "scripts/operations/campaign-resource-guard.test.mjs",
+    "tests/multihost/lifecycle-driver-guard.test.mjs",
+    "tests/multihost/harness-manifest.test.mjs"
+  ],
+  "testPattern": "^(?:Docker\\ runtime\\ no\\-restart\\ parser\\ rejects\\ policy/state/identity/projection/CID\\ violations|Docker\\ runtime\\ guarded\\ create\u2192inspect\u2192fence/clock\u2192CID\\ start\u2192inspect\\ transitions\\ and\\ actual\\ run\\ integration|v2\\ typed\\ budget,\\ exact\\ bindings,\\ real\\ CLI\\ and\\ long\\-lived\\ readonly\\ sampler\\ contract|closeout\\ phase\\ binds\\ actual\\ child\\ PID,\\ source,\\ spec,\\ budgets\\ and\\ canonical\\ bounded\\ bytes|v2\\ phase\\-aware\\ closeout\\ shares\\ the\\ same\\ overall\\ deadline\\ and\\ refuses\\ late\\ terminal\\ zero|v2\\ publication\\ remains\\ provisional\\ and\\ refuses\\ late\\ sync,\\ interruption\\ or\\ publication\\ failure|actual\\ run\\ publishes\\ its\\ phase\\ receipt\\ before\\ cleanup,\\ only\\ for\\ C8\\ budget\\ mode|synthetic\\ receipt\\ files\\ enforce\\ absence,\\ no\\-follow,\\ owner\\ modes\\ and\\ unique\\ regular\\ inode|lost\\ SSH\\ while\\ running\\ signals\\ only\\ owned\\ child\\ once\\ and\\ waits\\ for\\ cleanup\\ close|wall\\ timeout\\ and\\ unjoined\\ grace\\ remain\\ failures,\\ with\\ no\\ SIGTERM/SIGKILL\\ escalation|a\\ normal\\ joined\\ exit\\ can\\ pass;\\ a\\ stop\\ request\\ before\\ spawn\\ cannot|actual\\ lifecycle\\ driver\\ generation20261024\\ gates\\ legacy\\ and\\ C8\\ authorizations\\ and\\ explicit\\ closeout\\ reserve\\ before\\ absent\\ seed/output/network|actual\\ runner\\ inventory\\ covers\\ restored\\ audit\\ and\\ transitive\\ finality/monitor\\ dependencies)$"
+}
