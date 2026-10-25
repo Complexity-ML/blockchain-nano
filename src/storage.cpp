@@ -686,6 +686,18 @@ ForkCheckpointToken ChainStore::commit_fork_checkpoint(const Int& chain_id,const
 ForkCheckpointToken ChainStore::commit_fork_checkpoint_with_blobs(const Int& chain_id,const Bytes& genesis_hash,
  const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes,
  const std::vector<CheckpointBlob>& blobs,size_t maximum_records){
+ return commit_fork_checkpoint_parts(chain_id,genesis_hash,expected,snapshot,maximum_bytes,blobs,maximum_records,{},0,!blobs.empty());
+}
+ForkCheckpointToken ChainStore::commit_fork_checkpoint_with_deposit_blobs(const Int& chain_id,const Bytes& genesis_hash,
+ const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes,
+ const std::vector<CheckpointBlob>& blobs,size_t maximum_records,
+ const std::vector<CheckpointDepositLocatorRecord>& locators,size_t maximum_locators){
+ return commit_fork_checkpoint_parts(chain_id,genesis_hash,expected,snapshot,maximum_bytes,blobs,maximum_records,locators,maximum_locators,true);
+}
+ForkCheckpointToken ChainStore::commit_fork_checkpoint_parts(const Int& chain_id,const Bytes& genesis_hash,
+ const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes,
+ const std::vector<CheckpointBlob>& blobs,size_t maximum_records,
+ const std::vector<CheckpointDepositLocatorRecord>& locators,size_t maximum_locators,bool enforce_batch_bound){
  if(snapshot.empty()||snapshot.size()>maximum_bytes)throw std::invalid_argument("fork checkpoint size limit");
  const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
  std::lock_guard lock(mutex_);if(get("execution-checkpoint/v1"))throw std::invalid_argument("coupled checkpoint requires execution binding");const auto previous=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
@@ -695,10 +707,11 @@ ForkCheckpointToken ChainStore::commit_fork_checkpoint_with_blobs(const Int& cha
  const Json encoded{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(token.digest)}};
  rocksdb::WriteBatch batch;
  append_checkpoint_blobs(batch,blobs,maximum_records,maximum_bytes);
+ append_checkpoint_deposit_locators(batch,locators,maximum_locators,maximum_bytes);
  batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",encoded.dump());
  // Legacy writers retain their old payload-only budget. The fragment API
  // bounds the aggregate batch including metadata and pre-existing duplicates.
- if(!blobs.empty()&&batch.GetDataSize()>maximum_bytes)throw std::length_error("checkpoint blob batch budget");
+ if(enforce_batch_bound&&batch.GetDataSize()>maximum_bytes)throw std::length_error("checkpoint blob batch budget");
  const auto status=db_->Write(durable_write(),&batch);if(!status.ok())fork_checkpoint_write_uncertain_=true;
  require_ok(status);return token;
 }
@@ -716,6 +729,14 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint_with_blobs(const Int
  const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
  std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointBlob>& blobs,
  size_t maximum_records,const std::vector<CheckpointArchiveEntry>& archive,const std::optional<ExecutionStateRetentionAnchor>& retention){
+ return commit_execution_checkpoint_with_deposit_blobs(chain_id,genesis_hash,expected,expected_tip,common_height,common_hash,suffix,snapshot,maximum_bytes,maximum_blocks,blobs,maximum_records,{},0,archive,retention);
+}
+ForkCheckpointToken ChainStore::commit_execution_checkpoint_with_deposit_blobs(const Int& chain_id,const Bytes& genesis_hash,
+ const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
+ const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
+ std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointBlob>& blobs,
+ size_t maximum_records,const std::vector<CheckpointDepositLocatorRecord>& locators,size_t maximum_locators,
+ const std::vector<CheckpointArchiveEntry>& archive,const std::optional<ExecutionStateRetentionAnchor>& retention){
  if(snapshot.empty()||snapshot.size()>maximum_bytes||suffix.size()>maximum_blocks||archive.size()>maximum_blocks||common_height<0||common_height>Int("18446744073709551615")||expected_tip.size()!=32||common_hash.size()!=32)
   throw std::invalid_argument("execution checkpoint bounds");
  const auto digest=sha256(Bytes(snapshot.begin(),snapshot.end()));
@@ -744,6 +765,7 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint_with_blobs(const Int
  rocksdb::WriteBatch batch;std::set<std::string> removed,inserted;
  auto bounded=[&]{if(batch.GetDataSize()>maximum_bytes)throw std::length_error("execution checkpoint batch budget");};
  append_checkpoint_blobs(batch,blobs,maximum_records,maximum_bytes);bounded();
+ append_checkpoint_deposit_locators(batch,locators,maximum_locators,maximum_bytes);bounded();
  for(Int at=height;at>common_height;--at){
   const auto key=height_key(at);const auto old=read("block/"+key);if(!old||quantity(old->at("number"))!=at)throw std::runtime_error("missing execution checkpoint suffix");
   for(const auto& tx:old->at("transactions")){const auto hash=tx.at("hash").get<std::string>();removed.insert(hash);batch.Delete("tx/"+hash);batch.Delete("receipt/"+hash);}
@@ -864,5 +886,54 @@ std::optional<std::string> ChainStore::checkpoint_blob(const Int& chain_id,const
   std::string_view(payload.data(),payload.size()),digest,maximum_bytes,
   [](std::string_view value){return sha256(Bytes(value.begin(),value.end()));},
   [](std::string_view value){return std::string(value);});
+}
+}
+
+namespace nano {namespace {
+std::string deposit_locator_key(const CheckpointDepositLocatorKey& key){
+ if(key.profile_digest.size()!=32||key.network_anchor.size()!=32||key.key.size()!=32)
+  throw std::invalid_argument("checkpoint deposit locator key bounds");
+ return "checkpoint-deposit-locator/v4/"+hex(key.profile_digest).substr(2)+"/"+
+  hex(key.network_anchor).substr(2)+(key.execution_hash?"/e/":"/b/")+hex(key.key).substr(2);
+}
+std::string deposit_locator_value(const CheckpointDepositLocatorRecord& row){
+ if(row.digest.size()!=32)throw std::invalid_argument("checkpoint deposit locator digest bounds");
+ std::string value(40,'\0');
+ for(unsigned i=0;i<8;++i)value[i]=char((row.ordinal>>(i*8))&255);
+ std::copy(row.digest.begin(),row.digest.end(),value.begin()+8);return value;
+}
+}
+void ChainStore::append_checkpoint_deposit_locators(rocksdb::WriteBatch& batch,
+ const std::vector<CheckpointDepositLocatorRecord>& records,size_t maximum_records,size_t maximum_bytes){
+ if(records.size()>maximum_records)throw std::length_error("checkpoint deposit locator record budget");
+ std::map<std::string,std::string> seen;
+ for(const auto& row:records){
+  const auto key=deposit_locator_key(row.lookup),value=deposit_locator_value(row);
+  const auto [at,added]=seen.emplace(key,value);
+  if(!added){if(at->second!=value)throw std::invalid_argument("conflicting checkpoint deposit locator duplicate");continue;}
+  rocksdb::PinnableSlice old;
+  const auto found=db_->Get(rocksdb::ReadOptions{},db_->DefaultColumnFamily(),key,&old);
+  if(!found.IsNotFound()){
+   require_ok(found);
+   if(old.size()!=40||std::string_view(old.data(),old.size())!=value)
+    throw std::runtime_error("corrupt immutable checkpoint deposit locator");
+   continue;
+  }
+  batch.Put(key,value);
+  if(batch.GetDataSize()>maximum_bytes)throw std::length_error("checkpoint deposit locator batch budget");
+ }
+}
+std::optional<std::string> ChainStore::checkpoint_deposit_locator(const Int& chain_id,const Bytes& genesis_hash,
+ const CheckpointDepositLocatorKey& lookup)const{
+ const auto key=deposit_locator_key(lookup);
+ std::lock_guard lock(mutex_);
+ if(fork_checkpoint_write_uncertain_)throw std::runtime_error("checkpoint write uncertain; reopen required");
+ const auto identity=read("meta/identity");
+ if(genesis_hash.size()!=32||!identity||identity->at("chainId")!=quantity(chain_id)||identity->at("genesisHash")!=hex(genesis_hash))
+  throw std::invalid_argument("checkpoint deposit locator chain binding mismatch");
+ rocksdb::PinnableSlice value;const auto found=db_->Get(rocksdb::ReadOptions{},db_->DefaultColumnFamily(),key,&value);
+ if(found.IsNotFound())return std::nullopt;require_ok(found);
+ if(value.size()!=40)throw std::runtime_error("corrupt checkpoint deposit locator length");
+ return std::string(value.data(),value.size());
 }
 }

@@ -36,6 +36,16 @@ struct ExecutionDepositHistory::Node {
  using Context=std::shared_ptr<CanonicalDepositContext>;
  static constexpr size_t maximum_wire=256;
  static constexpr std::array<uint8_t,8> magic={'N','A','N','O','D','P',1,0};
+ struct Meter {
+  const DepositCheckpointTreeBudget budget;uint64_t visits=0,bytes=0;
+  explicit Meter(const DepositCheckpointTreeBudget& b):budget(b){if(!b.maximum_visits||!b.maximum_encoded_bytes)throw std::invalid_argument("deposit checkpoint tree budget");}
+  void charge(const Ptr& node,unsigned depth){
+   if(!node)return;
+   const uint64_t size=node->cold?node->cold->ref.bytes:depth?10+(node->left?74:1)+(node->right?74:1):194;
+   if(visits>=budget.maximum_visits||size>budget.maximum_encoded_bytes-bytes)throw std::length_error("deposit checkpoint tree traversal budget");
+   ++visits;bytes+=size;
+  }
+ };
  static void checkpoint(const std::function<void()>& check){if(check)check();}
  static ConsensusRoot digest(const Bytes& wire){
   const auto bytes=sha256(wire);if(bytes.size()!=32)throw std::logic_error("deposit node SHA256 width");
@@ -103,10 +113,12 @@ struct ExecutionDepositHistory::Node {
  }
  // Copy a closure only when moving to another context; in the same context,
  // immutable stubs are reused. New paths are folded bottom-up immediately.
- static Ptr persist(const Ptr& node,unsigned depth,const Context& source,const Context& target,const std::function<void()>& check){
+ static Ptr persist(const Ptr& node,unsigned depth,const Context& source,const Context& target,const std::function<void()>& check,Meter* meter=nullptr){
+  if(meter)meter->charge(node,depth);
   checkpoint(check);if(!target)throw std::invalid_argument("missing deposit cold target");target->ensure_open(check);
   if(!node)return {};
-  if(node->cold&&source==target){
+  if(node->cold&&source&&(source==target||source->shares_blob_storage(*target))){
+   source->ensure_open(check);
    if(node->cold->depth!=depth||node->left||node->right||node->data)throw std::logic_error("deposit retained stub shape");
    return node;
   }
@@ -116,7 +128,7 @@ struct ExecutionDepositHistory::Node {
    const auto& d=*expanded.data;wire.insert(wire.end(),d.message.public_key.begin(),d.message.public_key.end());
    wire.insert(wire.end(),d.message.withdrawal_credentials.begin(),d.message.withdrawal_credentials.end());write64(wire,d.message.amount_gwei);wire.insert(wire.end(),d.signature.begin(),d.signature.end());
   }else{
-   const auto left=persist(expanded.left,depth-1,source,target,check),right=persist(expanded.right,depth-1,source,target,check);
+   const auto left=persist(expanded.left,depth-1,source,target,check,meter),right=persist(expanded.right,depth-1,source,target,check,meter);
    encode_child(wire,left,depth-1);encode_child(wire,right,depth-1);
   }
   if(wire.size()>maximum_wire)throw std::logic_error("deposit node encoding capacity");
@@ -136,6 +148,53 @@ ExecutionDepositHistory ExecutionDepositHistory::with_cold_storage(std::shared_p
  check_storage(check);if(!context)throw std::invalid_argument("missing deposit cold storage");context->ensure_open(check);
  auto next=*this;next.tree_=Node::persist(tree_,32,cold_storage_,context,check);next.cold_storage_=std::move(context);
  next.check_storage(check);if(next.root()!=root())throw std::logic_error("deposit cold migration root mismatch");next.check_storage(check);return next;
+}
+Json ExecutionDepositHistory::checkpoint_reference(std::shared_ptr<CanonicalDepositContext> context,const DepositCheckpointTreeBudget& budget,const std::function<void()>& check)const{
+ const auto fixed_budget=budget;Node::Meter meter(fixed_budget);check_storage(check);if(!context||count_>UINT32_MAX)throw std::invalid_argument("deposit checkpoint context/count capacity");context->ensure_open(check);
+ auto folded=*this;folded.tree_=Node::persist(tree_,32,cold_storage_,context,check,&meter);folded.cold_storage_=std::move(context);
+ folded.check_storage(check);if(folded.root()!=root())throw std::logic_error("deposit checkpoint folding root mismatch");
+ folded.authenticate_checkpoint_closure(fixed_budget,{},check);
+ const auto text=[](const ConsensusRoot& r){return hex(Bytes(r.begin(),r.end()));};
+ const auto number=[](uint64_t n){return quantity(Int(std::to_string(n)));};
+ Json ref=nullptr;
+ if(folded.tree_){
+  if(!folded.tree_->cold||folded.tree_->cold->depth!=32)throw std::logic_error("deposit checkpoint unfolded root");
+  ref=Json::array({text(folded.tree_->cold->ref.digest),number(folded.tree_->cold->ref.bytes)});
+ }
+ auto out=Json::array({"nano-execution-deposit-history-v2",hex(folded.execution_hash_),number(folded.count_),text(folded.root()),text(folded.tree_?folded.tree_->hash:zeros()[32]),std::move(ref)});
+ folded.check_storage(check);return out;
+}
+void ExecutionDepositHistory::authenticate_checkpoint_closure(const DepositCheckpointTreeBudget& budget,const std::function<void(const CanonicalDepositBlobRef&)>& visit,const std::function<void()>& check)const{
+ Node::Meter meter(budget);
+ check_storage(check);if(!cold_storage_||count_>UINT32_MAX||bool(tree_)!=(count_!=0))throw std::invalid_argument("deposit checkpoint closure binding");
+ uint64_t visited=0;const auto maximum=uint64_t(2)*count_+33;
+ const auto walk=[&](auto&& self,const std::shared_ptr<const Node>& node,unsigned depth,uint64_t start)->void{
+  if(check)check();const auto span=uint64_t(1)<<depth;
+  const auto expected=start<count_?std::min<uint64_t>(count_-start,span):0;
+  if(bool(node)!=(expected!=0))throw std::invalid_argument("deposit checkpoint tree is not a dense prefix");
+  if(!node)return;
+  meter.charge(node,depth);
+  if(++visited>maximum)throw std::length_error("deposit checkpoint tree traversal capacity");
+  const auto expanded=Node::expand(node,depth,cold_storage_,check);
+  if(node->cold&&visit)visit(node->cold->ref);
+  if(depth){self(self,expanded.left,depth-1,start);self(self,expanded.right,depth-1,start+span/2);}
+ };
+ walk(walk,tree_,32,0);check_storage(check);
+}
+ExecutionDepositHistory ExecutionDepositHistory::from_checkpoint_reference(const Json& j,const Header& header,const State& state,const Bytes& expected,const Bytes& code_hash,size_t maximum,std::shared_ptr<CanonicalDepositContext> context,const DepositCheckpointTreeBudget& budget,const std::function<void()>& check){
+ const auto fixed_budget=budget;(void)Node::Meter(fixed_budget);
+ if(check)check();
+ const auto require=[](bool ok){if(!ok)throw std::invalid_argument("invalid deposit checkpoint reference");};
+ const auto decode_root=[&](const Json& value){require(value.is_string());const auto& text=value.get_ref<const std::string&>();require(text.size()==66);const auto bytes=unhex(text);require(bytes.size()==32&&hex(bytes)==text);ConsensusRoot out{};std::copy(bytes.begin(),bytes.end(),out.begin());return out;};
+ const auto number=[&](const Json& value){require(value.is_string());const auto n=u64(quantity(value));require(quantity(Int(std::to_string(n)))==value.get<std::string>());return n;};
+ require(j.is_array()&&j.size()==6&&j[0]=="nano-execution-deposit-history-v2"&&bool(context));context->ensure_open(check);
+ const auto anchor=decode_root(j[1]);const Bytes hash(anchor.begin(),anchor.end());require(hash==expected&&header.hash()==expected);
+ const auto count=number(j[2]);require(count<=maximum&&count<=UINT32_MAX);const auto mixed=decode_root(j[3]),tree_hash=decode_root(j[4]);
+ ExecutionDepositHistory out(hash);out.count_=count;out.cold_storage_=std::move(context);
+ if(count){require(j[5].is_array()&&j[5].size()==2);const auto digest=decode_root(j[5][0]);const auto bytes=number(j[5][1]);require(bytes>=10&&bytes<=Node::maximum_wire);out.tree_=Node::stub(tree_hash,32,{digest,bytes},check);}
+ else require(j[5].is_null()&&tree_hash==zeros()[32]);
+ require(out.root()==mixed);out.validate_execution(header,state,code_hash,check);
+ out.authenticate_checkpoint_closure(fixed_budget,{},check);out.check_storage(check);return out;
 }
 std::shared_ptr<const ExecutionDepositHistory::Node> ExecutionDepositHistory::insert(const std::shared_ptr<const Node>& old,unsigned depth,uint64_t index,const Phase0Deposit& deposit,const std::function<void()>& check,const std::shared_ptr<CanonicalDepositContext>& context){
  if(check)check();if(!depth){if(old)throw std::logic_error("deposit leaf already occupied");return std::make_shared<const Node>(Node{consensus_deposit_data_root(deposit),{},{},std::make_shared<const Node::Data>(Node::Data{deposit.message,deposit.signature}),{}});}

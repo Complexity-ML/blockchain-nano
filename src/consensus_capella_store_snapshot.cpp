@@ -24,7 +24,7 @@ Json profile(const CapellaForkBlockRules& r){
 }
 Json slot_snapshot(const CapellaSlotState& s){return Json::array({hex(s.ssz),s.last_processed_epoch?Json(num(*s.last_processed_epoch)):Json(nullptr)});}
 CapellaSlotState slot_restore(const Json& j,size_t budget){require(j.is_array()&&j.size()==2&&j[0].is_string());const auto& hexstate=j[0].get_ref<const std::string&>();require(hexstate.starts_with("0x")&&hexstate.size()%2==0&&(hexstate.size()-2)/2<=budget);CapellaSlotState s{unhex(hexstate),std::nullopt};if(!j[1].is_null())s.last_processed_epoch=number(j[1]);return s;}
-Json execution(const CapellaForkBlock& b,const std::function<void()>& cancel,bool matched_accounts=false){if(b.deposit_history&&b.deposit_history->uses_cold_storage())throw std::invalid_argument("cold deposit history cannot use a legacy store snapshot");Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());auto out=Json::array({b.execution_block.to_json(true),matched_accounts?Json(nullptr):b.execution_state.to_json(),receipts});if(b.deposit_history)out.push_back(b.deposit_history->snapshot(cancel));return out;}
+Json execution(const CapellaForkBlock& b,const std::function<void()>& cancel,bool matched_accounts=false,const std::shared_ptr<CanonicalDepositContext>& context={},const DepositCheckpointTreeBudget& budget={}){if(!context&&b.deposit_history&&b.deposit_history->uses_cold_storage())throw std::invalid_argument("cold deposit history cannot use a legacy store snapshot");Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());auto out=Json::array({b.execution_block.to_json(true),matched_accounts?Json(nullptr):b.execution_state.to_json(),receipts});if(b.deposit_history)out.push_back(context?b.deposit_history->checkpoint_reference(context,budget,cancel):b.deposit_history->snapshot(cancel));return out;}
 ConsensusSlashingState registry(const CapellaForkStore& s,const CapellaForkBlockRules& r,const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){
  const auto b_pin=s.blocks.at(s.timed.view.justified.root).lease(cancel);const auto& b=*b_pin;
  if(s.timed.view.justified.root==s.timed.view.anchor&&s.timed.view.justified.epoch==b.header.slot/r.transition.consensus.epoch.ffg.slots_per_epoch)return capella_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,cancel).registry;
@@ -38,8 +38,19 @@ struct ReusedColdMetadata {ConsensusBeaconHeader header;Header execution;Phase0F
 }
 std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore& s,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel,CapellaStoreSnapshotCache* cache,
- const std::function<void(const CapellaColdReference&,std::string_view)>* stage,CapellaReferenceSnapshotCache* memo){
- if(s.deposit_ancestry)throw std::invalid_argument("ephemeral audit deposit context cannot use a legacy snapshot");
+ const std::function<void(const CapellaColdReference&,std::string_view)>* stage,CapellaReferenceSnapshotCache* memo,
+ const std::shared_ptr<CanonicalDepositContext>& deposit_context={},const DepositCheckpointTreeBudget& tree_budget={}){
+ if(!deposit_context&&s.deposit_ancestry)throw std::invalid_argument("ephemeral audit deposit context cannot use a legacy snapshot");
+ if(deposit_context){
+  require(stage&&!cache&&!memo&&r.native_deposit_votes&&r.deposit_contract_code_hash.size()==32&&s.deposit_ancestry&&s.deposit_ancestry->context==deposit_context&&s.deposit_ancestors.empty());
+  require(tree_budget.maximum_visits&&tree_budget.maximum_encoded_bytes);(void)deposit_context->checkpoint_descriptor(cancel);
+  const auto encoded_profile=profile(r).dump();require(deposit_context->profile_digest()==sha256(Bytes(encoded_profile.begin(),encoded_profile.end())));
+  validate_capella_deposit_ancestors(s,cancel);
+  const auto anchor=deposit_context->at(deposit_context->anchor_cursor(cancel),cancel);
+  require(consensus_beacon_header_root(anchor.beacon)==capella_network_anchor(s));
+  const auto tip=deposit_context->at(deposit_context->tip_cursor(cancel),cancel);
+  require(consensus_beacon_header_root(tip.beacon)==s.timed.view.anchor);
+ }
  require(!stage||(!cache&&bool(*stage)));require(!memo||stage);
  const auto& v=s.timed.view;const auto& c=s.timed.clock;const auto slots=r.transition.consensus.epoch.ffg.slots_per_epoch;
  require(slots&&r.slot_duration_ms&&r.attestation_due_ms<=r.slot_duration_ms&&c.time_ms>=c.genesis_time_ms&&
@@ -93,7 +104,7 @@ std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore& s
   const bool matched_accounts=matched_state&&known->second[0][5].is_array()&&
    (known->second[0][5].size()==3||known->second[0][5].size()==4)&&
    snapshot_detail::validated_accounts_match(b.execution_state,known->second[0][5][1],cancel);
-  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),std::move(encoded_state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel,matched_accounts)});
+  auto row=Json::array({root(id),Json::array({num(b.header.slot),num(b.header.proposer_index),root(b.header.parent_root),root(b.header.state_root),root(b.header.body_root)}),std::move(encoded_state),num(n.realized_justified_epoch),num(n.unrealized_justified_epoch),execution(b,cancel,matched_accounts,deposit_context,tree_budget)});
   // Compare every serialized field, including state/receipts/deposit history,
   // plus the checkpoint metadata checked below. Root equality alone is unsafe.
   const auto justification=cp(s.unrealized_justifications.at(id));
@@ -117,8 +128,8 @@ std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore& s
    const auto digest=sha256(Bytes(payload.begin(),payload.end()));
    const CapellaColdReference reference{id,digest,payload.size(),id==v.anchor};
    if(entry.cold_reference()){
-    const auto& committed=*entry.cold_reference();require(committed.root==id&&committed.digest==digest&&committed.bytes==payload.size());
-
+    const auto& committed=*entry.cold_reference();require(committed.root==id);
+    if(committed.digest!=digest||committed.bytes!=payload.size()){require(bool(deposit_context));(*stage)(reference,payload);}
    }else (*stage)(reference,payload);
     if(memo){
      auto proof_metadata=metadata(id,entry);const auto charge=Json::array({root(id),hex(digest),num(payload.size()),proof_metadata,num(b.state.ssz.size()),num(genesis_seconds)}).dump().size();
@@ -151,13 +162,14 @@ std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore& s
  {"clock",Json::array({num(c.genesis_time_ms),num(c.time_ms),cp(c.unrealized_justified),cp(c.unrealized_finalized)})},
  {"boost",v.proposer_boost?Json(root(*v.proposer_boost)):Json(nullptr)},{"blocks",std::move(blocks)},{"messages",std::move(messages)},{"equivocations",std::move(equiv)},{"timely",std::move(timely)},{"unrealized",std::move(unrealized)}};
  if(s.network_anchor){require(*s.network_anchor!=v.anchor);j["format"]="nano-capella-store-v2";j["networkAnchor"]=root(*s.network_anchor);}
- require(!r.native_deposit_votes||!s.network_anchor||!s.deposit_ancestors.empty());
+ require(deposit_context||!r.native_deposit_votes||!s.network_anchor||!s.deposit_ancestors.empty());
  if(!s.deposit_ancestors.empty()){
   require(r.native_deposit_votes&&s.network_anchor.has_value());validate_capella_deposit_ancestors(s,cancel);Json pins=Json::array();
   for(const auto& old:s.deposit_ancestors){if(cancel)cancel();const auto& h=old.beacon;pins.push_back(Json::array({Json::array({num(h.slot),num(h.proposer_index),root(h.parent_root),root(h.state_root),root(h.body_root)}),old.execution.to_json(),num(old.count),root(old.root)}));}
   j["format"]="nano-capella-store-v3";j["depositAncestors"]=std::move(pins);
  }
- auto encoded=stage?Json{{"format","nano-capella-reference-store-v1"},{"snapshot",std::move(j)}}.dump():cache?snapshot_detail::canonical_snapshot_rows(j,encoded_rows,l.envelope_bytes,cancel):j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
+ if(deposit_context){j["format"]="nano-capella-store-v4";j["networkAnchor"]=s.network_anchor?Json(root(*s.network_anchor)):Json(nullptr);j["depositContext"]=deposit_context->checkpoint_descriptor(cancel);}
+ auto encoded=stage?Json{{"format",deposit_context?"nano-capella-reference-store-v2":"nano-capella-reference-store-v1"},{"snapshot",std::move(j)}}.dump():cache?snapshot_detail::canonical_snapshot_rows(j,encoded_rows,l.envelope_bytes,cancel):j.dump();require(encoded.size()<=l.envelope_bytes);if(cancel)cancel();return encoded;
 }
 std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& check,CapellaStoreSnapshotCache* cache,
@@ -180,21 +192,31 @@ std::string capella_store_reference_snapshot(const CapellaForkStore& s,const Cap
  const CapellaStoreSnapshotLimits& l,const std::function<void(const CapellaColdReference&,std::string_view)>& stage,const std::function<void()>& check){
  return capella_store_snapshot_impl(s,r,l,check,nullptr,&stage);
 }
+std::string capella_store_deposit_reference_snapshot(const CapellaForkStore& s,const CapellaForkBlockRules& r,
+ const CapellaStoreSnapshotLimits& l,const std::shared_ptr<CanonicalDepositContext>& context,const DepositCheckpointTreeBudget& budget,
+ const std::function<void(const CapellaColdReference&,std::string_view)>& stage,const std::function<void()>& check){
+ const auto fixed_budget=budget;require(bool(context));return capella_store_snapshot_reference_memo_impl(s,r,l,check,nullptr,&stage,nullptr,context,fixed_budget);
+}
 static CapellaForkStore restore_store(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel,
  const std::shared_ptr<CapellaColdRecordCache>& cache={},
  const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={},
  CapellaReferenceSnapshotCache* memo=nullptr,
- const std::function<std::optional<ReusedColdMetadata>(const CapellaColdReference&)>& reuse={}){
+ const std::function<std::optional<ReusedColdMetadata>(const CapellaColdReference&)>& reuse={},
+ const std::shared_ptr<CanonicalDepositContext>& deposit_context={},const DepositCheckpointTreeBudget& tree_budget={}){
  require(bytes.size()<=l.envelope_bytes&&digest.size()==32);if(cancel)cancel();require(sha256(Bytes(bytes.begin(),bytes.end()))==digest);
  const auto document=Json::parse(bytes);
- if(cache)require(document.is_object()&&document.size()==2&&document.at("format")=="nano-capella-reference-store-v1"&&document.dump()==bytes&&bool(fetch));
- const auto& j=cache?document.at("snapshot"):document;require(j.is_object()&&j.contains("format")&&j.at("format").is_string());const bool pinned=j.value("format",std::string())=="nano-capella-store-v3";const bool pruned=pinned||j.value("format",std::string())=="nano-capella-store-v2";require(j.is_object()&&j.size()==(pinned?15:pruned?14:13)&&(pruned||j.at("format")=="nano-capella-store-v1")&&j.at("profile")==profile(r));
+ if(deposit_context)require(cache&&!memo&&!reuse);
+ if(cache)require(document.is_object()&&document.size()==2&&document.at("format")== (deposit_context?"nano-capella-reference-store-v2":"nano-capella-reference-store-v1")&&document.dump()==bytes&&bool(fetch));
+ const auto& j=cache?document.at("snapshot"):document;require(j.is_object()&&j.contains("format")&&j.at("format").is_string());const bool pinned=j.value("format",std::string())=="nano-capella-store-v3";const bool pruned=pinned||j.value("format",std::string())=="nano-capella-store-v2";
+ if(deposit_context)require(j.size()==15&&j.at("format")=="nano-capella-store-v4"&&j.at("profile")==profile(r)&&j.at("depositContext")==deposit_context->checkpoint_descriptor(cancel));
+ else require(j.size()==(pinned?15:pruned?14:13)&&(pruned||j.at("format")=="nano-capella-store-v1")&&j.at("profile")==profile(r));
  require(j.at("blocks").is_array()&&j.at("blocks").size()<=l.blocks&&j.at("messages").is_array()&&j.at("messages").size()<=l.messages&&j.at("equivocations").is_array()&&j.at("equivocations").size()<=l.equivocations);
  require(j.at("timely").is_array()&&j.at("timely").size()<=l.blocks&&j.at("unrealized").is_array()&&j.at("unrealized").size()<=l.blocks);
  CapellaForkStore s;auto& v=s.timed.view;auto& c=s.timed.clock;
- if(pruned)s.network_anchor=root(j.at("networkAnchor"));
+ if(pruned||(deposit_context&&!j.at("networkAnchor").is_null()))s.network_anchor=root(j.at("networkAnchor"));
  v.anchor=root(j.at("anchor"));v.justified=cp(j.at("justified"));v.finalized=cp(j.at("finalized"));
+ if(deposit_context)s.deposit_ancestry=CapellaDepositAncestry{deposit_context,deposit_context->tip_cursor(cancel),v.anchor};
  const auto& clock=j.at("clock");require(clock.is_array()&&clock.size()==4);c={number(clock[0]),number(clock[1]),cp(clock[2]),cp(clock[3])};
  require(r.slot_duration_ms&&r.transition.consensus.epoch.ffg.slots_per_epoch&&c.time_ms>=c.genesis_time_ms);v.current_epoch=(c.time_ms-c.genesis_time_ms)/r.slot_duration_ms/r.transition.consensus.epoch.ffg.slots_per_epoch;
  if(!j.at("boost").is_null())v.proposer_boost=root(j.at("boost"));size_t total=0;
@@ -231,7 +253,7 @@ static CapellaForkStore restore_store(std::string_view bytes,const Bytes& digest
  }
  v.justified_registry=registry(s,r,l,cancel);
  const std::function<void(const CapellaColdReference&,std::string_view)> no_hot=[](const CapellaColdReference&,std::string_view){throw std::logic_error("Unexpected hot restored record");};
- require((cache?(memo?capella_store_reference_snapshot_cached(s,r,l,no_hot,*memo,cancel):capella_store_reference_snapshot(s,r,l,no_hot,cancel)):capella_store_snapshot(s,r,l,cancel))==bytes);return s;
+ require((deposit_context?capella_store_deposit_reference_snapshot(s,r,l,deposit_context,tree_budget,no_hot,cancel):cache?(memo?capella_store_reference_snapshot_cached(s,r,l,no_hot,*memo,cancel):capella_store_reference_snapshot(s,r,l,no_hot,cancel)):capella_store_snapshot(s,r,l,cancel))==bytes);return s;
 }
 CapellaForkStore capella_store_from_snapshot(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& rules,
  const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check){return restore_store(bytes,digest,rules,limits,check);}
@@ -240,6 +262,31 @@ CapellaForkStore capella_store_from_reference_snapshot(std::string_view bytes,co
  const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch,const std::function<void()>& check){
  auto cache=std::make_shared<CapellaColdRecordCache>(rules,limits,records,encoded_bytes);
  return restore_store(bytes,digest,rules,limits,check,cache,fetch);
+}
+CapellaForkStore capella_store_from_deposit_reference_snapshot(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& rules,
+ const CapellaStoreSnapshotLimits& limits,size_t records,size_t encoded_bytes,
+ const CanonicalDepositContextLimits& context_limits,const DepositCheckpointTreeBudget& budget,CanonicalDepositContext::Fetch fetch,
+ CanonicalDepositContext::FetchLocator lookup,const std::function<void()>& check){
+ const auto fixed_budget=budget;require(fixed_budget.maximum_visits&&fixed_budget.maximum_encoded_bytes&&bytes.size()<=limits.envelope_bytes&&digest.size()==32&&bool(fetch)&&bool(lookup));if(check)check();require(sha256(Bytes(bytes.begin(),bytes.end()))==digest);
+ const auto document=Json::parse(bytes);require(document.is_object()&&document.size()==2&&document.at("format")=="nano-capella-reference-store-v2"&&document.dump()==bytes);
+ const auto& snapshot=document.at("snapshot");require(snapshot.is_object()&&snapshot.size()==15&&snapshot.at("format")=="nano-capella-store-v4"&&snapshot.at("profile")==profile(rules));
+ const auto network=root(snapshot.at("networkAnchor").is_null()?snapshot.at("anchor"):snapshot.at("networkAnchor"));
+ const auto encoded_profile=profile(rules).dump();
+ auto context=CanonicalDepositContext::from_checkpoint(snapshot.at("depositContext"),sha256(Bytes(encoded_profile.begin(),encoded_profile.end())),network,context_limits,fetch,std::move(lookup),{},{},check);
+ auto cache=std::make_shared<CapellaColdRecordCache>(rules,limits,records,encoded_bytes,context,fixed_budget);
+ auto restored=restore_store(bytes,digest,rules,limits,check,cache,fetch,nullptr,{},context,fixed_budget);
+ authenticate_capella_deposit_checkpoint_closure(restored,fixed_budget,{},check);return restored;
+}
+void authenticate_capella_deposit_checkpoint_closure(const CapellaForkStore& store,const DepositCheckpointTreeBudget& budget,const CanonicalDepositContext::ClosureVisitor& visit,const std::function<void()>& check){
+ const auto fixed_budget=budget;require(fixed_budget.maximum_visits&&fixed_budget.maximum_encoded_bytes&&store.deposit_ancestry&&store.deposit_ancestry->context&&store.deposit_ancestors.empty());
+ const auto& context=store.deposit_ancestry->context;validate_capella_deposit_ancestors(store,check);
+ context->visit_checkpoint_closure(visit,check);
+ for(const auto& [id,entry]:store.blocks){
+  if(check)check();const auto block=entry.lease(check);require(consensus_beacon_header_root(block->header)==id&&block->deposit_history&&block->deposit_history->uses_cold_storage());
+  const auto& history_context=block->deposit_history->cold_storage();require(history_context==context);
+  block->deposit_history->authenticate_checkpoint_closure(fixed_budget,visit,check);
+ }
+ context->ensure_open(check);
 }
 CapellaForkStore capella_store_from_reference_snapshot_reusing(std::string_view bytes,const Bytes& digest,const CapellaForkBlockRules& rules,
  const CapellaStoreSnapshotLimits& limits,size_t records,size_t encoded_bytes,

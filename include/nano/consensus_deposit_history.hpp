@@ -2,6 +2,10 @@
 #include "nano/consensus_execution_deposit.hpp"
 namespace nano {
 class CanonicalDepositContext;
+struct CanonicalDepositBlobRef;
+// Caller-supplied per-tree/per-pass logical work budget. Repeated references
+// count repeatedly; emissions, unique CAS records and cache bytes are separate.
+struct DepositCheckpointTreeBudget {uint64_t maximum_visits,maximum_encoded_bytes;};
 // Immutable, branch-local deposit tree. Memory histories share subtrees. Cold
 // histories retain typed references plus at most a depth-32 prefix frontier;
 // their shared context owns bounded blob leases, never a global tree registry.
@@ -33,6 +37,22 @@ public:
   const std::function<void()>& checkpoint={})const;
  const std::shared_ptr<CanonicalDepositContext>& cold_storage()const{return cold_storage_;}
  bool uses_cold_storage()const{return bool(cold_storage_);}
+ // Explicit LOCAL v2 descriptor, never a legacy snapshot or peer admission.
+ // The supplied staged context owns synchronous staging callbacks, not a DB
+ // commit. A failure may leave candidate-only blobs but publishes no history.
+ Json checkpoint_reference(std::shared_ptr<CanonicalDepositContext>,const DepositCheckpointTreeBudget&,
+  const std::function<void()>& checkpoint={})const;
+ // Verify the complete tree closure with depth-32 traversal and no O(N) set.
+ // Shared CAS nodes may be revisited: visit count is not unique blob usage.
+ // CPU/I/O remains cooperatively cancellable; this is not an RSS/hardwall bound.
+ void authenticate_checkpoint_closure(const DepositCheckpointTreeBudget&,
+  const std::function<void(const CanonicalDepositBlobRef&)>& visitor,
+  const std::function<void()>& checkpoint={})const;
+ static ExecutionDepositHistory from_checkpoint_reference(const Json&,
+  const Header& trusted_header,const State& trusted_state,
+  const Bytes& expected_block_hash,const Bytes& pinned_code_hash,
+  size_t maximum_deposits,std::shared_ptr<CanonicalDepositContext>,const DepositCheckpointTreeBudget&,
+  const std::function<void()>& checkpoint={});
  // Caller MUST authenticate the old (execution hash, count, root) tuple from
  // canonical ancestry. Root equality alone does not prove ancestry.
  // Prefix reconstruction retains at most 32 hot boundary nodes and performs

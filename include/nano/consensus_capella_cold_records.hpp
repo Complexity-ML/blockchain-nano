@@ -25,11 +25,17 @@ struct CapellaColdCacheUsage {size_t records,encoded_bytes;};
 class CapellaColdRecordCache {
  struct Entry {std::shared_ptr<const CapellaColdRecord> record;uint64_t used;};
  CapellaForkBlockRules rules_;CapellaStoreSnapshotLimits limits_;
+ std::shared_ptr<CanonicalDepositContext> deposit_context_;
+ DepositCheckpointTreeBudget deposit_tree_budget_{};
  size_t maximum_records_,maximum_encoded_bytes_,encoded_bytes_=0;uint64_t clock_=0;
  std::map<std::string,Entry> entries_;
  mutable std::recursive_timed_mutex mutex_;bool loading_=false;
 public:
  CapellaColdRecordCache(CapellaForkBlockRules,CapellaStoreSnapshotLimits,size_t maximum_records,size_t maximum_encoded_bytes);
+ // Explicit v4 decoder. The context must come from the same authenticated
+ // descriptor/provider as the store; the old constructor remains v1-v3 only.
+ CapellaColdRecordCache(CapellaForkBlockRules,CapellaStoreSnapshotLimits,size_t maximum_records,size_t maximum_encoded_bytes,
+  std::shared_ptr<CanonicalDepositContext>,const DepositCheckpointTreeBudget&);
  // Authenticate hash/length/root and fully validate Beacon/EVM/receipt binding.
  // Total cache bytes and per-row limits are independent explicit budgets.
  // Resource pressure throws before eviction/publication. Pinned records cannot

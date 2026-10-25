@@ -15,6 +15,17 @@ struct CheckpointArchiveEntry {Bytes root;uint64_t slot;Bytes payload;};
 // Local opaque immutable fragments. The caller validates consensus semantics;
 // the storage layer verifies the SHA256 commitment and synchronous atomicity.
 struct CheckpointBlob {Bytes digest;std::string payload;};
+// Non-authoritative immutable local lookup hints. Their row digests MUST be
+// authenticated against a held canonical cursor by the caller. No peer API.
+struct CheckpointDepositLocatorKey {
+ Bytes profile_digest,network_anchor,key;
+ bool execution_hash=false;
+};
+struct CheckpointDepositLocatorRecord {
+ CheckpointDepositLocatorKey lookup;
+ uint64_t ordinal;
+ Bytes digest;
+};
 // A request-owned serialized canonical state; no proof/finality authority.
 struct SerializedExecutionState {bool canonical=false;std::optional<std::string> encoded;};
 struct ForkCheckpointRecord {ForkCheckpointToken token;std::string snapshot;};
@@ -32,6 +43,12 @@ class ChainStore {
  mutable std::mutex mutex_;
  bool fork_checkpoint_write_uncertain_=false;
  void append_checkpoint_blobs(rocksdb::WriteBatch&,const std::vector<CheckpointBlob>&,size_t maximum_records,size_t maximum_bytes);
+ ForkCheckpointToken commit_fork_checkpoint_parts(const Int&,const Bytes&,
+  const std::optional<ForkCheckpointToken>&,std::string_view,size_t,
+  const std::vector<CheckpointBlob>&,size_t,
+  const std::vector<CheckpointDepositLocatorRecord>&,size_t,bool);
+ void append_checkpoint_deposit_locators(rocksdb::WriteBatch&,
+  const std::vector<CheckpointDepositLocatorRecord>&,size_t maximum_records,size_t maximum_bytes);
  std::optional<ForkCheckpointRecord> fork_checkpoint_impl(const Int&,const Bytes&,size_t) const;
  std::optional<ExecutionStatePruningInfo> state_pruning_impl() const;
  std::optional<std::string> get(const std::string& key) const;
@@ -72,6 +89,17 @@ public:
  ForkCheckpointToken commit_fork_checkpoint_with_blobs(const Int& chain_id,const Bytes& genesis_hash,
   const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes,
   const std::vector<CheckpointBlob>& blobs,size_t maximum_records);
+ // Local v4 staging primitive: checkpoint, CAS blobs and locator hints share
+ // one synchronous primary batch. The record and aggregate byte budgets are
+ // independent; this does not validate consensus or activate a runtime format.
+ ForkCheckpointToken commit_fork_checkpoint_with_deposit_blobs(const Int& chain_id,const Bytes& genesis_hash,
+  const std::optional<ForkCheckpointToken>& expected,std::string_view snapshot,size_t maximum_bytes,
+  const std::vector<CheckpointBlob>& blobs,size_t maximum_records,
+  const std::vector<CheckpointDepositLocatorRecord>& locators,size_t maximum_locators);
+ // Returns exactly 40 bytes (LE64 ordinal + SHA256 row digest), or nullopt.
+ // A well-shaped hint is not ancestry authority. RocksDB may allocate internally.
+ std::optional<std::string> checkpoint_deposit_locator(const Int& chain_id,const Bytes& genesis_hash,
+  const CheckpointDepositLocatorKey&) const;
  // Digest comes from the independently authenticated manifest, not from disk.
  // Missing fragments return nullopt; corrupt or oversized records fail closed.
  std::optional<std::string> checkpoint_blob(const Int& chain_id,const Bytes& genesis_hash,
@@ -100,6 +128,16 @@ public:
   const std::vector<ExecutionCheckpointBlock>& suffix,std::string_view snapshot,
   size_t maximum_bytes,size_t maximum_blocks,const std::vector<CheckpointBlob>& blobs,
   size_t maximum_records,const std::vector<CheckpointArchiveEntry>& archive={},
+  const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
+ // Same execution/tip/token CAS guards, with typed immutable locator hints
+ // included in the execution/checkpoint/blob batch. Legacy API stays unchanged.
+ ForkCheckpointToken commit_execution_checkpoint_with_deposit_blobs(const Int& chain_id,const Bytes& genesis_hash,
+  const std::optional<ForkCheckpointToken>& expected,const Bytes& expected_tip,
+  const Int& common_height,const Bytes& common_hash,const std::vector<ExecutionCheckpointBlock>& suffix,
+  std::string_view snapshot,size_t maximum_bytes,size_t maximum_blocks,
+  const std::vector<CheckpointBlob>& blobs,size_t maximum_records,
+  const std::vector<CheckpointDepositLocatorRecord>& locators,size_t maximum_locators,
+  const std::vector<CheckpointArchiveEntry>& archive={},
   const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
  // Missing historical state is intentional only below this durable boundary.
  std::optional<ExecutionStatePruningInfo> state_pruning() const;

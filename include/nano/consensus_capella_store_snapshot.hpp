@@ -1,6 +1,7 @@
 #pragma once
 #include "nano/consensus_capella_fork_store.hpp"
 #include "nano/consensus_altair_snapshot.hpp"
+#include "nano/consensus_canonical_deposit_context.hpp"
 namespace nano {
 // Canonical local consensus/execution configuration commitment.
 Json capella_fork_profile(const CapellaForkBlockRules&);
@@ -16,7 +17,8 @@ class CapellaReferenceSnapshotCache;
 class CapellaStoreSnapshotCache {
  friend std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore&,const CapellaForkBlockRules&,
   const CapellaStoreSnapshotLimits&,const std::function<void()>&,CapellaStoreSnapshotCache*,
-  const std::function<void(const CapellaColdReference&,std::string_view)>*,CapellaReferenceSnapshotCache*);
+  const std::function<void(const CapellaColdReference&,std::string_view)>*,CapellaReferenceSnapshotCache*,
+  const std::shared_ptr<CanonicalDepositContext>&,const DepositCheckpointTreeBudget&);
  Json profile_;
  std::map<ConsensusRoot,Json> records_;
  friend std::string capella_store_snapshot_impl(const CapellaForkStore&,const CapellaForkBlockRules&,
@@ -34,7 +36,8 @@ class CapellaReferenceSnapshotCache {
  Json profile_;std::map<ConsensusRoot,Entry> records_;size_t encoded_bytes_=0;uint64_t reuses_=0,validated_cold_rows_=0;
  friend std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore&,const CapellaForkBlockRules&,
   const CapellaStoreSnapshotLimits&,const std::function<void()>&,CapellaStoreSnapshotCache*,
-  const std::function<void(const CapellaColdReference&,std::string_view)>*,CapellaReferenceSnapshotCache*);
+  const std::function<void(const CapellaColdReference&,std::string_view)>*,CapellaReferenceSnapshotCache*,
+  const std::shared_ptr<CanonicalDepositContext>&,const DepositCheckpointTreeBudget&);
 
  friend CapellaForkStore capella_store_from_reference_snapshot_reusing(std::string_view,const Bytes&,const CapellaForkBlockRules&,
   const CapellaStoreSnapshotLimits&,size_t,size_t,const std::function<std::optional<std::string>(const Bytes&,size_t)>&,
@@ -86,5 +89,27 @@ CapellaForkStore capella_store_from_reference_snapshot_reusing(std::string_view,
 // from authenticated SSZ rather than accepting duplicate serialized weights.
 CapellaForkStore capella_store_from_snapshot(std::string_view,const Bytes& expected_digest,
  const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,
+ const std::function<void()>& checkpoint={});
+// Explicit LOCAL deposit-CAS codec. No old writer/reader auto-detects this
+// format. Context is candidate-owned; every Stage callback must stage only.
+// Its tip must bind the hot storage anchor and its anchor the network identity.
+std::string capella_store_deposit_reference_snapshot(const CapellaForkStore&,
+ const CapellaForkBlockRules&,const CapellaStoreSnapshotLimits&,
+ const std::shared_ptr<CanonicalDepositContext>&,const DepositCheckpointTreeBudget&,
+ const std::function<void(const CapellaColdReference&,std::string_view)>& stage,
+ const std::function<void()>& checkpoint={});
+// Authenticate the complete manifest before constructing its provider. The
+// limits and generation-scoped locator reader come from the caller, not disk.
+// This decoder accepts only reference-store-v2/store-v4 and never stages writes.
+CapellaForkStore capella_store_from_deposit_reference_snapshot(std::string_view,
+ const Bytes& expected_digest,const CapellaForkBlockRules&,
+ const CapellaStoreSnapshotLimits&,size_t cache_records,size_t cache_bytes,
+ const CanonicalDepositContextLimits&,const DepositCheckpointTreeBudget&,CanonicalDepositContext::Fetch,
+ CanonicalDepositContext::FetchLocator,const std::function<void()>& checkpoint={});
+// LOCAL GC/authentication helper, used only after the explicit v4 restore.
+// Visits all tuple/locator bindings and every history node closure, including
+// shared nodes. Caller bounds/deduplicates its closure set separately.
+void authenticate_capella_deposit_checkpoint_closure(const CapellaForkStore&,const DepositCheckpointTreeBudget&,
+ const CanonicalDepositContext::ClosureVisitor&,
  const std::function<void()>& checkpoint={});
 }
