@@ -1,0 +1,667 @@
+{
+  "format": "nano-durable-deposit-checkpoint-component-qualification-v1",
+  "cppCandidate": "f865e4d30596a70736c7d9817062e82ed1ddca5f",
+  "coreCandidate": "6523cae6f187dc5b6ff1e45ca2c29916a6365f90",
+  "coreDiffBetweenCandidates": false,
+  "armTests": 9,
+  "amdTests": 9,
+  "skippedTests": 0,
+  "freshComponentGroups": 6,
+  "historyProofsCompared": 49,
+  "runtimeRecords": {
+    "arm64": [
+      {
+        "contextsCreated": 10,
+        "databaseFenceFilesClosed": 70,
+        "databaseFenceFilesOpened": 70,
+        "explicitContextCloseCalls": 20,
+        "groups": [
+          {
+            "case": "nonzero-contract-history-and-prefixes",
+            "deposits": 32,
+            "executionHeaders": 96,
+            "fullConsensusAdmission": false,
+            "fullProofsCompared": 142
+          },
+          {
+            "case": "old-votes-and-ssz-operations",
+            "exactOperationBytes": 120280,
+            "hotRecords": 8,
+            "legacyFormatReuseRefused": true,
+            "oldTuples": 89,
+            "periodVotesCompared": 9
+          },
+          {
+            "case": "siblings-count-root-cursor-refusals",
+            "foreignCursorRefused": true,
+            "sameCountRootSlotSibling": true,
+            "sameCountSlotDifferentRootSibling": true
+          },
+          {
+            "case": "holes-order-and-declared-capacity",
+            "implicitExpansion": false
+          },
+          {
+            "case": "legacy-corruption-code-and-proof-refusals",
+            "oldV1BytesPreserved": true,
+            "proofsConsumed": 32,
+            "publicUnitValidators": 2,
+            "unreachableScratchBlobsMayRemain": true
+          },
+          {
+            "case": "typed-cancellation-and-idempotent-retry",
+            "scratchOrphansCounted": true,
+            "sourceHistoryUnchanged": true
+          },
+          {
+            "case": "bounded-pins-concurrent-leases-and-close",
+            "concurrentReaders": 8,
+            "immutableLeaseSurvivesClose": true,
+            "inFlightCloseDrainQualified": false,
+            "lastStrongReleaseChargeZero": true,
+            "lateCacheHitRefused": true,
+            "nestedLoadAndCloseRefused": true,
+            "weakRescueAfterCloseCharged": true
+          }
+        ],
+        "networkQualified": false,
+        "passed": true,
+        "physicalRssIsLogicalCacheBound": false,
+        "productionQualified": false,
+        "publicUnitDepositSignatures": 2,
+        "scenario": "canonical-deposit-context-regression",
+        "signedBeaconAdmissionQualified": false,
+        "sourceDatabaseUnchanged": true,
+        "wholeDriverPeakRssKiB": 29048
+      },
+      {
+        "actualFinalizedEpochFromProducer": 10,
+        "actualPrunes": 9,
+        "cachedColdCursorWriterRefused": true,
+        "canonicalExecutionChecks": 97,
+        "coldBlobBytes": 41919,
+        "coldBlobRecords": 479,
+        "coldCachedBytes": 85,
+        "coldCachedRecords": 1,
+        "coldTupleBytes": 243550,
+        "coldTuples": 97,
+        "executionBlockHash": "0xa455a264ee98b67c90dc2718d02d7d558af3f7a17764f2a88fe55e0224e62a89",
+        "executionStateRoot": "0x2ac73471d402d44acf5821613c528d0a971df37b2a2740107b0448d791e406c3",
+        "finalWarmAnchorSlot": 80,
+        "fixtureBlsSignatures": 972,
+        "headRoot": "0x720bfce96300fb33b4fba729304d3e07580ac02a13737d8201bcbe4af82315e9",
+        "historicalForkChoiceVerified": false,
+        "inlineDepositAncestorPeak": 0,
+        "largestDepositHistoryCount": 16,
+        "legacyColdHistoryWriterRefused": true,
+        "legacyFragmentsStaged": 0,
+        "liveRecordPeak": 33,
+        "liveSszPeakBytes": 686517,
+        "liveSszPlusNextReservePeakBytes": 4861032,
+        "networkFinalityQualified": false,
+        "oldFullProofsCompared": 16,
+        "oldSelectedSlot": 63,
+        "passed": true,
+        "productionQualified": false,
+        "publicRegistrySize": 64,
+        "scenario": "capella-cold-deposit-signed-replay",
+        "signedDescendants": 96,
+        "sourceArchiveReads": 192,
+        "successfulVisitsIncludingAnchor": 97,
+        "topups": 16,
+        "transactions": 16,
+        "wholeDriverPeakRssKiB": 26024,
+        "wholeProcessRssIsLogicalBudget": false
+      },
+      {
+        "allAllocationsBounded": false,
+        "authenticatedBeaconAdmissionsQualified": false,
+        "databaseFenceFilesClosed": 56,
+        "databaseFenceFilesOpened": 56,
+        "deduplicatedEmissionCounterIsClosureBound": false,
+        "executionPrimaryBatchExercised": true,
+        "explicitStoreV4Exercised": true,
+        "groups": 6,
+        "historyProofsCompared": 49,
+        "inFlightCloseDrainQualified": false,
+        "migrationQualified": false,
+        "networkConsensusQualified": false,
+        "nonzeroDeposits": 32,
+        "nonzeroExecutionHeaders": 96,
+        "passed": true,
+        "physicalPowerLossQualified": false,
+        "productionQualified": false,
+        "readOnlyPrimaryUnchanged": true,
+        "realPrimaryBatchExercised": true,
+        "runtimeConnected": false,
+        "scenario": "canonical-deposit-checkpoint-component",
+        "separateValidSignedStoreSingleton": true,
+        "syntheticBeaconTuples": 97
+      },
+      {
+        "binaryFragments": true,
+        "concurrentCasLoserAbsent": true,
+        "digestAndAggregateBounds": true,
+        "duplicateIdempotence": true,
+        "executionCheckpointCoupling": true,
+        "legacyApisPreserved": true,
+        "productionQualified": false,
+        "readonlyCopyUnchanged": true,
+        "runtimeGraphPagingImplemented": false,
+        "scenario": "checkpoint-immutable-blobs",
+        "tamperingRejectedWithoutOverwrite": true
+      },
+      {
+        "allAllocationsBounded": false,
+        "groups": 2,
+        "oversizedViewCopyCallbacks": 0,
+        "oversizedViewHashCallbacks": 0,
+        "passed": true,
+        "persistedFormatChanged": false,
+        "processRssQualified": false,
+        "productionQualified": false,
+        "realStoreAndProviderExercised": true,
+        "rocksDbInternalAllocationBounded": false,
+        "scenario": "checkpoint-blob-application-copy-bound"
+      },
+      {
+        "fragmentAndTokenAtomic": true,
+        "physicalPowerLossQualified": false,
+        "productionQualified": false,
+        "reopenedDispositions": 2,
+        "scenario": "checkpoint-blob-sync-failure",
+        "uncertainReadsAndRetriesBlocked": true
+      },
+      {
+        "beaconForkChoice": false,
+        "bothHistoriesRestored": true,
+        "depositsPerBranch": 2,
+        "foreignProofsRejected": 4,
+        "fundedBranches": 2,
+        "replayedPositionsRejected": 4,
+        "runtimeConnected": false,
+        "sameKeyIndices": [
+          0,
+          1
+        ],
+        "scenario": "competing-deposit-order"
+      },
+      {
+        "foreignSelectedHistoryRejected": true,
+        "mandatoryOperationsChecked": 4,
+        "retainedBranches": 2,
+        "runtimeConnected": false,
+        "scenario": "competing-native-deposit-selection",
+        "siblingVotesRejected": true,
+        "syntheticBeaconEnvelope": true
+      },
+      {
+        "authenticatedPrefixes": 4,
+        "authenticatedRestore": true,
+        "branches": 2,
+        "crossBranchProofRejected": true,
+        "duplicateCreditRejected": true,
+        "fundedAdmission": true,
+        "invalidPoPIgnored": true,
+        "nativeMandatoryProofPreserved": true,
+        "nativePeriodVotesCompared": 10,
+        "prefixCheckpointBoundaries": [
+          3,
+          35,
+          34,
+          35
+        ],
+        "prefixDutyCancellations": 107,
+        "prefixProofsCompared": 6,
+        "profile": "Paris",
+        "runtimeConnected": false,
+        "scenario": "execution-deposit-history",
+        "topup": true
+      },
+      {
+        "blockedOperations": 5,
+        "executionOwner": false,
+        "lostSuffix": false,
+        "networkActivated": false,
+        "physicalPowerLoss": false,
+        "replay": true,
+        "scenario": "capella-reactor-sync"
+      },
+      {
+        "blockedOperations": 5,
+        "executionOwner": false,
+        "lostSuffix": true,
+        "networkActivated": false,
+        "physicalPowerLoss": false,
+        "replay": true,
+        "scenario": "capella-reactor-sync"
+      },
+      {
+        "executionTip": true,
+        "externalMutationsRejectedAndClosed": 3,
+        "networkQualified": false,
+        "primaryCheckpoint": true,
+        "scenario": "capella-cold-duplicate-storage-guards",
+        "witnessCheckpoint": true
+      },
+      {
+        "allPublishedRecordsCold": true,
+        "graphCapacityClosed": false,
+        "idempotentMigration": true,
+        "lateSnapshotReadRejected": true,
+        "migrationAtomic": true,
+        "networkQualified": false,
+        "primaryAndWitnessRestarts": true,
+        "productionQualified": false,
+        "runtimeConfigBootQualified": false,
+        "scenario": "capella-cold-reactor-integration",
+        "signerCommitmentUnchanged": true,
+        "stickyColdFormat": true,
+        "validChildDurablyAdmitted": true,
+        "witnessPreviousPrimaryRecovered": true
+      }
+    ],
+    "amd64": [
+      {
+        "contextsCreated": 10,
+        "databaseFenceFilesClosed": 70,
+        "databaseFenceFilesOpened": 70,
+        "explicitContextCloseCalls": 20,
+        "groups": [
+          {
+            "case": "nonzero-contract-history-and-prefixes",
+            "deposits": 32,
+            "executionHeaders": 96,
+            "fullConsensusAdmission": false,
+            "fullProofsCompared": 142
+          },
+          {
+            "case": "old-votes-and-ssz-operations",
+            "exactOperationBytes": 120280,
+            "hotRecords": 8,
+            "legacyFormatReuseRefused": true,
+            "oldTuples": 89,
+            "periodVotesCompared": 9
+          },
+          {
+            "case": "siblings-count-root-cursor-refusals",
+            "foreignCursorRefused": true,
+            "sameCountRootSlotSibling": true,
+            "sameCountSlotDifferentRootSibling": true
+          },
+          {
+            "case": "holes-order-and-declared-capacity",
+            "implicitExpansion": false
+          },
+          {
+            "case": "legacy-corruption-code-and-proof-refusals",
+            "oldV1BytesPreserved": true,
+            "proofsConsumed": 32,
+            "publicUnitValidators": 2,
+            "unreachableScratchBlobsMayRemain": true
+          },
+          {
+            "case": "typed-cancellation-and-idempotent-retry",
+            "scratchOrphansCounted": true,
+            "sourceHistoryUnchanged": true
+          },
+          {
+            "case": "bounded-pins-concurrent-leases-and-close",
+            "concurrentReaders": 8,
+            "immutableLeaseSurvivesClose": true,
+            "inFlightCloseDrainQualified": false,
+            "lastStrongReleaseChargeZero": true,
+            "lateCacheHitRefused": true,
+            "nestedLoadAndCloseRefused": true,
+            "weakRescueAfterCloseCharged": true
+          }
+        ],
+        "networkQualified": false,
+        "passed": true,
+        "physicalRssIsLogicalCacheBound": false,
+        "productionQualified": false,
+        "publicUnitDepositSignatures": 2,
+        "scenario": "canonical-deposit-context-regression",
+        "signedBeaconAdmissionQualified": false,
+        "sourceDatabaseUnchanged": true,
+        "wholeDriverPeakRssKiB": 30148
+      },
+      {
+        "actualFinalizedEpochFromProducer": 10,
+        "actualPrunes": 9,
+        "cachedColdCursorWriterRefused": true,
+        "canonicalExecutionChecks": 97,
+        "coldBlobBytes": 41919,
+        "coldBlobRecords": 479,
+        "coldCachedBytes": 85,
+        "coldCachedRecords": 1,
+        "coldTupleBytes": 243550,
+        "coldTuples": 97,
+        "executionBlockHash": "0xa455a264ee98b67c90dc2718d02d7d558af3f7a17764f2a88fe55e0224e62a89",
+        "executionStateRoot": "0x2ac73471d402d44acf5821613c528d0a971df37b2a2740107b0448d791e406c3",
+        "finalWarmAnchorSlot": 80,
+        "fixtureBlsSignatures": 972,
+        "headRoot": "0x720bfce96300fb33b4fba729304d3e07580ac02a13737d8201bcbe4af82315e9",
+        "historicalForkChoiceVerified": false,
+        "inlineDepositAncestorPeak": 0,
+        "largestDepositHistoryCount": 16,
+        "legacyColdHistoryWriterRefused": true,
+        "legacyFragmentsStaged": 0,
+        "liveRecordPeak": 33,
+        "liveSszPeakBytes": 686517,
+        "liveSszPlusNextReservePeakBytes": 4861032,
+        "networkFinalityQualified": false,
+        "oldFullProofsCompared": 16,
+        "oldSelectedSlot": 63,
+        "passed": true,
+        "productionQualified": false,
+        "publicRegistrySize": 64,
+        "scenario": "capella-cold-deposit-signed-replay",
+        "signedDescendants": 96,
+        "sourceArchiveReads": 192,
+        "successfulVisitsIncludingAnchor": 97,
+        "topups": 16,
+        "transactions": 16,
+        "wholeDriverPeakRssKiB": 27392,
+        "wholeProcessRssIsLogicalBudget": false
+      },
+      {
+        "allAllocationsBounded": false,
+        "authenticatedBeaconAdmissionsQualified": false,
+        "databaseFenceFilesClosed": 56,
+        "databaseFenceFilesOpened": 56,
+        "deduplicatedEmissionCounterIsClosureBound": false,
+        "executionPrimaryBatchExercised": true,
+        "explicitStoreV4Exercised": true,
+        "groups": 6,
+        "historyProofsCompared": 49,
+        "inFlightCloseDrainQualified": false,
+        "migrationQualified": false,
+        "networkConsensusQualified": false,
+        "nonzeroDeposits": 32,
+        "nonzeroExecutionHeaders": 96,
+        "passed": true,
+        "physicalPowerLossQualified": false,
+        "productionQualified": false,
+        "readOnlyPrimaryUnchanged": true,
+        "realPrimaryBatchExercised": true,
+        "runtimeConnected": false,
+        "scenario": "canonical-deposit-checkpoint-component",
+        "separateValidSignedStoreSingleton": true,
+        "syntheticBeaconTuples": 97
+      },
+      {
+        "binaryFragments": true,
+        "concurrentCasLoserAbsent": true,
+        "digestAndAggregateBounds": true,
+        "duplicateIdempotence": true,
+        "executionCheckpointCoupling": true,
+        "legacyApisPreserved": true,
+        "productionQualified": false,
+        "readonlyCopyUnchanged": true,
+        "runtimeGraphPagingImplemented": false,
+        "scenario": "checkpoint-immutable-blobs",
+        "tamperingRejectedWithoutOverwrite": true
+      },
+      {
+        "allAllocationsBounded": false,
+        "groups": 2,
+        "oversizedViewCopyCallbacks": 0,
+        "oversizedViewHashCallbacks": 0,
+        "passed": true,
+        "persistedFormatChanged": false,
+        "processRssQualified": false,
+        "productionQualified": false,
+        "realStoreAndProviderExercised": true,
+        "rocksDbInternalAllocationBounded": false,
+        "scenario": "checkpoint-blob-application-copy-bound"
+      },
+      {
+        "fragmentAndTokenAtomic": true,
+        "physicalPowerLossQualified": false,
+        "productionQualified": false,
+        "reopenedDispositions": 2,
+        "scenario": "checkpoint-blob-sync-failure",
+        "uncertainReadsAndRetriesBlocked": true
+      },
+      {
+        "beaconForkChoice": false,
+        "bothHistoriesRestored": true,
+        "depositsPerBranch": 2,
+        "foreignProofsRejected": 4,
+        "fundedBranches": 2,
+        "replayedPositionsRejected": 4,
+        "runtimeConnected": false,
+        "sameKeyIndices": [
+          0,
+          1
+        ],
+        "scenario": "competing-deposit-order"
+      },
+      {
+        "foreignSelectedHistoryRejected": true,
+        "mandatoryOperationsChecked": 4,
+        "retainedBranches": 2,
+        "runtimeConnected": false,
+        "scenario": "competing-native-deposit-selection",
+        "siblingVotesRejected": true,
+        "syntheticBeaconEnvelope": true
+      },
+      {
+        "authenticatedPrefixes": 4,
+        "authenticatedRestore": true,
+        "branches": 2,
+        "crossBranchProofRejected": true,
+        "duplicateCreditRejected": true,
+        "fundedAdmission": true,
+        "invalidPoPIgnored": true,
+        "nativeMandatoryProofPreserved": true,
+        "nativePeriodVotesCompared": 10,
+        "prefixCheckpointBoundaries": [
+          3,
+          35,
+          34,
+          35
+        ],
+        "prefixDutyCancellations": 107,
+        "prefixProofsCompared": 6,
+        "profile": "Paris",
+        "runtimeConnected": false,
+        "scenario": "execution-deposit-history",
+        "topup": true
+      },
+      {
+        "blockedOperations": 5,
+        "executionOwner": false,
+        "lostSuffix": false,
+        "networkActivated": false,
+        "physicalPowerLoss": false,
+        "replay": true,
+        "scenario": "capella-reactor-sync"
+      },
+      {
+        "blockedOperations": 5,
+        "executionOwner": false,
+        "lostSuffix": true,
+        "networkActivated": false,
+        "physicalPowerLoss": false,
+        "replay": true,
+        "scenario": "capella-reactor-sync"
+      },
+      {
+        "executionTip": true,
+        "externalMutationsRejectedAndClosed": 3,
+        "networkQualified": false,
+        "primaryCheckpoint": true,
+        "scenario": "capella-cold-duplicate-storage-guards",
+        "witnessCheckpoint": true
+      },
+      {
+        "allPublishedRecordsCold": true,
+        "graphCapacityClosed": false,
+        "idempotentMigration": true,
+        "lateSnapshotReadRejected": true,
+        "migrationAtomic": true,
+        "networkQualified": false,
+        "primaryAndWitnessRestarts": true,
+        "productionQualified": false,
+        "runtimeConfigBootQualified": false,
+        "scenario": "capella-cold-reactor-integration",
+        "signerCommitmentUnchanged": true,
+        "stickyColdFormat": true,
+        "validChildDurablyAdmitted": true,
+        "witnessPreviousPrimaryRecovered": true
+      }
+    ]
+  },
+  "functionalRuntimeRecordsEqual": true,
+  "retainedResourceDifferences": [
+    {
+      "record": 0,
+      "scenario": "canonical-deposit-context-regression",
+      "field": "wholeDriverPeakRssKiB",
+      "arm64": 29048,
+      "amd64": 30148
+    },
+    {
+      "record": 1,
+      "scenario": "capella-cold-deposit-signed-replay",
+      "field": "wholeDriverPeakRssKiB",
+      "arm64": 26024,
+      "amd64": 27392
+    }
+  ],
+  "coreMembers": 145,
+  "coreUnitsActuallyCompiledIn01": {
+    "arm64": 62,
+    "amd64": 62
+  },
+  "coreUnitsActuallyCompiledIn02": [
+    "kzg.cpp (byte-identical object and generated setup header)"
+  ],
+  "testCallersCompiledIn02": 7,
+  "coreObjectPayloadsChangedIn02": 0,
+  "programElfMachine": {
+    "arm64": 183,
+    "amd64": 62
+  },
+  "qualifiedProgramsPerArchitecture": 7,
+  "ciGuardTestsPassed": 16,
+  "ciGuardSource": "6523cae6f187dc5b6ff1e45ca2c29916a6365f90",
+  "ciGuardFilesUnchangedInCppCandidate": true,
+  "dailyRegistrations": 27,
+  "wholeDailyCpp27Executed": false,
+  "compilerFailuresPreserved": [
+    {
+      "architecture": "arm64",
+      "candidate": "6523cae6",
+      "status": "FAILED",
+      "compileExit": 2,
+      "testsExecuted": 0,
+      "cause": "new test compared std::string to Json without explicit string extraction"
+    },
+    {
+      "architecture": "amd64",
+      "candidate": "6523cae6",
+      "status": "FAILED",
+      "compileExit": 2,
+      "testsExecuted": 0,
+      "cause": "same test-only JSON extraction compile error"
+    }
+  ],
+  "imageBuilds": 0,
+  "runtimeV4Activated": false,
+  "legacyV4MigrationQualified": false,
+  "fullNodePortabilityQualified": false,
+  "dutyRecoveryQualified": false,
+  "networkCampaignStarted": false,
+  "newEthereumForkQualified": false,
+  "physicalPowerLossQualified": false,
+  "globalWorkRssBoundQualified": false,
+  "independentSecurityReviewDone": false,
+  "githubCiQualified": false,
+  "productionQualified": false,
+  "finalSourceFiles": [
+    {
+      "path": "CMakeLists.txt",
+      "bytes": 185859,
+      "sha256": "669bf235ab0b2cf099e4501fdb06c80d60fc74815effa03f1908fe414e197f3e"
+    },
+    {
+      "path": "include/nano/consensus_canonical_deposit_context.hpp",
+      "bytes": 8692,
+      "sha256": "2392a4386f1e7d678ed6f2b9dad81e173b090e67289f3d193d8bfaa880f76442"
+    },
+    {
+      "path": "include/nano/consensus_capella_cold_records.hpp",
+      "bytes": 2830,
+      "sha256": "6d1287f3f0474fc92fc279ad1bf90c1ff2ba2d0bfbdbd16fab207004d5f4b811"
+    },
+    {
+      "path": "include/nano/consensus_capella_store_snapshot.hpp",
+      "bytes": 8675,
+      "sha256": "17c37b154678c086f6fefdc17dbb9b5002284e5154239267211bd00972965fca"
+    },
+    {
+      "path": "include/nano/consensus_deposit_history.hpp",
+      "bytes": 6291,
+      "sha256": "eaae98f27206fadc5ee8963107e1c04069d1d7bc5d92f77ee22345bf937c9e7e"
+    },
+    {
+      "path": "include/nano/storage.hpp",
+      "bytes": 14166,
+      "sha256": "c6a3121db5a762ba81a10dc73ef9f0a8ba6945e21263096d7635b79d5172b834"
+    },
+    {
+      "path": "scripts/ci/check-core.cmake",
+      "bytes": 11228,
+      "sha256": "e267772c3433adf1b5d05764ea693620fccfe341e60d710d1c2553f93e8fdbeb"
+    },
+    {
+      "path": "scripts/ci/check-core.test.mjs",
+      "bytes": 19595,
+      "sha256": "28212c68e0179a91a766ceb06e2e55136382b49ea5ed0b33043a9907c3a8147a"
+    },
+    {
+      "path": "scripts/ci/core.sh",
+      "bytes": 10558,
+      "sha256": "dfed94ec20e70d2ec0bf4f05dc7a117eb473cefff268b53702cefaf724d44371"
+    },
+    {
+      "path": "src/consensus_canonical_deposit_context.cpp",
+      "bytes": 54339,
+      "sha256": "39b99980201358e1626ce17b32bb093687b1dd13522b8579ab2ee726739040c2"
+    },
+    {
+      "path": "src/consensus_capella_cold_records.cpp",
+      "bytes": 7350,
+      "sha256": "c45b5cf08717098f5deb599a7b0805d5268a48dc5bbe2a9407b741ce4cbbeb2f"
+    },
+    {
+      "path": "src/consensus_capella_store_snapshot.cpp",
+      "bytes": 33191,
+      "sha256": "3afabc35fc9fe8c292da6142b09176337446994a5548a1ee774dd090eb2d8210"
+    },
+    {
+      "path": "src/consensus_deposit_history.cpp",
+      "bytes": 25819,
+      "sha256": "ddbab680964534aac301c15bd93b6e188c5714f527b5560f2277396d9e1eefd7"
+    },
+    {
+      "path": "src/storage.cpp",
+      "bytes": 80569,
+      "sha256": "5bef3f1359aa8a40725452dfba316b03856bd0f171a27bb089d6230aeb6824a3"
+    },
+    {
+      "path": "tests/test_canonical_deposit_checkpoint.cpp",
+      "bytes": 42011,
+      "sha256": "02e620fb62ec779b510d157c882469e8852a51f3eb10e5472cd60049b70ffe9f"
+    }
+  ],
+  "sourceArchive": {
+    "bytes": 36024320,
+    "sha256": "cb46be6b78df6aea879778e5dc8d6abda77c7aec774e59ab1d2f07d5509480b4",
+    "gitRevision": "f865e4d30596a70736c7d9817062e82ed1ddca5f",
+    "payloadFiles": 1470
+  }
+}

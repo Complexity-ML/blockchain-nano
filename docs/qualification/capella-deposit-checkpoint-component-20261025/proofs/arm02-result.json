@@ -1,0 +1,113 @@
+{
+  "format": "nano-deposit-checkpoint-component-build-v1",
+  "sourceCandidate": "f865e4d30596a70736c7d9817062e82ed1ddca5f",
+  "architecture": "aarch64",
+  "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "imageBuilds": 0,
+  "networkCampaignStarted": false,
+  "productionQualified": false,
+  "phases": [
+    {
+      "name": "clone-output",
+      "exitCode": 0,
+      "elapsedMs": 892
+    },
+    {
+      "name": "configure",
+      "exitCode": 0,
+      "elapsedMs": 1763
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "elapsedMs": 101380
+    },
+    {
+      "name": "archive-members",
+      "exitCode": 0,
+      "elapsedMs": 124
+    },
+    {
+      "name": "registry",
+      "exitCode": 0,
+      "elapsedMs": 127
+    },
+    {
+      "name": "tests",
+      "exitCode": 0,
+      "elapsedMs": 11044
+    }
+  ],
+  "passed": true,
+  "inheritedCore": {
+    "bytes": 42505964,
+    "sha256": "2fda419881c09e08c42b3c81adfc3cc3afe7e084fcab13dcca071004433aaf62"
+  },
+  "compileCommands": [
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -I/work/third_party/secp256k1/include -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wpedantic -MD -MT CMakeFiles/nano_core.dir/src/kzg.cpp.o -MF CMakeFiles/nano_core.dir/src/kzg.cpp.o.d -o CMakeFiles/nano_core.dir/src/kzg.cpp.o -c /work/src/kzg.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -DNANO_TEST_SOURCE=\\\"/work\\\" -I/work/third_party/ckzg/blst/bindings -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -O1 -MD -MT CMakeFiles/nano-canonical-deposit-checkpoint-tests.dir/tests/test_canonical_deposit_checkpoint.cpp.o -MF CMakeFiles/nano-canonical-deposit-checkpoint-tests.dir/tests/test_canonical_deposit_checkpoint.cpp.o.d -o CMakeFiles/nano-canonical-deposit-checkpoint-tests.dir/tests/test_canonical_deposit_checkpoint.cpp.o -c /work/tests/test_canonical_deposit_checkpoint.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -DNANO_TEST_SOURCE=\\\"/work\\\" -I/work/third_party/ckzg/blst/bindings -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -O1 -MD -MT CMakeFiles/nano-canonical-deposit-context-tests.dir/tests/test_canonical_deposit_context.cpp.o -MF CMakeFiles/nano-canonical-deposit-context-tests.dir/tests/test_canonical_deposit_context.cpp.o.d -o CMakeFiles/nano-canonical-deposit-context-tests.dir/tests/test_canonical_deposit_context.cpp.o -c /work/tests/test_canonical_deposit_context.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -DNANO_TEST_SOURCE=\\\"/work\\\" -I/work/third_party/ckzg/blst/bindings -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -O1 -MD -MT CMakeFiles/nano-capella-cold-deposit-replay-tests.dir/tests/test_capella_cold_deposit_replay.cpp.o -MF CMakeFiles/nano-capella-cold-deposit-replay-tests.dir/tests/test_capella_cold_deposit_replay.cpp.o.d -o CMakeFiles/nano-capella-cold-deposit-replay-tests.dir/tests/test_capella_cold_deposit_replay.cpp.o -c /work/tests/test_capella_cold_deposit_replay.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -DNANO_TEST_SOURCE=\\\"/work\\\" -I/work/include -I/work/third_party -I/work/third_party/mcl/include -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/nano-deposit-history-tests.dir/tests/test_deposit_history.cpp.o -MF CMakeFiles/nano-deposit-history-tests.dir/tests/test_deposit_history.cpp.o.d -o CMakeFiles/nano-deposit-history-tests.dir/tests/test_deposit_history.cpp.o -c /work/tests/test_deposit_history.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o -MF CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o.d -o CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o -c /work/tests/test_checkpoint_blob_bounded_read.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -DNANO_SYNC_FAULT=1 -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o -MF CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o.d -o CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o -c /work/tests/test_checkpoint_blobs.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -DNANO_SYNC_FAULT=1 -DNANO_TEST_SOURCE=\\\"/work\\\" -I/work/include -I/work/third_party -I/work/third_party/mcl/include -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o -MF CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o.d -o CMakeFiles/nano-capella-transition-tests.dir/tests/test_capella_transition.cpp.o -c /work/tests/test_capella_transition.cpp"
+  ],
+  "kzgObjectAndGeneratedSetupByteIdentical": true,
+  "coreObjectsChanged": [],
+  "coreObjectCount": 145,
+  "tests": [
+    "consensus_canonical_deposit_checkpoint",
+    "consensus_canonical_deposit_context",
+    "consensus_capella_cold_deposit_replay",
+    "consensus_capella_cold_reactor_guards",
+    "consensus_capella_reactor_sync_failure",
+    "consensus_execution_deposit_history",
+    "storage_checkpoint_blob_application_copy_bound",
+    "storage_checkpoint_blob_sync_failure",
+    "storage_checkpoint_immutable_blobs"
+  ],
+  "artifacts": {
+    "libnano_core.a": {
+      "bytes": 42505964,
+      "sha256": "2fda419881c09e08c42b3c81adfc3cc3afe7e084fcab13dcca071004433aaf62"
+    },
+    "nano-canonical-deposit-checkpoint-tests": {
+      "bytes": 5514608,
+      "sha256": "123bde21695b16b1336398b809497989be314d7d9f8fcee5e18b6c2a791e8632"
+    },
+    "nano-canonical-deposit-context-tests": {
+      "bytes": 5430616,
+      "sha256": "9afd25daf9e6ccbf927806e9ba4da6e6361f1e45bdfd713a9d8326b99c403ada"
+    },
+    "nano-capella-cold-deposit-replay-tests": {
+      "bytes": 5343080,
+      "sha256": "113bb07ec87f52106f6d388fc42a6c1a97ddd6ac4b907cfb8d357f784aff6113"
+    },
+    "nano-deposit-history-tests": {
+      "bytes": 4929240,
+      "sha256": "c4b8d35728948b3603bc691efa6dac9495ec217ef4ad686e67c2ba98b4af293f"
+    },
+    "nano-checkpoint-blob-bounded-read-tests": {
+      "bytes": 2337656,
+      "sha256": "d1bd5b9ced3b54e56ab439cf41f84107fe395635cc62dfac2faedcbb0979d31e"
+    },
+    "nano-checkpoint-blob-tests": {
+      "bytes": 2415040,
+      "sha256": "2808c4d01b47213dad4e719e461996501c5b81af199e307ef236d2f1286eb9eb"
+    },
+    "nano-capella-transition-tests": {
+      "bytes": 18684184,
+      "sha256": "b4ac40c1e22036568a3d52670adf63c8b02ce9ecbd3c55e56f42fb4802045be1"
+    },
+    "focused.xml": {
+      "bytes": 8379,
+      "sha256": "fc9cae6473b04370cb6fb7f980cbc7d96f727faea6fdf08eccb9f60d3452d45d"
+    },
+    "Testing/Temporary/LastTest.log": {
+      "bytes": 12334,
+      "sha256": "87f389c1e3f0279538c85db6a6bb40446a8889fa59af7427d13061bf1d9e44b7"
+    }
+  },
+  "finishedAtUnix": 1792925604.991202
+}
