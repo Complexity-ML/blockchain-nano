@@ -52,6 +52,8 @@ public:
  // ReadWriteExisting: exclusive maintenance open, no creation or initialization.
  explicit ChainStore(const std::filesystem::path& path,OpenMode mode=OpenMode::ReadWrite);
  ~ChainStore();
+ // Authoritative opened database locator; read-only, no layout or DB mutation.
+ std::filesystem::path directory() const;
  ChainStore(const ChainStore&)=delete;
  ChainStore& operator=(const ChainStore&)=delete;
  void bind_chain(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract="");

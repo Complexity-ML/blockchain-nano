@@ -276,6 +276,7 @@ ChainStore::ChainStore(const std::filesystem::path& path,OpenMode mode){
  }catch(...){delete db_;db_=nullptr;throw;}
 }
 ChainStore::~ChainStore(){delete db_;}
+std::filesystem::path ChainStore::directory()const{std::lock_guard lock(mutex_);return std::filesystem::path(db_->GetName());}
 void ChainStore::require_existing_chain_binding(const Int& chain_id,const Bytes& genesis_hash,const std::string& consensus,const std::string& staking_contract)const{
  std::lock_guard lock(mutex_);Json identity={{"chainId",quantity(chain_id)},{"genesisHash",hex(genesis_hash)},{"consensus",consensus}};
  if(!staking_contract.empty())identity["stakingContract"]=address(staking_contract);
