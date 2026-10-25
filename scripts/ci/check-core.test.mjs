@@ -110,7 +110,7 @@ test('all five replay/cancellation registrations require their own no-argument d
 }));
 test('bounded canonical audit labels are an exact set and the old deposit-auditor selector cannot stand in for the thin stream driver',async()=>fixture(async({registry,check})=>{
  const reordered=registry();reordered.tests.find(x=>x.name==='consensus_capella_bounded_canonical_audit').properties[1].value.reverse();
- assert.match((await check(reordered)).stdout,/Verified 25 daily core/);
+ assert.match((await check(reordered)).stdout,/Verified 26 daily core/);
  for(const labels of [['consensus','capella','audit','audit'],['consensus','capella','audit','other'],['consensus','capella','audit',3],['audit;capella','','consensus','recovery'],['audit','capella','consensus','recovery;']]){
   const r=registry();r.tests.find(x=>x.name==='consensus_capella_bounded_canonical_audit').properties[1].value=labels;
   await assert.rejects(check(r),/Canonical replay/);
@@ -119,7 +119,7 @@ test('bounded canonical audit labels are an exact set and the old deposit-audito
  stream.command.push('--fresh-stream-self-test');
  await assert.rejects(check(oldSelector),/Canonical replay\/cancellation command/);
 }));
-test('real daily shell builds and hashes every added driver and selects all twenty-five reviewed names',async()=>{
+test('real daily shell builds and hashes every added driver and selects all twenty-six reviewed names',async()=>{
  const source=await readFile(join(repo,'scripts/ci/core.sh'),'utf8'),lines=source.split('\n');
  const build=lines.filter(line=>line.startsWith('cmake --build ')&&line.includes(' --target '));assert.equal(build.length,1);
  const targets=build[0].split(' --target ')[1].split(' 2>&1')[0].split(/\s+/);
