@@ -1,4 +1,5 @@
 #include "nano/consensus_capella_canonical_stream.hpp"
+#include "nano/consensus_capella_deposits.hpp"
 #include "consensus_capella_stream_index.hpp"
 
 namespace nano {
