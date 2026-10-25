@@ -125,6 +125,21 @@ int main(){try{
  refuses([&]{restored.authenticated_prefix(1,Bytes(31),ha.root());});
  auto bad_root=ha.root();bad_root[0]^=1;refuses([&]{restored.authenticated_prefix(1,ha.execution_hash(),bad_root);});
  bool prefix_cancelled=false;size_t visits=0;try{restored.authenticated_prefix(1,ha.execution_hash(),ha.root(),[&]{if(++visits==10)throw ExecutionCancelled("prefix interrupted");});}catch(const ExecutionCancelled&){prefix_cancelled=true;}check(prefix_cancelled&&restored.snapshot()==snapshot,"prefix failure mutated history");
+ // One hot boundary checkpoint per descended level, plus the two outer
+ // checkpoints: empty, one leaf, aligned two-leaf subtree, partial three-leaf
+ // subtree. Exercise every cancellation point, including before publication.
+ const std::array<size_t,4> prefix_checkpoints{3,35,34,35};size_t prefix_duty_cancellations=0;
+ for(size_t n=0;n<originals.size();++n){
+  const auto& original=*originals[n];size_t completed=0;
+  const auto prefix=restored.authenticated_prefix(original.count(),original.execution_hash(),original.root(),[&]{++completed;});
+  check(completed==prefix_checkpoints[n]&&prefix.snapshot()==original.snapshot(),"hot prefix checkpoint boundary changed");
+  for(size_t stop_at=1;stop_at<=completed;++stop_at){
+   size_t seen=0;bool expired=false;
+   try{restored.authenticated_prefix(original.count(),original.execution_hash(),original.root(),[&]{if(++seen==stop_at)throw ExpiredCapellaDuty("hot prefix duty expired");});}
+   catch(const ExpiredCapellaDuty& e){expired=std::string(e.what())=="hot prefix duty expired";}
+   check(expired&&seen==stop_at&&restored.snapshot()==snapshot,"hot prefix cancellation changed type, work or source");++prefix_duty_cancellations;
+  }
+ }
  // Native voting keeps historical commitments even when old full records disappear.
  CapellaForkStore full;std::vector<ConsensusRoot> ids;const std::array<const ExecutionDepositHistory*,5> histories{&empty,&ha,&ht,&hi,&he};const std::array<Header,5> headers{anchor,ba.header,bt.header,bi.header,be.header};
  for(size_t i=0;i<histories.size();++i){ConsensusBeaconHeader header{};header.slot=i;if(i)header.parent_root=ids.back();const auto id=consensus_beacon_header_root(header);CapellaForkBlock record{};record.header=header;record.execution_block.header=headers[i];record.deposit_history=std::make_shared<const ExecutionDepositHistory>(*histories[i]);full.blocks.emplace(id,std::move(record));ids.push_back(id);}full.timed.view.anchor=ids[0];
@@ -161,5 +176,5 @@ int main(){try{
  const auto operation=capella_native_deposit_operations(full,ids[4],advanced,selected_vote,native);check(operation.size()==1240&&operation==capella_native_deposit_operations(pruned,ids[4],advanced,selected_vote,native),"pruning changed mandatory historical deposit proof");
  auto twice=pruned;twice.deposit_ancestors=capella_deposit_ancestors_before(pruned,ids[4]);twice.timed.view.anchor=ids[4];twice.blocks.erase(ids[3]);validate_capella_deposit_ancestors(twice);check(twice.deposit_ancestors.size()==4&&capella_native_deposit_operations(twice,ids[4],advanced,selected_vote,native)==operation,"repeated pruning lost deposit references");
  auto forged_pins=pruned;forged_pins.deposit_ancestors[0].root[0]^=1;refuses([&]{validate_capella_deposit_ancestors(forged_pins);});forged_pins=pruned;forged_pins.deposit_ancestors.pop_back();refuses([&]{validate_capella_deposit_ancestors(forged_pins);});forged_pins=pruned;std::swap(forged_pins.deposit_ancestors[0],forged_pins.deposit_ancestors[1]);refuses([&]{validate_capella_deposit_ancestors(forged_pins);});
- std::cout<<Json{{"scenario","execution-deposit-history"},{"profile","Paris"},{"branches",2},{"fundedAdmission",true},{"topup",true},{"invalidPoPIgnored",true},{"crossBranchProofRejected",true},{"duplicateCreditRejected",true},{"authenticatedRestore",true},{"runtimeConnected",false},{"authenticatedPrefixes",4},{"prefixProofsCompared",prefix_proofs},{"nativePeriodVotesCompared",vote_comparisons},{"nativeMandatoryProofPreserved",true}}.dump()<<'\n';return 0;
+ std::cout<<Json{{"scenario","execution-deposit-history"},{"profile","Paris"},{"branches",2},{"fundedAdmission",true},{"topup",true},{"invalidPoPIgnored",true},{"crossBranchProofRejected",true},{"duplicateCreditRejected",true},{"authenticatedRestore",true},{"runtimeConnected",false},{"authenticatedPrefixes",4},{"prefixProofsCompared",prefix_proofs},{"prefixCheckpointBoundaries",prefix_checkpoints},{"prefixDutyCancellations",prefix_duty_cancellations},{"nativePeriodVotesCompared",vote_comparisons},{"nativeMandatoryProofPreserved",true}}.dump()<<'\n';return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

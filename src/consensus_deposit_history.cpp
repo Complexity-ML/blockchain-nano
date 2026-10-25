@@ -147,10 +147,12 @@ std::shared_ptr<const ExecutionDepositHistory::Node> ExecutionDepositHistory::pr
  if(check)check();if(!count)return {};const uint64_t capacity=uint64_t(1)<<depth;
  if(count==capacity)return node;
  if(!node||!depth||count>capacity)throw std::logic_error("invalid deposit prefix path");
- const auto expanded=Node::expand(node,depth,context,check);const auto half=capacity/2;auto left=expanded.left;std::shared_ptr<const Node> right;
+ // A hot prefix already checks once per boundary at entry, as before cold
+ // storage was introduced. Only cold contexts need the extra I/O checkpoints.
+ const auto expanded=context?Node::expand(node,depth,context,check):Node::expand(node,depth,context,{});const auto half=capacity/2;auto left=expanded.left;std::shared_ptr<const Node> right;
  if(count<=half)left=prefix_tree(left,depth-1,count,check,context);
  else right=prefix_tree(expanded.right,depth-1,count-half,check,context);
- if(check)check();return std::make_shared<const Node>(Node{consensus_signing_root(left?left->hash:zeros()[depth-1],right?right->hash:zeros()[depth-1]),std::move(left),std::move(right),{},{}});
+ if(context&&check)check();return std::make_shared<const Node>(Node{consensus_signing_root(left?left->hash:zeros()[depth-1],right?right->hash:zeros()[depth-1]),std::move(left),std::move(right),{},{}});
 }
 ExecutionDepositHistory ExecutionDepositHistory::authenticated_prefix(uint64_t count,const Bytes& hash,const ConsensusRoot& expected,const std::function<void()>& check)const{
  check_storage(check);if(count>count_)throw std::invalid_argument("deposit prefix count exceeds history");
