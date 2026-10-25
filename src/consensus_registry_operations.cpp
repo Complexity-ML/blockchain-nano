@@ -88,7 +88,7 @@ Phase0RegistryOperationsResult prepare_phase0_registry_operations(
   const auto b=body.subspan(exits_begin+112*i,112);
   SignedConsensusVoluntaryExit exit{little(b,0,8),little(b,8,8),Bytes(b.begin()+16,b.end())};
   const auto version=exit.epoch<fork.epoch?fork.previous_version:fork.current_version;
-  if(!process_phase0_voluntary_exit(next.registry,exit_rules,exit,version,context.genesis_root))return InvalidPhase0RegistryBlock{};
+  if(!process_phase0_voluntary_exit(next.registry,exit_rules,exit,version,context.genesis_root,checkpoint))return InvalidPhase0RegistryBlock{};
   if(checkpoint)checkpoint();
  }
  if(checkpoint)checkpoint();

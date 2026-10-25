@@ -952,6 +952,11 @@ target_link_libraries(nano-slashing-transition-tests PRIVATE nano_core nano_ckzg
 add_test(NAME consensus_slashing_transition COMMAND nano-slashing-transition-tests)
 set_tests_properties(consensus_slashing_transition PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
 
+add_executable(nano-consensus-cancellation-tests tests/test_consensus_cancellation.cpp)
+target_link_libraries(nano-consensus-cancellation-tests PRIVATE nano_core nano_ckzg)
+add_test(NAME consensus_registry_cancellation COMMAND nano-consensus-cancellation-tests)
+set_tests_properties(consensus_registry_cancellation PROPERTIES TIMEOUT 60 LABELS "qualification_consensus_ethereum")
+
 add_executable(nano-slashing-recovery-tests tests/test_slashing_recovery.cpp)
 target_link_libraries(nano-slashing-recovery-tests PRIVATE nano_core nano_ckzg)
 add_test(NAME consensus_slashing_recovery COMMAND nano-slashing-recovery-tests)

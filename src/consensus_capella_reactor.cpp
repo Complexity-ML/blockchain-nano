@@ -639,7 +639,7 @@ bool CapellaDurableReactor::voluntary_exit_ssz(std::span<const uint8_t> input,co
  const auto head_pin=capella_fork_head(*state_,rules_,check);const auto& head=*head_pin;const auto root=consensus_beacon_header_root(head.header);const auto key=exit_key(*state_,root,*operation,rules_,check);if(!key)return false;
  const auto& t=rules_.transition;auto context=capella_fork_block_context(head.state,head.header,{t.consensus.epoch,t.execution,t.maximum_state_bytes},t.consensus.state,check);
  const auto version=operation->epoch<context.fork.epoch?context.fork.previous_version:context.fork.current_version;
- if(!process_phase0_voluntary_exit(context.registry,t.consensus.exit,*operation,version,context.genesis_root))return false;
+ if(!process_phase0_voluntary_exit(context.registry,t.consensus.exit,*operation,version,context.genesis_root,check))return false;
  for(const auto& [_,record]:exits_){if(check)check();const auto other=decode_consensus_voluntary_exit_ssz(record.wire,check);if(!other)throw std::logic_error("Invalid queued Capella exit");if(other->validator_index==operation->validator_index&&record.public_key==*key)return false;}
  if(exits_.size()>=limits_.messages)throw std::length_error("Capella exit capacity");auto exits=exits_;exits.emplace(id,CapellaPendingExit{root,*key,bytes});publish(*state_,check,{},std::nullopt,std::nullopt,std::nullopt,std::move(exits));return true;
 }

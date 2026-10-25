@@ -3,6 +3,7 @@
 #include "nano/core.hpp"
 #include <map>
 #include <optional>
+#include <functional>
 namespace nano {
 struct ConsensusCommitteeMember {
  uint64_t validator_index=0;
@@ -33,5 +34,8 @@ public:
  bool matches_validator_key(uint64_t index,std::span<const uint8_t> key)const;
  std::optional<ConsensusParticipation> verify(std::span<const uint64_t> indices,
                     const ConsensusRoot& object_root,std::span<const uint8_t> signature)const;
+ std::optional<ConsensusParticipation> verify(std::span<const uint64_t> indices,
+                    const ConsensusRoot& object_root,std::span<const uint8_t> signature,
+                    const std::function<void()>& checkpoint)const;
 };
 }

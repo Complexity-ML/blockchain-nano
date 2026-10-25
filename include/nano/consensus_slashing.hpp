@@ -16,6 +16,10 @@ struct IndexedConsensusAttestation {
 std::optional<std::vector<uint64_t>> verify_attester_slashing(
  const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
  const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context);
+std::optional<std::vector<uint64_t>> verify_attester_slashing(
+ const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
+ const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
+ const std::function<void()>& checkpoint);
 
 // Explicit Phase0 economics profile, NOT the Electra/Pectra slashing rules.
 // Values must come from authenticated chain configuration. No network defaults.
@@ -51,6 +55,13 @@ std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
  const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
  const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
  uint64_t proposer_index,uint64_t whistleblower_index);
+// Cooperative overloads preserve the old symbols. A throwing checkpoint leaves
+// caller-owned state unchanged; no callback follows the final atomic swap.
+std::optional<std::vector<uint64_t>> process_phase0_attester_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const IndexedConsensusAttestation& first,const ConsensusCommittee& first_context,
+ const IndexedConsensusAttestation& second,const ConsensusCommittee& second_context,
+ uint64_t proposer_index,uint64_t whistleblower_index,const std::function<void()>& checkpoint);
 
 // Phase0 indexed-attestation slashing against the authenticated funded registry.
 // Admission MUST have established PoP for every key, including genesis keys.
@@ -101,6 +112,12 @@ std::optional<std::vector<uint64_t>> process_phase0_proposer_slashing(
  const ConsensusBytes4& historical_fork_version,const ConsensusRoot& genesis_root,
  uint64_t proposer_index,uint64_t whistleblower_index);
 
+std::optional<std::vector<uint64_t>> process_phase0_proposer_slashing(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const SignedConsensusBeaconHeader& first,const SignedConsensusBeaconHeader& second,
+ const ConsensusBytes4& historical_fork_version,const ConsensusRoot& genesis_root,
+ uint64_t proposer_index,uint64_t whistleblower_index,const std::function<void()>& checkpoint);
+
 // Versioned local persistence envelope, not an Ethereum SSZ BeaconState.
 // Decoder rejects noncanonical quantities, duplicate/reordered indices and
 // configuration mismatch. ChainStore binding supplies the chain identity.
@@ -112,6 +129,9 @@ ConsensusSlashingState phase0_slashing_from_snapshot(const Json& snapshot,const 
 // by the validated epoch transition and official isolated component fixtures.
 std::map<uint64_t,uint64_t> phase0_slashing_penalties(
  const ConsensusSlashingState& state,const Phase0SlashingRules& rules);
+std::map<uint64_t,uint64_t> phase0_slashing_penalties(
+ const ConsensusSlashingState& state,const Phase0SlashingRules& rules,
+ const std::function<void()>& checkpoint);
 
 // Slashing sub-transition only: apply the delayed correlation penalty before
 // resetting the next epoch bucket, then advance this ledger by exactly one epoch.
@@ -119,4 +139,7 @@ std::map<uint64_t,uint64_t> phase0_slashing_penalties(
 // other epoch transitions. Does not implement the complete beacon epoch process.
 std::map<uint64_t,uint64_t> advance_phase0_slashing_epoch(
  ConsensusSlashingState& state,const Phase0SlashingRules& rules,uint64_t expected_epoch);
+std::map<uint64_t,uint64_t> advance_phase0_slashing_epoch(
+ ConsensusSlashingState& state,const Phase0SlashingRules& rules,uint64_t expected_epoch,
+ const std::function<void()>& checkpoint);
 }

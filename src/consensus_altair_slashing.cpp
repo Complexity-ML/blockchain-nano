@@ -27,13 +27,13 @@ struct Context {
   for(size_t i=0;i<count;++i){if(cp)cp();const auto at=validators_at+121*i;ConsensusSlashingValidator v{};std::copy_n(b.begin()+at,48,v.public_key.begin());v.withdrawal_credentials=root(at+48);v.effective_balance=number(at+80);v.slashed=b[at+88];v.activation_eligibility_epoch=number(at+89);v.activation_epoch=number(at+97);v.exit_epoch=number(at+105);v.withdrawable_epoch=number(at+113);v.balance=number(balances_at+8*i);registry.validators.emplace(i,v);}
  }
  uint64_t proposer()const{
-  std::vector<Phase0ProposerValidator> candidates;for(const auto& [i,v]:registry.validators)candidates.push_back({i,v.effective_balance,v.activation_epoch,v.exit_epoch});const auto& d=rules.duties;
+  std::vector<Phase0ProposerValidator> candidates;for(const auto& [i,v]:registry.validators){if(checkpoint)checkpoint();candidates.push_back({i,v.effective_balance,v.activation_epoch,v.exit_epoch});}const auto& d=rules.duties;
   return phase0_proposer_index(candidates,randao,{d.slots_per_epoch,d.min_seed_lookahead},number(40),d.maximum_effective_balance,d.shuffle_rounds,checkpoint);
  }
  AltairSlashingCandidate result(std::vector<uint64_t> indices)const{
   Bytes out(bytes.begin(),bytes.end());auto put=[&](size_t at,uint64_t n){for(size_t j=0;j<8;++j)out[at+j]=uint8_t(n>>(8*j));};
   for(const auto& [i,v]:registry.validators){if(checkpoint)checkpoint();const auto at=validators_at+121*i;out[at+88]=v.slashed;put(at+105,v.exit_epoch);put(at+113,v.withdrawable_epoch);put(balances_at+8*i,v.balance);}
-  for(size_t i=0;i<registry.slashings.size();++i)put(slashings_at+8*i,registry.slashings[i]);if(checkpoint)checkpoint();return {std::move(out),std::move(indices)};
+  for(size_t i=0;i<registry.slashings.size();++i){if(checkpoint)checkpoint();put(slashings_at+8*i,registry.slashings[i]);}if(checkpoint)checkpoint();return {std::move(out),std::move(indices)};
  }
 };
 }
@@ -41,7 +41,7 @@ std::optional<AltairSlashingCandidate> prepare_altair_proposer_slashing(
  std::span<const uint8_t> b,const SignedConsensusBeaconHeader& first,const SignedConsensusBeaconHeader& second,
  const AltairStateLimits& l,const AltairSlashingRules& r,const std::function<void()>& checkpoint){
  Context c(b,l,r,checkpoint);const auto proposer=c.proposer();if(checkpoint)checkpoint();
- auto indices=process_phase0_proposer_slashing(c.registry,r.economics,first,second,c.version(first.message.slot/r.duties.slots_per_epoch),c.root(8),proposer,proposer);
+ auto indices=process_phase0_proposer_slashing(c.registry,r.economics,first,second,c.version(first.message.slot/r.duties.slots_per_epoch),c.root(8),proposer,proposer,checkpoint);
  if(!indices)return std::nullopt;return c.result(std::move(*indices));
 }
 std::optional<AltairSlashingCandidate> prepare_altair_attester_slashing(

@@ -140,8 +140,8 @@ std::optional<AltairSlotState> transition(const AltairSlotState& input,
  for(size_t i=0;i<ops[3].size();i+=1240){auto result=prepare_altair_deposit(out.ssz,deposit(ops[3].subspan(i,1240)),r.state,r.deposit,d.slots_per_epoch,checkpoint);if(!result)return std::nullopt;out.ssz=std::move(result->ssz);}
  if(!ops[4].empty()){
   auto exits=registry(out.ssz,l,d.slots_per_epoch,checkpoint);
-  for(size_t i=0;i<ops[4].size();i+=112){if(checkpoint)checkpoint();const auto op=ops[4].subspan(i,112);const SignedConsensusVoluntaryExit exit{number(op,0),number(op,8),Bytes(op.begin()+16,op.end())};if(!process_phase0_voluntary_exit(exits,r.exit,exit,version(exit.epoch),genesis))return std::nullopt;}
-  const auto start=number(out.ssz,l.fields[2],4);for(const auto& [i,v]:exits.validators){put(out.ssz,start+121*i+105,v.exit_epoch);put(out.ssz,start+121*i+113,v.withdrawable_epoch);}
+  for(size_t i=0;i<ops[4].size();i+=112){if(checkpoint)checkpoint();const auto op=ops[4].subspan(i,112);const SignedConsensusVoluntaryExit exit{number(op,0),number(op,8),Bytes(op.begin()+16,op.end())};if(!process_phase0_voluntary_exit(exits,r.exit,exit,version(exit.epoch),genesis,checkpoint))return std::nullopt;}
+  const auto start=number(out.ssz,l.fields[2],4);for(const auto& [i,v]:exits.validators){if(checkpoint)checkpoint();put(out.ssz,start+121*i+105,v.exit_epoch);put(out.ssz,start+121*i+113,v.withdrawable_epoch);}if(checkpoint)checkpoint();
  }
  if(cr){
   auto full=capella_detail::restore(out.ssz,execution_header,withdrawal_cursors,historical_summaries,r.state,cr->execution,cr->maximum_state_bytes,checkpoint);

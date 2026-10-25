@@ -1,4 +1,5 @@
 #include "nano/consensus_block_operations.hpp"
+#include "consensus_registry_checkpoint.hpp"
 #include <algorithm>
 namespace nano {
 namespace {
@@ -19,7 +20,7 @@ std::optional<Phase0ProposerOperationsCandidate> prepare_phase0_proposer_operati
   throw std::invalid_argument("inconsistent Phase0 block/evidence fork context");
  auto authenticated=authenticate_phase0_block(bytes,context,limits,randao_rules,registry,randao,checkpoint);
  if(!authenticated)return std::nullopt;
- auto next=registry;
+ auto next=consensus_registry_detail::copy(registry,checkpoint);
  // The authentication call has checked all canonical body offsets and list
  // lengths, so these exact slices are safe for immutable input snapshots.
  const auto body=bytes.subspan(184);
@@ -30,7 +31,7 @@ std::optional<Phase0ProposerOperationsCandidate> prepare_phase0_proposer_operati
   const auto proof=body.subspan(offsets[0]+416*i,416);
   const auto first=signed_header(proof.first(208)),second=signed_header(proof.subspan(208));
   const auto version=first.message.slot/randao_rules.slots_per_epoch<fork.epoch?fork.previous_version:fork.current_version;
-  if(!process_phase0_proposer_slashing(next,slashing_rules,first,second,version,context.genesis_root,authenticated->header.proposer_index,authenticated->header.proposer_index))return std::nullopt;
+  if(!process_phase0_proposer_slashing(next,slashing_rules,first,second,version,context.genesis_root,authenticated->header.proposer_index,authenticated->header.proposer_index,checkpoint))return std::nullopt;
   if(checkpoint)checkpoint();
  }
  std::array<size_t,4> pending{};

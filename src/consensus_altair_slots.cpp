@@ -35,7 +35,7 @@ AltairSlotState detail::prepare_common_epoch(const AltairSlotState& input,const 
  const auto slash_at=layout.randao+32*l.epochs_per_historical_vector;
  for(size_t i=0;i<l.epochs_per_slashings_vector;++i)registry.slashings.push_back(number(b,slash_at+8*i));
  registry=prepare_phase0_registry_updates(registry,r.registry,number(b,layout.previous+89),checkpoint).registry_after;
- const auto debits=phase0_slashing_penalties(registry,r.slashing);for(const auto& [i,debit]:debits){if(checkpoint)checkpoint();registry.validators.at(i).balance-=debit;}
+ const auto debits=phase0_slashing_penalties(registry,r.slashing,checkpoint);for(const auto& [i,debit]:debits){if(checkpoint)checkpoint();registry.validators.at(i).balance-=debit;}
  if((epoch+1)%r.epochs_per_eth1_voting_period==0)lists[1].clear();
  registry=prepare_phase0_effective_balances(registry,r.effective,checkpoint);
  registry.slashings=phase0_slashings_after_reset(epoch,registry.slashings,l.epochs_per_slashings_vector);

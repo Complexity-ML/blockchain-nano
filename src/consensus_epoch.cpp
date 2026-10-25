@@ -27,7 +27,7 @@ Phase0EpochState prepare_phase0_epoch(const Phase0EpochState& state,const Phase0
  out.ffg.checkpoints=prepare_phase0_justification_finalization(out.ffg,out.registry,out.randao,duties,checkpoint).checkpoints;
  out.registry=prepare_phase0_rewards(out.ffg,out.registry,out.randao,rules.rewards,checkpoint).registry_after;
  out.registry=prepare_phase0_registry_updates(out.registry,queue,out.ffg.checkpoints.finalized.epoch,checkpoint).registry_after;
- const auto debits=phase0_slashing_penalties(out.registry,slash);
+ const auto debits=phase0_slashing_penalties(out.registry,slash,checkpoint);
  for(const auto& [index,debit]:debits){if(checkpoint)checkpoint();out.registry.validators.at(index).balance-=debit;}
  if(checkpoint)checkpoint();
  out.eth1_votes=phase0_eth1_votes_after_reset(epoch,out.eth1_votes,rules.epochs_per_eth1_voting_period);
