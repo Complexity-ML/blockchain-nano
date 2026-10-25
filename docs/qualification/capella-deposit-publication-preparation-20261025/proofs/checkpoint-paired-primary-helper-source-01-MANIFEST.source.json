@@ -1,0 +1,16 @@
+{
+ "format":"nano-paired-primary-helper-source-v1",
+ "status":"SOURCE_ONLY_FROZEN_FOR_REVIEW",
+ "compiled":false,"testsExecuted":false,"repositoryEdited":false,
+ "runtimeActivationQualified":false,"productionQualified":false,
+ "payloadCount":4,"payloadBytes":75827,
+ "payloads":[
+  {"path":"source/tests/test_canonical_deposit_checkpoint.cpp","bytes":42649,"sha256":"17607ccfb18859eb1cd8e4850ec742ee20f1d8ea47da28608fc17fbf9fa0dc5a","apply":true},
+  {"path":"helper.patch","bytes":30196,"sha256":"caec11459107527d25ac34dba7acbc1c6c37696b2a16231b908d6b447c4ad57d","apply":false,"purpose":"Equivalent review diff; do not apply in addition to the complete source file."},
+  {"path":"README.source.md","bytes":2429,"sha256":"88129fb09b0cdf96dcd5eb84339bdc3253322e79b6fbe2da076e1af1e11e3573","apply":false},
+  {"path":"BASE.source.json","bytes":553,"sha256":"4f057a6cde2d569bd374bc64af19acf1661a32a534db7319268ff036b5c31a90","apply":false}
+ ],
+ "reviewAtFreeze":"Root and Recovery source reviews requested and pending; no GO or runtime result is inferred from freezing bytes.",
+ "scope":"One test-helper integration plus explicit configuration plumbing and paired post-close refusal assertions. Six existing groups/budgets/oracles retained. No production code/CMake/daily selection change in this companion.",
+ "adoption":"Parent verifies original driver and paired-provider dependency, completes source review, and composes this test file with the paired gate before the single intended qualification batch. This source manifest does not authorize runtime activation."
+}

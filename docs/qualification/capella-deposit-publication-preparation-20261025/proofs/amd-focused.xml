@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="6"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="19"
+	timestamp="2026-10-25T12:59:36"
+	>
+	<testcase name="consensus_canonical_deposit_checkpoint" classname="consensus_canonical_deposit_checkpoint" time="1.56105" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_deposit_checkpoint"/>
+		</properties>
+		<system-out>{"allAllocationsBounded":false,"authenticatedBeaconAdmissionsQualified":false,"databaseFenceFilesClosed":56,"databaseFenceFilesOpened":56,"deduplicatedEmissionCounterIsClosureBound":false,"executionPrimaryBatchExercised":true,"explicitStoreV4Exercised":true,"groups":6,"historyProofsCompared":49,"inFlightCloseDrainQualified":false,"migrationQualified":false,"networkConsensusQualified":false,"nonzeroDeposits":32,"nonzeroExecutionHeaders":96,"passed":true,"physicalPowerLossQualified":false,"productionQualified":false,"readOnlyPrimaryUnchanged":true,"realPrimaryBatchExercised":true,"runtimeConnected":false,"scenario":"canonical-deposit-checkpoint-component","separateValidSignedStoreSingleton":true,"syntheticBeaconTuples":97}
+</system-out>
+	</testcase>
+	<testcase name="storage_checkpoint_provider_paired_lifetime" classname="storage_checkpoint_provider_paired_lifetime" time="0.00849764" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_checkpoint"/>
+		</properties>
+		<system-out>{"arbitrarySleeps":0,"groups":4,"inflightKinds":2,"legacyValidCallsPreserved":true,"migrationQualified":false,"pairedCallbackGate":true,"passed":true,"physicalPowerLossQualified":false,"productionQualified":false,"reentryRejected":true,"runtimePublicationQualified":false,"scenario":"checkpoint-provider-paired-lifetime"}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_deposit_publication" classname="consensus_capella_deposit_publication" time="7.76558" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_deposit_checkpoint"/>
+		</properties>
+		<system-out>{"groups":4,"networkConsensusQualified":false,"passed":true,"productionQualified":false,"reactorHandoffQualified":false,"runtimeActivated":false,"scenario":"sealed-deposit-publication-preparation"}
+</system-out>
+	</testcase>
+	<testcase name="storage_checkpoint_blob_application_copy_bound" classname="storage_checkpoint_blob_application_copy_bound" time="0.0631595" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_checkpoint"/>
+		</properties>
+		<system-out>{"allAllocationsBounded":false,"groups":2,"oversizedViewCopyCallbacks":0,"oversizedViewHashCallbacks":0,"passed":true,"persistedFormatChanged":false,"processRssQualified":false,"productionQualified":false,"realStoreAndProviderExercised":true,"rocksDbInternalAllocationBounded":false,"scenario":"checkpoint-blob-application-copy-bound"}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_reactor_sync_failure" classname="consensus_capella_reactor_sync_failure" time="7.75583" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"blockedOperations":5,"executionOwner":false,"lostSuffix":false,"networkActivated":false,"physicalPowerLoss":false,"replay":true,"scenario":"capella-reactor-sync"}
+{"blockedOperations":5,"executionOwner":false,"lostSuffix":true,"networkActivated":false,"physicalPowerLoss":false,"replay":true,"scenario":"capella-reactor-sync"}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_cold_reactor_guards" classname="consensus_capella_cold_reactor_guards" time="2.15885" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"executionTip":true,"externalMutationsRejectedAndClosed":3,"networkQualified":false,"primaryCheckpoint":true,"scenario":"capella-cold-duplicate-storage-guards","witnessCheckpoint":true}
+{"allPublishedRecordsCold":true,"graphCapacityClosed":false,"idempotentMigration":true,"lateSnapshotReadRejected":true,"migrationAtomic":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"runtimeConfigBootQualified":false,"scenario":"capella-cold-reactor-integration","signerCommitmentUnchanged":true,"stickyColdFormat":true,"validChildDurablyAdmitted":true,"witnessPreviousPrimaryRecovered":true}
+</system-out>
+	</testcase>
+</testsuite>

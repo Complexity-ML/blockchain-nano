@@ -1,0 +1,115 @@
+{
+  "format": "nano-foundation-source-adoption-v1",
+  "base": "d2367f180f7b5d82ed1b8a5abbceb02720d1d86b",
+  "sourcesOnly": true,
+  "packets": [
+    {
+      "packet": "checkpoint-provider-paired-read-source-01",
+      "manifestSha256": "b8369bba01ea1eace4ff18f38b796185ef722872d4b3c1b326b7b36b436c456a"
+    },
+    {
+      "packet": "checkpoint-paired-primary-helper-source-01",
+      "manifestSha256": "6b959ccaeb86239281a293e07fbac8e7446db7e6764416cf376df2669c5d544e"
+    },
+    {
+      "packet": "deposit-runtime-preparation-source-01",
+      "manifestSha256": "23fdcf4e6e88a533adca6e42ab9f3fbca44d28edcd843c1171e6cb7948903c07"
+    },
+    {
+      "packet": "deposit-prepared-storage-source-03",
+      "manifestSha256": "d45a8fd8944d09b2badabc0ad9a54ed7cd583139ad606853d348957300ac19cd"
+    },
+    {
+      "packet": "deposit-durable-verifier-source-03",
+      "manifestSha256": "2354bb47bf68371474805ced1b88a4784552c76d925918e8f8ced8e516141413"
+    },
+    {
+      "packet": "deposit-preparation-build-ci-source-01",
+      "manifestSha256": "e9b1360f6898b03f2e6ff2b72fc82b541694e83a8d3cf1f64f29d0a41a48a814"
+    }
+  ],
+  "files": {
+    "include/nano/consensus_capella_cold_records.hpp": {
+      "packet": "checkpoint-provider-paired-read-source-01",
+      "bytes": 3394,
+      "sha256": "138de5545ee5f20e987759c5edc32d197ca8ad1ba00f1badf3df987196a4dc72"
+    },
+    "src/consensus_capella_checkpoint_provider.cpp": {
+      "packet": "checkpoint-provider-paired-read-source-01",
+      "bytes": 4728,
+      "sha256": "926549304e85d1d998eb25ac25b47d23c41e482598fc93fc0e93a3f3ad264b31"
+    },
+    "tests/test_checkpoint_provider_lifetime.cpp": {
+      "packet": "checkpoint-provider-paired-read-source-01",
+      "bytes": 11945,
+      "sha256": "6aadb00fd8ecb07671c15c073e31c63952e5ae237e7c1afd89ab81005237bc68"
+    },
+    "tests/test_canonical_deposit_checkpoint.cpp": {
+      "packet": "checkpoint-paired-primary-helper-source-01",
+      "bytes": 42649,
+      "sha256": "17607ccfb18859eb1cd8e4850ec742ee20f1d8ea47da28608fc17fbf9fa0dc5a"
+    },
+    "src/consensus_capella_deposit_publication.hpp": {
+      "packet": "deposit-runtime-preparation-source-01",
+      "bytes": 6908,
+      "sha256": "ecf1012243b9d91e00d750608c10e41db65b0cb62b48869700fa24a8f8c9ff0e"
+    },
+    "src/consensus_capella_deposit_publication.cpp": {
+      "packet": "deposit-runtime-preparation-source-01",
+      "bytes": 20707,
+      "sha256": "aa422410a5da1949d1633e6131879b327c6114635c73fdf7f38e53861cf5f092"
+    },
+    "include/nano/consensus_canonical_deposit_context.hpp": {
+      "packet": "deposit-runtime-preparation-source-01",
+      "bytes": 9263,
+      "sha256": "fdf95a49b793c17394bcf950cfb2def70e9ec0a33b2415dab1d1e90ec5fd4be1"
+    },
+    "src/consensus_canonical_deposit_context.cpp": {
+      "packet": "deposit-runtime-preparation-source-01",
+      "bytes": 56031,
+      "sha256": "f7d2e15433da26ab768c0de430375bbad3b060ede2dfb957cc143438a088cea7"
+    },
+    "tests/test_capella_deposit_publication.cpp": {
+      "packet": "deposit-runtime-preparation-source-01",
+      "bytes": 20803,
+      "sha256": "39a9cb82d330b869bd4fca51b50e9e91026943fe3e729efe4d1d7a77871ad78e"
+    },
+    "include/nano/storage.hpp": {
+      "packet": "deposit-prepared-storage-source-03",
+      "bytes": 14871,
+      "sha256": "5c3cd8d5047dbd541a6fc1bb1edb5ade7758df32a01f4cc45312b5dd22606e2b"
+    },
+    "src/storage.cpp": {
+      "packet": "deposit-prepared-storage-source-03",
+      "bytes": 83432,
+      "sha256": "d64ee40030995b473d76ffc3ad59ba1556548ed2e09b4e027e35d744178e6930"
+    },
+    "src/consensus_capella_reactor.cpp": {
+      "packet": "deposit-durable-verifier-source-03",
+      "bytes": 131344,
+      "sha256": "7eae8ed71ee2cee24033ee1f2a60a77830ada753877a43b60d424ce65a0ea3b5"
+    },
+    "CMakeLists.txt": {
+      "packet": "deposit-preparation-build-ci-source-01",
+      "bytes": 187151,
+      "sha256": "891821b3c90d648af6d0f7039271bd0efff0825bd90968530d2a7ca204f20279"
+    },
+    "scripts/ci/core.sh": {
+      "packet": "deposit-preparation-build-ci-source-01",
+      "bytes": 10824,
+      "sha256": "51910f99e553ff2e945ac0610cfaaa2c0dbd378f5a022373067d2bb54b746c73"
+    },
+    "scripts/ci/check-core.cmake": {
+      "packet": "deposit-preparation-build-ci-source-01",
+      "bytes": 11740,
+      "sha256": "ecb40932491d071add2e4edcc666b3ff3368455acb718b23a5eb45d4fd7580b4"
+    },
+    "scripts/ci/check-core.test.mjs": {
+      "packet": "deposit-preparation-build-ci-source-01",
+      "bytes": 19989,
+      "sha256": "71e2ab1eb8837f0f1041c379cbe2de53d25a691304650e470cbf4e4198a12f1d"
+    }
+  },
+  "compiled": false,
+  "runtimeActivated": false
+}

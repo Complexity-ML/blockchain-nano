@@ -1,0 +1,23 @@
+{
+  "format":"nano-paired-checkpoint-provider-source-v1",
+  "status":"SOURCE_ONLY_FROZEN_FOR_PARENT_REVIEW_AND_QUALIFICATION",
+  "compiled":false,"testsExecuted":false,"repositoryEdited":false,
+  "runtimePublicationQualified":false,"productionQualified":false,
+  "payloadCount":8,"payloadBytes":30747,
+  "payloads":[
+    {"path":"source/include/nano/consensus_capella_cold_records.hpp","bytes":3394,"sha256":"138de5545ee5f20e987759c5edc32d197ca8ad1ba00f1badf3df987196a4dc72","apply":true},
+    {"path":"source/src/consensus_capella_checkpoint_provider.cpp","bytes":4728,"sha256":"926549304e85d1d998eb25ac25b47d23c41e482598fc93fc0e93a3f3ad264b31","apply":true},
+    {"path":"source/tests/test_checkpoint_provider_lifetime.cpp","bytes":11945,"sha256":"6aadb00fd8ecb07671c15c073e31c63952e5ae237e7c1afd89ab81005237bc68","apply":true},
+    {"path":"CMake.fragment.txt","bytes":416,"sha256":"31aa9843421b6e4d2407462bb4ba699007aae4d5542d243e92ea2e5e2eeb797e","apply":"parent integration fragment"},
+    {"path":"README.source.md","bytes":4579,"sha256":"59567c316492f1838c1ebea37c888223dbb8859583678bdd9c2a230cace9668a","apply":false},
+    {"path":"BASE.source.json","bytes":1116,"sha256":"89356206577248676697350474d54f0f127a75938ffe913257ca7eafbe62a9f2","apply":false},
+    {"path":"rejected-source/provider-source-no-go-01.cpp","bytes":4008,"sha256":"7096ff3624ef65d7a198a318c35f4415d644f3840a66d817fbde4d7b9338de35","apply":false,"status":"UNEXECUTED_SOURCE_NO_GO"},
+    {"path":"rejected-source/NO-GO.source.md","bytes":561,"sha256":"b80724a70cb708f12f44e302d7e459deb71144f8e93755915a94dfb3ac6fe3cd","apply":false}
+  ],
+  "review":{
+    "recoverySourceAudit":"Source GO on provider92654930/header138de554/test6aadb00f, including the cross-thread foreign-provider contention correction and deterministic two-held-callback regressions. No execution.",
+    "root":"Second source review pending at freeze; parent requested freeze now and owns adoption/build/runtime evidence.",
+    "sourceMerge":"Not claimed as a reviewer of the final package; parent assigned it separate runtime preparation work."
+  },
+  "adoption":"Verify original source pins and complete composed closure. Apply only the three source payloads and deliberate CMake integration. Rejected source is retained history, never an alternative executable. No runtime activation, prepared-publication capability, generation authentication or physical/global duration guarantee is established."
+}

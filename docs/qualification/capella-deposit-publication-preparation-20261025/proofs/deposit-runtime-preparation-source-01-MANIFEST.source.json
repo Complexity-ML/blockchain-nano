@@ -1,0 +1,88 @@
+{
+  "format": "nano-source-package-manifest-v1",
+  "package": "deposit-runtime-preparation-source-01",
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "rootDeclaredRepositoryRevisionPrefix": "d2367f18",
+  "payloadFiles": 8,
+  "payloadBytes": 175377,
+  "files": [
+    {
+      "path": "source/src/consensus_capella_deposit_publication.hpp",
+      "bytes": 6908,
+      "sha256": "ecf1012243b9d91e00d750608c10e41db65b0cb62b48869700fa24a8f8c9ff0e"
+    },
+    {
+      "path": "source/src/consensus_capella_deposit_publication.cpp",
+      "bytes": 20707,
+      "sha256": "aa422410a5da1949d1633e6131879b327c6114635c73fdf7f38e53861cf5f092"
+    },
+    {
+      "path": "source/include/nano/consensus_canonical_deposit_context.hpp",
+      "bytes": 9263,
+      "sha256": "fdf95a49b793c17394bcf950cfb2def70e9ec0a33b2415dab1d1e90ec5fd4be1"
+    },
+    {
+      "path": "source/src/consensus_canonical_deposit_context.cpp",
+      "bytes": 56031,
+      "sha256": "f7d2e15433da26ab768c0de430375bbad3b060ede2dfb957cc143438a088cea7"
+    },
+    {
+      "path": "source/tests/test_capella_deposit_publication.cpp",
+      "bytes": 20803,
+      "sha256": "39a9cb82d330b869bd4fca51b50e9e91026943fe3e729efe4d1d7a77871ad78e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5062,
+      "sha256": "6634cbf16f0b6b6d0fa98986996046d928173e80da14cb8fbc561648a78dfad7"
+    },
+    {
+      "path": "BASE-PINS.source.json",
+      "bytes": 3173,
+      "sha256": "1e5dc0500a955eecfdd164af2dbab32d84ab6f67a6c101dcd455e67dc9bdec35"
+    },
+    {
+      "path": "runtime-preparation.patch",
+      "bytes": 53430,
+      "sha256": "927218cc5e88dcdad8420d544e558c58d0da84c6778cfb7c65324a4284a359aa"
+    }
+  ],
+  "sourceReview": {
+    "peer": "/root/recovery_source_audit",
+    "verdict": "GO_SOURCE_BOUNDED",
+    "scope": "Five code payloads, initial helper body, restricted Context clone, owned archives delta, full four-group test and README; composed with Root Storage03 and FixedVerifier03.",
+    "codeAndTestsExecutedByAuthorOrPeer": false
+  },
+  "requiredCompositionManifests": [
+    {
+      "path": "../deposit-prepared-storage-source-03/MANIFEST.source.json",
+      "bytes": 627,
+      "sha256": "d45a8fd8944d09b2badabc0ad9a54ed7cd583139ad606853d348957300ac19cd"
+    },
+    {
+      "path": "../deposit-durable-verifier-source-03/MANIFEST.source.json",
+      "bytes": 353,
+      "sha256": "2354bb47bf68371474805ced1b88a4784552c76d925918e8f8ced8e516141413"
+    },
+    {
+      "path": "../checkpoint-provider-paired-read-source-01/MANIFEST.source.json",
+      "bytes": 2451,
+      "sha256": "b8369bba01ea1eace4ff18f38b796185ef722872d4b3c1b326b7b36b436c456a"
+    }
+  ],
+  "qualifications": {
+    "compiled": false,
+    "testsExecuted": false,
+    "runtimeActivated": false,
+    "reactorHandoffQualified": false,
+    "witnessRecoveryQualified": false,
+    "physicalPowerLossQualified": false,
+    "productionQualified": false
+  },
+  "limits": [
+    "The source singleton test has anchor=head; it does not demonstrate the separate Storage retention DAG guard.",
+    "Primary owner address is a lifetime contract; shutdown/commit serialization and owner lifetime remain Reactor responsibilities.",
+    "Logical emissions, tree/cache/delta bounds do not establish global restore/GC work, physical RSS or OS hard deadlines.",
+    "Root owns CMake, runtime publication, Blockchain and sequential witness integration and actual qualification."
+  ]
+}
