@@ -14,19 +14,32 @@ const quantity=n=>'0x'+n.toString(16);
 const owned=value=>structuredClone(value);
 
 export function validateLifecycleMode(value){
- const v=owned(value);if(v&&typeof v==='object')for(const k of ['privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled'])if(!Object.hasOwn(v,k))v[k]=false;exact(v,['format','identities','deadlines','resources','syntheticActionAuthorized','intentionallyAuthorConflictingHeaders','privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled'],'mode');for(const k of ['privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled'])need(typeof v[k]==='boolean','explicit '+k+' gate');
- need(v.format==='nano-fresh-validator-lifecycle-v1'&&v.syntheticActionAuthorized===true&&v.intentionallyAuthorConflictingHeaders===true,'explicit synthetic action authority');
+ const v=owned(value),v2=v?.format==='nano-fresh-validator-lifecycle-v2';if(v&&typeof v==='object')for(const k of ['privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled'])if(!Object.hasOwn(v,k))v[k]=false;exact(v,['format','identities','deadlines','resources','syntheticActionAuthorized','intentionallyAuthorConflictingHeaders','privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled',...(v2?['planningProfile']:[])],'mode');for(const k of ['privateVpsLifecycleTransferAuthorized','crossOwnerEvidenceTransferAuthorized','runtimeDriverEnabled'])need(typeof v[k]==='boolean','explicit '+k+' gate');
+ need(['nano-fresh-validator-lifecycle-v1','nano-fresh-validator-lifecycle-v2'].includes(v.format)&&v.syntheticActionAuthorized===true&&v.intentionallyAuthorConflictingHeaders===true,'explicit synthetic action authority');
+ if(v2){const p=v.planningProfile;exact(p,['path','sha256','bytes'],'planning profile Artifact');need(typeof p.path==='string'&&p.path.startsWith('/')&&p.path.length<=4096&&p.path.split('/').slice(1).every(x=>x!==''&&x!=='.'&&x!=='..')&&!/[\0\r\n]/.test(p.path)&&/^[0-9a-f]{64}$/.test(p.sha256)&&Number.isSafeInteger(p.bytes)&&p.bytes>0&&p.bytes<=1048576,'pinned public planning profile');}
  exact(v.identities,roles,'identities');
  for(const role of roles){const id=v.identities[role];exact(id,['owner','keyEnv','publicKey'],role);need(owners.includes(id.owner)&&typeof id.keyEnv==='string'&&id.keyEnv.length<=128&&/^NANO_TEST_CAPELLA_NETWORK_KEY_[A-Z0-9_]*$/.test(id.keyEnv)&&publicPattern.test(id.publicKey),role+' public owner identity');}
  need(v.identities.voluntaryExit.publicKey!==v.identities.slashing.publicKey&&v.identities.voluntaryExit.keyEnv!==v.identities.slashing.keyEnv,'disjoint exit and slashing identities');
- exact(v.deadlines,['registrationMs','activationMs','finalityMs','restoreMs','actionMs','auditMs','maximumEpochsAfterActivation','maximumRunMs'],'deadlines');
+ exact(v.deadlines,['registrationMs','activationMs','finalityMs','restoreMs','actionMs','auditMs','maximumEpochsAfterActivation','maximumRunMs',...(v2?['proposerMs']:[])],'deadlines');
  for(const [key,n] of Object.entries(v.deadlines))positive(n,key);
  need(v.deadlines.maximumRunMs<=2147483647,'finite whole-run timer bound');
- for(const key of ['registrationMs','activationMs','finalityMs','restoreMs','actionMs','auditMs'])need(v.deadlines[key]<=v.deadlines.maximumRunMs,key+' exceeds total');
+ for(const key of ['registrationMs','activationMs','finalityMs','restoreMs','actionMs','auditMs',...(v2?['proposerMs']:[])])need(v.deadlines[key]<=v.deadlines.maximumRunMs,key+' exceeds total');
  exact(v.resources,['maximumWallSeconds','maximumHistoryBlocks','maximumArchiveBytes','maximumIndexBytes','maximumInventoryFiles','maximumInventoryBytes'],'resources');
  for(const [key,n] of Object.entries(v.resources))need(lifecycleQuantity(n,key)>0n,key+' positive quantity');
  const wall=BigInt(v.resources.maximumWallSeconds);need(wall<=600n&&wall*1000n<=BigInt(v.deadlines.auditMs)&&(wall<60n?wall:60n)*1000n<=BigInt(v.deadlines.actionMs),'tool wall budget exceeds bounded audit/action phase');
  return v;
+}
+
+// An optional longer event phase belongs only to the explicit V2 recipe.
+// Legacy V1 files retain their old field shape and finality-sized searches.
+export function lifecycleProposalMs(mode){const v=validateLifecycleMode(mode);return v.format==='nano-fresh-validator-lifecycle-v2'?v.deadlines.proposerMs:v.deadlines.finalityMs;}
+export function lifecycleSequentialPhaseBudget(mode){
+ const v=validateLifecycleMode(mode),d=v.deadlines,P=BigInt(lifecycleProposalMs(v)),F=BigInt(d.finalityMs);
+ // Six common-finality calls, two operation-inclusion searches and two
+ // withdrawal searches are distinct from the four same-key proposal searches.
+ const lifecycle=BigInt(d.registrationMs)+BigInt(d.activationMs)+10n*F+4n*P+2n*BigInt(d.restoreMs)+2n*BigInt(d.actionMs)+3n*BigInt(d.auditMs);
+ const mac=2n*(BigInt(d.restoreMs)+F+2n*P);
+ return {lifecycle,mac,initialFinality:F,proposalMs:P,finalityMs:F};
 }
 
 export function deriveLifecycleParameters(profileBytes,mode,{maximumBootstrapAgeMs=0}={}){
@@ -42,7 +55,7 @@ export function deriveLifecycleParameters(profileBytes,mode,{maximumBootstrapAge
  const epochMs=slots*slotMs,exitDelay=1n+exit[2]+exit[3],earliest=exit[4]+(exitDelay>slashing[4]?exitDelay:slashing[4]),v=validateLifecycleMode(mode),d=v.deadlines;
  need(Number.isSafeInteger(maximumBootstrapAgeMs)&&maximumBootstrapAgeMs>=0,'bootstrap age budget');
  need(BigInt(d.maximumEpochsAfterActivation)>=earliest,'declared horizon is shorter than real tenure and withdrawal delay');
- const ancillary=BigInt(d.registrationMs)+BigInt(d.activationMs)+6n*BigInt(d.finalityMs)+2n*BigInt(d.restoreMs)+2n*BigInt(d.actionMs)+3n*BigInt(d.auditMs);
+ const ancillary=lifecycleSequentialPhaseBudget(v).lifecycle;
  const minimumRun=ancillary+BigInt(d.maximumEpochsAfterActivation)*epochMs;
  need(BigInt(d.maximumRunMs)>=minimumRun,'whole-run deadline omits real lifecycle interval or stages');
  const endSlot=(BigInt(d.maximumRunMs)+BigInt(maximumBootstrapAgeMs)+slotMs-1n)/slotMs+2n;
@@ -50,6 +63,29 @@ export function deriveLifecycleParameters(profileBytes,mode,{maximumBootstrapAge
  // Public streamer encoding: root32,parent32,slotLE8,lengthLE8,wireSha32.
  need(BigInt(v.resources.maximumIndexBytes)>=BigInt(v.resources.maximumHistoryBlocks)*112n,'scalar index budget cannot cover declared history');
  return {format:'nano-fresh-lifecycle-parameters-v1',slotsPerEpoch:quantity(slots),slotMs:quantity(slotMs),epochMs:quantity(epochMs),tenureEpochs:quantity(exit[4]),exitLookaheadEpochs:quantity(exit[2]),withdrawalDelayEpochs:quantity(exit[3]),slashingVectorEpochs:quantity(slashing[4]),earliestWithdrawalEpochsAfterActivation:quantity(earliest),maximumEpochsAfterActivation:quantity(BigInt(d.maximumEpochsAfterActivation)),maximumEndSlot:quantity(endSlot),minimumWholeRunMs:quantity(minimumRun),maximumRunMs:d.maximumRunMs,wallClockCompletionGuaranteed:false};
+}
+
+export function deriveLifecycleCampaignBudget(profileBytes,mode,{maximumBootstrapAgeMs=0,closeoutReserveMs,remainingWorkMs}={}){
+ const v=validateLifecycleMode(mode),parameters=deriveLifecycleParameters(profileBytes,v,{maximumBootstrapAgeMs}),d=v.deadlines,phases=lifecycleSequentialPhaseBudget(v);
+ need(Number.isSafeInteger(closeoutReserveMs)&&closeoutReserveMs>0&&closeoutReserveMs<d.maximumRunMs,'explicit global closeout reserve');
+ need(Number.isSafeInteger(remainingWorkMs)&&remainingWorkMs>=0&&remainingWorkMs<=d.maximumRunMs-closeoutReserveMs,'actual remaining original work budget');
+ const minimumWork=BigInt(parameters.minimumWholeRunMs)+phases.mac+phases.initialFinality;
+ need(minimumWork<=BigInt(remainingWorkMs),'remaining global work omits lifecycle, Mac or initial-finality phases');
+ const livePhaseMs=phases.lifecycle-3n*BigInt(d.auditMs),epochMs=lifecycleQuantity(parameters.epochMs);
+ const conservativeEpochHorizon=lifecycleQuantity(parameters.earliestWithdrawalEpochsAfterActivation)+(livePhaseMs+epochMs-1n)/epochMs;
+ if(v.format==='nano-fresh-validator-lifecycle-v2')need(BigInt(d.maximumEpochsAfterActivation)>=conservativeEpochHorizon,'declared epoch horizon omits live phase windows without assuming overlap');
+ const slotMs=lifecycleQuantity(parameters.slotMs),slots=lifecycleQuantity(parameters.slotsPerEpoch),eventWindow=phases.proposalMs>phases.finalityMs?phases.proposalMs:phases.finalityMs;
+ need(3n*slots+(eventWindow+slotMs-1n)/slotMs+1n<1024n,'declared event window exceeds unchanged ancestry horizon');
+ const p=JSON.parse(profileBytes),wire=p.common[0].executionLimits;
+ let maximumBlockBytes=null,archiveWorstCaseBytes=null;
+ if(v.format==='nano-fresh-validator-lifecycle-v2'){
+  need(Array.isArray(wire)&&wire.length===1,'planning profile maximum block wire shape');maximumBlockBytes=lifecycleQuantity(wire[0]);need(maximumBlockBytes>=404n,'profile maximum block wire bound');
+  archiveWorstCaseBytes=BigInt(v.resources.maximumHistoryBlocks)*(maximumBlockBytes+112n);
+  need(BigInt(v.resources.maximumArchiveBytes)>=archiveWorstCaseBytes,'archive capacity cannot cover declared history at profile wire bound');
+ }
+ return {format:'nano-lifecycle-campaign-budget-v1',phaseCounts:{lifecycleCommonFinality:6,operationSearches:2,withdrawalSearches:2,lifecycleProposalSearches:4,macProposalSearches:4,macCommonFinality:2,initialCommonFinality:1,lifecycleRestores:2,macRestores:2,actions:2,terminalAudits:3},
+  proposerMs:Number(phases.proposalMs),finalityMs:Number(phases.finalityMs),minimumWorkMs:quantity(minimumWork),remainingWorkMs,closeoutReserveMs,maximumRunMs:d.maximumRunMs,maximumEndSlot:parameters.maximumEndSlot,conservativeEpochHorizon:quantity(conservativeEpochHorizon),declaredEpochHorizon:quantity(BigInt(d.maximumEpochsAfterActivation)),
+  minimumHistoryBlocks:parameters.maximumEndSlot,minimumIndexBytes:quantity(BigInt(v.resources.maximumHistoryBlocks)*112n),maximumBlockBytes:maximumBlockBytes===null?null:quantity(maximumBlockBytes),archiveWorstCaseBytes:archiveWorstCaseBytes===null?null:quantity(archiveWorstCaseBytes),profileRewritten:false,forcedDeadlineExtensionAuthorized:false,campaignAuthorized:false,wallClockCompletionGuaranteed:false,productionQualified:false};
 }
 
 export function bindLifecycleIdentities(domain,prepared,declarations){

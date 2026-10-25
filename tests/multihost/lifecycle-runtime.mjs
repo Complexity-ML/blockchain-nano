@@ -6,7 +6,7 @@ import {constants} from 'node:fs';
 import {join,resolve,dirname} from 'node:path';
 import {tmpdir} from 'node:os';
 import {setTimeout as sleep} from 'node:timers/promises';
-import {validateLifecycleMode,deriveLifecycleParameters,bindLifecycleIdentities,lifecycleQuantity,lifecycleObservationFromBeacon,validateLifecycleDeposit,requireLifecycleTenure,validateLifecycleObservation} from './lifecycle.mjs';
+import {validateLifecycleMode,deriveLifecycleParameters,bindLifecycleIdentities,lifecycleQuantity,lifecycleObservationFromBeacon,validateLifecycleDeposit,requireLifecycleTenure,validateLifecycleObservation,lifecycleProposalMs} from './lifecycle.mjs';
 const need=(v,m)=>{if(!v)throw Error('Fresh lifecycle driver: '+m);};
 const exact=(v,k,m)=>need(v&&typeof v==='object'&&!Array.isArray(v)&&Object.keys(v).sort().join('\0')===[...k].sort().join('\0'),m+' exact fields');
 const q=n=>'0x'+BigInt(n).toString(16),root=/^0x[0-9a-f]{64}$/,shaPattern=/^[0-9a-f]{64}$/;
@@ -163,10 +163,22 @@ export function validateLifecycleTerminalProjection(r,{campaignId,requiredFinali
 }
 // The sequence here is driven by real observations. In-process tests can check
 // refusals/order only; they cannot qualify the adapters or a lifecycle campaign.
+export async function observeLifecycleProposal({ops,id,index,checkpoint,after,ms,wholeDeadline,activationEpoch,slotsPerEpoch,maximumEpochs,now=()=>performance.now()}){
+ ops.check();const began=now(),workEnd=ops.workDeadline?ops.workDeadline():wholeDeadline,until=Math.min(began+ms,wholeDeadline,workEnd);
+ need(Number.isFinite(began)&&Number.isFinite(until)&&Number.isSafeInteger(ms)&&ms>0&&until>began,'bounded original proposal phase');
+ const remaining=Math.floor(until-began);need(remaining>0&&typeof after==='bigint'&&after>=0n&&typeof activationEpoch==='bigint'&&activationEpoch>=0n&&typeof maximumEpochs==='bigint'&&maximumEpochs>0n&&typeof slotsPerEpoch==='bigint'&&slotsPerEpoch>0n,'usable proposal budget and fixed horizon');lifecycleQuantity(index);
+ need(lifecycleQuantity(lifecycleCheckpoint(checkpoint).epoch)<=activationEpoch+maximumEpochs,'proposal anchor exceeded fixed activation horizon');
+ const result=await ops.finalizedProposal(id,index,checkpoint,after,remaining,until);ops.check();const ended=now();
+ need(Number.isFinite(ended)&&ended>=began&&ended<until,'proposal completed after original phase/work deadline');
+ need(result&&root.test(result.root)&&lifecycleQuantity(result.slot)>after,'new finalized proposal after fixed journal/head floor');
+ need(lifecycleQuantity(result.slot)/slotsPerEpoch<=activationEpoch+maximumEpochs,'proposal exceeded fixed activation horizon');
+ if(Object.hasOwn(result,'resolvedIndex'))need(result.resolvedIndex===index,'proposal substituted fixed validator identity');return result;
+}
 export async function runFreshLifecycle({spec,domain,prepared,profileBytes,depositDocument,initialFinality,ops}){
  const mode=requireLifecycleRuntimeAuthority(spec),parameters=deriveLifecycleParameters(profileBytes,mode,{maximumBootstrapAgeMs:Number(BigInt(spec.clock.maximumDowntimeMs))}),bindings=bindLifecycleIdentities(domain,prepared,mode.identities),ids=bindings.identities;
- const deposit=validateLifecycleDeposit(depositDocument,domain,ids.voluntaryExit),rolling=lifecycleRollingFinalityWindow(parameters,mode.deadlines.finalityMs),began=performance.now(),until=began+mode.deadlines.maximumRunMs,maximumEpochs=lifecycleQuantity(parameters.maximumEpochsAfterActivation);let activation=null,headEpoch=0n,checkpoint=initialFinality,rollingSequence=0;lifecycleCheckpoint(checkpoint?.result?.lastCheckpoint);
- const check=()=>{ops.check();need(performance.now()<until,'whole-run finite horizon');if(activation!==null)need(headEpoch<=activation+maximumEpochs,'fixed epoch horizon missed');};
+ const proposerMs=lifecycleProposalMs(mode),deposit=validateLifecycleDeposit(depositDocument,domain,ids.voluntaryExit),rolling=lifecycleRollingFinalityWindow(parameters,Math.max(mode.deadlines.finalityMs,proposerMs)),began=performance.now(),until=began+mode.deadlines.maximumRunMs,maximumEpochs=lifecycleQuantity(parameters.maximumEpochsAfterActivation);let activation=null,headEpoch=0n,checkpoint=initialFinality,rollingSequence=0;lifecycleCheckpoint(checkpoint?.result?.lastCheckpoint);
+ const check=()=>{ops.check();need(performance.now()<until,'whole-run finite horizon');const finalizedEpoch=lifecycleQuantity(lifecycleCheckpoint(checkpoint.result.lastCheckpoint).epoch);headEpoch=headEpoch>finalizedEpoch?headEpoch:finalizedEpoch;if(activation!==null)need(headEpoch<=activation+maximumEpochs,'fixed epoch horizon missed');};
+ const proposal=(id,index,checkpoint,after)=>{check();return observeLifecycleProposal({ops,id,index,checkpoint,after,ms:proposerMs,wholeDeadline:until,activationEpoch:activation,slotsPerEpoch:lifecycleQuantity(parameters.slotsPerEpoch),maximumEpochs});};
  const wait=async(label,ms,callback)=>{const deadline=Math.min(until,performance.now()+ms);for(;;){check();need(performance.now()<deadline,label+' deadline');const x=await callback(deadline);check();need(performance.now()<deadline,label+' deadline');if(x)return x;await ops.sleep(Math.min(3000,Math.max(1,deadline-performance.now())));}};
  const observe=async(id,selector='head',phaseDeadline=until)=>{check();const h=await ops.header(id.owner,selector),m=h?.data?.header?.message;need(h?.execution_optimistic===false&&root.test(h?.data?.root)&&m&&root.test(m.state_root)&&/^(0|[1-9][0-9]*)$/.test(m.slot),'immutable Beacon HEAD/header');const epoch=BigInt(m.slot)/lifecycleQuantity(parameters.slotsPerEpoch);headEpoch=headEpoch>epoch?headEpoch:epoch;check();
   const baseEpoch=BigInt(checkpoint.result.lastCheckpoint.epoch),distance=BigInt(m.slot)-baseEpoch*lifecycleQuantity(parameters.slotsPerEpoch);
@@ -182,10 +194,10 @@ export async function runFreshLifecycle({spec,domain,prepared,profileBytes,depos
  exit=await wait('real activation',mode.deadlines.activationMs,async deadline=>{const r=await observe(ids.voluntaryExit,'head',deadline);return r&&BigInt(r.activationEpoch)!==(1n<<64n)-1n&&BigInt(r.epoch)>=BigInt(r.activationEpoch)&&BigInt(r.epoch)<BigInt(r.exitEpoch)?r:null;});activation=BigInt(exit.activationEpoch);
  const restartEvidence=[],actions={};
  checkpoint=await ops.finality(checkpoint.result.lastCheckpoint,'lifecycle-activation',mode.deadlines.finalityMs);
- const firstBefore=await ops.finalizedProposal(ids.voluntaryExit,exit.resolvedIndex,checkpoint.result.lastCheckpoint,0n,mode.deadlines.finalityMs);
+ const firstBefore=await proposal(ids.voluntaryExit,exit.resolvedIndex,checkpoint.result.lastCheckpoint,0n);
  const first=await ops.restore('after-activation',ids.voluntaryExit,firstBefore);restartEvidence.push(first);
  checkpoint=await ops.finality(first.finalized,'lifecycle-after-first-restore',mode.deadlines.finalityMs);
- first.afterProposalRoot=(await ops.finalizedProposal(ids.voluntaryExit,exit.resolvedIndex,checkpoint.result.lastCheckpoint,BigInt(first.cutoffSlot),mode.deadlines.finalityMs)).root;
+ first.afterProposalRoot=(await proposal(ids.voluntaryExit,exit.resolvedIndex,checkpoint.result.lastCheckpoint,BigInt(first.cutoffSlot))).root;
  await wait('real exit tenure',Number(maximumEpochs*lifecycleQuantity(parameters.epochMs)),async deadline=>{const r=await observe(ids.voluntaryExit,'head',deadline);if(!r)return null;exit=r;if(BigInt(r.epoch)<BigInt(r.activationEpoch)+BigInt(parameters.tenureEpochs))return null;requireLifecycleTenure(r,ids.voluntaryExit,parameters);return r;});
  for(const [role,kind] of [['voluntaryExit','voluntary_exit'],['slashing','proposer_slashing']]){
   const id=ids[role],observed=await observe(id);need(observed?.registered&&observed.slashed===false&&observed.withdrawalRecipient!==null,'eligible separate action identity');if(role==='voluntaryExit')requireLifecycleTenure(observed,id,parameters);
@@ -205,12 +217,12 @@ export async function runFreshLifecycle({spec,domain,prepared,profileBytes,depos
  const payoutCandidates=[];for(let i=0;i<2;++i){const role=['voluntaryExit','slashing'][i];payoutCandidates.push(await ops.finalizedWithdrawal(ids[role],payoutRows[i],checkpoint.result.lastCheckpoint,mode.deadlines.finalityMs));}
  const thirdCandidates=bindings.ownership.filter(x=>x.owner==='vps-docker'&&!Object.values(ids).some(id=>id.publicKey===x.publicKey));let third,thirdRow;
  for(const id of thirdCandidates){const r=await observe(id);if(r&&r.registered&&!r.slashed&&BigInt(r.activationEpoch)<=BigInt(r.epoch)&&BigInt(r.epoch)<BigInt(r.exitEpoch)){third=id;thirdRow=r;break;}}need(third,'third active unslashed VPS restart duty identity');
- const secondBefore=await ops.finalizedProposal(third,thirdRow.resolvedIndex,checkpoint.result.lastCheckpoint,0n,mode.deadlines.finalityMs);
+ const secondBefore=await proposal(third,thirdRow.resolvedIndex,checkpoint.result.lastCheckpoint,0n);
  const second=await ops.restore('after-payout',third,secondBefore);restartEvidence.push(second);
  checkpoint=await ops.finality(second.finalized,'lifecycle-after-second-restore',mode.deadlines.finalityMs);
- second.afterProposalRoot=(await ops.finalizedProposal(third,thirdRow.resolvedIndex,checkpoint.result.lastCheckpoint,BigInt(second.cutoffSlot),mode.deadlines.finalityMs)).root;
+ second.afterProposalRoot=(await proposal(third,thirdRow.resolvedIndex,checkpoint.result.lastCheckpoint,BigInt(second.cutoffSlot))).root;
  const evidence={requiredFinalized:lifecycleCheckpoint(checkpoint.result.lastCheckpoint),deposit,actions:Object.fromEntries(Object.entries(actions).map(([role,a])=>[role,{action:a.actionArtifact,acceptedJob:a.acceptedJobArtifact,inclusionRoot:a.inclusionRoot}])),restarts:restartEvidence.map(({cutoffSlot,beforeProposalRoot,afterProposalRoot,dutyPublicKey,sourceCapture,restoredCapture})=>({cutoffSlot,beforeProposalRoot,afterProposalRoot,dutyPublicKey,sourceCapture,restoredCapture}))};
- check();await ops.stageTerminalEvidence(evidence,{crossOwnerEvidenceTransferAuthorized:mode.crossOwnerEvidenceTransferAuthorized});
+ check();await ops.stageTerminalEvidence(evidence,{crossOwnerEvidenceTransferAuthorized:mode.crossOwnerEvidenceTransferAuthorized});check();
  // Return only a pending terminal commitment; run.mjs first stops/captures ALL
  // three owners, then invokes the mandatory in-situ closing audit and fences.
  return {format:'nano-fresh-lifecycle-runtime-pending-terminal-v1',bindings,parameters,evidence,payoutCandidatesObserved:2,restoresExecuted:2,canonicalReplayQualified:false,productionQualified:false};

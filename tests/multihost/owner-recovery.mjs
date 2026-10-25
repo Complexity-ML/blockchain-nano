@@ -11,7 +11,8 @@ const path=p=>need(typeof p==='string'&&isAbsolute(p)&&normalize(p)===p&&!/[\0\r
 // Existing lifecycle terminal audits remain counted by deriveLifecycleParameters.
 export function minimumMacOwnerRecoveryMs(deadlines){
  for(const key of ['restoreMs','finalityMs'])need(Number.isSafeInteger(deadlines?.[key])&&deadlines[key]>0,'positive recovery deadline '+key);
- return 2n*(BigInt(deadlines.restoreMs)+3n*BigInt(deadlines.finalityMs));
+ const proposer=deadlines.proposerMs??deadlines.finalityMs;need(Number.isSafeInteger(proposer)&&proposer>0,'positive recovery proposer deadline');
+ return 2n*(BigInt(deadlines.restoreMs)+BigInt(deadlines.finalityMs)+2n*BigInt(proposer));
 }
 export function relocateOwnerRuntimeConfiguration(node,{oldDataRoot,oldWitnessRoot,dataRoot,witnessRoot}){
  for(const p of [oldDataRoot,oldWitnessRoot,dataRoot,witnessRoot])path(p);
