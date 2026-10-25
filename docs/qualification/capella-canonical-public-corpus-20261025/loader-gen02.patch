@@ -1,0 +1,26 @@
+--- a/tests/support/capella_stream_public_corpus.hpp
++++ b/tests/support/capella_stream_public_corpus.hpp
+@@ -164,7 +164,7 @@
+  check(archives.contains(head_id)&&archives.at(head_id).slot==head.slot&&head.slot==previous_slot,"public corpus head is the complete signed tip");
+  check(execution.contains(declared_anchor)&&execution.size()==archives.size()+1&&(finalized.root==declared_anchor||archives.contains(finalized.root)),"public corpus complete anchor/finality oracle coverage");for(const auto& [id,_]:archives)check(execution.contains(id),"public corpus every archive oracle present before bootstrap");
+  std::optional<CheckpointArchiveEntry> sibling;
+- if(mode==PublicCorpusMode::Complete){check(!body.at("sibling").is_null(),"public corpus genuine sibling required");uint64_t sibling_bytes=raw_bytes;sibling=d::archive(body.at("sibling"),sibling_bytes);check(sibling->slot==archives.at(first_root).slot&&sibling->root!=archives.at(first_root).root,"public corpus distinct same-slot sibling");}
++ if(mode==PublicCorpusMode::Complete){check(!body.at("sibling").is_null(),"public corpus genuine sibling required");uint64_t sibling_bytes=raw_bytes;sibling=d::archive(body.at("sibling"),sibling_bytes);check(sibling->slot==archives.at(first_root).slot&&sibling->root!=archives.at(first_root).root&&test_root(sibling->root)!=declared_anchor,"public corpus distinct same-slot sibling");}
+  else check(body.at("sibling").is_null(),"public corpus stalled mode has no sibling");
+  const auto& statistics=body.at("producerStatistics");d::fields(statistics,{"scope","fixtureBlsSignatures","peakGeneratorRecords","peakGeneratorStateSszBytes","generatorPrunes","archiveBytes"});
+  check(statistics.at("scope")=="producer-generation-only"&&d::unsigned_number(statistics.at("archiveBytes"))==raw_bytes&&d::unsigned_number(statistics.at("fixtureBlsSignatures"))<=20000,"public corpus static producer provenance");
+@@ -179,11 +179,13 @@
+  check(state_bytes<=base.limits.total_state_bytes&&finalized.epoch<=head.slot/base.rules.transition.consensus.epoch.ffg.slots_per_epoch,"public corpus provenance/finality bounds");
+  if(mode==PublicCorpusMode::Complete){
+   check(prunes>0&&finalized.epoch>0,"public corpus complete mode genuine finality provenance");
++  const auto sibling_id=test_root(sibling->root);check(!base.initial.blocks.contains(sibling_id),"public corpus sibling cannot reuse an existing anchor record");
+   check(test_root(sibling->payload,116)==anchor,"public corpus sibling parent bound to fixed anchor");
+   const auto at=base.initial.timed.clock.genesis_time_ms+sibling->slot*base.rules.slot_duration_ms;
+   auto store=prepare_capella_resumed_store_tick(base.initial,at,base.rules,base.limits.replay_slots,base.limits.sync_trials,checkpoint);
+   const auto admitted=prepare_capella_resumed_fork_block(store,sibling->payload,base.rules,base.limits.replay_slots,base.limits.sync_trials,checkpoint);
+-  check(admitted&&admitted->blocks.contains(test_root(sibling->root)),"public corpus sibling must itself pass genuine Core admission");
++  check(admitted&&admitted->blocks.size()==store.blocks.size()+1&&admitted->blocks.contains(sibling_id),"public corpus sibling must itself pass genuine Core admission");
++  const auto& sibling_header=admitted->blocks.at(sibling_id).header();check(sibling_header.slot==sibling->slot&&sibling_header.parent_root==anchor,"public corpus newly admitted sibling identity differs");
+  }else check(prunes==0&&finalized==base.initial.timed.view.finalized,"public corpus stalled finality cannot be fabricated");
+  checkpoint();return {std::move(base),std::move(archives),std::move(sibling),std::move(execution),head,finalized,size_t(records),size_t(state_bytes),prunes,raw_bytes,statistics};
+ }

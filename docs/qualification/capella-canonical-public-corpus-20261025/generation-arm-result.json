@@ -1,0 +1,93 @@
+{
+  "format": "nano-root-bounded-canonical-audit-build-test-v1",
+  "passed": true,
+  "firstFailure": null,
+  "secondaryFailures": [],
+  "sourceCandidate": "7faf84e47dd300b6e3c68b9fc5d3c8c8b63dcca0",
+  "architecture": "aarch64",
+  "actualDockerExitCode": 0,
+  "elapsedMs": 79242,
+  "heldSourceAndProviderFiles": 977,
+  "heldFilesClosed": 977,
+  "operatorFdLimitTemporarilyRaised": false,
+  "operatorFdLimitRestored": true,
+  "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "imageBuilds": 0,
+  "gitArchivePayloadsByteExact": true,
+  "knownEmptyGitFixtures": 3,
+  "newGitInputAdmission": {
+    "stableSamples": 3,
+    "stableSpanMs": 2115,
+    "files": 952,
+    "payloadsBoundToGit": true,
+    "retainedAuthoritiesRefreshed": false
+  },
+  "newGitArchiveAdmission": {
+    "stableSamples": 3,
+    "stableSpanMs": 2037,
+    "files": 1,
+    "payloadsBoundToGit": true,
+    "retainedAuthoritiesRefreshed": false
+  },
+  "cleanCoreBuild": false,
+  "currentHeaderMmdClosureQualified": false,
+  "archiveProof": {
+    "membersBefore": 143,
+    "membersAfter": 144,
+    "replacedExisting": [
+      "consensus_capella_audit.cpp.o",
+      "storage.cpp.o"
+    ],
+    "added": [
+      "consensus_capella_canonical_stream.cpp.o"
+    ],
+    "unchangedObjectPayloads": 141,
+    "allKeptObjectsByteExact": true,
+    "retainedObjectsCompiledWithHistoricalHeaders": true,
+    "completeCurrentHeaderMmdClosureClaimed": false,
+    "coreSourceBase": "e53e06c05f1befa7fa3aeb4970f22987c073d1e3",
+    "productionSourceCandidate": "5dfb9ddcaaa5ba1e2a6bedf1d038ba0e388c8b60",
+    "productionSourceUnchanged": true
+  },
+  "testResults": [
+    {
+      "name": "run-corpus_generator-complete",
+      "exitCode": 0,
+      "stdout": "{\"artifact\":{\"bodyBytes\":4832583,\"bodySha256\":\"5f19c991c0624884cda0651e10646f40a6ff55b4f07c3a7da9b88f78fa3f3447\",\"manifestBytes\":196,\"manifestSha256\":\"1abc347450dcb50b8c3d0f9ffa4327bf351ec202a35e9ea974e98a0d760c5dfd\",\"mode\":\"complete\",\"producerStatistics\":{\"archiveBytes\":1528740,\"fixtureBlsSignatures\":10271,\"generatorPrunes\":125,\"peakGeneratorRecords\":32,\"peakGeneratorStateSszBytes\":666728,\"scope\":\"producer-generation-only\"}},\"elapsedMs\":55200,\"generationPerformanceQualified\":false,\"newNetworkIdentities\":false,\"passed\":true,\"productionQualified\":false,\"runtimeReplayQualified\":false,\"scenario\":\"fixed-public-stream-corpus-export\",\"wholeDriverPeakRssKiB\":37936}\n"
+    },
+    {
+      "name": "run-corpus_generator-stalled",
+      "exitCode": 0,
+      "stdout": "{\"artifact\":{\"bodyBytes\":965801,\"bodySha256\":\"26f35b171ee65a6060010f0359e01cb4f8eefcf8e0f789b9e7fff79f9838edcf\",\"manifestBytes\":194,\"manifestSha256\":\"fecfc2fdf55bf8b486d8f1751c81094665a35772f82c6e5258f7eefacbdaf63c\",\"mode\":\"stalled\",\"producerStatistics\":{\"archiveBytes\":261120,\"fixtureBlsSignatures\":512,\"generatorPrunes\":0,\"peakGeneratorRecords\":256,\"peakGeneratorStateSszBytes\":5374280,\"scope\":\"producer-generation-only\"}},\"elapsedMs\":10672,\"generationPerformanceQualified\":false,\"newNetworkIdentities\":false,\"passed\":true,\"productionQualified\":false,\"runtimeReplayQualified\":false,\"scenario\":\"fixed-public-stream-corpus-export\",\"wholeDriverPeakRssKiB\":31588}\n"
+    }
+  ],
+  "actualCompletedRuntimeMarkers": [
+    {
+      "name": "run-corpus_generator-complete",
+      "actualExitCode": 0,
+      "stdoutSha256": "dc1352f0be883ffeadfa62d9ee87d5ded4c0d6249ce0b256488825bcbb371d26",
+      "stdoutBytes": 667
+    },
+    {
+      "name": "run-corpus_generator-stalled",
+      "actualExitCode": 0,
+      "stdoutSha256": "86f750aaef45c12f9aab07e16f34fb249bb4cee856d9f9f632fbb035e8248b18",
+      "stdoutBytes": 662
+    }
+  ],
+  "inheritedRuntime": [],
+  "completedCoreCompilationsRepeated": false,
+  "coreOptimization": "O3",
+  "defaultTestDriverOptimization": "O1",
+  "actualTestDriverOptimizations": {
+    "corpus_generator": "O3"
+  },
+  "linkedPrograms": [],
+  "networkCampaignStarted": false,
+  "realFundsUsed": false,
+  "productionQualified": false,
+  "newCore": {
+    "sha256": "d3de12dc48c620cb1049c5bc40896ac3286df5c0b2dcbef073f0343e89a06031",
+    "bytes": 41487030
+  }
+}

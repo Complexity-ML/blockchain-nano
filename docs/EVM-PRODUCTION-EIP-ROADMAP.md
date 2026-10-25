@@ -6356,3 +6356,12 @@ Preuves : [Core ARM64/AMD64](qualification/consensus-cancellation-20261025/READM
 [Preuves et limites](qualification/capella-bounded-canonical-audit-20261025/README.md) : ARM64 et AMD64 Docker passent chacun six groupes sur 160 blocs signés après l'ancre, fenêtres 64 et 48, checkpoint ancien prouvé après élagage, signature ancienne corrompue refusée et fichiers des DB source et copie full9/SHA inchangés. Les journaux privés anti-double-signature ne sont pas qualifiés par ce lot. Pic de fenêtre : 33 records / 686 517 octets SSZ. Les RSS de 84 508 672 et 81 203 200 octets concernent les drivers entiers, sans borne totale de l'audit ou des dépôts auxiliaires.
 
 AMD03 qualifie ce scénario borné ; il ne requalifie pas AMD02, dont le legacy 1 026 échoue à 300 s, ni AMD01/ARM01. Le legacy long ARM O1 reste hérité. Les reçus et l'imprécision du défaut global d'optimisation sont conservés avec leur note de commandes. CI02 ne rejoue qu'un contrôle JUnit (1 PASS / 15 SKIP), après CI01 FAILED ; aucun job CI n'est qualifié. Archive Core : 141 objets historiques sur 144, sans fermeture complète des headers courants ; `nano --help` n'est pas un audit CLI complet. Aucun budget élargi ni test supprimé, aucun EIP/fork promu. Les critères de production restants demeurent inchangés, dont coût CPU long, mémoire auxiliaire, scratch conservé, CI effective, revue de sécurité et duties/finalité réels sur trois environnements ; campagne 04 FAILED, objectif non atteint.
+
+
+---
+
+### 25 octobre 2026 — corpus consensus, aucun profil EVM promu
+
+[Preuves du corpus signé et des deux replays](qualification/capella-canonical-public-corpus-20261025/README.md). Sources Core5df inchangées : le nouveau runner rejoue1 026 blocs publics signés contre les attentes Block/stateRoot figées du producteur Nano ; ces attentes ne sont pas un oracle indépendant Ethereum. Les replays ARM64/AMD64 et refus passent dans ce périmètre consensus.
+
+Les statuts EVM/RPC/EIP précédents sont conservés : aucune règle de gas, précompilation, transaction, sérialisation ou activation réseau n'est modifiée. Le Shanghai de cette fixture ne prouve pas une activation réseau. L'ancien combiné AMD300s demeure FAILED ; le mode corpus n'est ni une nouvelle qualification Ethereum ni un build complet. CI effective refusée avant étapes sur9fb68b85, objets141/144 historiques, limites mémoire auxiliaire et revue indépendante ouvertes. Conditions Base/native/bridge USDC/Doppler non adoptées par ces tests.

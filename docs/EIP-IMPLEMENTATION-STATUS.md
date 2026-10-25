@@ -8821,3 +8821,18 @@ Preuves : [Core ARM64/AMD64](qualification/consensus-cancellation-20261025/READM
 [Preuves et limites](qualification/capella-bounded-canonical-audit-20261025/README.md) : ARM64 et AMD64 Docker passent chacun six groupes sur 160 blocs signés après l'ancre, fenêtres 64 et 48, checkpoint ancien prouvé après élagage, signature ancienne corrompue refusée et fichiers des DB source et copie full9/SHA inchangés. Les journaux privés anti-double-signature ne sont pas qualifiés par ce lot. Pic de fenêtre : 33 records / 686 517 octets SSZ. Les RSS de 84 508 672 et 81 203 200 octets concernent les drivers entiers, sans borne totale de l'audit ou des dépôts auxiliaires.
 
 AMD03 qualifie ce scénario borné ; il ne requalifie pas AMD02, dont le legacy 1 026 échoue à 300 s, ni AMD01/ARM01. Le legacy long ARM O1 reste hérité. Les reçus et l'imprécision du défaut global d'optimisation sont conservés avec leur note de commandes. CI02 ne rejoue qu'un contrôle JUnit (1 PASS / 15 SKIP), après CI01 FAILED ; aucun job CI n'est qualifié. Archive Core : 141 objets historiques sur 144, sans fermeture complète des headers courants ; `nano --help` n'est pas un audit CLI complet. Aucun budget élargi ni test supprimé, aucun EIP/fork promu. Les critères de production restants demeurent inchangés, dont coût CPU long, mémoire auxiliaire, scratch conservé, CI effective, revue de sécurité et duties/finalité réels sur trois environnements ; campagne 04 FAILED, objectif non atteint.
+
+
+---
+
+### 25 octobre 2026 — état courant du lot corpus signé
+
+[Preuves du corpus signé et des deux replays](qualification/capella-canonical-public-corpus-20261025/README.md). Aucun statut d'EIP précédent n'est promu.
+
+| Élément | Statut précis | Preuve / limite |
+|---|---|---|
+| Rejeu canonique Core | Implémenté, qualifié en composant |1 026 descendants, ARM64/AMD64 mêmes hashes, neuf refus Core conservés ; pas de réseau réel. |
+| Entrées publiques figées / chargeur | Implémenté, cinq refus qualifiés | SHA, taille, mode, absence, sibling/ancre intentionnellement réengagé ; quatre signatures de bootstrap comptées. |
+| Workflow combiné historique AMD | FAILED conservé |300 007 ms, génération208 928 ms puis949 visites avant refus ; séparation de corpus ne le requalifie pas. |
+| Auxiliaires de dépôts | Partiel ; contexte froid non commencé | Pic observé de1 007 ancêtres avec zéro dépôt, fenêtre33 ; plan Source sans limite totale mémoire démontrée. |
+| Nœud / build / CI / production | Ouverts | Core source inchangé,141/144 objets historiques ; CI9fb refusée avant étapes, campagne04 FAILED, audit indépendant et critères réseau/bridge/Doppler ouverts. |

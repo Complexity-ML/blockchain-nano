@@ -1,0 +1,109 @@
+{
+  "format": "nano-root-pinned-corpus-cross-arch-v1",
+  "passed": true,
+  "exactFieldsCompared": [
+    "signedBlocks",
+    "headRoot",
+    "executionBlockHash",
+    "executionStateRoot",
+    "actualFinalizedEpoch",
+    "prunes",
+    "liveRecordPeak",
+    "liveStateSszPeakBytes",
+    "liveStateSszPlusNextReservePeakBytes",
+    "peakDepositAncestorRecords",
+    "largestDepositHistoryCount",
+    "historicalForkChoiceVerified"
+  ],
+  "architectures": {
+    "arm": {
+      "observed": {
+        "signedBlocks": 1026,
+        "headRoot": "0x8e59d99a5b133b75877750375633396032b7216dfaec1a74ea37e775b7a9445a",
+        "executionBlockHash": "0x8770f10789d07c09903ef1b3ba451c5a62ab7a102e1e32842c179198346cd685",
+        "executionStateRoot": "0x42ffe6cd8565087b92b6b5a0cc119abc3fbf2f18a951240afe41287de8fd5a4d",
+        "actualFinalizedEpoch": 126,
+        "prunes": 125,
+        "liveRecordPeak": 33,
+        "liveStateSszPeakBytes": 686517,
+        "liveStateSszPlusNextReservePeakBytes": 4861032,
+        "peakDepositAncestorRecords": 1007,
+        "largestDepositHistoryCount": 0,
+        "historicalForkChoiceVerified": false
+      },
+      "wholeInvocationMs": 28753,
+      "wholeInvocationPeakRssKiB": 50688,
+      "phases": {
+        "bad-signature.index": 52,
+        "core-stream-replay-1026": 25746,
+        "core-stream-stalled-window-refusal": 2670,
+        "explicit-cancellation-refusal": 0,
+        "fixture-load-pinned-1026": 114,
+        "fixture-load-pinned-stalled-255": 62,
+        "missing.index": 9,
+        "pinned-corpus-input-refusals": 86,
+        "private-index-seal-and-mutation-refusals": 1,
+        "wrong-branch.index": 9
+      },
+      "stdout": {
+        "bytes": 9018,
+        "sha256": "cc43ead5d33cb5d9a953c19a8910867b23955b9b70086a9ee9de3fc413bc95c6"
+      },
+      "groups": 4,
+      "coreRefusals": 9,
+      "inputRefusals": 5,
+      "bootstrapSignatures": 4,
+      "sourceCandidate": "e2ccf1558777e3e1daa9264aad6f6d31d06d0a81"
+    },
+    "amd": {
+      "observed": {
+        "signedBlocks": 1026,
+        "headRoot": "0x8e59d99a5b133b75877750375633396032b7216dfaec1a74ea37e775b7a9445a",
+        "executionBlockHash": "0x8770f10789d07c09903ef1b3ba451c5a62ab7a102e1e32842c179198346cd685",
+        "executionStateRoot": "0x42ffe6cd8565087b92b6b5a0cc119abc3fbf2f18a951240afe41287de8fd5a4d",
+        "actualFinalizedEpoch": 126,
+        "prunes": 125,
+        "liveRecordPeak": 33,
+        "liveStateSszPeakBytes": 686517,
+        "liveStateSszPlusNextReservePeakBytes": 4861032,
+        "peakDepositAncestorRecords": 1007,
+        "largestDepositHistoryCount": 0,
+        "historicalForkChoiceVerified": false
+      },
+      "wholeInvocationMs": 108936,
+      "wholeInvocationPeakRssKiB": 51776,
+      "phases": {
+        "bad-signature.index": 220,
+        "core-stream-replay-1026": 97984,
+        "core-stream-stalled-window-refusal": 9873,
+        "explicit-cancellation-refusal": 0,
+        "fixture-load-pinned-1026": 348,
+        "fixture-load-pinned-stalled-255": 192,
+        "missing.index": 30,
+        "pinned-corpus-input-refusals": 251,
+        "private-index-seal-and-mutation-refusals": 3,
+        "wrong-branch.index": 30
+      },
+      "stdout": {
+        "bytes": 9031,
+        "sha256": "059f6d7676f70bb8bb71c561c01afe17db3d2c9e824c1ead6bb93651d55a7513"
+      },
+      "groups": 4,
+      "coreRefusals": 9,
+      "inputRefusals": 5,
+      "bootstrapSignatures": 4,
+      "sourceCandidate": "e2ccf1558777e3e1daa9264aad6f6d31d06d0a81"
+    }
+  },
+  "equalityUsesNoNormalization": true,
+  "productionSourceUnchanged": "5dfb9ddcaaa5ba1e2a6bedf1d038ba0e388c8b60",
+  "newCoreCompilations": 0,
+  "imageBuilds": 0,
+  "coldOsCacheClaimed": false,
+  "freshVerifierProcessWithoutLongGeneration": true,
+  "oldCombinedWorkflowRequalified": false,
+  "totalMemoryBoundProven": false,
+  "networkFinalityProven": false,
+  "nativeMacRuntimeProven": false,
+  "productionQualified": false
+}
