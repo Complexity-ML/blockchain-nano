@@ -2,6 +2,7 @@
 // No network actor, validator journal, external key, seed or campaign input.
 #include "nano/consensus_capella_audit.hpp"
 #include "nano/consensus_capella_canonical_stream.hpp"
+#include "nano/storage_memory_policy.hpp"
 #include "support/capella_stream_signed_fixture.hpp"
 #include <rocksdb/db.h>
 #include <openssl/evp.h>
@@ -17,13 +18,19 @@ using namespace nano;
 namespace fs=std::filesystem;
 namespace f=nano::test::canonical_stream_fixture;
 constexpr size_t signed_blocks=160,fixture_live_blocks=64,explicit_live_blocks=48;
-uint64_t process_high_water_bytes(){rusage usage{};f::check(::getrusage(RUSAGE_SELF,&usage)==0&&usage.ru_maxrss>=0,"whole driver RSS observation");
+constexpr ChainStoreMemoryPolicy memory_policy{4*1024*1024,2,16*1024*1024,0};
+bool fixture_generated=false,database_materialized=false;
+std::optional<uint64_t> rss_before_fixture,rss_after_fixture,rss_after_persist;
+std::optional<uint64_t> process_high_water_observation(){rusage usage{};if(::getrusage(RUSAGE_SELF,&usage)!=0||usage.ru_maxrss<0)return std::nullopt;
 #ifdef __APPLE__
  return uint64_t(usage.ru_maxrss);
 #else
- f::check(uint64_t(usage.ru_maxrss)<=UINT64_MAX/1024,"Linux RSS byte conversion");return uint64_t(usage.ru_maxrss)*1024;
+ if(uint64_t(usage.ru_maxrss)>UINT64_MAX/1024)return std::nullopt;return uint64_t(usage.ru_maxrss)*1024;
 #endif
 }
+uint64_t process_high_water_bytes(){const auto value=process_high_water_observation();f::check(value.has_value(),"whole driver RSS observation");return *value;}
+Json rss_json(const std::optional<uint64_t>& value){return value?Json(*value):Json(nullptr);}
+Json memory_policy_json(){return {{"writeBufferBytes",memory_policy.write_buffer_bytes},{"maximumWriteBuffers",memory_policy.maximum_write_buffers},{"sharedMemtableBytes",memory_policy.shared_memtable_bytes},{"sharedBlockCacheBytes",memory_policy.shared_block_cache_bytes},{"totalProcessRssBound",false},{"durabilityChanged",false}};}
 struct PhysicalRow {
  bool directory=false;std::array<std::string,9> material;Bytes digest;
  bool operator==(const PhysicalRow&)const=default;
@@ -69,7 +76,7 @@ struct Tmpdir {
  ~Tmpdir(){if(previous)::setenv("TMPDIR",previous->c_str(),1);else ::unsetenv("TMPDIR");}
 };
 template<class Database=rocksdb::DB>std::unique_ptr<Database> mutation_database(const fs::path& path){
- rocksdb::Options options;options.create_if_missing=false;std::unique_ptr<Database> db;
+ rocksdb::Options options;options.create_if_missing=false;apply_chain_store_memory_policy(options);std::unique_ptr<Database> db;
  if constexpr(requires{Database::Open(options,path.string(),&db);})f::check(Database::Open(options,path.string(),&db).ok(),"existing mutation copy open");
  else{Database* raw=nullptr;const auto result=Database::Open(options,path.string(),&raw);db.reset(raw);f::check(result.ok(),"existing mutation copy open");}return db;
 }
@@ -84,11 +91,11 @@ struct Boundary {
  ConsensusCheckpoint finalized;uint64_t warm_anchor_slot=0;
 };
 Boundary persist(const fs::path& path,const f::LongFixture& source){
- const auto& c=source.f;ChainStore disk(path);disk.bind_chain(c.genesis.chain_id,c.genesis.block.header.hash(),"beacon");disk.commit(c.genesis.block,c.genesis.state,{});
+ f::test_stage="durable-store-genesis-and-anchor";f::test_slot=0;const auto& c=source.f;ChainStore disk(path);disk.bind_chain(c.genesis.chain_id,c.genesis.block.header.hash(),"beacon");disk.commit(c.genesis.block,c.genesis.state,{});
  {const auto anchor=c.initial.blocks.at(c.initial.timed.view.anchor).lease(f::checkpoint);disk.commit(anchor->execution_block,anchor->execution_state,anchor->receipts);}
- CapellaDurableReactor reactor(disk,c.genesis.chain_id,c.genesis.block.header.hash(),c.rules,c.limits,c.initial,f::checkpoint);reactor.set_automatic_pruning(true);reactor.set_historical_state_pruning(true);
+ f::test_stage="durable-reactor-initial-checkpoint";CapellaDurableReactor reactor(disk,c.genesis.chain_id,c.genesis.block.header.hash(),c.rules,c.limits,c.initial,f::checkpoint);reactor.set_automatic_pruning(true);reactor.set_historical_state_pruning(true);
  std::vector<const CheckpointArchiveEntry*> ordered;for(const auto& [_,entry]:source.archives)ordered.push_back(&entry);std::sort(ordered.begin(),ordered.end(),[](auto a,auto b){return a->slot<b->slot;});
- f::check(ordered.size()==signed_blocks,"fixed complete signed history");for(const auto* entry:ordered){f::checkpoint();reactor.tick(c.initial.timed.clock.genesis_time_ms+entry->slot*c.rules.slot_duration_ms,f::checkpoint);f::check(reactor.block(entry->payload,f::checkpoint),"actual durable canonical signed admission");}
+ f::check(ordered.size()==signed_blocks,"fixed complete signed history");f::test_stage="durable-signed-history-admission";for(const auto* entry:ordered){f::test_slot=entry->slot;f::checkpoint();reactor.tick(c.initial.timed.clock.genesis_time_ms+entry->slot*c.rules.slot_duration_ms,f::checkpoint);f::check(reactor.block(entry->payload,f::checkpoint),"actual durable canonical signed admission");}
  const auto saved=reactor.current();const auto head=capella_fork_head(*saved.state,c.rules,f::checkpoint);f::check(head->header==source.head&&saved.state->timed.view.finalized==source.finalized,"durable fixture matches independently generated head/finality");
  const auto anchor=saved.state->blocks.at(saved.state->timed.view.anchor).header();f::check(anchor.slot>16&&disk.state_pruning().has_value(),"real durable pruning moved warm anchor beyond old external checkpoint");
  return {saved.token,head->execution_block.header.hash(),head->execution_state.root(),consensus_beacon_header_root(head->header),head->header.state_root,saved.state->timed.view.anchor,saved.state->timed.view.finalized,anchor.slot};
@@ -123,16 +130,18 @@ Json public_result(Json result){result.at("replayWindow").erase("privateIndexFil
 } // namespace
 
 int main(){try{
+ f::test_stage="bounded-database-memory-policy";ScopedChainStoreMemoryPolicy memory(memory_policy);
+ f::test_stage="owned-scratch-setup";
  f::Temp temporary;const auto root=temporary.path,scratch=root/"audit-scratch",db=root/"canonical";fs::create_directory(scratch);fs::permissions(scratch,fs::perms::owner_all,fs::perm_options::replace);
- f::test_stage="fixed-public-unit-fixture";f::LongFixture source(signed_blocks);source.f.limits.blocks=fixture_live_blocks;f::check(source.archives.size()>source.f.limits.blocks&&source.finalized.epoch>2,"history exceeds declared legacy live window with real FFG advances");const auto signatures=f::test_signatures;
- const auto stopped=persist(db,source);const auto anchor=scratch/"trusted-anchor.json";write(anchor,capella_store_snapshot(source.f.initial,source.f.rules,source.f.limits,f::checkpoint));
+ f::test_stage="fixed-public-unit-fixture";f::test_slot=0;rss_before_fixture=process_high_water_observation();f::LongFixture source(signed_blocks);fixture_generated=true;rss_after_fixture=process_high_water_observation();f::test_stage="fixture-budget-admission";source.f.limits.blocks=fixture_live_blocks;f::check(source.archives.size()>source.f.limits.blocks&&source.finalized.epoch>2,"history exceeds declared legacy live window with real FFG advances");const auto signatures=f::test_signatures;
+ const auto stopped=persist(db,source);database_materialized=true;rss_after_persist=process_high_water_observation();f::test_stage="trusted-anchor-snapshot";const auto anchor=scratch/"trusted-anchor.json";write(anchor,capella_store_snapshot(source.f.initial,source.f.rules,source.f.limits,f::checkpoint));
  const auto old_entry=std::find_if(source.archives.begin(),source.archives.end(),[](const auto& row){return row.second.slot==16;});f::check(old_entry!=source.archives.end(),"known old epoch boundary exists");const ConsensusCheckpoint required{2,old_entry->first};
- auto input=request(source,anchor,stopped,required);const auto before=inventory(db);Json groups=Json::array();
+ f::test_stage="owned-request-and-pre-audit-inventory";auto input=request(source,anchor,stopped,required);const auto before=inventory(db);Json groups=Json::array();
  const auto rss_before_default=process_high_water_bytes();f::test_stage="legacy-frontend-bounded";const auto default_result=audit_capella_database(source.f.genesis,db,input);const auto rss_after_default=process_high_water_bytes();verified(default_result,source,stopped,required,source.f.limits.blocks);same_boundary(db,source,stopped);f::check(inventory(db)==before,"default RO frontend changed database namespace/full9/SHA");groups.push_back({{"case","legacy-default-wrapper"},{"audit",public_result(default_result)}});
  auto explicit_request=input;const auto index=scratch/"explicit.index";explicit_request["replayWindow"]={{"maximumLiveBlocks",q(explicit_live_blocks)},{"maximumLiveStateBytes",q(source.f.limits.total_state_bytes)},{"newPrivateIndex",index.string()}};
  const auto rss_before_explicit=process_high_water_bytes();f::test_stage="explicit-frontend-bounded";const auto explicit_result=audit_capella_database(source.f.genesis,db,explicit_request);const auto rss_after_explicit=process_high_water_bytes();verified(explicit_result,source,stopped,required,explicit_live_blocks);same_boundary(db,source,stopped);f::check(inventory(db)==before,"explicit RO frontend changed database namespace/full9/SHA");groups.push_back({{"case","explicit-48-live"},{"audit",public_result(explicit_result)}});
- const auto corrupt=root/"old-signature-copy";fs::copy(db,corrupt,fs::copy_options::recursive);const auto first=std::find_if(source.archives.begin(),source.archives.end(),[](const auto& row){return row.second.slot==2;});f::check(first!=source.archives.end()&&first->second.slot<explicit_result.at("replayWindow").at("finalReplayAnchorSlot").get<uint64_t>(),"old corrupted signature is outside final live window");corrupt_old_signature(corrupt,first->second);
- const auto corrupt_before=inventory(corrupt);std::set<std::pair<std::string,std::string>> source_inodes;for(const auto& [_,row]:before)if(!row.directory)source_inodes.emplace(row.material[0],row.material[1]);
+ f::test_stage="independent-database-copy";const auto corrupt=root/"old-signature-copy";fs::copy(db,corrupt,fs::copy_options::recursive);const auto first=std::find_if(source.archives.begin(),source.archives.end(),[](const auto& row){return row.second.slot==2;});f::check(first!=source.archives.end()&&first->second.slot<explicit_result.at("replayWindow").at("finalReplayAnchorSlot").get<uint64_t>(),"old corrupted signature is outside final live window");f::test_stage="historical-signature-mutation";f::test_slot=first->second.slot;corrupt_old_signature(corrupt,first->second);
+ f::test_stage="corrupt-copy-readonly-inventory";const auto corrupt_before=inventory(corrupt);std::set<std::pair<std::string,std::string>> source_inodes;for(const auto& [_,row]:before)if(!row.directory)source_inodes.emplace(row.material[0],row.material[1]);
  for(const auto& [_,row]:corrupt_before)if(!row.directory)f::check(!source_inodes.contains({row.material[0],row.material[1]}),"mutation copy has independent file inodes even if its intentional writable open rotated WAL/log names");
  {ChainStore copy(corrupt,ChainStore::OpenMode::ReadOnly);const auto entry=copy.checkpoint_archive(first->second.root,source.f.limits.envelope_bytes);f::check(entry&&entry->payload!=first->second.payload&&entry->root==first->second.root,"modified outer SHA remains coherent before BLS-prefix audit");}
  auto bad=explicit_request;bad["replayWindow"]["newPrivateIndex"]=(scratch/"old-corrupt.index").string();bool refused=false;f::test_stage="old-signature-prefix-refusal";try{(void)audit_capella_database(source.f.genesis,corrupt,bad);}catch(const std::runtime_error& e){refused=std::string(e.what()).find("stream canonical signed transition rejected")!=std::string::npos;}f::check(refused,"old signature outside warm window must fail actual full signed prefix");f::check(inventory(corrupt)==corrupt_before&&inventory(db)==before,"corrupt prefix audit changed either DB");groups.push_back({{"case","old-signature-outside-window"},{"refused",true}});
@@ -153,5 +162,5 @@ int main(){try{
  }
  f::check(inventory(db)==before,"index namespace guards did not mutate source DB");groups.push_back({{"case","index-namespace-and-preexisting-ownership"},{"insideDatabaseRefusedBeforeCreation",true},{"preexistingIndexSurvived",true}});
  f::check(groups.size()==6&&f::test_signatures==signatures&&opened_fence_files==closed_fence_files,"six cases, no audit signatures, all fence file descriptors closed");
- std::cout<<Json{{"scenario","actual-core-bounded-canonical-audit"},{"passed",true},{"groups",groups},{"signedHistoryBlocks",signed_blocks},{"fixtureBlsSignatures",signatures},{"auditBlsSignaturesCreated",f::test_signatures-signatures},{"physicalFenceFilesOpened",opened_fence_files},{"physicalFenceFilesClosed",closed_fence_files},{"databaseFullNineAndShaUnchanged",true},{"processHighWater",{{"unit","bytes"},{"scope","whole driver including public fixture generation, database materialization and audits"},{"beforeDefaultAudit",rss_before_default},{"afterDefaultAudit",rss_after_default},{"beforeExplicitAudit",rss_before_explicit},{"afterExplicitAudit",rss_after_explicit},{"final",process_high_water_bytes()},{"isolatedAuditRssBoundQualified",false}}},{"stateReservationIsProcessRss",false},{"networkOrCampaignStarted",false},{"productionQualified",false}}.dump()<<'\n';return 0;
- }catch(const std::exception& e){std::cerr<<Json{{"scenario","actual-core-bounded-canonical-audit"},{"passed",false},{"stage",f::test_stage},{"error",e.what()},{"networkOrCampaignStarted",false},{"productionQualified",false}}.dump()<<'\n';return 1;}}
+ f::test_stage="summary";std::cout<<Json{{"scenario","actual-core-bounded-canonical-audit"},{"passed",true},{"groups",groups},{"signedHistoryBlocks",signed_blocks},{"fixtureBlsSignatures",signatures},{"auditBlsSignaturesCreated",f::test_signatures-signatures},{"physicalFenceFilesOpened",opened_fence_files},{"physicalFenceFilesClosed",closed_fence_files},{"databaseFullNineAndShaUnchanged",true},{"databaseMemoryPolicy",memory_policy_json()},{"processHighWater",{{"unit","bytes"},{"scope","whole driver including public fixture generation, database materialization and audits"},{"beforeFixture",rss_json(rss_before_fixture)},{"afterFixture",rss_json(rss_after_fixture)},{"afterDurableMaterialization",rss_json(rss_after_persist)},{"beforeDefaultAudit",rss_before_default},{"afterDefaultAudit",rss_after_default},{"beforeExplicitAudit",rss_before_explicit},{"afterExplicitAudit",rss_after_explicit},{"final",process_high_water_bytes()},{"isolatedAuditRssBoundQualified",false}}},{"stateReservationIsProcessRss",false},{"networkOrCampaignStarted",false},{"productionQualified",false}}.dump()<<'\n';return 0;
+ }catch(const std::exception& e){std::cerr<<Json{{"scenario","actual-core-bounded-canonical-audit"},{"passed",false},{"stage",f::test_stage},{"lastSyntheticSlot",f::test_slot},{"error",e.what()},{"fixtureGenerated",fixture_generated},{"databaseMaterialized",database_materialized},{"actualWholeDriverHighWaterBytes",rss_json(process_high_water_observation())},{"beforeFixtureHighWaterBytes",rss_json(rss_before_fixture)},{"afterFixtureHighWaterBytes",rss_json(rss_after_fixture)},{"afterDurableMaterializationHighWaterBytes",rss_json(rss_after_persist)},{"existingFixtureRssCeilingBytes",128*1024*1024},{"databaseMemoryPolicy",memory_policy_json()},{"networkOrCampaignStarted",false},{"productionQualified",false}}.dump()<<'\n';return 1;}}

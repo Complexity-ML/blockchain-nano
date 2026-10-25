@@ -125,7 +125,7 @@ add_executable(nano-capella-canonical-stream-tests tests/test_capella_canonical_
 target_link_libraries(nano-capella-canonical-stream-tests PRIVATE nano_core)
 target_include_directories(nano-capella-canonical-stream-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
 target_compile_definitions(nano-capella-canonical-stream-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
-target_compile_options(nano-capella-canonical-stream-tests PRIVATE $<$<CONFIG:Release>:-O1>)
+# Keep the original Release optimization for the long signed-stream fixture.
 add_test(NAME consensus_fresh_lifecycle_canonical_stream COMMAND nano-capella-canonical-stream-tests)
 set_tests_properties(consensus_fresh_lifecycle_canonical_stream PROPERTIES TIMEOUT 300 LABELS qualification_consensus_lifecycle)
 add_test(NAME consensus_fresh_lifecycle_sealed_observe COMMAND nano-capella-deposit-audit --fresh-lifecycle-observe-self-test)
