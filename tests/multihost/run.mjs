@@ -7,6 +7,7 @@ import {selectNativeExporterLoaderGuard} from './native-loader-guard.mjs';
 import {linuxSourceFiles,createMacLinuxFiles,linuxInventory,linuxBootstrapProof} from './linux-owned-files.mjs';
 import {runFreshLifecycle,requireLifecycleRuntimeAuthority,lifecycleRollingFinalityWindow,lifecyclePrivateDirectory,readLifecycleKnownFile,writeLifecycleKnownFile,admitLifecycleKnownFiles,lifecycleSubmissionPlan,validatePreparedLifecycleAction,validateLifecycleAcceptedProjection,validateLifecycleTerminalProjection,lifecycleOperationDigest,publishLifecycleStoppedCapture,lifecycleStoppedCapturesReceipt,createLifecycleStopReceipts,admitNewLifecycleOutput} from './lifecycle-runtime.mjs';
 import {createTerminalEvidenceSequence} from './terminal-evidence.mjs';
+import {describeCloseoutBudget} from './closeout-budget.mjs';
 import {lifecycleWholeCopyProgram,lifecycleOwnerProjection} from './lifecycle-owner.mjs';
 import {validateVpsDutyFloorPair} from './vps-duty-floor.mjs';
 import {deriveLifecycleParameters,validateLifecycleDeposit,lifecycleProposalMs,deriveLifecycleCampaignBudget} from './lifecycle.mjs';
@@ -494,7 +495,7 @@ if(pinnedRestart&&!process.exitCode){
 // silently rebound to new binaries, keys, archives or source revisions.
 async function runFreshCampaign(args){
  const campaignStartedAt=performance.now(),[target,revision,outputArg,,specFile,,specSha]=args,legacyExec=promisify(execFile);
- let campaignBudget,campaignCommands,campaignCloseoutReserve,campaignCloseoutStartedAt,interrupted;
+ let campaignBudget,campaignCommands,campaignCloseoutReserve,campaignCloseoutStartedAt,interrupted,closeoutInterrupted;
  let operatorOwnershipReady=false,operatorOwnershipAttempted=false,operatorOwnershipPin=null,operatorProcessSequence=0;
  const exec=(program,argv,options={})=>{if(campaignCommands)need(operatorOwnershipReady,'Durable operator ownership handoff required before external command');return campaignCommands?campaignCommands.exec(program,argv,options):legacyExec(program,argv,options);};
  const need=(ok,why)=>{if(!ok)throw Error(why);},sha=b=>createHash('sha256').update(b).digest('hex');
@@ -512,26 +513,38 @@ async function runFreshCampaign(args){
  const materialChanges=(a,b)=>materialFields.filter((_,i)=>a[i]!==b[i]);
  const rowChanges=(a,b)=>[...['path','sha256','bytes'].filter(k=>a[k]!==b[k]),...materialChanges(a.material,b.material)];
  function inputNeed(ok,why,path,changedFieldNames){if(!ok){const diagnostic={stage:publicCheckStage,publicPath:diagnosticPublicPaths.has(path)?path:null,changedFieldNames:[...new Set(changedFieldNames)]};const e=Error(why+' '+JSON.stringify(diagnostic));e.publicInputDiagnostic=diagnostic;throw e;}}
+ function checkCampaignIo(origin=null){
+  const phase=campaignBudget?.phase??null,signal=origin?.signal??campaignBudget?.signal;
+  if(signal?.aborted)throw signal.reason;
+  if(origin&&origin.phase!==phase)throw Error('Fresh campaign I/O origin phase ended');
+  if(closeoutInterrupted)throw closeoutInterrupted;
+  if(interrupted&&phase!=='closeout')throw interrupted;
+  campaignBudget?.check();
+ }
  async function observe(path,expected,body=false,admit=true){
-  path=resolve(path);if(newFiles.has(path)&&!held.has(path)){expected=newFiles.get(path);admit=false;}need(await realpath(path)===path,'Linked public input path refused');const f=await open(path,fsConstants.O_RDONLY|fsConstants.O_NOFOLLOW|fsConstants.O_NONBLOCK),before=await f.stat({bigint:true});
+  const origin={phase:campaignBudget?.phase??null,signal:campaignBudget?.signal??null},check=()=>checkCampaignIo(origin);
+  check();path=resolve(path);if(newFiles.has(path)&&!held.has(path)){expected=newFiles.get(path);admit=false;}check();const real=await realpath(path);check();need(real===path,'Linked public input path refused');check();const f=await open(path,fsConstants.O_RDONLY|fsConstants.O_NOFOLLOW|fsConstants.O_NONBLOCK);let result,row,primary,hasPrimary=false;
   try{
+   check();const before=await f.stat({bigint:true});check();
    need(before.isFile()&&before.nlink===1n&&before.size>0n&&before.size<=BigInt(body||publicExportProbePaths.has(path)&&!held.has(path)?16*1024*1024:1073741824),'Public software/document bound/type');
-   const hash=createHash('sha256'),buffer=Buffer.alloc(65536),chunks=[];let size=0;for(;;){const {bytesRead}=await f.read(buffer,0,buffer.length,null);if(!bytesRead)break;size+=bytesRead;need(BigInt(size)<=before.size,'Input grew');hash.update(buffer.subarray(0,bytesRead));if(body)chunks.push(Buffer.from(buffer.subarray(0,bytesRead)));}
-   const after=await f.stat({bigint:true}),linked=await lstat(path,{bigint:true}),row={path,sha256:hash.digest('hex'),bytes:size,material:material(after)};
+   const hash=createHash('sha256'),buffer=Buffer.alloc(65536),chunks=[];let size=0;for(;;){check();const {bytesRead}=await f.read(buffer,0,buffer.length,null);check();if(!bytesRead)break;size+=bytesRead;need(BigInt(size)<=before.size,'Input grew');hash.update(buffer.subarray(0,bytesRead));if(body)chunks.push(Buffer.from(buffer.subarray(0,bytesRead)));}
+   check();const after=await f.stat({bigint:true});check();const linked=await lstat(path,{bigint:true});check();row={path,sha256:hash.digest('hex'),bytes:size,material:material(after)};
    inputNeed(size===Number(before.size)&&canonical(material(before))===canonical(row.material)&&canonical(row.material)===canonical(material(linked)),'Public input changed during FD read',path,[...(size===Number(before.size)?[]:['bytes']),...materialChanges(material(before),row.material),...materialChanges(row.material,material(linked))]);
    if(expected)inputNeed(row.sha256===expected.sha256&&(expected.bytes===undefined||row.bytes===expected.bytes),'Public input SHA/bytes differs',path,[...(row.sha256===expected.sha256?[]:['sha256']),...(expected.bytes===undefined||row.bytes===expected.bytes?[]:['bytes'])]);
    if(publicExportProbePaths.has(path)&&expected?.material&&!held.has(path))inputNeed(canonical(expected.material)===canonical(row.material),'New public export first admission material differs',path,materialChanges(expected.material,row.material));
-   if(held.has(path))inputNeed(canonical(held.get(path))===canonical(row),'Previously admitted public input changed',path,rowChanges(held.get(path),row));else if(admit)held.set(path,row);
-   return body?Buffer.concat(chunks):row;
-  }finally{await f.close();}
+   result=body?Buffer.concat(chunks):row;check();
+   if(held.has(path))inputNeed(canonical(held.get(path))===canonical(row),'Previously admitted public input changed',path,rowChanges(held.get(path),row));
+  }catch(error){hasPrimary=true;primary=error;throw error;}finally{try{await f.close();}catch(error){if(!hasPrimary)throw error;try{Object.defineProperty(primary,'campaignIoCloseFailure',{value:error,configurable:true});}catch{}}}
+  check();if(held.has(path))inputNeed(canonical(held.get(path))===canonical(row),'Previously admitted public input changed',path,rowChanges(held.get(path),row));else if(admit)held.set(path,row);return result;
  }
- async function fence(){for(const z of [...held.values()])await observe(z.path,z);}
+ async function fence(){const origin={phase:campaignBudget?.phase??null,signal:campaignBudget?.signal??null},check=()=>checkCampaignIo(origin);check();for(const z of [...held.values()]){check();await observe(z.path,z);check();}check();}
  async function save(path,value){
-  path=resolve(path);need(!held.has(path)&&!newFiles.has(path),'NEW save cannot replace retained output/input');const bytes=Buffer.isBuffer(value)?Buffer.from(value):Buffer.from(typeof value==='string'?value:JSON.stringify(value,null,2)+'\n');
-  need(bytes.length>0&&bytes.length<=1073741824,'NEW save known byte bound');const f=await open(path,'wx',0o600);let creation;
-  try{await f.writeFile(bytes);await f.sync();creation=material(await f.stat({bigint:true}));}finally{await f.close();}
-  const directory=await open(dirname(path),'r');try{await directory.sync();}finally{await directory.close();}const expected={sha256:sha(bytes),bytes:bytes.length};
-  await admitNewLifecycleOutput(path,expected,creation,{isRetained:()=>held.has(path)||newFiles.has(path)});need(!held.has(path)&&!newFiles.has(path),'NEW save cannot replace retained output/input');newFiles.set(path,expected);return bytes;
+  const origin={phase:campaignBudget?.phase??null,signal:campaignBudget?.signal??null},check=()=>checkCampaignIo(origin);
+  check();path=resolve(path);need(!held.has(path)&&!newFiles.has(path),'NEW save cannot replace retained output/input');const bytes=Buffer.isBuffer(value)?Buffer.from(value):Buffer.from(typeof value==='string'?value:JSON.stringify(value,null,2)+'\n');check();
+  need(bytes.length>0&&bytes.length<=1073741824,'NEW save known byte bound');check();const f=await open(path,'wx',0o600);let creation,primary,hasPrimary=false;
+  try{check();await f.writeFile(bytes);check();await f.sync();check();const stat=await f.stat({bigint:true});check();creation=material(stat);}catch(error){hasPrimary=true;primary=error;throw error;}finally{try{await f.close();}catch(error){if(!hasPrimary)throw error;try{Object.defineProperty(primary,'campaignIoCloseFailure',{value:error,configurable:true});}catch{}}}
+  check();const directory=await open(dirname(path),'r');let directoryPrimary,directoryHasPrimary=false;try{check();await directory.sync();check();}catch(error){directoryHasPrimary=true;directoryPrimary=error;throw error;}finally{try{await directory.close();}catch(error){if(!directoryHasPrimary)throw error;try{Object.defineProperty(directoryPrimary,'campaignIoCloseFailure',{value:error,configurable:true});}catch{}}}check();const expected={sha256:sha(bytes),bytes:bytes.length};
+  await admitNewLifecycleOutput(path,expected,creation,{isRetained:()=>{check();return held.has(path)||newFiles.has(path);}});check();need(!held.has(path)&&!newFiles.has(path),'NEW save cannot replace retained output/input');newFiles.set(path,expected);check();return bytes;
  }
  const spec=validateFreshCampaignSpec(JSON.parse(await observe(resolve(specFile),{sha256:specSha},true)),{target,sourceBaseRevision:revision});
  need(!spec.lifecycle||spec.lifecycle.runtimeDriverEnabled,'Fresh lifecycle runtime driver is unavailable; managed submission and owner-local terminal audit are required');
@@ -662,7 +675,7 @@ async function runFreshCampaign(args){
  }
  const started=new Set(),volumes=new Map(),originalVolumes=new Map(),lifecycleStopReceipts=createLifecycleStopReceipts();let native,tunnel,failure,bodyFailureRecordError,manifest,plan,preparedManifest,remotePeer,restoreReceipt,restoreStopEnvelope,restoreAudit,restoredMounts;
  if(campaignCloseoutReserve!==undefined){campaignBudget=createCampaignDeadline({startedAt:campaignStartedAt,maximumRunMs:spec.lifecycle.deadlines.maximumRunMs,closeoutReserveMs:campaignCloseoutReserve,onExpire:({phase})=>{interrupted??=Error('Fresh campaign '+phase+' deadline');}});campaignCommands=createCampaignCommands({deadline:campaignBudget,spawn});}
- let lifecycleNativeLog=join(output,'native.log');const onSignal=()=>{interrupted??=Error('Fresh campaign interrupted');if(campaignBudget?.phase==='work')campaignCommands.cancelAll(interrupted);};if(campaignBudget){for(const signal of ['SIGINT','SIGTERM','SIGHUP'])process.on(signal,onSignal);}else{process.once('SIGINT',onSignal);process.once('SIGTERM',onSignal);}
+ let lifecycleNativeLog=join(output,'native.log');const onSignal=()=>{const reason=Error('Fresh campaign interrupted');interrupted??=reason;if(campaignBudget?.phase==='closeout')closeoutInterrupted??=reason;else if(campaignBudget?.phase==='work')campaignCommands.cancelAll(interrupted);};if(campaignBudget){for(const signal of ['SIGINT','SIGTERM','SIGHUP'])process.on(signal,onSignal);}else{process.once('SIGINT',onSignal);process.once('SIGTERM',onSignal);}
  const lifecycleWholeTimer=spec.lifecycle&&!campaignBudget?setTimeout(()=>{interrupted??=Error('Fresh lifecycle whole-run deadline');},spec.lifecycle.deadlines.maximumRunMs):null;
  // Track close from spawn time: exitCode alone does not join stdio/handles.
  const closedChildren=new WeakSet(),exited=child=>child.exitCode!==null||child.signalCode!==null;
@@ -1268,6 +1281,17 @@ except BaseException:
   // replay refuses. A successful replay alone cannot pass the campaign result.
   await save(join(output,'lifecycle-terminal-public.json'),r);lifecycleQualified=true;
  }
+ async function publishCloseoutBudget(phase){
+  checkCampaignIo();need(campaignBudget&&spec.lifecycle,'Actual original campaign budget required for closeout inventory');
+  const counts={heldFiles:held.size,newFiles:newFiles.size,ownedOperations:ownedRuns.length,ownerSourceFences:ownerRecoverySourceFences.length,
+   lifecycleSourceFences:lifecycleSourceFences.length,localLifecycleAdmissions:[...lifecycleArtifacts.values()].filter(x=>x.admission).length,
+   lifecycleRemoteIndexes:lifecycleRemoteIndexes.length,lifecycleRemoteFiles:lifecycleRemoteFiles.length};
+  const linux=macLinux?.budgetInventory??{authoritySets:0,nestedFiles:0,volumes:0,authorityFiles:0,authorityPayloadBytes:'0x0',nestedPayloadBytes:'0x0'};
+  const signerCounts=preparedManifest?Object.fromEntries(preparedManifest.nodes.map(n=>[n.name,n.signerIdentities.length])):null;
+  const report=describeCloseoutBudget({phase,reserveMs:campaignCloseoutReserve,remainingGlobalMs:Math.max(0,Math.floor(campaignBudget.overallEnd-performance.now())),
+   counts,linux,resourceBounds:spec.lifecycle.resources,signerCounts,macBootstrap:Boolean(macBootstrap),macOwnerRecoveryRequested:Boolean(nativeLoader)});
+  checkCampaignIo();await save(join(output,'closeout-budget-'+phase+'.json'),report);checkCampaignIo();return report;
+ }
  async function lifecycleBranch(initial,profileBytes){
   const depositPath=join(assets,'deposit.json'),depositBytes=await observe(depositPath,null,true),depositDocument=JSON.parse(depositBytes);diagnosticPublicPaths.add(depositPath);
   lifecyclePending=await runFreshLifecycle({spec,domain:manifest,prepared:preparedManifest,profileBytes,depositDocument,initialFinality:initial,ops:{
@@ -1285,6 +1309,7 @@ except BaseException:
   if(interrupted)throw interrupted;await publishOperatorOwnership();if(interrupted)throw interrupted;publicCheckStage='initial-software-read';initialSoftware=await software();publicCheckStage='initial-software-complete';await save(join(output,'software-public.json'),initialSoftware);const helperPath=join(harnessRoot,linuxSourceFiles.helper.path),copierPath=join(harnessRoot,linuxSourceFiles.copier.path),helperBytes=await observe(helperPath,linuxSourceFiles.helper,true),copierBytes=await observe(copierPath,linuxSourceFiles.copier,true);macLinux=createMacLinuxFiles({docker,image:owner('mac-docker').image,uuid,prefix:containers['mac-docker'],softwareMounts:()=>mounts('mac-docker'),helperPath,helperBytes,copierBytes,save:(name,b)=>save(join(output,name),b),verifyHelper:()=>observe(helperPath,linuxSourceFiles.helper),checkpoint:lifecycleCheck});await macLinux.preflight(owner('mac-docker').programs.bootstrapImport.path);publicCheckStage='initial-held-fence';await fence();publicCheckStage='campaign-body';if(!campaignCommands)await save(join(output,'harness.json'),await hashHarness(harnessRoot));
   // Compilation, image and public artifact checks finish BEFORE the new clock
   // and reserved key domain are exported. Never retry/reset a failed exporter.
+  if(campaignBudget&&spec.lifecycle)await publishCloseoutBudget('before-export');
   let planningParameters=null,planningMaximumBlockBytes=null;
   if(spec.lifecycle?.format==='nano-fresh-validator-lifecycle-v2'){
    need(campaignBudget&&campaignCloseoutReserve!==undefined,'V2 event windows require original explicit global work/closeout authority');
@@ -1335,6 +1360,7 @@ except BaseException:
   const transportInventory=verifyFreshBootstrapTransportInventory(JSON.parse(inventoryBytes),originalInventory);await save(join(proof,'source-inventory-after-transport.json'),originalInventory);await save(join(proof,'bootstrap-transport-inventory-check.json'),transportInventory);
   const exportAge=BigInt(Date.now())-BigInt(plan.anchor.genesisTimeMs);need(exportAge>=0n&&exportAge<=BigInt(spec.clock.maximumDowntimeMs),'New fixture exceeded explicitly approved startup catch-up age');
   const preparedClockChecks=[];for(const name of names)preparedClockChecks.push({owner:name,...checkFreshInitialRuntimeClock({...await initialClockInput(name),nowMs:BigInt(Date.now())})});await save(join(output,'initial-prepared-clock-checks.json'),{format:'nano-fresh-prepared-initial-clocks-v1',owners:preparedClockChecks,runtimeStarted:false,productionQualified:false});
+  if(campaignBudget&&spec.lifecycle)await publishCloseoutBudget('before-launch');
   if(campaignBudget){const budgetPlan=deriveLifecycleCampaignBudget(await observe(join(assets,'profile.json'),manifest.files.profile,true),spec.lifecycle,{maximumBootstrapAgeMs:Number(BigInt(spec.clock.maximumDowntimeMs)),closeoutReserveMs:campaignCloseoutReserve,remainingWorkMs:Math.floor(campaignBudget.workEnd-performance.now())});await save(join(output,'pre-launch-lifecycle-budget.json'),budgetPlan);campaignBudget.check();}
   if(spec.partitionRotation){partitionNetworkCreated=true;partitionNetworkAbsent=false;await docker(['network','create','--label',label,partitionNetwork],true);}
   await startDocker('vps-docker',undefined,null,true);for(let i=0;i<60;i++){if(interrupted)throw interrupted;try{remotePeer=(await rpc('vps-docker','nno_getNetworkInfo')).node?.peerId;if(remotePeer)break;}catch{if(interrupted)throw interrupted;}await delay(1000);}if(interrupted)throw interrupted;need(/^[A-Za-z0-9]+$/.test(remotePeer??''),'VPS private peer identity unavailable');

@@ -41,9 +41,11 @@ const generation20261024RuntimeSupervision=Object.freeze({...generation20261024O
 const generation20261025FinalizedScanner=Object.freeze({...generation20261024RuntimeSupervision,'run.mjs':'66424ecb30e3347c9e4efc2066efa0e2d891ae7c9944b152450e9c067ee21896','finalized-lifecycle-scanner.mjs':'c70e6519c496228e901cefe619aeab77db37327c0b44198b51a6f906043bb581'});
 const generation20261025VpsDutyFloor=Object.freeze({...generation20261025FinalizedScanner,'run.mjs':'afb7864031b843d898e30cb3b8d91f378f061498ba7c7f02b5367ae15ddbc3e4','lifecycle-owner.mjs':'9c53d42a4eb26ea245fb7b05372464d371321735fcd8c11c99780a7abc1c649e','vps-duty-floor.mjs':'02576882669855504430b7134f112a4394a4e2c4cace797d39dfc1212b33302b'});
 const generation20261025ProposerBudget=Object.freeze({...generation20261025VpsDutyFloor,'lifecycle.mjs':'314ffbfe7a345e82fd59d1741bb80e65f49f0fb4e7e4c4d07bd2f29f560a45e6','lifecycle-runtime.mjs':'c4265869c682c2ce8bb0c618f397eb49f31697e650a601bd0219562c09895bb4','owner-recovery.mjs':'3fb31e6124dc58f7dda56a42abb5cec28bfca913218e112b80a03a9d6d3d661a','run.mjs':'fae70cf9825d5956a382e21c6d1403ac435462c92a850b2b216ff6e10ccdb89f'});
+const generation20261025CloseoutIo=Object.freeze({...generation20261025ProposerBudget,'run.mjs':'24ef79bfa0227d8713710e4e40dd4970f880ec190509ca54e2ffb4f1cdf143bf','linux-owned-files.mjs':'3667f3fada21e83ebf3a344129028b9f90857b83627d76352ec0d13fcaa05c58','closeout-budget.mjs':'d9072acca71ac94a9bf874367cf86112fd74c18dd17bb2addc11855e3bf2464e'});
+const generation20261025CloseoutIoOrigin=Object.freeze({...generation20261025CloseoutIo,'run.mjs':'f943a69b290502facc26ff9588c68d72163f08d515564c1bf75d71a1bae4b5a9'});
 Object.freeze(historicalSourcePins);
-const sourcePinGeneration='generation20261025ProposerBudget';
-const sourcePins=Object.freeze({...historicalSourcePins,...generation20261025ProposerBudget});
+const sourcePinGeneration='generation20261025CloseoutIoOrigin';
+const sourcePins=Object.freeze({...historicalSourcePins,...generation20261025CloseoutIoOrigin});
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
 const material=s=>fields.map(k=>String(s[k]));
@@ -68,7 +70,7 @@ async function writeAndAdmitFixture(path,bytes){
 }
 const absent=async path=>{try{await lstat(path);}catch(e){if(e.code==='ENOENT')return;throw e;}assert.fail('Forbidden fixture path was created: '+path);};
 test('actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network',{timeout:45000},async()=>{
- assert.equal(sourcePinGeneration,'generation20261025ProposerBudget');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
+ assert.equal(sourcePinGeneration,'generation20261025CloseoutIoOrigin');assert.deepEqual(Object.keys(generation20261018).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs']);
  assert.deepEqual(Object.keys(generation20261018NativeLoader).sort(),['lifecycle-owner.mjs','lifecycle-runtime.mjs','native-loader-guard.mjs','prepare.mjs','run.mjs']);
  assert.deepEqual(Object.keys(generation20261018NativeLoopback).sort(),Object.keys(generation20261018NativeLoader).sort());
  assert.deepEqual(Object.keys(generation20261018NativeLoopback).filter(leaf=>generation20261018NativeLoopback[leaf]!==generation20261018NativeLoader[leaf]),['prepare.mjs']);
@@ -86,7 +88,11 @@ test('actual lifecycle driver generation20261025 gates legacy and C8 authorizati
  assert.deepEqual(Object.keys(generation20261025VpsDutyFloor).filter(leaf=>!Object.hasOwn(generation20261025FinalizedScanner,leaf)),['vps-duty-floor.mjs']);
  assert.deepEqual(Object.keys(generation20261025VpsDutyFloor).filter(leaf=>generation20261025ProposerBudget[leaf]!==generation20261025VpsDutyFloor[leaf]).sort(),['lifecycle-runtime.mjs','owner-recovery.mjs','run.mjs']);
  assert.deepEqual(Object.keys(generation20261025ProposerBudget).filter(leaf=>!Object.hasOwn(generation20261025VpsDutyFloor,leaf)),['lifecycle.mjs']);
- for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261025ProposerBudget,leaf)?generation20261025ProposerBudget[leaf]:pin,'Only the explicitly named source generation may override historical pins');
+ assert.deepEqual(Object.keys(generation20261025ProposerBudget).filter(leaf=>generation20261025CloseoutIo[leaf]!==generation20261025ProposerBudget[leaf]),['run.mjs']);
+ assert.deepEqual(Object.keys(generation20261025CloseoutIo).filter(leaf=>!Object.hasOwn(generation20261025ProposerBudget,leaf)).sort(),['closeout-budget.mjs','linux-owned-files.mjs']);
+ assert.deepEqual(Object.keys(generation20261025CloseoutIoOrigin).sort(),Object.keys(generation20261025CloseoutIo).sort());
+ assert.deepEqual(Object.keys(generation20261025CloseoutIo).filter(leaf=>generation20261025CloseoutIoOrigin[leaf]!==generation20261025CloseoutIo[leaf]),['run.mjs']);
+ for(const [leaf,pin]of Object.entries(historicalSourcePins))assert.equal(sourcePins[leaf],Object.hasOwn(generation20261025CloseoutIoOrigin,leaf)?generation20261025CloseoutIoOrigin[leaf]:pin,'Only the explicitly named source generation may override historical pins');
  const run=resolve(process.argv[2]??fileURLToPath(new URL('./run.mjs',import.meta.url))),source=dirname(run),before={};
  for(const [leaf,expected] of Object.entries(sourcePins)){before[leaf]=await stable(join(source,leaf));assert.equal(before[leaf].sha256,expected,'Exact frozen source required');}
  const parent=await realpath(await mkdtemp(join(tmpdir(),'nano-lifecycle-unavailable-'))),missing=[];
@@ -133,7 +139,9 @@ async function newOutputFixture({samples,changeAfterSample,changeAfterWait,chang
  const source=await readFile(new URL('./run.mjs',import.meta.url),'utf8');
  const extract=(start,end)=>{const at=source.indexOf(start);assert(at>=0&&source.indexOf(start,at+1)===-1);const stop=source.indexOf(end,at);assert(stop>at);return source.slice(at,stop).trim();};
  const saveCode=extract(' async function save(path,value){','\n const spec='),observeCode=extract(' async function observe(path,expected,body=false,admit=true){','\n async function fence(){');
- const deps={open,dirname:p=>p.slice(0,p.lastIndexOf('/')),resolve:p=>p,realpath:async p=>p,lstat:async()=>stat(currentRead.linked),fsConstants:constants,createHash,canonical:v=>JSON.stringify(v),material,materialFields:outputMaterialFields,materialChanges:(a,b)=>outputMaterialFields.filter((_,i)=>a[i]!==b[i]),rowChanges:()=>[],held,newFiles,publicExportProbePaths:new Set(),sha,need,inputNeed:need,admitNewLifecycleOutput:async(file,pin,m,options)=>{const result=await lifecycleOutputAdmission.admitNewLifecycleOutput(file,pin,m,{...options,sample,now:()=>clock,wait});changeAfterAdmission?.({held,newFiles,path});return result;}};
+ // Global I/O interruption/deadline cases live in closeout-io.test.mjs; this
+ // fixture keeps the original NEW admission clock and every material oracle.
+ const deps={campaignBudget:null,checkCampaignIo:()=>{},open,dirname:p=>p.slice(0,p.lastIndexOf('/')),resolve:p=>p,realpath:async p=>p,lstat:async()=>stat(currentRead.linked),fsConstants:constants,createHash,canonical:v=>JSON.stringify(v),material,materialFields:outputMaterialFields,materialChanges:(a,b)=>outputMaterialFields.filter((_,i)=>a[i]!==b[i]),rowChanges:()=>[],held,newFiles,publicExportProbePaths:new Set(),sha,need,inputNeed:need,admitNewLifecycleOutput:async(file,pin,m,options)=>{const result=await lifecycleOutputAdmission.admitNewLifecycleOutput(file,pin,m,{...options,sample,now:()=>clock,wait});changeAfterAdmission?.({held,newFiles,path});return result;}};
  const save=Function(...Object.keys(deps),observeCode+'\n'+saveCode+'\nreturn save;')(...Object.values(deps));
  return {path,input,creation,stable,held,newFiles,events,save,expectedSha,get reads(){return reads;},get clock(){return clock;},get openCount(){return openCount;},get written(){return written;}};
 }

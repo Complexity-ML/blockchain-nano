@@ -26,7 +26,9 @@ function terminalFixture(options={}){
  const native={joined:false},tunnel={joined:false},held=new Map([['/synthetic/source',{path:'/synthetic/source',sha256:'b'.repeat(64),bytes:1,material:['1','2','33152','501','20','1','1','100','200']}]]);
  const newFiles=new Map([['/synthetic/output/old.json',{sha256:'c'.repeat(64),bytes:1,material:['1','3','33152','501','20','1','1','100','200']}]]),observed=new Map([...held,...newFiles].map(([path,row])=>[path,structuredClone(row)]));
  const observe=async(path,pin)=>{events.push('observe:'+path);assert.deepEqual(observed.get(path),pin,'Retained full-nine/SHA authority must not refresh');};
- const fence=new Function('held','observe',fenceDeclaration+';return fence;')(held,observe);
+ // This ordering fixture has no filesystem waits. The actual I/O checkpoints
+ // are extracted and exercised with late awaits in closeout-io.test.mjs.
+ const fence=new Function('held','observe','checkCampaignIo','campaignBudget',fenceDeclaration+';return fence;')(held,observe,()=>{},campaignBudget);
  const need=(ok,message)=>{if(!ok)throw Error(message);};
  async function save(path,value){
   const leaf=path.split('/').at(-1);events.push('save:'+leaf);if(options.publicationFailure===leaf)throw options.publicationError;

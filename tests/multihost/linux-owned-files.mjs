@@ -125,5 +125,10 @@ export function createMacLinuxFiles({docker,image,uuid,prefix,softwareMounts,hel
    const selection=selectVpsLinuxJournals(sourceInventoryBytes,wholeInventoryBytes,plan.campaignNamespace),transport=await exportVpsLinuxBootstrap({selection,configuration,planBytes,lifecycle,read:control=>job(['perl','-e',vpsLinuxJournalReader],mount(bootstrapVolume,'/bootstrap'),180000,control),fenceSource:handle.fenceSource,verifyAll});await save('vps-linux-bootstrap-transport-public.json',transport.publicScope);return transport;
   };await handle.fenceSource();await verifyAll();return handle;
  }
- return {create,mount,job,write,verifyAll,readKnown,readNested,preflight,generation,bootstrap,copyBytes,get authorityCount(){return authorities.length;}};
+ return {create,mount,job,write,verifyAll,readKnown,readNested,preflight,generation,bootstrap,copyBytes,get authorityCount(){return authorities.length;},
+  get budgetInventory(){return Object.freeze({authoritySets:authorities.length,nestedFiles:nested.size,volumes:volumes.size,
+   authorityFiles:authorities.reduce((n,a)=>n+a.receipt.filesVerified,0),
+   authorityPayloadBytes:'0x'+authorities.reduce((n,a)=>n+BigInt(a.receipt.payloadBytes),0n).toString(16),
+   nestedPayloadBytes:'0x'+[...nested.values()].reduce((n,a)=>n+BigInt(a.bytes),0n).toString(16)});}
+ };
 }
