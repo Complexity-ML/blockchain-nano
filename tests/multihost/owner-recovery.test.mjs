@@ -108,11 +108,21 @@ test('actual Mac post-recovery proposal adapter refuses exact or late phase comp
  // The legacy spelling makes this test causally reject the uncorrected source.
  const selected=source.includes(marker)?marker:legacy,at=source.indexOf(selected);assert(at>=0&&source.indexOf(selected,at+1)===-1,'One exact new Mac proposal adapter');
  const stop=source.indexOf(',\n   record:',at);assert(stop>at,'Exact following recorder boundary');const expression=source.slice(at+'   finalizedProposal:'.length,stop).trim();
- for(const completion of [99,100,101]){
-  let clock=0,checks=0,calls=0;const expected={root:hash(800),slot:'0x21'},duty={index:'0x0'},checkpoint={epoch:'0x1',root:hash(700)};
-  const dependencies={performance:{now:()=>clock},lifecycleCheck:()=>{++checks;assert(clock<1000,'Unrelated global budget stays valid');},need:(ok,why)=>{if(!ok)throw Error(why);},spec:{lifecycle:{deadlines:{finalityMs:100}}},lifecycleFindFinalized:async(name,cp,cutoff,find,milliseconds)=>{++calls;assert.equal(name,'mac-native');assert.equal(cp,checkpoint);assert.equal(cutoff,32n);assert.equal(milliseconds,100);clock=completion;return expected;}};
+ // These small fixtures exercise the caller, not validateLifecycleMode(). The
+ // actual window resolver is covered by lifecycle-proposer-budget.test.mjs.
+ // Keep its dependency explicit and require the caller to use its result.
+ const windows=[
+  {label:'legacy P=F without a campaign budget',format:'nano-fresh-validator-lifecycle-v1',proposerMs:100,campaignBudget:null,phaseEnd:100},
+  {label:'P exceeds F',format:'nano-fresh-validator-lifecycle-v2',proposerMs:300,campaignBudget:{workEnd:1000},phaseEnd:300},
+  {label:'global work end is shorter than P',format:'nano-fresh-validator-lifecycle-v2',proposerMs:300,campaignBudget:{workEnd:200},phaseEnd:200}
+ ];
+ for(const window of windows)for(const completion of [window.phaseEnd-1,window.phaseEnd,window.phaseEnd+1]){
+  let clock=0,checks=0,calls=0,windowCalls=0;const expected={root:hash(800),slot:'0x21'},duty={index:'0x0'},checkpoint={epoch:'0x1',root:hash(700)},lifecycle={format:window.format,deadlines:{finalityMs:100,...(window.format.endsWith('-v2')?{proposerMs:window.proposerMs}:{})}};
+  // The injected check counts both boundaries while the independent overall
+  // test limit remains open; the real adapter must enforce its own work cap.
+  const dependencies={performance:{now:()=>clock},lifecycleCheck:()=>{++checks;assert(clock<1000,'Independent outer test limit stays valid');},need:(ok,why)=>{if(!ok)throw Error(why);},spec:{lifecycle},campaignBudget:window.campaignBudget,lifecycleProposalMs:value=>{++windowCalls;assert.equal(value,lifecycle);return window.proposerMs;},lifecycleFindFinalized:async(name,cp,cutoff,find,milliseconds,phaseEnd,phaseKind)=>{++calls;assert.equal(name,'mac-native');assert.equal(cp,checkpoint);assert.equal(cutoff,32n);assert.equal(typeof find,'function');assert.equal(milliseconds,window.proposerMs,window.label);assert.equal(phaseEnd,window.phaseEnd,window.label);assert.equal(phaseKind,'proposal');clock=completion;return expected;}};
   const adapter=Function(...Object.keys(dependencies),'return ('+expression+');')(...Object.values(dependencies));
-  if(completion<100)assert.deepEqual(await adapter('mac-native',duty,checkpoint,32n),expected);else await assert.rejects(adapter('mac-native',duty,checkpoint,32n),/Whole owner post-recovery proposal deadline/);
-  assert.equal(calls,1);assert.equal(checks,2);
+  if(completion<window.phaseEnd)assert.deepEqual(await adapter('mac-native',duty,checkpoint,32n),expected);else await assert.rejects(adapter('mac-native',duty,checkpoint,32n),/Whole owner post-recovery proposal deadline/,window.label);
+  assert.equal(windowCalls,1,window.label);assert.equal(calls,1,window.label);assert.equal(checks,2,window.label);
  }
 });
