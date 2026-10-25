@@ -1,0 +1,86 @@
+{
+  "format": "nano-checkpoint-blob-focused-build-v1",
+  "sourceCandidate": "0bdc9c8de1343cc12b489ed5841703dd57caf975",
+  "architecture": "x86_64",
+  "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+  "imageBuilds": 0,
+  "networkCampaignStarted": false,
+  "productionQualified": false,
+  "phases": [
+    {
+      "name": "clone-output",
+      "exitCode": 0,
+      "elapsedMs": 967
+    },
+    {
+      "name": "configure",
+      "exitCode": 0,
+      "elapsedMs": 2231
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "elapsedMs": 42206
+    },
+    {
+      "name": "registry",
+      "exitCode": 0,
+      "elapsedMs": 317
+    },
+    {
+      "name": "tests",
+      "exitCode": 0,
+      "elapsedMs": 10399
+    }
+  ],
+  "passed": true,
+  "inheritedCore": {
+    "path": "/home/ubuntu/nano-cold-deposit-full-amd-root-20261025-01/outputs/libnano_core.a",
+    "bytes": 42048996,
+    "sha256": "281e7532c3df8408f1abf2ecab1d58c971978471cf18ef366c8ec9d78f03fbb4"
+  },
+  "compileCommands": [
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -I/work/third_party/secp256k1/include -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wpedantic -MD -MT CMakeFiles/nano_core.dir/src/kzg.cpp.o -MF CMakeFiles/nano_core.dir/src/kzg.cpp.o.d -o CMakeFiles/nano_core.dir/src/kzg.cpp.o -c /work/src/kzg.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -I/work/third_party/secp256k1/include -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wpedantic -MD -MT CMakeFiles/nano_core.dir/src/storage.cpp.o -MF CMakeFiles/nano_core.dir/src/storage.cpp.o.d -o CMakeFiles/nano_core.dir/src/storage.cpp.o -c /work/src/storage.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o -MF CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o.d -o CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o -c /work/tests/test_checkpoint_blob_bounded_read.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -DNANO_SYNC_FAULT=1 -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o -MF CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o.d -o CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o -c /work/tests/test_checkpoint_blobs.cpp"
+  ],
+  "kzgObjectAndGeneratedSetupByteIdentical": true,
+  "coreObjectsChanged": [
+    "CMakeFiles/nano_core.dir/src/storage.cpp.o"
+  ],
+  "tests": [
+    "consensus_capella_cold_reactor_guards",
+    "consensus_capella_reactor_sync_failure",
+    "storage_checkpoint_blob_application_copy_bound",
+    "storage_checkpoint_blob_sync_failure",
+    "storage_checkpoint_immutable_blobs"
+  ],
+  "artifacts": {
+    "libnano_core.a": {
+      "bytes": 42050204,
+      "sha256": "5d09fb0eea138dd869bf014da823425733c01bd43374793b16c76497d79c1ebd"
+    },
+    "nano-checkpoint-blob-bounded-read-tests": {
+      "bytes": 2400232,
+      "sha256": "f19fd4aa768897fd33f7a9f74c4f0547b8a263db97ffcc5791b18b15442c4e01"
+    },
+    "nano-checkpoint-blob-tests": {
+      "bytes": 2480168,
+      "sha256": "76ea1414fb1c39865bf87a48b0613929331aa40e156ea007c1f0ae90723e2a6f"
+    },
+    "nano-capella-transition-tests": {
+      "bytes": 19706296,
+      "sha256": "983b98020d57572e117a0db81321afa3f758ea6597ce4176f1800dbecd86af58"
+    },
+    "focused.xml": {
+      "bytes": 3465,
+      "sha256": "eb8d69fcb8402d386be0da9b1bfad89495da44e22cd9abded29eb8fd9b73d4fc"
+    },
+    "Testing/Temporary/LastTest.log": {
+      "bytes": 5490,
+      "sha256": "ac226799eb659051d9664be8180e760513267c852f0470b41732e44e41723a48"
+    }
+  },
+  "finishedAtUnix": 1792921973.7688324
+}

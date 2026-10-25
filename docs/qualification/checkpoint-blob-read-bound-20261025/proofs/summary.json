@@ -1,0 +1,116 @@
+{
+  "format": "nano-checkpoint-blob-application-copy-qualification-v1",
+  "cppCandidate": "0bdc9c8de1343cc12b489ed5841703dd57caf975",
+  "deliveryCodeCandidate": "50070e03c98b875798a8d1d1976ed74298bf5803",
+  "cppDiffToDelivery": false,
+  "armFreshTests": 5,
+  "amdFreshTests": 5,
+  "runtimeRecordsCompared": 7,
+  "runtimeRecordsExact": true,
+  "runtimeRecords": [
+    {
+      "binaryFragments": true,
+      "concurrentCasLoserAbsent": true,
+      "digestAndAggregateBounds": true,
+      "duplicateIdempotence": true,
+      "executionCheckpointCoupling": true,
+      "legacyApisPreserved": true,
+      "productionQualified": false,
+      "readonlyCopyUnchanged": true,
+      "runtimeGraphPagingImplemented": false,
+      "scenario": "checkpoint-immutable-blobs",
+      "tamperingRejectedWithoutOverwrite": true
+    },
+    {
+      "allAllocationsBounded": false,
+      "groups": 2,
+      "oversizedViewCopyCallbacks": 0,
+      "oversizedViewHashCallbacks": 0,
+      "passed": true,
+      "persistedFormatChanged": false,
+      "processRssQualified": false,
+      "productionQualified": false,
+      "realStoreAndProviderExercised": true,
+      "rocksDbInternalAllocationBounded": false,
+      "scenario": "checkpoint-blob-application-copy-bound"
+    },
+    {
+      "fragmentAndTokenAtomic": true,
+      "physicalPowerLossQualified": false,
+      "productionQualified": false,
+      "reopenedDispositions": 2,
+      "scenario": "checkpoint-blob-sync-failure",
+      "uncertainReadsAndRetriesBlocked": true
+    },
+    {
+      "blockedOperations": 5,
+      "executionOwner": false,
+      "lostSuffix": false,
+      "networkActivated": false,
+      "physicalPowerLoss": false,
+      "replay": true,
+      "scenario": "capella-reactor-sync"
+    },
+    {
+      "blockedOperations": 5,
+      "executionOwner": false,
+      "lostSuffix": true,
+      "networkActivated": false,
+      "physicalPowerLoss": false,
+      "replay": true,
+      "scenario": "capella-reactor-sync"
+    },
+    {
+      "executionTip": true,
+      "externalMutationsRejectedAndClosed": 3,
+      "networkQualified": false,
+      "primaryCheckpoint": true,
+      "scenario": "capella-cold-duplicate-storage-guards",
+      "witnessCheckpoint": true
+    },
+    {
+      "allPublishedRecordsCold": true,
+      "graphCapacityClosed": false,
+      "idempotentMigration": true,
+      "lateSnapshotReadRejected": true,
+      "migrationAtomic": true,
+      "networkQualified": false,
+      "primaryAndWitnessRestarts": true,
+      "productionQualified": false,
+      "runtimeConfigBootQualified": false,
+      "scenario": "capella-cold-reactor-integration",
+      "signerCommitmentUnchanged": true,
+      "stickyColdFormat": true,
+      "validChildDurablyAdmitted": true,
+      "witnessPreviousPrimaryRecovered": true
+    }
+  ],
+  "ciGuardTests": 16,
+  "ciGuardFailures": 0,
+  "dailyRegistrationCount": 26,
+  "wholeDailyCpp26ExecutedThisLot": false,
+  "githubCiQualified": false,
+  "imageBuilds": 0,
+  "networkCampaignStarted": false,
+  "physicalPowerLossQualified": false,
+  "internalRocksDbAllocationBounded": false,
+  "liveDepositPersistenceV4Qualified": false,
+  "productionQualified": false,
+  "historicalFailures": [
+    {
+      "name": "arm-envelope01",
+      "status": "FAILED",
+      "reason": "compile-count guard expected only storage; actual storage and KZG were compiled, KZG object and generated setup bytes identical; build exit0, no tests01"
+    },
+    {
+      "name": "ci-guard01",
+      "status": "FAILED",
+      "cppCandidate": "0bdc9c8d",
+      "tests": 16,
+      "passed": 15,
+      "failed": 1,
+      "reason": "stale /Verified 25 daily core/ assertion versus actual26",
+      "evidenceKind": "tool execution transcript; original raw process stream was not separately saved"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "format": "nano-checkpoint-blob-focused-build-v1",
+  "sourceCandidate": "0bdc9c8de1343cc12b489ed5841703dd57caf975",
+  "architecture": "aarch64",
+  "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "imageBuilds": 0,
+  "networkCampaignStarted": false,
+  "productionQualified": false,
+  "phases": [
+    {
+      "name": "clone-output",
+      "exitCode": 0,
+      "elapsedMs": 835
+    },
+    {
+      "name": "configure",
+      "exitCode": 0,
+      "elapsedMs": 3323
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "elapsedMs": 14403
+    }
+  ],
+  "passed": false,
+  "inheritedCore": {
+    "path": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261025/cold-deposit-full-arm-root-01/outputs/libnano_core.a",
+    "bytes": 42295354,
+    "sha256": "9e98a5cfab663f9f2022cd582ef4d38cfef69343b35dd981372ff19db31613ee"
+  },
+  "compileCommands": [
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -I/work/third_party/secp256k1/include -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wpedantic -MD -MT CMakeFiles/nano_core.dir/src/kzg.cpp.o -MF CMakeFiles/nano_core.dir/src/kzg.cpp.o.d -o CMakeFiles/nano_core.dir/src/kzg.cpp.o -c /work/src/kzg.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -I/work/third_party/secp256k1/include -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wpedantic -MD -MT CMakeFiles/nano_core.dir/src/storage.cpp.o -MF CMakeFiles/nano_core.dir/src/storage.cpp.o.d -o CMakeFiles/nano_core.dir/src/storage.cpp.o -c /work/src/storage.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o -MF CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o.d -o CMakeFiles/nano-checkpoint-blob-bounded-read-tests.dir/tests/test_checkpoint_blob_bounded_read.cpp.o -c /work/tests/test_checkpoint_blob_bounded_read.cpp",
+    "/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -DNANO_SYNC_FAULT=1 -I/work/include -I/work/third_party -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -MD -MT CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o -MF CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o.d -o CMakeFiles/nano-checkpoint-blob-tests.dir/tests/test_checkpoint_blobs.cpp.o -c /work/tests/test_checkpoint_blobs.cpp"
+  ],
+  "failure": {
+    "type": "AssertionError",
+    "reason": "['/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -I/work/third_party/secp256k1/include -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wpedantic -MD -MT CMakeFiles/nano_core.dir/src/kzg.cpp.o -MF CMakeFiles/nano_core.dir/src/kzg.cpp.o.d -o CMakeFiles/nano_core.dir/src/kzg.cpp.o -c /work/src/kzg.cpp', '/usr/bin/clang++ -DMCL_BINT_ASM_X64=0 -DMCL_DONT_USE_XBYAK -DMCL_FP_BIT=384 -DMCL_FR_BIT=256 -DMCL_MSM=0 -DMCL_PORTABLE=1 -DMCL_USE_LLVM=1 -I/work/include -I/work/third_party -I/work/third_party/ckzg/src -I/work/third_party/ckzg/blst/bindings -I/out/third_party/ckzg/include -I/work/third_party/secp256k1/include -I/work/third_party/mcl/include -O3 -DNDEBUG -std=gnu++20 -Wall -Wextra -Wpedantic -MD -MT CMakeFiles/nano_core.dir/src/storage.cpp.o -MF CMakeFiles/nano_core.dir/src/storage.cpp.o.d -o CMakeFiles/nano_core.dir/src/storage.cpp.o -c /work/src/storage.cpp']"
+  },
+  "finishedAtUnix": 1792921773.0982609
+}

@@ -9407,3 +9407,10 @@ fork choice, live network finality or journal restoration. Eighteen failures
 remain visible. Live persistent pruning/v4, close/drain, full validator cycle,
 WAN, restoration and independent review remain OPEN.
 [Scope](qualification/capella-canonical-deposit-context-20261025/README.md).
+
+
+### 25 octobre 2026 — borne des copies de blobs de checkpoint
+
+Implémenté et qualifié par composant : le lecteur vérifie la taille avant les copies applicatives de hachage et de résultat. Candidat C++ `0bdc9c8d`, livraison de code `50070e03` (correction JavaScript uniquement après le candidat). Cinq CTests ciblés passent sur chacune des images Docker ARM64 et AMD64 existantes ; les sept observations de programme concordent. Les 16 tests des gardes CI passent et l’enregistrement quotidien comporte désormais 26 tests, sans prétendre avoir rejoué ces 26 tests C++ dans ce lot. Deux unités Core ont réellement compilé : stockage et KZG, dont l’objet et le header généré restent identiques. Les deux échecs de contrôle de ce lot et tous les échecs historiques sont conservés. Rapport : [checkpoint-blob-read-bound-20261025](qualification/checkpoint-blob-read-bound-20261025/README.md).
+
+Restent ouverts : allocations internes RocksDB, décompression, lecture d’identité et comparaisons de doublons du writer non bornées globalement ; persistance et migration v4 des arbres/contexte de dépôts froids, pruning vivant, restauration entière et reprise des duties/finalité commune, qualifications réseau/validateurs/ressources, reproductibilité, CI bloquée par le compte et revue indépendante. Aucun fork/EIP supplémentaire n’est qualifié par ce lot. Aucune image reconstruite, campagne réseau, vente ou déploiement public. Le principe de travail du lancement reste 1 Nanobees Base ↔ 1 NANO natif avec réserve intégrale et conversion bidirectionnelle ; ce n’est ni 1 USDC, ni une route active. L’objectif de production reste actif et incomplet.
