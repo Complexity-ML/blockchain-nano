@@ -1,0 +1,296 @@
+[
+  {
+    "name": "compiler-version",
+    "argv": [
+      "/usr/bin/clang++",
+      "--version"
+    ],
+    "timeoutSeconds": 10
+  },
+  {
+    "name": "prepare-output",
+    "argv": [
+      "/bin/mkdir",
+      "-p",
+      "/out/obj",
+      "/out/logs"
+    ],
+    "timeoutSeconds": 10
+  },
+  {
+    "name": "M-canonical_stream",
+    "argv": [
+      "/usr/bin/clang++",
+      "-DMCL_BINT_ASM_X64=0",
+      "-DMCL_DONT_USE_XBYAK",
+      "-DMCL_FP_BIT=384",
+      "-DMCL_FR_BIT=256",
+      "-DMCL_MSM=0",
+      "-DMCL_PORTABLE=1",
+      "-DMCL_USE_LLVM=1",
+      "-I/work/include",
+      "-I/work/third_party",
+      "-I/work/third_party/ckzg/src",
+      "-I/work/third_party/ckzg/blst/bindings",
+      "-I/work/third_party/ckzg/include",
+      "-I/work/third_party/secp256k1/include",
+      "-I/work/third_party/mcl/include",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++20",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-DNANO_TEST_SOURCE=\"/work\"",
+      "-MM",
+      "-MT",
+      "/out/obj/canonical_stream.o",
+      "-MF",
+      "/out/obj/canonical_stream.M",
+      "/work/tests/test_capella_canonical_stream.cpp"
+    ],
+    "timeoutSeconds": 60
+  },
+  {
+    "name": "M-bounded_audit",
+    "argv": [
+      "/usr/bin/clang++",
+      "-DMCL_BINT_ASM_X64=0",
+      "-DMCL_DONT_USE_XBYAK",
+      "-DMCL_FP_BIT=384",
+      "-DMCL_FR_BIT=256",
+      "-DMCL_MSM=0",
+      "-DMCL_PORTABLE=1",
+      "-DMCL_USE_LLVM=1",
+      "-I/work/include",
+      "-I/work/third_party",
+      "-I/work/third_party/ckzg/src",
+      "-I/work/third_party/ckzg/blst/bindings",
+      "-I/work/third_party/ckzg/include",
+      "-I/work/third_party/secp256k1/include",
+      "-I/work/third_party/mcl/include",
+      "-O1",
+      "-DNDEBUG",
+      "-std=gnu++20",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-DNANO_TEST_SOURCE=\"/work\"",
+      "-MM",
+      "-MT",
+      "/out/obj/bounded_audit.o",
+      "-MF",
+      "/out/obj/bounded_audit.M",
+      "/work/tests/test_capella_bounded_audit.cpp"
+    ],
+    "timeoutSeconds": 60
+  },
+  {
+    "name": "copy-core",
+    "argv": [
+      "/bin/cp",
+      "/base/libnano_core.a",
+      "/out/libnano_core.a"
+    ],
+    "timeoutSeconds": 10
+  },
+  {
+    "name": "writable-core",
+    "argv": [
+      "/bin/chmod",
+      "600",
+      "/out/libnano_core.a"
+    ],
+    "timeoutSeconds": 10
+  },
+  {
+    "name": "compile-canonical_stream",
+    "argv": [
+      "/usr/bin/clang++",
+      "-DMCL_BINT_ASM_X64=0",
+      "-DMCL_DONT_USE_XBYAK",
+      "-DMCL_FP_BIT=384",
+      "-DMCL_FR_BIT=256",
+      "-DMCL_MSM=0",
+      "-DMCL_PORTABLE=1",
+      "-DMCL_USE_LLVM=1",
+      "-I/work/include",
+      "-I/work/third_party",
+      "-I/work/third_party/ckzg/src",
+      "-I/work/third_party/ckzg/blst/bindings",
+      "-I/work/third_party/ckzg/include",
+      "-I/work/third_party/secp256k1/include",
+      "-I/work/third_party/mcl/include",
+      "-O3",
+      "-DNDEBUG",
+      "-std=gnu++20",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-DNANO_TEST_SOURCE=\"/work\"",
+      "-MMD",
+      "-MT",
+      "/out/obj/canonical_stream.o",
+      "-MF",
+      "/out/obj/canonical_stream.d",
+      "-o",
+      "/out/obj/canonical_stream.o",
+      "-c",
+      "/work/tests/test_capella_canonical_stream.cpp"
+    ],
+    "timeoutSeconds": 600
+  },
+  {
+    "name": "link-canonical_stream",
+    "argv": [
+      "/usr/bin/clang++",
+      "-O3",
+      "-DNDEBUG",
+      "/out/obj/canonical_stream.o",
+      "-o",
+      "/out/canonical_stream",
+      "/old/third_party/mcl/bint64.o",
+      "/old/third_party/mcl/base64.o",
+      "/out/libnano_core.a",
+      "/old/third_party/ckzg/libnano_ckzg.a",
+      "/old/third_party/ckzg/libnano_blst.a",
+      "/old/third_party/secp256k1/lib/libsecp256k1.a",
+      "/usr/lib/x86_64-linux-gnu/libgmpxx.so",
+      "/usr/lib/x86_64-linux-gnu/libgmp.so",
+      "/usr/lib/x86_64-linux-gnu/libssl.so",
+      "/usr/lib/x86_64-linux-gnu/libcrypto.so",
+      "/usr/lib/x86_64-linux-gnu/libicuuc.so",
+      "-ldl",
+      "/usr/lib/x86_64-linux-gnu/librocksdb.so",
+      "/old/lib/libmcl.a"
+    ],
+    "timeoutSeconds": 90
+  },
+  {
+    "name": "loader-canonical_stream",
+    "argv": [
+      "/usr/bin/ldd",
+      "/out/canonical_stream"
+    ],
+    "timeoutSeconds": 15
+  },
+  {
+    "name": "compile-bounded_audit",
+    "argv": [
+      "/usr/bin/clang++",
+      "-DMCL_BINT_ASM_X64=0",
+      "-DMCL_DONT_USE_XBYAK",
+      "-DMCL_FP_BIT=384",
+      "-DMCL_FR_BIT=256",
+      "-DMCL_MSM=0",
+      "-DMCL_PORTABLE=1",
+      "-DMCL_USE_LLVM=1",
+      "-I/work/include",
+      "-I/work/third_party",
+      "-I/work/third_party/ckzg/src",
+      "-I/work/third_party/ckzg/blst/bindings",
+      "-I/work/third_party/ckzg/include",
+      "-I/work/third_party/secp256k1/include",
+      "-I/work/third_party/mcl/include",
+      "-O1",
+      "-DNDEBUG",
+      "-std=gnu++20",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-DNANO_TEST_SOURCE=\"/work\"",
+      "-MMD",
+      "-MT",
+      "/out/obj/bounded_audit.o",
+      "-MF",
+      "/out/obj/bounded_audit.d",
+      "-o",
+      "/out/obj/bounded_audit.o",
+      "-c",
+      "/work/tests/test_capella_bounded_audit.cpp"
+    ],
+    "timeoutSeconds": 600
+  },
+  {
+    "name": "link-bounded_audit",
+    "argv": [
+      "/usr/bin/clang++",
+      "-O3",
+      "-DNDEBUG",
+      "/out/obj/bounded_audit.o",
+      "-o",
+      "/out/bounded_audit",
+      "/old/third_party/mcl/bint64.o",
+      "/old/third_party/mcl/base64.o",
+      "/out/libnano_core.a",
+      "/old/third_party/ckzg/libnano_ckzg.a",
+      "/old/third_party/ckzg/libnano_blst.a",
+      "/old/third_party/secp256k1/lib/libsecp256k1.a",
+      "/usr/lib/x86_64-linux-gnu/libgmpxx.so",
+      "/usr/lib/x86_64-linux-gnu/libgmp.so",
+      "/usr/lib/x86_64-linux-gnu/libssl.so",
+      "/usr/lib/x86_64-linux-gnu/libcrypto.so",
+      "/usr/lib/x86_64-linux-gnu/libicuuc.so",
+      "-ldl",
+      "/usr/lib/x86_64-linux-gnu/librocksdb.so",
+      "/old/lib/libmcl.a"
+    ],
+    "timeoutSeconds": 90
+  },
+  {
+    "name": "loader-bounded_audit",
+    "argv": [
+      "/usr/bin/ldd",
+      "/out/bounded_audit"
+    ],
+    "timeoutSeconds": 15
+  },
+  {
+    "name": "reuse-nano",
+    "argv": [
+      "/bin/cp",
+      "/previous/nano",
+      "/out/nano"
+    ],
+    "timeoutSeconds": 10
+  },
+  {
+    "name": "executable-nano",
+    "argv": [
+      "/bin/chmod",
+      "700",
+      "/out/nano"
+    ],
+    "timeoutSeconds": 10
+  },
+  {
+    "name": "loader-nano",
+    "argv": [
+      "/usr/bin/ldd",
+      "/out/nano"
+    ],
+    "timeoutSeconds": 15
+  },
+  {
+    "name": "run-canonical_stream",
+    "argv": [
+      "/out/canonical_stream"
+    ],
+    "timeoutSeconds": 360
+  },
+  {
+    "name": "run-bounded_audit",
+    "argv": [
+      "/out/bounded_audit"
+    ],
+    "timeoutSeconds": 600
+  },
+  {
+    "name": "run-nano",
+    "argv": [
+      "/out/nano",
+      "--help"
+    ],
+    "timeoutSeconds": 15
+  }
+]

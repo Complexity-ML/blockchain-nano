@@ -1,0 +1,114 @@
+TAP version 13
+# Subtest: exact twenty-three daily registrations validate without claiming full C++ qualification
+ok 1 - exact twenty-three daily registrations validate without claiming full C++ qualification
+  ---
+  duration_ms: 129.474762
+  ...
+# Subtest: missing, duplicated and foreign registrations cannot pass daily core gate
+ok 2 - missing, duplicated and foreign registrations cannot pass daily core gate
+  ---
+  duration_ms: 129.552739
+  ...
+# Subtest: all CTest skip properties are refused even when value is false
+ok 3 - all CTest skip properties are refused even when value is false
+  ---
+  duration_ms: 97.461517
+  ...
+# Subtest: green overrides cannot invert or ignore a failed positive C++ check
+ok 4 - green overrides cannot invert or ignore a failed positive C++ check
+  ---
+  duration_ms: 85.547544
+  ...
+# Subtest: explicit positive numeric budgets and unique properties are required
+ok 5 - explicit positive numeric budgets and unique properties are required
+  ---
+  duration_ms: 83.111311
+  ...
+# Subtest: new capture command, helper name, label and exact fifteen-second budget are bound
+ok 6 - new capture command, helper name, label and exact fifteen-second budget are bound
+  ---
+  duration_ms: 218.863136
+  ...
+# Subtest: duty availability registration cannot substitute a different program, mode, label or budget
+ok 7 - duty availability registration cannot substitute a different program, mode, label or budget
+  ---
+  duration_ms: 237.689964
+  ...
+# Subtest: RPC simulation context registration binds its program, dedicated selector, label and ninety-second budget
+ok 8 - RPC simulation context registration binds its program, dedicated selector, label and ninety-second budget
+  ---
+  duration_ms: 156.850858
+  ...
+# Subtest: new state reader and proof registrations bind every program, selector, label and ninety-second budget
+ok 9 - new state reader and proof registrations bind every program, selector, label and ninety-second budget
+  ---
+  duration_ms: 555.445283
+  ...
+# Subtest: adverse sync registration cannot be omitted or substituted by another program, mode, label or budget
+ok 10 - adverse sync registration cannot be omitted or substituted by another program, mode, label or budget
+  ---
+  duration_ms: 287.557671
+  ...
+# Subtest: legacy RPC registration keeps its real program, no selector, fixture cwd and 120-second budget
+ok 11 - legacy RPC registration keeps its real program, no selector, fixture cwd and 120-second budget
+  ---
+  duration_ms: 179.256274
+  ...
+# Subtest: all three replay/cancellation registrations require their own no-argument driver, exact budget and labels
+ok 12 - all three replay/cancellation registrations require their own no-argument driver, exact budget and labels
+  ---
+  duration_ms: 1066.757426
+  ...
+# Subtest: bounded canonical audit labels are an exact set and the old deposit-auditor selector cannot stand in for the thin stream driver
+ok 13 - bounded canonical audit labels are an exact set and the old deposit-auditor selector cannot stand in for the thin stream driver
+  ---
+  duration_ms: 289.592219
+  ...
+# Subtest: real daily shell builds and hashes every added driver and selects all twenty-three reviewed names
+ok 14 - real daily shell builds and hashes every added driver and selects all twenty-three reviewed names
+  ---
+  duration_ms: 3.655241
+  ...
+# Subtest: daily shell refuses a green CTest exit with a skipped or incomplete JUnit report
+not ok 15 - daily shell refuses a green CTest exit with a skipped or incomplete JUnit report
+  ---
+  duration_ms: 95.733192
+  location: 'file:///case/scripts/ci/check-core.test.mjs:135:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    {
+      "scenario": "incomplete",
+      "code": 1,
+      "signal": null,
+      "stdout": "CMake Error: The source directory \"/tmp/nano-core-selection-3a1LCf\" does not appear to contain CMakeLists.txt.\nSpecify --help for usage, or press the help button on the CMake GUI.\n",
+      "stderr": "+ set -euo pipefail\n+ [[ -n '' ]]\n+ build_dir=build\n+ mkdir -p ci-reports\n+ git -c safe.directory=/tmp/nano-core-selection-3a1LCf rev-parse HEAD\n+ cmake --version\n+ /usr/bin/node --version\n+ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release\n+ tee ci-reports/configure.log\n",
+      "selectionAudit": "<not created>",
+      "resultAudit": "<not created>"
+    }
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: |-
+    ctest executed
+    
+  actual: '<not created>'
+  operator: 'strictEqual'
+  stack: |-
+    file:///case/scripts/ci/check-core.test.mjs:171:10
+    async fixture (file:///case/scripts/ci/check-core.test.mjs:37:3)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+# Subtest: operations job refuses a missing mandatory recovery test before globs can hide it
+ok 16 - operations job refuses a missing mandatory recovery test before globs can hide it
+  ---
+  duration_ms: 46.371199
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 15
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3911.013335

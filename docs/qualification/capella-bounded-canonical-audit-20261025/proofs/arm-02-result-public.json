@@ -1,0 +1,113 @@
+{
+  "format": "nano-root-bounded-canonical-audit-build-test-v1",
+  "passed": true,
+  "firstFailure": null,
+  "secondaryFailures": [],
+  "sourceCandidate": "c0ffcea8326ecb39e3283db9932eb221c1d57232",
+  "architecture": "aarch64",
+  "actualDockerExitCode": 0,
+  "elapsedMs": 42424,
+  "heldSourceAndProviderFiles": 978,
+  "heldFilesClosed": 978,
+  "operatorFdLimitTemporarilyRaised": false,
+  "operatorFdLimitRestored": true,
+  "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "imageBuilds": 0,
+  "gitArchivePayloadsByteExact": true,
+  "knownEmptyGitFixtures": 3,
+  "newGitInputAdmission": {
+    "stableSamples": 3,
+    "stableSpanMs": 2125,
+    "files": 950,
+    "payloadsBoundToGit": true,
+    "retainedAuthoritiesRefreshed": false
+  },
+  "newGitArchiveAdmission": {
+    "stableSamples": 3,
+    "stableSpanMs": 2041,
+    "files": 1,
+    "payloadsBoundToGit": true,
+    "retainedAuthoritiesRefreshed": false
+  },
+  "cleanCoreBuild": false,
+  "currentHeaderMmdClosureQualified": false,
+  "archiveProof": {
+    "membersBefore": 143,
+    "membersAfter": 144,
+    "replacedExisting": [
+      "consensus_capella_audit.cpp.o",
+      "storage.cpp.o"
+    ],
+    "added": [
+      "consensus_capella_canonical_stream.cpp.o"
+    ],
+    "unchangedObjectPayloads": 141,
+    "allKeptObjectsByteExact": true,
+    "retainedObjectsCompiledWithHistoricalHeaders": true,
+    "completeCurrentHeaderMmdClosureClaimed": false,
+    "coreSourceBase": "e53e06c05f1befa7fa3aeb4970f22987c073d1e3",
+    "productionSourceCandidate": "5dfb9ddcaaa5ba1e2a6bedf1d038ba0e388c8b60",
+    "productionSourceUnchanged": true
+  },
+  "testResults": [
+    {
+      "name": "run-bounded_audit",
+      "exitCode": 0,
+      "stdout": "{\"auditBlsSignaturesCreated\":0,\"databaseFullNineAndShaUnchanged\":true,\"databaseMemoryPolicy\":{\"durabilityChanged\":false,\"maximumWriteBuffers\":2,\"sharedBlockCacheBytes\":0,\"sharedMemtableBytes\":16777216,\"totalProcessRssBound\":false,\"writeBufferBytes\":4194304},\"fixtureBlsSignatures\":1611,\"groups\":[{\"audit\":{\"allHistoricalStatesMaterialized\":false,\"archiveBytes\":238400,\"blocksIncludingTrustedAnchor\":161,\"canonicalHistoryVerified\":true,\"checkpointDigest\":\"0x6f00cd1ac3f35391793cc93947de74ecf60983065b84127b7a2381bdbf65cd0c\",\"checkpointSequence\":338,\"externalFinalizedAncestorVerified\":true,\"finalized\":{\"epoch\":\"0x12\",\"root\":\"0xd188c99774f71f2e6710ee6e1b531619720038b805ebb2568c5cec19a043e77d\"},\"firstExecutionBlock\":\"0x1\",\"head\":\"0x6550aec04ec15afd5dcdca470d098dd4f5b55c2a19c71b6a0df9bdc9189234b4\",\"historicalForkChoiceVerified\":false,\"historicalStandaloneVotesReplayed\":false,\"lastExecutionBlock\":\"0xa1\",\"prunedExecutionStatesReplayed\":143,\"replayWindow\":{\"auxiliaryDepositMemoryBounded\":false,\"finalReplayAnchorRoot\":\"0xd188c99774f71f2e6710ee6e1b531619720038b805ebb2568c5cec19a043e77d\",\"finalReplayAnchorSlot\":144,\"indexBytes\":17920,\"largestDepositHistoryCount\":0,\"maximumIndexBytes\":17920,\"maximumLiveBlocks\":64,\"maximumLiveStateBytes\":134217728,\"peakDepositAncestorRecords\":143,\"peakLiveBlocks\":33,\"peakLiveStateSszBytes\":686517,\"peakLiveStateSszPlusNextReserveBytes\":4861032,\"privateIndexAutomaticDeletion\":false,\"privateIndexLocatorRedacted\":true,\"privateIndexOwnershipForDeletionVerified\":false,\"processRssQualified\":false,\"prunes\":17,\"verifiedSignedBlocks\":160},\"requiredFinalized\":{\"epoch\":\"0x2\",\"root\":\"0xe637c682bb8d63d0d6ad5068200adfa2ad09ae41910d347c3a61d9a12189fe94\"},\"transactions\":0,\"trustedAnchor\":\"0xc3dfd65aa909be8e857b4130b5a1cea111beba58e85da024f8784167abbea818\"},\"case\":\"legacy-default-wrapper\"},{\"audit\":{\"allHistoricalStatesMaterialized\":false,\"archiveBytes\":238400,\"blocksIncludingTrustedAnchor\":161,\"canonicalHistoryVerified\":true,\"checkpointDigest\":\"0x6f00cd1ac3f35391793cc93947de74ecf60983065b84127b7a2381bdbf65cd0c\",\"checkpointSequence\":338,\"externalFinalizedAncestorVerified\":true,\"finalized\":{\"epoch\":\"0x12\",\"root\":\"0xd188c99774f71f2e6710ee6e1b531619720038b805ebb2568c5cec19a043e77d\"},\"firstExecutionBlock\":\"0x1\",\"head\":\"0x6550aec04ec15afd5dcdca470d098dd4f5b55c2a19c71b6a0df9bdc9189234b4\",\"historicalForkChoiceVerified\":false,\"historicalStandaloneVotesReplayed\":false,\"lastExecutionBlock\":\"0xa1\",\"prunedExecutionStatesReplayed\":143,\"replayWindow\":{\"auxiliaryDepositMemoryBounded\":false,\"finalReplayAnchorRoot\":\"0xd188c99774f71f2e6710ee6e1b531619720038b805ebb2568c5cec19a043e77d\",\"finalReplayAnchorSlot\":144,\"indexBytes\":17920,\"largestDepositHistoryCount\":0,\"maximumIndexBytes\":17920,\"maximumLiveBlocks\":48,\"maximumLiveStateBytes\":134217728,\"peakDepositAncestorRecords\":143,\"peakLiveBlocks\":33,\"peakLiveStateSszBytes\":686517,\"peakLiveStateSszPlusNextReserveBytes\":4861032,\"privateIndexAutomaticDeletion\":false,\"privateIndexLocatorRedacted\":true,\"privateIndexOwnershipForDeletionVerified\":false,\"processRssQualified\":false,\"prunes\":17,\"verifiedSignedBlocks\":160},\"requiredFinalized\":{\"epoch\":\"0x2\",\"root\":\"0xe637c682bb8d63d0d6ad5068200adfa2ad09ae41910d347c3a61d9a12189fe94\"},\"transactions\":0,\"trustedAnchor\":\"0xc3dfd65aa909be8e857b4130b5a1cea111beba58e85da024f8784167abbea818\"},\"case\":\"explicit-48-live\"},{\"case\":\"old-signature-outside-window\",\"refused\":true},{\"case\":\"insufficient-two-live\",\"refused\":true},{\"case\":\"cancellation-after-index-progress\",\"checkpoints\":356264,\"refused\":true},{\"case\":\"index-namespace-and-preexisting-ownership\",\"insideDatabaseRefusedBeforeCreation\":true,\"preexistingIndexSurvived\":true}],\"networkOrCampaignStarted\":false,\"passed\":true,\"physicalFenceFilesClosed\":118,\"physicalFenceFilesOpened\":118,\"processHighWater\":{\"afterDefaultAudit\":84508672,\"afterDurableMaterialization\":84508672,\"afterExplicitAudit\":84508672,\"afterFixture\":18968576,\"beforeDefaultAudit\":84508672,\"beforeExplicitAudit\":84508672,\"beforeFixture\":11309056,\"final\":84508672,\"isolatedAuditRssBoundQualified\":false,\"scope\":\"whole driver including public fixture generation, database materialization and audits\",\"unit\":\"bytes\"},\"productionQualified\":false,\"scenario\":\"actual-core-bounded-canonical-audit\",\"signedHistoryBlocks\":160,\"stateReservationIsProcessRss\":false}\n"
+    },
+    {
+      "name": "run-nano",
+      "exitCode": 0,
+      "stdout": "Nano local chain tools\nUsage: nano <init|status|audit|mine|validate|import|serve|run> <genesis.json> <database-directory> [arguments]\n  wallet <create|import|address|sign-message|sign-transaction|sign-typed-data> <keyfile> [data]\n  wallet deployment-address <keyfile> [nonce]\n  wallet create-many <new-directory> [count] (default: 10)\n  wallet hd-create <mnemonic-file> [word-count]; wallet hd-derive <keyfile> [index]\n  rpc <URL> <info|nodes|network|balance|send|deploy|receipt|mine> [arguments]\n  rpc <URL> <stake-register|stake-add> <keyfile> <contract> <amountNano>\n  rpc <URL> stake-withdraw <keyfile> <contract>\n  rpc <URL> deploy <keyfile> <bytecode-file> [timeout] [valueNano]\n  validator <config.json> [--once] (separate client)\n  init/status: show canonical chain status\n  mine/validate: <coinbase> <timestamp> [signed-raw-transactions.json]\n  audit-capella <genesis.json> <existing-database-directory> <audit-request.json> (offline canonical replay)\n  beacon-journal init <identity.json> <new-database> <new-receipt-directory>\n  beacon-journal status <identity.json> <database> <expected-commitment.json>\n  beacon-journal export <identity.json> <database> <expected-commitment.json> <new-receipt-directory>\n  beacon-journal import <identity.json> <database> <expected-commitment.json> <interchange.json> <max-bytes> <new-receipt-directory>\n  migrate: <genesis.json> <python-chaindb-directory> <new-database-directory>\n  import: <block.json> <current-timestamp>\n  run: [node-config.json] (RPC and P2P together)\n  serve: [port] [bind-address] [wallet-config.json] (defaults: 8545, 127.0.0.1)\n"
+    }
+  ],
+  "actualCompletedRuntimeMarkers": [
+    {
+      "name": "run-bounded_audit",
+      "actualExitCode": 0,
+      "stdoutSha256": "75f4d7915b71b1899fa53ba591006a98ca1a43fa878623e4a041bad5a450275c",
+      "stdoutBytes": 4293
+    },
+    {
+      "name": "run-nano",
+      "actualExitCode": 0,
+      "stdoutSha256": "7ec763dd4111d0593310c18cf848f83a60a120db5337ea85b2d27e47204b447e",
+      "stdoutBytes": 1601
+    }
+  ],
+  "inheritedRuntime": [
+    {
+      "name": "run-canonical_stream",
+      "stdoutPin": {
+        "bytes": 1261,
+        "sha256": "526268532bf6be082040d42206932df57c9d9663f959276050fc9b61f651034f"
+      },
+      "scope": "positive1026stream path/Core same; priorO1driver retained; newcatch diagnostics not exercised",
+      "actualExitCode": 0,
+      "reexecuted": false
+    }
+  ],
+  "completedCoreCompilationsRepeated": false,
+  "coreOptimization": "O3",
+  "testDriverOptimization": "O1",
+  "linkedPrograms": [
+    {
+      "name": "nano",
+      "source": "src/main.cpp",
+      "args": [
+        "--help"
+      ],
+      "expectedHelpText": "audit-capella <genesis.json> <existing-database-directory> <audit-request.json>",
+      "bytes": 13552008,
+      "sha256": "03ccf13d97c7896ad59410fc27c78aebd3e905f9a537cd8c28f678a041ee4029",
+      "hostPath": "/Users/boris/Documents/Codex/2026-09-20/users-boris-dev-blockchain-python/qualification-resume-20261025/canonical-audit-arm-root-01/outputs/nano"
+    }
+  ],
+  "networkCampaignStarted": false,
+  "realFundsUsed": false,
+  "productionQualified": false,
+  "newCore": {
+    "sha256": "d3de12dc48c620cb1049c5bc40896ac3286df5c0b2dcbef073f0343e89a06031",
+    "bytes": 41487030
+  }
+}

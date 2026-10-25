@@ -1,0 +1,108 @@
+{
+  "format": "nano-bounded-audit-software-identities-v1",
+  "software": [
+    {
+      "architecture": "linux-arm64",
+      "toolchainImage": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+      "productionSourceCandidate": "5dfb9ddcaaa5ba1e2a6bedf1d038ba0e388c8b60",
+      "testSourceCandidate": "c0ffcea8326ecb39e3283db9932eb221c1d57232",
+      "currentProductionSourcesUnchanged": true,
+      "nano": {
+        "sha256": "03ccf13d97c7896ad59410fc27c78aebd3e905f9a537cd8c28f678a041ee4029",
+        "bytes": 13552008
+      },
+      "core": {
+        "sha256": "d3de12dc48c620cb1049c5bc40896ac3286df5c0b2dcbef073f0343e89a06031",
+        "bytes": 41487030
+      },
+      "providers": [
+        {
+          "guestPath": "/old/lib/libmcl.a",
+          "bytes": 819100,
+          "sha256": "9cd061ad7ba7dc3afc0a3e3131ad5de30e417eda4e2786014a10cad59c6d384f"
+        },
+        {
+          "guestPath": "/old/third_party/ckzg/libnano_blst.a",
+          "bytes": 254382,
+          "sha256": "74f6492d65025a9efd2eabe28709f1d76754ba26feb958e5557cfc2264a4b30b"
+        },
+        {
+          "guestPath": "/old/third_party/ckzg/libnano_ckzg.a",
+          "bytes": 49148,
+          "sha256": "bfd5bce272c74751ea71135e21c72b68eca9f95864e9f68a2cd23bc0dbd3dde3"
+        },
+        {
+          "guestPath": "/old/third_party/mcl/base64.o",
+          "bytes": 51568,
+          "sha256": "fe5060c1f64bf94ef3fef56e88e82008bbdbb5deffbacff11bc88624bd2855c9"
+        },
+        {
+          "guestPath": "/old/third_party/mcl/bint64.o",
+          "bytes": 16128,
+          "sha256": "cb9bbe48067df83ccd5d2fa76dc7157bfc289532f86b1f7526b01b065d895c22"
+        },
+        {
+          "guestPath": "/old/third_party/secp256k1/lib/libsecp256k1.a",
+          "bytes": 1272190,
+          "sha256": "751f172a0ea8fd36fe6237bf0f7c3b28ca942d7f55083e6057d7de72c3f0558b"
+        }
+      ],
+      "cliQualification": "linked ELF and --help smoke only",
+      "imageRebuiltOrDeployed": false,
+      "nativeMacExecutableQualified": false,
+      "wholeCurrentHeaderMmdClosureQualified": false
+    },
+    {
+      "architecture": "linux-amd64",
+      "toolchainImage": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+      "productionSourceCandidate": "5dfb9ddcaaa5ba1e2a6bedf1d038ba0e388c8b60",
+      "testSourceCandidate": "c0ffcea8326ecb39e3283db9932eb221c1d57232",
+      "currentProductionSourcesUnchanged": true,
+      "nano": {
+        "sha256": "791f0aca50318b3b70c21070f000a5cf8104b89bff0407feaecacf832be27487",
+        "bytes": 14109824
+      },
+      "core": {
+        "sha256": "9d0ca7dcf313d71a365fd1b40f8fa4531d3d870293f2935ad77959a488a1175d",
+        "bytes": 41253306
+      },
+      "providers": [
+        {
+          "guestPath": "/old/third_party/mcl/bint64.o",
+          "bytes": 19760,
+          "sha256": "d2a30108ee051c3d5a473dee43535c88a447aa81961819565b75fd5ee4038d17"
+        },
+        {
+          "guestPath": "/old/third_party/mcl/base64.o",
+          "bytes": 64200,
+          "sha256": "0eadf929b9dacc4acfc64f648c4e14374d6f35a9d3223f7d9f5743e400dddec9"
+        },
+        {
+          "guestPath": "/old/third_party/ckzg/libnano_ckzg.a",
+          "bytes": 54340,
+          "sha256": "f816e478d405c4d0534ef231d205975fc9eacacbb0e5dc360d7d6de62d0e4cd5"
+        },
+        {
+          "guestPath": "/old/third_party/ckzg/libnano_blst.a",
+          "bytes": 313998,
+          "sha256": "d49255c72f14c75bf92d665978f5e43c709499604fe3a7aab49c59397a9f9c83"
+        },
+        {
+          "guestPath": "/old/third_party/secp256k1/lib/libsecp256k1.a",
+          "bytes": 1310950,
+          "sha256": "ea23660ba94127725ba64f9d311757d23811e926d6f9924dacb4ec32a08bb6c6"
+        },
+        {
+          "guestPath": "/old/lib/libmcl.a",
+          "bytes": 830682,
+          "sha256": "f5be373399ca12a4e98e7b8d8a07280def307418c2eb0a3b454769cafbdf42b7"
+        }
+      ],
+      "cliQualification": "linked ELF and --help smoke only",
+      "imageRebuiltOrDeployed": false,
+      "nativeMacExecutableQualified": false,
+      "wholeCurrentHeaderMmdClosureQualified": false
+    }
+  ],
+  "productionQualified": false
+}
