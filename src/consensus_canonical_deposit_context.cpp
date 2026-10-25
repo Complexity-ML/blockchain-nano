@@ -42,6 +42,9 @@ ConsensusRoot digest(std::string_view text) {
 std::string raw(const ConsensusRoot& root) {
  return std::string(reinterpret_cast<const char*>(root.data()), root.size());
 }
+std::string root_hex(const ConsensusRoot& root) {
+ return nano::hex(Bytes(root.begin(), root.end()));
+}
 ConsensusRoot root(const Json& value) {
  require(value.is_string(), "deposit context root type");
  const auto& text = value.get_ref<const std::string&>();
@@ -169,7 +172,7 @@ struct Row {
 };
 Json beacon_json(const ConsensusBeaconHeader& h) {
  return Json::array({integer(h.slot), integer(h.proposer_index),
-                     hex(h.parent_root), hex(h.state_root), hex(h.body_root)});
+                     root_hex(h.parent_root), root_hex(h.state_root), root_hex(h.body_root)});
 }
 std::string encode_row(uint64_t ordinal, const std::optional<ConsensusRoot>& parent,
                        const CapellaDepositAncestor& tuple, const Bytes& profile,
@@ -177,9 +180,9 @@ std::string encode_row(uint64_t ordinal, const std::optional<ConsensusRoot>& par
  std::string encoded_jumps;
  for (const auto& location : jumps) encoded_jumps += encode_locator(location);
  return Json::array({"nano-canonical-deposit-tuple-v1", hex(profile), integer(ordinal),
-                     parent ? Json(hex(*parent)) : Json(nullptr),
+                     parent ? Json(root_hex(*parent)) : Json(nullptr),
                      beacon_json(tuple.beacon), tuple.execution.to_json(),
-                     integer(tuple.count), hex(tuple.root),
+                     integer(tuple.count), root_hex(tuple.root),
                      hex(Bytes(encoded_jumps.begin(), encoded_jumps.end()))}).dump();
 }
 bool same_tuple(const CapellaDepositAncestor& a, const CapellaDepositAncestor& b) {
@@ -285,8 +288,8 @@ struct CanonicalDepositContextState {
  std::string next_metadata(uint64_t t, uint64_t tb, uint64_t b, uint64_t bb,
                             const ConsensusRoot& tip) const {
   return Json::array({"nano-canonical-deposit-context-v1", hex(profile),
-                     hex(anchor_digest), integer(t), integer(tb), integer(b),
-                     integer(bb), hex(tip)}).dump();
+                     root_hex(anchor_digest), integer(t), integer(tb), integer(b),
+                     integer(bb), root_hex(tip)}).dump();
  }
  void check_metadata(const Checkpoint& check) const {
   fence(check);
@@ -424,7 +427,7 @@ std::shared_ptr<CanonicalDepositContext> CanonicalDepositContext::create(
   throw std::length_error("deposit context anchor capacity");
  state->anchor_digest = state->tip_digest = digest(encoded);
  state->marker = Json::array({"nano-canonical-deposit-owner-v1", hex(profile),
-                              hex(consensus_beacon_header_root(anchor.beacon))}).dump();
+                              root_hex(consensus_beacon_header_root(anchor.beacon))}).dump();
  checkpoint(check);
  if (::mkdir(directory.c_str(), 0700) != 0)
   throw std::runtime_error("deposit context requires new directory");
