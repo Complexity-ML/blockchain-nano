@@ -1,0 +1,315 @@
+TAP version 13
+# Subtest: real guarded observe preserves exact SHA/full9/cache predicates and closes successful reads
+ok 1 - real guarded observe preserves exact SHA/full9/cache predicates and closes successful reads
+  ---
+  duration_ms: 9.408544
+  ...
+# Subtest: real observe refuses late realpath/read/stat while every opened FD is closed
+ok 2 - real observe refuses late realpath/read/stat while every opened FD is closed
+  ---
+  duration_ms: 7.621806
+  ...
+# Subtest: real fstat failure after open now closes the descriptor and retains its original error
+ok 3 - real fstat failure after open now closes the descriptor and retains its original error
+  ---
+  duration_ms: 0.937586
+  ...
+# Subtest: real save stops after late open/write/sync without further writes or NEW admission
+ok 4 - real save stops after late open/write/sync without further writes or NEW admission
+  ---
+  duration_ms: 2.604762
+  ...
+# Subtest: real save callback checks the existing global budget inside NEW sampling without changing retained predicates
+ok 5 - real save callback checks the existing global budget inside NEW sampling without changing retained predicates
+  ---
+  duration_ms: 1.173409
+  ...
+# Subtest: real fence checks an empty expired closure and never proceeds to later rows after late IO
+ok 6 - real fence checks an empty expired closure and never proceeds to later rows after late IO
+  ---
+  duration_ms: 1.33618
+  ...
+# Subtest: real pre-export caller refuses late planning-profile IO before exporter or additional output
+ok 7 - real pre-export caller refuses late planning-profile IO before exporter or additional output
+  ---
+  duration_ms: 2.701851
+  ...
+# Subtest: readonly serial report includes growing Linux fanout and does not qualify an arbitrary reserve
+ok 8 - readonly serial report includes growing Linux fanout and does not qualify an arbitrary reserve
+  ---
+  duration_ms: 2.519228
+  ...
+# Subtest: real terminal sequence retains a late IO error and continues later owned cleanup stages
+ok 9 - real terminal sequence retains a late IO error and continues later owned cleanup stages
+  ---
+  duration_ms: 1.39715
+  ...
+# Subtest: real Mac inventory getter is readonly and publishes counts rather than private locators
+ok 10 - real Mac inventory getter is readonly and publishes counts rather than private locators
+  ---
+  duration_ms: 16.135896
+  ...
+# Subtest: real signal dispatch keeps WORK origin aborted while new bounded closeout IO retains FAILED verdict and second signal
+ok 11 - real signal dispatch keeps WORK origin aborted while new bounded closeout IO retains FAILED verdict and second signal
+  ---
+  duration_ms: 3.11261
+  ...
+# Subtest: real FD finally preserves the primary error when close also rejects and never admits late or refused close
+ok 12 - real FD finally preserves the primary error when close also rejects and never admits late or refused close
+  ---
+  duration_ms: 2.090855
+  ...
+# Subtest: actual runner inventory covers restored audit and transitive finality/monitor dependencies
+ok 13 - actual runner inventory covers restored audit and transitive finality/monitor dependencies
+  ---
+  duration_ms: 84.770573
+  ...
+# Subtest: dependency-only edit changes its hash while entry hash remains identical
+ok 14 - dependency-only edit changes its hash while entry hash remains identical # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.255586
+  ...
+# Subtest: multiline imports, side effects and cycles are included once
+ok 15 - multiline imports, side effects and cycles are included once # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.09783
+  ...
+# Subtest: missing imported dependency fails rather than making a partial manifest
+ok 16 - missing imported dependency fails rather than making a partial manifest # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.114871
+  ...
+# Subtest: import outside repository is rejected
+ok 17 - import outside repository is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.111965
+  ...
+# Subtest: symlink to external source is rejected
+ok 18 - symlink to external source is rejected # SKIP test name does not match pattern
+  ---
+  duration_ms: 0.087407
+  ...
+# Subtest: actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+ok 19 - actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+  ---
+  duration_ms: 25402.173416
+  ...
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 20 - new output admission: actual save rejects transient ctime sample before stable first admission
+  ---
+  duration_ms: 7.354701
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 21 - new output admission: three strict samples span two seconds and ctime change resets the run
+  ---
+  duration_ms: 5.93669
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 22 - new output admission: every known-byte and creation-identity mismatch refuses without retry
+  ---
+  duration_ms: 29.27542
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 23 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+  ---
+  duration_ms: 10.718628
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 24 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+  ---
+  duration_ms: 5.886089
+  ...
+# Subtest: terminal sequence preserves first error and separates recorder failures without skipping later checks
+ok 25 - terminal sequence preserves first error and separates recorder failures without skipping later checks
+  ---
+  duration_ms: 5.263335
+  ...
+# Subtest: terminal sequence refuses duplicate, invalid and concurrent stage execution before callback
+ok 26 - terminal sequence refuses duplicate, invalid and concurrent stage execution before callback
+  ---
+  duration_ms: 2.677666
+  ...
+# Subtest: actual finally closes handles before captures, commits before replay, and fences after owned cleanup
+ok 27 - actual finally closes handles before captures, commits before replay, and fences after owned cleanup
+  ---
+  duration_ms: 11.514281
+  ...
+# Subtest: actual finally records incomplete lifecycle independently while all terminal fences still execute
+ok 28 - actual finally records incomplete lifecycle independently while all terminal fences still execute
+  ---
+  duration_ms: 9.900969
+  ...
+# Subtest: actual finally retains body error through secondary cleanup, software and recording failures
+ok 29 - actual finally retains body error through secondary cleanup, software and recording failures
+  ---
+  duration_ms: 3.610129
+  ...
+# Subtest: actual finally never captures after an unjoined child and still attempts cleanup and fences
+ok 30 - actual finally never captures after an unjoined child and still attempts cleanup and fences
+  ---
+  duration_ms: 2.619633
+  ...
+# Subtest: actual finally requires both successful clean joins even when a forced or throwing join already closed its child
+ok 31 - actual finally requires both successful clean joins even when a forced or throwing join already closed its child
+  ---
+  duration_ms: 18.697496
+  ...
+# Subtest: actual finally refuses stale stopped receipts and journal audits when an owner stop or stopped-state check fails
+ok 32 - actual finally refuses stale stopped receipts and journal audits when an owner stop or stopped-state check fails
+  ---
+  duration_ms: 5.585996
+  ...
+# Subtest: actual finally fences original sources and all retained families after the final software probes and their cleanup
+ok 33 - actual finally fences original sources and all retained families after the final software probes and their cleanup
+  ---
+  duration_ms: 7.701477
+  ...
+# Subtest: actual finally cleans only new readonly fence operations under owner guards and treats a late stop as failure
+not ok 34 - actual finally cleans only new readonly fence operations under owner guards and treats a late stop as failure
+  ---
+  duration_ms: 4.463182
+  location: 'file:///case/tests/multihost/terminal-evidence.test.mjs:141:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    
+    false !== true
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///case/tests/multihost/terminal-evidence.test.mjs:143:323)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+# Subtest: actual finally keeps individual owner commitments if one capture fails, without closing an incomplete set
+ok 35 - actual finally keeps individual owner commitments if one capture fails, without closing an incomplete set
+  ---
+  duration_ms: 2.670612
+  ...
+# Subtest: actual finally refuses post-cleanup software, retained source and retained output mutation separately
+ok 36 - actual finally refuses post-cleanup software, retained source and retained output mutation separately
+  ---
+  duration_ms: 7.271753
+  ...
+# Subtest: actual finally refuses absent initial admission and enforces owned image before stopping a late container
+not ok 37 - actual finally refuses absent initial admission and enforces owned image before stopping a late container
+  ---
+  duration_ms: 4.542722
+  location: 'file:///case/tests/multihost/terminal-evidence.test.mjs:154:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    The input did not match the regular expression /owner image\/label/. Input:
+    
+    'dockerRuntimeInspectTemplate is not defined'
+    
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual: 'dockerRuntimeInspectTemplate is not defined'
+  operator: 'match'
+  stack: |-
+    TestContext.<anonymous> (file:///case/tests/multihost/terminal-evidence.test.mjs:156:118)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+# Subtest: actual finally retains original failure when terminal publication itself fails
+ok 38 - actual finally retains original failure when terminal publication itself fails
+  ---
+  duration_ms: 4.617276
+  ...
+# Subtest: C8 actual finally joins clients before runtime cleanup and publishes only a provisional result
+not ok 39 - C8 actual finally joins clients before runtime cleanup and publishes only a provisional result
+  ---
+  duration_ms: 4.801986
+  location: 'file:///case/tests/multihost/terminal-evidence.test.mjs:164:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected values to be strictly equal:
+    + actual - expected
+    
+    + ReferenceError: specSha is not defined
+    +     at eval (eval at terminalFixture (file:///case/tests/multihost/terminal-evidence.test.mjs:86:16), <anonymous>:8:249)
+    +     at Object.attempt (file:///case/tests/multihost/terminal-evidence.mjs:17:15)
+    +     at terminalStage (eval at terminalFixture (file:///case/tests/multihost/terminal-evidence.test.mjs:86:16), <anonymous>:6:81)
+    +     at eval (eval at terminalFixture (file:///case/tests/multihost/terminal-evidence.test.mjs:86:16), <anonymous>:8:27)
+    +     at Object.run (file:///case/tests/multihost/terminal-evidence.test.mjs:87:70)
+    +     at TestContext.<anonymous> (file:///case/tests/multihost/terminal-evidence.test.mjs:165:52)
+    +     at Test.runInAsyncScope (node:async_hooks:203:9)
+    +     at Test.run (node:internal/test_runner/test:631:25)
+    +     at Test.processPendingSubtests (node:internal/test_runner/test:374:18)
+    +     at Test.postRun (node:internal/test_runner/test:715:19)
+    - null
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  actual:
+  error: 'specSha is not defined'
+  name: 'ReferenceError'
+  stack: |-
+    eval (eval at terminalFixture (file:///case/tests/multihost/terminal-evidence.test.mjs:86:16), <anonymous>:8:249)
+    Object.attempt (file:///case/tests/multihost/terminal-evidence.mjs:17:15)
+    terminalStage (eval at terminalFixture (file:///case/tests/multihost/terminal-evidence.test.mjs:86:16), <anonymous>:6:81)
+    eval (eval at terminalFixture (file:///case/tests/multihost/terminal-evidence.test.mjs:86:16), <anonymous>:8:27)
+    Object.run (file:///case/tests/multihost/terminal-evidence.test.mjs:87:70)
+    TestContext.<anonymous> (file:///case/tests/multihost/terminal-evidence.test.mjs:165:52)
+    Test.runInAsyncScope (node:async_hooks:203:9)
+    Test.run (node:internal/test_runner/test:631:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:374:18)
+    Test.postRun (node:internal/test_runner/test:715:19)
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///case/tests/multihost/terminal-evidence.test.mjs:166:9)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+# Subtest: C8 actual finally preserves an effective late deadline failure after a ready provisional publication
+not ok 40 - C8 actual finally preserves an effective late deadline failure after a ready provisional publication
+  ---
+  duration_ms: 2.040123
+  location: 'file:///case/tests/multihost/terminal-evidence.test.mjs:179:1'
+  failureType: 'testCodeFailure'
+  error: 'The prior ready snapshot is deliberately not a terminal verdict'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///case/tests/multihost/terminal-evidence.test.mjs:181:9)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+# Subtest: C8 actual finally retains a client-join failure while stopping owners and attempting all original fences
+not ok 41 - C8 actual finally retains a client-join failure while stopping owners and attempting all original fences
+  ---
+  duration_ms: 4.025295
+  location: 'file:///case/tests/multihost/terminal-evidence.test.mjs:186:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Expected "actual" to be reference-equal to "expected":
+    + actual - expected
+    
+    + [ReferenceError: specSha is not defined]
+    - [Error: owned command join failed]
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected:
+  actual:
+  operator: 'strictEqual'
+  stack: |-
+    TestContext.<anonymous> (file:///case/tests/multihost/terminal-evidence.test.mjs:188:9)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+1..41
+# tests 41
+# suites 0
+# pass 31
+# fail 5
+# cancelled 0
+# skipped 5
+# todo 0
+# duration_ms 26658.21036

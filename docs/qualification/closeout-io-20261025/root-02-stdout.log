@@ -1,0 +1,95 @@
+TAP version 13
+# Subtest: terminal sequence preserves first error and separates recorder failures without skipping later checks
+ok 1 - terminal sequence preserves first error and separates recorder failures without skipping later checks
+  ---
+  duration_ms: 6.358082
+  ...
+# Subtest: terminal sequence refuses duplicate, invalid and concurrent stage execution before callback
+ok 2 - terminal sequence refuses duplicate, invalid and concurrent stage execution before callback
+  ---
+  duration_ms: 1.529134
+  ...
+# Subtest: actual finally closes handles before captures, commits before replay, and fences after owned cleanup
+ok 3 - actual finally closes handles before captures, commits before replay, and fences after owned cleanup
+  ---
+  duration_ms: 13.764844
+  ...
+# Subtest: actual finally records incomplete lifecycle independently while all terminal fences still execute
+ok 4 - actual finally records incomplete lifecycle independently while all terminal fences still execute
+  ---
+  duration_ms: 12.28944
+  ...
+# Subtest: actual finally retains body error through secondary cleanup, software and recording failures
+ok 5 - actual finally retains body error through secondary cleanup, software and recording failures
+  ---
+  duration_ms: 4.180974
+  ...
+# Subtest: actual finally never captures after an unjoined child and still attempts cleanup and fences
+ok 6 - actual finally never captures after an unjoined child and still attempts cleanup and fences
+  ---
+  duration_ms: 2.62079
+  ...
+# Subtest: actual finally requires both successful clean joins even when a forced or throwing join already closed its child
+ok 7 - actual finally requires both successful clean joins even when a forced or throwing join already closed its child
+  ---
+  duration_ms: 13.133523
+  ...
+# Subtest: actual finally refuses stale stopped receipts and journal audits when an owner stop or stopped-state check fails
+ok 8 - actual finally refuses stale stopped receipts and journal audits when an owner stop or stopped-state check fails
+  ---
+  duration_ms: 5.741799
+  ...
+# Subtest: actual finally fences original sources and all retained families after the final software probes and their cleanup
+ok 9 - actual finally fences original sources and all retained families after the final software probes and their cleanup
+  ---
+  duration_ms: 7.836444
+  ...
+# Subtest: actual finally cleans only new readonly fence operations under owner guards and treats a late stop as failure
+ok 10 - actual finally cleans only new readonly fence operations under owner guards and treats a late stop as failure
+  ---
+  duration_ms: 4.490313
+  ...
+# Subtest: actual finally keeps individual owner commitments if one capture fails, without closing an incomplete set
+ok 11 - actual finally keeps individual owner commitments if one capture fails, without closing an incomplete set
+  ---
+  duration_ms: 1.523019
+  ...
+# Subtest: actual finally refuses post-cleanup software, retained source and retained output mutation separately
+ok 12 - actual finally refuses post-cleanup software, retained source and retained output mutation separately
+  ---
+  duration_ms: 7.521805
+  ...
+# Subtest: actual finally refuses absent initial admission and enforces owned image before stopping a late container
+ok 13 - actual finally refuses absent initial admission and enforces owned image before stopping a late container
+  ---
+  duration_ms: 4.362845
+  ...
+# Subtest: actual finally retains original failure when terminal publication itself fails
+ok 14 - actual finally retains original failure when terminal publication itself fails
+  ---
+  duration_ms: 41.941735
+  ...
+# Subtest: C8 actual finally joins clients before runtime cleanup and publishes only a provisional result
+ok 15 - C8 actual finally joins clients before runtime cleanup and publishes only a provisional result
+  ---
+  duration_ms: 3.197657
+  ...
+# Subtest: C8 actual finally preserves an effective late deadline failure after a ready provisional publication
+ok 16 - C8 actual finally preserves an effective late deadline failure after a ready provisional publication
+  ---
+  duration_ms: 2.961757
+  ...
+# Subtest: C8 actual finally retains a client-join failure while stopping owners and attempting all original fences
+ok 17 - C8 actual finally retains a client-join failure while stopping owners and attempting all original fences
+  ---
+  duration_ms: 2.723161
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 600.741688

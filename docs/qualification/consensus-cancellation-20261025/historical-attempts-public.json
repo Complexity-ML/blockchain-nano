@@ -1,0 +1,156 @@
+{
+  "format": "nano-core-cancellation-build-test-history-v1",
+  "campaignAttempts": false,
+  "earlierFailuresPreserved": true,
+  "attempts": [
+    {
+      "passed": false,
+      "firstFailure": {
+        "type": "ValueError",
+        "reason": "bounded regular source/provider"
+      },
+      "actualDockerExitCode": null,
+      "elapsedMs": 1122,
+      "heldSourceAndProviderFiles": 1338,
+      "heldFilesClosed": 1338,
+      "id": "core-build-arm-01",
+      "fullRetainedResult": {
+        "sha256": "11ff895a24ac21d03b10cbff07f5ffae8911993c5d94233ff87b5cb350ae90a2",
+        "bytes": 3850
+      },
+      "secondaryFailureCount": 30,
+      "secondaryKinds": [
+        "fence"
+      ]
+    },
+    {
+      "passed": false,
+      "firstFailure": {
+        "type": "ValueError",
+        "reason": "actual core compile/test Docker exit zero"
+      },
+      "actualDockerExitCode": 1,
+      "elapsedMs": 34347,
+      "heldSourceAndProviderFiles": 1813,
+      "heldFilesClosed": 1813,
+      "id": "core-build-arm-02",
+      "fullRetainedResult": {
+        "sha256": "952e42a6a8e40e2d961d8b9e509e22cbdc3d06fb300b7225adc7e73bd45856d6",
+        "bytes": 171610
+      },
+      "secondaryFailureCount": 1689,
+      "secondaryKinds": [
+        "fence"
+      ],
+      "lastStartedStage": "{\"stage\":63,\"name\":\"M-capella_transition\"}"
+    },
+    {
+      "passed": false,
+      "firstFailure": {
+        "type": "ValueError",
+        "reason": "source first FD/path fence"
+      },
+      "actualDockerExitCode": null,
+      "elapsedMs": 760,
+      "heldSourceAndProviderFiles": 3,
+      "heldFilesClosed": 3,
+      "id": "core-build-arm-03",
+      "fullRetainedResult": {
+        "sha256": "b2bf0751b30661e85bf8ad793f20e9908924ec1fb14abc4389b8e7d1c2fbcb7e",
+        "bytes": 908
+      },
+      "secondaryFailureCount": 0,
+      "secondaryKinds": []
+    },
+    {
+      "passed": false,
+      "firstFailure": {
+        "type": "ValueError",
+        "reason": "actual core compile/test Docker exit zero"
+      },
+      "actualDockerExitCode": 1,
+      "elapsedMs": 115895,
+      "heldSourceAndProviderFiles": 1854,
+      "heldFilesClosed": 1854,
+      "id": "core-build-arm-04",
+      "fullRetainedResult": {
+        "sha256": "dc774f85c4cca522f29afc613ca3af28eefc1bd5a565fbace9e7d12aec1fb5ff",
+        "bytes": 1371
+      },
+      "secondaryFailureCount": 0,
+      "secondaryKinds": [],
+      "lastStartedStage": "{\"stage\":67,\"name\":\"run-capella_transitionlocal-exits\"}"
+    },
+    {
+      "passed": false,
+      "firstFailure": {
+        "type": "ValueError",
+        "reason": "bounded regular source/provider"
+      },
+      "actualDockerExitCode": null,
+      "elapsedMs": 1335,
+      "heldSourceAndProviderFiles": 1338,
+      "heldFilesClosed": 1338,
+      "id": "core-build-amd-01",
+      "fullRetainedResult": {
+        "sha256": "7b743c25da39d2dafd47c23da8dc5df831ff17b6e8989c954876a95152c2a69b",
+        "bytes": 816
+      },
+      "secondaryFailureCount": 0,
+      "secondaryKinds": []
+    },
+    {
+      "passed": false,
+      "firstFailure": {
+        "type": "ValueError",
+        "reason": "actual core compile/test Docker exit zero"
+      },
+      "actualDockerExitCode": 1,
+      "elapsedMs": 141572,
+      "heldSourceAndProviderFiles": 1813,
+      "heldFilesClosed": 1813,
+      "id": "core-build-amd-02",
+      "fullRetainedResult": {
+        "sha256": "4bf1a2961c438aaaf855560637b0d505dfee0c098b1237f7b775d30d79f4b9ca",
+        "bytes": 1018
+      },
+      "secondaryFailureCount": 0,
+      "secondaryKinds": [],
+      "lastStartedStage": "{\"stage\":63,\"name\":\"M-capella_transition\"}"
+    },
+    {
+      "passed": false,
+      "firstFailure": {
+        "type": "ValueError",
+        "reason": "actual core compile/test Docker exit zero"
+      },
+      "actualDockerExitCode": 124,
+      "elapsedMs": 379930,
+      "heldSourceAndProviderFiles": 1854,
+      "heldFilesClosed": 1854,
+      "id": "core-build-amd-03",
+      "fullRetainedResult": {
+        "sha256": "37606949d8add83ff5459c980b21e3737a81b2d6ee97a894f3114df814a3e920",
+        "bytes": 1196
+      },
+      "secondaryFailureCount": 0,
+      "secondaryKinds": [],
+      "lastStartedStage": "{\"stage\":64,\"name\":\"compile-capella_transition\"}"
+    },
+    {
+      "id": "capella-fixture-arm-01",
+      "passed": false,
+      "firstFailure": {
+        "type": "ValueError",
+        "reason": "exact fixture count and FD bound"
+      },
+      "actualDockerExitCode": null,
+      "secondaryFailureCount": 0,
+      "fullRetainedResult": {
+        "sha256": "08ed0ba785f2f0a10f95060a69501f02ee2318b218a0afe6986578f047f27acb",
+        "bytes": 7732
+      }
+    }
+  ],
+  "historicalMacMetadataRefusalCauseIdentified": false
+}

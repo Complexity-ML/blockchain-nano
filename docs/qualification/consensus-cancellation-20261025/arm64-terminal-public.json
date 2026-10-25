@@ -1,0 +1,217 @@
+{
+  "format": "nano-root-capella-fixture-only-continuation-v1",
+  "passed": true,
+  "firstFailure": null,
+  "secondaryFailures": [],
+  "sourceCandidate": "e53e06c05f1befa7fa3aeb4970f22987c073d1e3",
+  "architecture": "aarch64",
+  "priorBatchRemainsFailed": true,
+  "priorInputAuthoritiesRefreshed": false,
+  "newRuntimeFixtureAdmission": {
+    "stableSamples": 3,
+    "stableSpanMs": 2156,
+    "files": 916,
+    "payloadsBoundToGit": true,
+    "retainedAuthoritiesRefreshed": false
+  },
+  "actualDockerExitCode": 0,
+  "elapsedMs": 13009,
+  "heldFilesOpened": 2967,
+  "heldFilesClosed": 2967,
+  "operatorFdLimitRestored": true,
+  "image": "sha256:e30ce85e363309a64814c300fbf07b482e28b841c8f9577cba9b4e70070d37fb",
+  "imageBuilds": 0,
+  "cppCompilationsRepeated": 0,
+  "inheritedTestInvocations": [
+    {
+      "name": "run-consensus_cancellation",
+      "actualExitCode": 0,
+      "reexecuted": false,
+      "executable": {
+        "sha256": "bd2d92b19580ad7a75eb707f67df1f2f9a9570bea82278c904cadc79d4779b73",
+        "bytes": 579640
+      },
+      "stdout": "{\"cases\":28,\"consensusCampaignExecuted\":false,\"groups\":[\"registry-inspection-before-late-invalid-row\",\"registry-staging-activation-and-cancellation\",\"voluntary-exit-stages-and-versioned-dispatch\",\"proposer-slashing-progress-and-late-rollback\",\"registry-attester-slashing-progress-and-late-rollback\",\"committee-attester-overloads-and-index-loop\",\"delayed-penalty-read-loops\",\"slashing-epoch-staging-and-final-swap\"],\"newNetworkIdentities\":false,\"persistent\":false,\"productionQualified\":false,\"scenario\":\"consensus-cooperative-registry-cancellation\",\"syntheticRegistryEntries\":8192}\n"
+    },
+    {
+      "name": "run-slashing_transition",
+      "actualExitCode": 0,
+      "reexecuted": false,
+      "executable": {
+        "sha256": "b469c7b47469f75380d3488976b1cf113f0f86d0b716bb022efee8722760985d",
+        "bytes": 500808
+      },
+      "stdout": "{\"activeInConsensus\":false,\"cases\":26,\"inMemoryTransition\":true,\"persistent\":false,\"scenario\":\"phase0-attester-slashing-transition\"}\n"
+    },
+    {
+      "name": "run-slashing_epoch",
+      "actualExitCode": 0,
+      "reexecuted": false,
+      "executable": {
+        "sha256": "bb5f2f10c0bafe529a747a6c55897d537c1f0c65a695cddd91c29935dabe7f72",
+        "bytes": 500328
+      },
+      "stdout": "{\"activeInConsensus\":false,\"checks\":11,\"rejected\":8,\"scenario\":\"phase0-slashing-epoch\",\"wideArithmetic\":true}\n"
+    },
+    {
+      "name": "run-registry_operations",
+      "actualExitCode": 0,
+      "reexecuted": false,
+      "executable": {
+        "sha256": "16e90c8b1079d99f44ef9f5cf3be3fa6ec61db4ae17fe08cf1a5f2dd7b24104d",
+        "bytes": 726736
+      },
+      "stdout": "{\"activeInConsensus\":false,\"atomicOverflowRejections\":1,\"cancellations\":341,\"fullBlockTransition\":false,\"invalid\":2,\"scenario\":\"phase0-all-operation-types\",\"valid\":1}\n{\"activeInConsensus\":false,\"cancellations\":336,\"configurationRejections\":2,\"fullBlockTransition\":false,\"invalid\":2,\"scenario\":\"phase0-integrated-attestation-block\",\"valid\":1}\n{\"activeInConsensus\":false,\"atomicOverflowRejections\":1,\"cancellations\":326,\"configurationRejections\":3,\"fullStateTransition\":false,\"positive\":3,\"rejected\":11,\"scenario\":\"phase0-registry-block-operations\",\"unsupported\":2}\n"
+    },
+    {
+      "name": "run-epoch_transition",
+      "actualExitCode": 0,
+      "reexecuted": false,
+      "executable": {
+        "sha256": "1f78fcce98244ee60ee20397f91b15fc44a63118b85ffac93413b264e6923519",
+        "bytes": 748336
+      },
+      "stdout": "{\"activeInConsensus\":false,\"cancellations\":983,\"deferredHistorySequences\":1,\"epochs\":5,\"fullSlotTransition\":false,\"localRejections\":13,\"officialProjections\":6,\"orderingControls\":1,\"registryEntriesCompared\":384,\"replayRejections\":5,\"scenario\":\"phase0-ordered-epoch\",\"stateRootVerified\":false,\"votingComposition\":1}\n"
+    },
+    {
+      "name": "run-registry_epoch_official",
+      "actualExitCode": 0,
+      "reexecuted": false,
+      "executable": {
+        "sha256": "f17cb42730fee8e835bce259a0a8c21453792dfbf73147dee87500dedc8533e6",
+        "bytes": 672160
+      },
+      "stdout": "{\"activated\":19,\"activeInConsensus\":false,\"cancellations\":263,\"ejected\":37,\"eligible\":19,\"fullEpochTransition\":false,\"invalid\":1,\"localRejections\":10,\"scenario\":\"official-phase0-registry-updates\",\"snapshotRoundtrips\":14,\"valid\":14,\"validatorsCompared\":1152}\n"
+    },
+    {
+      "name": "run-voluntary_exit_official",
+      "actualExitCode": 0,
+      "reexecuted": false,
+      "executable": {
+        "sha256": "1ecace7fe2011fe855cd368d5b05be460e81d72b330c56ab1089b0be260265c2",
+        "bytes": 603360
+      },
+      "stdout": "{\"activeInConsensus\":false,\"atomicOverflowRejections\":4,\"invalid\":6,\"localRejections\":24,\"replayRejections\":4,\"scenario\":\"official-voluntary-exit\",\"valid\":4,\"validatorsCompared\":320}\n"
+    },
+    {
+      "name": "run-altair_slashing",
+      "actualExitCode": 0,
+      "reexecuted": false,
+      "executable": {
+        "sha256": "5315e4de2505f70f5dcc428dc22ee2c064d6479104ed650b92d083e48690914b",
+        "bytes": 748968
+      },
+      "stdout": "{\"cancellations\":14,\"fullStateMatches\":11,\"invalid\":33,\"invalidLifecycle\":1,\"mutations\":22,\"networkActive\":false,\"overflowRejections\":11,\"replayRejections\":11,\"scenario\":\"official-altair-slashing\",\"syntheticComponentMatches\":1}\n"
+    }
+  ],
+  "newTestInvocations": [
+    {
+      "name": "local-exits",
+      "actualExitCode": 0,
+      "stdout": "{\"cancellationChecked\":true,\"invalidOrDuplicateRejected\":4,\"scenario\":\"capella-local-exits\",\"selected\":1,\"trialBudgetChecked\":true}\n{\"assembledBodies\":9,\"beaconReadChecks\":0,\"blocks\":9,\"cancellations\":18,\"contexts\":9,\"deferredVotes\":0,\"durableReactor\":true,\"finalityScenario\":false,\"finalizedEpoch\":0,\"includedAttestations\":0,\"localAttestations\":0,\"localBlsChangeSelection\":false,\"localProposals\":8,\"localRandao\":8,\"migrated\":false,\"networkActivated\":false,\"participationPercent\":100,\"queuedBlsChangeSelection\":false,\"rejected\":20,\"scenario\":\"capella-signed-transition\",\"signedArchives\":9,\"signedSlashings\":1,\"signedVotes\":6,\"skippedForkSlots\":0,\"snapshotReopened\":true,\"storeBlocks\":9,\"storeSigkillReopens\":2,\"storeVotes\":6,\"voteReorgs\":2,\"wireMessages\":0,\"withdrawals\":1}\n",
+      "executableSha256": "c3ecececb974c32f086c6b5c084860720023d5291ccd186273326ef7c17ed35b"
+    },
+    {
+      "name": "exit-wire",
+      "actualExitCode": 0,
+      "stdout": "{\"checkpointUnchanged\":true,\"queueEmpty\":true,\"rejected\":[\"wrong-domain\",\"wrong-fork\",\"wrong-genesis\",\"wrong-index\",\"wrong-key\",\"future-epoch\",\"unknown-index\",\"insufficient-tenure\"],\"scenario\":\"capella-exit-authentication-rejections\"}\n{\"capacityChecked\":true,\"consensusUnchangedOnAdmission\":true,\"duplicateIdempotent\":true,\"invalidRejected\":true,\"reopened\":true,\"scenario\":\"capella-queued-exits\"}\n{\"applicable\":false,\"reopened\":false,\"retained\":true,\"scenario\":\"capella-exit-reorg\"}\n{\"automaticSelection\":true,\"liveCheckpointUnchanged\":true,\"scenario\":\"capella-exit-reincluded\",\"signedBlockAccepted\":true}\n{\"applicable\":true,\"reopened\":true,\"retained\":true,\"scenario\":\"capella-exit-reorg\"}\n{\"applicable\":false,\"reopened\":true,\"retained\":true,\"scenario\":\"capella-exit-reorg\"}\n{\"assembledBodies\":9,\"beaconReadChecks\":0,\"blocks\":9,\"cancellations\":18,\"contexts\":9,\"deferredVotes\":0,\"durableReactor\":true,\"finalityScenario\":false,\"finalizedEpoch\":0,\"includedAttestations\":0,\"localAttestations\":0,\"localBlsChangeSelection\":false,\"localProposals\":8,\"localRandao\":8,\"migrated\":false,\"networkActivated\":false,\"participationPercent\":100,\"queuedBlsChangeSelection\":false,\"rejected\":20,\"scenario\":\"capella-signed-transition\",\"signedArchives\":9,\"signedSlashings\":1,\"signedVotes\":6,\"skippedForkSlots\":0,\"snapshotReopened\":true,\"storeBlocks\":9,\"storeSigkillReopens\":2,\"storeVotes\":6,\"voteReorgs\":2,\"wireMessages\":0,\"withdrawals\":1}\n",
+      "executableSha256": "c3ecececb974c32f086c6b5c084860720023d5291ccd186273326ef7c17ed35b"
+    }
+  ],
+  "archiveProof": {
+    "members": 143,
+    "replaced": [
+      "consensus_altair_slashing.cpp.o",
+      "consensus_altair_slots.cpp.o",
+      "consensus_altair_transition.cpp.o",
+      "consensus_block_operations.cpp.o",
+      "consensus_capella_reactor.cpp.o",
+      "consensus_committee.cpp.o",
+      "consensus_epoch.cpp.o",
+      "consensus_registry_operations.cpp.o",
+      "consensus_slashing.cpp.o"
+    ],
+    "unchangedObjectPayloads": 134,
+    "allKeptObjectsByteExact": true,
+    "retainedObjectsCompiledWithHistoricalHeaders": true,
+    "completeCurrentHeaderMmdClosureClaimed": false,
+    "coreSourceBase": "d23409b3c032be87de303c4864ec7dac557ced34"
+  },
+  "independentMmdComparisons": [
+    {
+      "unit": "consensus_slashing.cpp",
+      "dependencies": 16
+    },
+    {
+      "unit": "consensus_committee.cpp",
+      "dependencies": 10
+    },
+    {
+      "unit": "consensus_block_operations.cpp",
+      "dependencies": 19
+    },
+    {
+      "unit": "consensus_registry_operations.cpp",
+      "dependencies": 23
+    },
+    {
+      "unit": "consensus_altair_slashing.cpp",
+      "dependencies": 18
+    },
+    {
+      "unit": "consensus_altair_transition.cpp",
+      "dependencies": 56
+    },
+    {
+      "unit": "consensus_capella_reactor.cpp",
+      "dependencies": 76
+    },
+    {
+      "unit": "consensus_altair_slots.cpp",
+      "dependencies": 24
+    },
+    {
+      "unit": "consensus_epoch.cpp",
+      "dependencies": 19
+    },
+    {
+      "unit": "consensus_cancellation",
+      "dependencies": 35
+    },
+    {
+      "unit": "slashing_transition",
+      "dependencies": 33
+    },
+    {
+      "unit": "slashing_epoch",
+      "dependencies": 33
+    },
+    {
+      "unit": "registry_operations",
+      "dependencies": 44
+    },
+    {
+      "unit": "epoch_transition",
+      "dependencies": 41
+    },
+    {
+      "unit": "registry_epoch_official",
+      "dependencies": 33
+    },
+    {
+      "unit": "voluntary_exit_official",
+      "dependencies": 33
+    },
+    {
+      "unit": "altair_slashing",
+      "dependencies": 40
+    },
+    {
+      "unit": "capella_transition",
+      "dependencies": 147
+    }
+  ],
+  "wholeCurrentHeaderClosureQualified": false,
+  "networkCampaignStarted": false,
+  "productionQualified": false
+}

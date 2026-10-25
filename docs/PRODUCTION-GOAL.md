@@ -5999,3 +5999,26 @@ Voir [reçus et portée](qualification/inventory-v2-receipts-20261025/README.md)
 **25 octobre 2026 — racine initiale InventoryV2.** Une seule transition Geth vide retrouve la racine initiale Native `59b1d26c…`, avec les trois comptes de fixture inchangés et zéro gaz. Docker termine exit0 en 1,915 s ; la commande Geth termine exit0/close0, groupe joint, et les 21 FD suivis du pilote et 31 FD Root sont fermés. Aucun rejeu Native ou des 65 transactions, aucune compilation et aucun build d'image. Ce complément ferme uniquement la comparaison de la pré-racine initiale de cette trace synthétique Shanghai. Il ne qualifie pas les blocs minés, le réseau ou le consensus. Les échecs historiques, l'audit indépendant et tous les autres critères de production restent ouverts. Voir les [preuves de racine initiale](qualification/inventory-v2-initial-root-20261025/README.md).
 
 **25 octobre 2026 — CI du lot livre 086c11ed.** GitHub run 40149566316 refuse changes, operations et vps-duty-worker avant toute etape pour echec recent de paiement ou plafond du compte ; core et network sont skipped. Aucun test CI execute, aucune relance manuelle ni depense. La CI complete demeure ouverte ; les preuves Docker locales ne la remplacent pas. Voir le [recu terminal CI](qualification/vps-duty-floor-portable-20261025/retained-public/ci-086c11ed/README.md).
+
+
+---
+
+### 25 octobre 2026 — annulation Core, clôture I/O et écart historique de gaz
+
+Ce lot conserve les critères et preuves historiques. Sources C++ qualifiées : `e53e06c05f1befa7fa3aeb4970f22987c073d1e3` ; candidate finale de code/outillage : `21a92877e14c37f46d38eda9c8ea62687af801f5` (C++ inchangé depuis e53). Aucune nouvelle campagne réseau, identité de validation, activation de fork, transaction publique ou image Docker n’est créée par cette qualification.
+
+| Sujet | Statut de ce lot | Limite conservée |
+|---|---|---|
+| Annulation du registre, sorties et sanctions | **Implémenté ; qualifié en composants ARM64 et AMD64** | 28 nouveaux cas, 8 192 lignes synthétiques ; dix invocations par architecture, dont huit résultats conservés et deux Capella complétés. Ce ne sont pas 8 192 nœuds ni une finalité entre trois hôtes. |
+| I/O de clôture | **Implémenté ; 36 groupes ciblés qualifiés en deux périmètres** | 19 groupes aux octets inchangés réutilisés et17 scénarios de fixture commune rejoués. Aucune borne physique E/S/OS, clôture complète après SIGINT ou réserve suffisante n’est prouvée. |
+| Écart historique de 324 unités de gaz Inventory V2 | **Expliqué hors ligne** | 65 hashes Anvil exacts retrouvés ;27 octets non nuls supplémentaires×12. Aucun rejeu EVM ni correction des frais Nano. Le différentiel historique de racines Anvil reste FAILED. |
+| Mémoire du rejeu canonique | **Partiel ; plan Source seulement, nouvelle implémentation non commencée** | La fenêtre de records/SSZ, l’ascendance des dépôts et la RSS doivent encore être traitées/mesurées dans leur périmètre exact. |
+| Profil EVM/RPC et EIP | **Statuts antérieurs conservés** | Aucun fork ou EIP n’est promu par des tests de maintenance consensus/outillage ; seules les règles réellement activées font foi. |
+
+Le Core testé est O3. Le driver Capella ARM64 reste O3 ; seul le driver de test AMD64 a été compilé en O1 après son timeout O3 de240s, conservé comme FAILED. Les archives143 membres conservent134 payloads historiques et remplacent exactement neuf objets. La fermeture MMD de18 unités réellement compilées est vérifiée ; celle de tout le Core face aux nouveaux headers, un build propre complet et des binaires de nœud déployés ne sont pas revendiqués.
+
+Les anciens contrôles FAILED restent conservés, dont admissions/refus de métadonnées Mac non attribués, entrées de fixture manquantes et timeout de compilation. La première qualification I/O reste FAILED31PASS/5FAIL/5SKIP ; les17 scénarios terminal ont ensuite tous passé après correction des seules dépendances de fixture. La campagne04 signée reste terminale et FAILED ; aucun domaine/journal/témoin n’est réinitialisé ni accord consommé de nouveau.
+
+Restent ouverts : restauration complète de la candidate et reprise effective des duties avec finalité commune qui avance, cycle complet des validateurs/sanctions, partitions/asymétries/reconnexion et anomalie WAN dans leur périmètre exact, limites de mémoire/reprise/charge, cohérence des binaires et déploiement, CI refusée avant exécution pour compte/plafond et revue de sécurité indépendante. Les termes Base–Nano/Doppler, la réserve/ratio/conversion, le bridge USDC et la visibilité/indexation externe ne sont pas adoptés par ces tests. **La production n’est pas déclarée prête.** L’objectif continue ; aucune nouvelle campagne, vente, fonds réel, ouverture publique ou dépense n’est autorisée par cet addendum.
+
+Preuves : [Core ARM64/AMD64](qualification/consensus-cancellation-20261025/README.md), [clôture I/O](qualification/closeout-io-20261025/README.md), [explication du gaz](qualification/inventory-v2-historical-gas-20261025/README.md), [plan Source du rejeu borné](qualification/canonical-audit-bounded-replay-plan-20261025/PLAN.source.md).
