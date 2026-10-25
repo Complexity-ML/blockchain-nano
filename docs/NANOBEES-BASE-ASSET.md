@@ -1,5 +1,32 @@
 # Nanobees sur Base et NANO natif — proposition de relation entre actifs
 
+## Orientation de travail retenue — 25 octobre 2026
+
+À la demande de choisir le modèle le plus clair, la spécification retient un
+même actif économique représenté sur les deux chaînes : **1 Nanobees entier
+sur Base donne droit à 1 NANO natif entier**, avec une réserve canonique
+verrouillée et une conversion dans les deux sens. Le cours en USDC reste un
+prix de marché ; cette parité ne fixe aucun prix en dollars ni droit au
+remboursement en USDC.
+
+Ce choix porte uniquement sur le principe de conception. Il ne fixe ni offre,
+allocations, décimales, frais, gouvernance, date, adresses ou pouvoirs réels et
+n'autorise aucun financement, verrouillage de fonds réels, vente ou déploiement.
+La route demeure à implémenter et qualifier. La réserve doit couvrir toute
+l'offre préémise, y compris les tokens détenus par Doppler, les LP et le vesting.
+Une promesse sans réserve vérifiée ne constitue pas une conversion disponible.
+
+Le ratio atomique devra être dérivé exactement des décimales :
+`native_atomic = base_atomic × 10^native_decimals / 10^base_decimals`.
+Il vaut 1/1 en unités atomiques seulement si les deux actifs ont les mêmes
+décimales ; les quantités non divisibles doivent être refusées, sans arrondi
+silencieux. Les frais sont séparés du principal de conversion.
+
+Les sections techniques ci-dessous restent des exigences de conception, pas
+une qualification du bridge. Le statut du 18 octobre est conservé comme historique.
+
+### Historique antérieur au choix de travail
+
 Statut au 18 octobre 2026 : recommandation de conception, non adoptée et non
 implémentée. L’utilisateur a répondu « je sais pas » à la question sur le rôle du
 token Base. Cela ne fixe ni ratio, ni offre, ni inflation, ni gouvernance et

@@ -6044,3 +6044,22 @@ L'ancien combiné AMD O3 reste **FAILED** à 300 007 ms : génération 208 928 m
 **Partiel** : fenêtre chaude à 33 records / 686 517 octets SSZ, mais un pic observé de 1 007 métadonnées d’ancêtres avec zéro dépôt. **Non commencé** : implémentation du contexte froid authentifié pour borner ces métadonnées ET l'arbre des dépôts ; son plan Source conserve anciennes recherches/preuves/formats. Pas de borne totale mémoire, de fork-choice historique, de nœud Mac natif ou de finalité réseau qualifiés ici. Les objets historiques141/144 restent réutilisés ; fermeture complète des headers/build propre/binaires de nœud déployés demeurent ouverts. Zéro image et zéro Core reconstruits dans ce lot.
 
 CI effective toujours ouverte : run40160421918 de9fb68b85 refusé avant toute étape pour paiement/plafond, core/network skipped ; aucune relance manuelle/dépense. Campagne04 signée terminale FAILED, aucune campagne05, aucun journal/témoin réinitialisé. Restent requis : restauration et duties/finalité commune réels, cycle/rotations/sanctions, sync/partitions/WAN, ressources/pruning, builds/CI/supervision/reprises et revue indépendante. Relation Base–actif natif, réserve/ratio/conversion, bridge USDC et termes/qualification Doppler restent ouverts. Aucun EIP/fork, financement, référencement ou production prête déduit. Objectif actif et non atteint ; aucune vente, fonds réel, ouverture publique ou nouvelle dépense autorisés.
+
+
+---
+
+### Canonical deposit audit context — ARM64 / AMD64 qualified
+
+Candidate `07509b17893b16ad8d7105aa59a31d403cf41160` passes both final10
+external envelopes:25 fresh CTests per architecture plus one same-source legacy
+JUnit inherited from09, no skips; current145-member Core/32 ELF/177 dependency
+joins, CLI smoke and1908/1908 FDs closed on each side without secondary failure.
+The legacy was not replayed in10. Eighteen failed envelopes stay FAILED.
+
+Own final10 signed96/16 proofs and15 exact cross-architecture fields qualify
+this audit component, not a live node. Persistent live pruning/v4, global
+resources/in-flight close, shipping P2P/native-Mac/network/cycle/WAN/restoration,
+CI billing/bitwise builds, independent review and bridge/Doppler gates remain
+OPEN. The1:1 Base/NANO orientation is a working specification, not actual
+collateral or final sale terms.
+[Evidence and retained history](qualification/capella-canonical-deposit-context-20261025/README.md).

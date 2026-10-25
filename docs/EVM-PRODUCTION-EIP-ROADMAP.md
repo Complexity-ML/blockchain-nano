@@ -6365,3 +6365,20 @@ AMD03 qualifie ce scénario borné ; il ne requalifie pas AMD02, dont le legacy 
 [Preuves du corpus signé et des deux replays](qualification/capella-canonical-public-corpus-20261025/README.md). Sources Core5df inchangées : le nouveau runner rejoue1 026 blocs publics signés contre les attentes Block/stateRoot figées du producteur Nano ; ces attentes ne sont pas un oracle indépendant Ethereum. Les replays ARM64/AMD64 et refus passent dans ce périmètre consensus.
 
 Les statuts EVM/RPC/EIP précédents sont conservés : aucune règle de gas, précompilation, transaction, sérialisation ou activation réseau n'est modifiée. Le Shanghai de cette fixture ne prouve pas une activation réseau. L'ancien combiné AMD300s demeure FAILED ; le mode corpus n'est ni une nouvelle qualification Ethereum ni un build complet. CI effective refusée avant étapes sur9fb68b85, objets141/144 historiques, limites mémoire auxiliaire et revue indépendante ouvertes. Conditions Base/native/bridge USDC/Doppler non adoptées par ces tests.
+
+
+---
+
+### Deposit replay storage — targeted ARM64 / AMD64 qualification
+
+Candidate `07509b17` completes both final10 envelopes:25 fresh selected CTests,
+one same-source legacy result inherited from09, CLI and final source/binary/FD
+fences. Own final10 signed96/16 metrics agree exactly on15 cross-architecture
+fields. This does not borrow a PASS from Focused02's failed artifact-fence
+envelope or qualify a new EVM revision, EIP activation or general EVM/RPC scope.
+
+The implementation remains audit scratch. Live persistence/pruning/v4 and
+global resource/close guarantees are OPEN, as are shipping/native-Mac/P2P,
+network recovery, CI billing/bitwise builds, independent review and bridge/
+Doppler requirements. All18 historical failures are retained.
+[Evidence](qualification/capella-canonical-deposit-context-20261025/README.md).

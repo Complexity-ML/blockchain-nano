@@ -8836,3 +8836,22 @@ AMD03 qualifie ce scénario borné ; il ne requalifie pas AMD02, dont le legacy 
 | Workflow combiné historique AMD | FAILED conservé |300 007 ms, génération208 928 ms puis949 visites avant refus ; séparation de corpus ne le requalifie pas. |
 | Auxiliaires de dépôts | Partiel ; contexte froid non commencé | Pic observé de1 007 ancêtres avec zéro dépôt, fenêtre33 ; plan Source sans limite totale mémoire démontrée. |
 | Nœud / build / CI / production | Ouverts | Core source inchangé,141/144 objets historiques ; CI9fb refusée avant étapes, campagne04 FAILED, audit indépendant et critères réseau/bridge/Doppler ouverts. |
+
+
+---
+
+### Non-EIP audit infrastructure — candidate07509b17
+
+| Item | Status and exact qualification scope |
+| --- | --- |
+| Canonical audit ancestry and cold tree | Qualified in both final10 external ARM64/AMD64 envelopes, with current source/binary/final FD fences and CLI smoke. |
+| Test coverage |25 fresh selected cases plus one pinned same-source legacy inherited from09 per architecture; no skips, not26 fresh executions in10. |
+| Hot-prefix compatibility | Bound35, counts3/35/34/35 and107 typed cancellations retained; cold cooperative checks unchanged. |
+| Live persistent pruning / v4 | OPEN; audit scratch is not a restartable primary format. |
+| Activation / broad conformance | No EIP, general EVM/RPC, network or production promotion. |
+
+Own final10 native metrics match on15 fields; all18 failed envelopes remain
+FAILED. Resource/close, shipping/native-Mac/P2P/network/cycle/WAN/restoration,
+CI billing/bitwise builds, independent review and bridge/Doppler gates stay
+OPEN. The Base/NANO1:1 working orientation is not an active funded conversion.
+[Evidence](qualification/capella-canonical-deposit-context-20261025/README.md).

@@ -1,0 +1,80 @@
+Test project /out
+      Start   3: core
+ 1/25 Test   #3: core .............................................   Passed    0.26 sec
+      Start   6: consensus_isolated_stopped_capture_guards
+ 2/25 Test   #6: consensus_isolated_stopped_capture_guards ........   Passed    0.00 sec
+      Start   8: consensus_capella_duty_projection_availability
+ 3/25 Test   #8: consensus_capella_duty_projection_availability ...   Passed    5.71 sec
+      Start  11: consensus_fresh_lifecycle_canonical_stream
+ 4/25 Test  #11: consensus_fresh_lifecycle_canonical_stream .......   Passed   29.19 sec
+      Start  12: consensus_canonical_deposit_context
+ 5/25 Test  #12: consensus_canonical_deposit_context ..............   Passed    0.56 sec
+      Start  13: consensus_capella_cold_deposit_replay
+ 6/25 Test  #13: consensus_capella_cold_deposit_replay ............***Failed    0.06 sec
+{"elapsedMs":62,"passed":false,"productionQualified":false,"reason":"public fixed topup sender","scenario":"capella-cold-deposit-signed-replay","testSlot":2,"testStage":"real-signed-nonzero-fixture","wholeDriverPeakRssKiB":17188}
+
+      Start  20: chain
+ 7/25 Test  #20: chain ............................................   Passed    0.11 sec
+      Start  21: rpc
+ 8/25 Test  #21: rpc ..............................................   Passed    1.00 sec
+      Start  22: rpc_simulation_context
+ 9/25 Test  #22: rpc_simulation_context ...........................   Passed    0.04 sec
+      Start  23: rpc_state_block_id
+10/25 Test  #23: rpc_state_block_id ...............................   Passed    0.07 sec
+      Start  24: rpc_get_proof
+11/25 Test  #24: rpc_get_proof ....................................   Passed   15.07 sec
+      Start  25: rpc_state_read_cost
+12/25 Test  #25: rpc_state_read_cost ..............................   Passed    0.84 sec
+      Start  45: rpc_queue_expiry
+13/25 Test  #45: rpc_queue_expiry .................................   Passed    0.94 sec
+      Start 138: ethereum_consensus_bls_verify
+14/25 Test #138: ethereum_consensus_bls_verify ....................   Passed    0.03 sec
+      Start 140: ethereum_consensus_bls_fast_aggregate
+15/25 Test #140: ethereum_consensus_bls_fast_aggregate ............   Passed    0.02 sec
+      Start 152: consensus_registry_cancellation
+16/25 Test #152: consensus_registry_cancellation ..................   Passed    0.05 sec
+      Start 254: storage_execution_checkpoint
+17/25 Test #254: storage_execution_checkpoint .....................   Passed    0.20 sec
+      Start 275: consensus_capella_payload_paired_state
+18/25 Test #275: consensus_capella_payload_paired_state ...........   Passed    0.02 sec
+      Start 283: consensus_capella_signed_transition
+19/25 Test #283: consensus_capella_signed_transition ..............   Passed    4.71 sec
+      Start 298: consensus_capella_clock_diagnostics
+20/25 Test #298: consensus_capella_clock_diagnostics ..............   Passed    0.11 sec
+      Start 375: consensus_local_monotonic_time
+21/25 Test #375: consensus_local_monotonic_time ...................   Passed    0.00 sec
+      Start 396: consensus_capella_published_signed_inventory
+22/25 Test #396: consensus_capella_published_signed_inventory .....   Passed    1.72 sec
+      Start 397: consensus_capella_publication_cancel_boundary
+23/25 Test #397: consensus_capella_publication_cancel_boundary ....   Passed    4.31 sec
+      Start 415: consensus_capella_sync_adverse
+24/25 Test #415: consensus_capella_sync_adverse ...................   Passed    1.53 sec
+      Start 416: consensus_capella_bounded_canonical_audit
+25/25 Test #416: consensus_capella_bounded_canonical_audit ........   Passed   28.44 sec
+
+96% tests passed, 1 tests failed out of 25
+
+Label Time Summary:
+audit                                        =  28.44 sec*proc (1 test)
+capella                                      =  28.44 sec*proc (1 test)
+clock                                        =   0.00 sec*proc (1 test)
+consensus                                    =  28.44 sec*proc (2 tests)
+qualification_consensus_deposits             =   0.63 sec*proc (2 tests)
+qualification_consensus_duty_availability    =   5.71 sec*proc (1 test)
+qualification_consensus_ethereum             =   0.10 sec*proc (3 tests)
+qualification_consensus_lifecycle            =  29.19 sec*proc (1 test)
+qualification_consensus_recovery             =   4.31 sec*proc (1 test)
+qualification_consensus_recovery_tooling     =   0.00 sec*proc (1 test)
+qualification_consensus_runtime              =   1.82 sec*proc (2 tests)
+qualification_consensus_sync_adverse         =   1.53 sec*proc (1 test)
+qualification_evm                            =   1.36 sec*proc (3 tests)
+qualification_rpc_simulation_context         =   0.04 sec*proc (1 test)
+qualification_rpc_state_block_id             =   0.07 sec*proc (1 test)
+qualification_rpc_state_proof                =  15.91 sec*proc (2 tests)
+qualification_storage_local                  =   0.20 sec*proc (1 test)
+recovery                                     =  28.44 sec*proc (1 test)
+
+Total Test time (real) =  95.00 sec
+
+The following tests FAILED:
+	 13 - consensus_capella_cold_deposit_replay (Failed)

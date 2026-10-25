@@ -9390,3 +9390,20 @@ AMD03 qualifie ce scénario borné ; il ne requalifie pas AMD02, dont le legacy 
 [Preuves du corpus signé et des deux replays](qualification/capella-canonical-public-corpus-20261025/README.md). Audit Core existant : **implémenté ; qualifié en composant** sur1 026 descendants signés ARM64/AMD64, mêmes hashes, neuf refus Core et cinq refus d'entrée. Le checkpoint epoch126 est celui du producteur public épinglé ; pas une finalité réseau ni un fork-choice historique. Aucun changement d'EIP, de seuil, de poids, de plafond de validateurs ou d'activation de profil.
 
 Les64 identités publiques synthétiques ne sont pas64 nœuds déployés. Ancien workflow génération+rejeu AMD300s FAILED conservé. Mémoire auxiliaire **partielle** : pic observé de1 007 métadonnées d'ancêtres malgré zéro dépôt, fenêtre chaude33 ; contexte disque authentifié **plan seulement / implémentation non commencée**. Campagne04 FAILED et journaux conservés ; restauration entière/duties/finalité à trois environnements, cycle complet/rotations/sanctions, partitions/WAN et qualification réseau restent ouverts. Pas de campagne05 ni revue indépendante réalisées par ce lot.
+
+
+---
+
+### Canonical deposit audit storage — targeted ARM64 / AMD64 qualification
+
+Final10 candidate `07509b17` passes both external envelopes:25 fresh selected
+cases plus one pinned same-source legacy result inherited from09,107 typed
+cancellations, current source/archive/header/ELF fences, CLI and final FD closure.
+The legacy bound35 and exact3/35/34/35 counts remain; no legacy replay occurred
+in10. Signed96/16 and old full proofs agree on15 fields across architectures.
+
+This storage/audit qualification promotes no validator-EIP activation, historical
+fork choice, live network finality or journal restoration. Eighteen failures
+remain visible. Live persistent pruning/v4, close/drain, full validator cycle,
+WAN, restoration and independent review remain OPEN.
+[Scope](qualification/capella-canonical-deposit-context-20261025/README.md).

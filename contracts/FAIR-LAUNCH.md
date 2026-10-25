@@ -349,3 +349,26 @@ Le ratio concerne les unités de jetons, aucun cours en USDC. Le gateway existan
 par une modification de compteur. Réserve NANO, USDC de vente, liquidité Doppler
 et bridge USDC restent des comptabilités séparées. Cette note ne fixe aucun terme
 économique et ne vaut ni choix utilisateur, ni qualification, ni ouverture de vente.
+
+
+## 25 octobre 2026 — orientation de conversion Base / NANO
+
+La conception de travail retient **1 Nanobees entier sur Base pour 1 NANO natif
+entier**, avec une réserve native verrouillée et des conversions aller/retour.
+Cela ne fixe aucun prix USDC. L'offre, ses allocations, les décimales, les frais,
+les pouvoirs, les adresses et le calendrier restent à définir avant approbation
+finale des termes. Voir [NANOBEES-BASE-ASSET](../docs/NANOBEES-BASE-ASSET.md).
+
+La préémission Doppler doit être entièrement couverte avant toute promesse de
+conversion ou ouverture de vente. Le bridge existant à encours initial nul ne
+supporte pas cette préémission par simple changement de compteur : l'adaptateur
+à deux séquestres, sa finalité, ses transferts en attente, ses remboursements et
+ses limites de confiance restent à implémenter et tester. Le bridge USDC est une
+route distincte ; les USDC de la vente et la liquidité ne remplacent pas la
+réserve native. Ce choix documentaire n'ouvre aucune vente et n'autorise ni
+fonds réels, ni déploiement public, ni dépense.
+
+Référence conceptuelle primaire pour la conservation interchaînes :
+[OP Stack — verrouillage, émission, destruction et libération](https://specs.optimism.io/protocol/predeploys.html#l2standardbridge).
+Cette référence ne fournit pas à Nano un vérificateur de finalité ou une route
+Base déjà opérationnelle.

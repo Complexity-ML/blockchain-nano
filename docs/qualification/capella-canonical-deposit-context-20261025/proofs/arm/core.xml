@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="25"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="105"
+	timestamp="2026-10-25T09:17:11"
+	>
+	<testcase name="core" classname="core" time="0.262228" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>4069 checks passed
+</system-out>
+	</testcase>
+	<testcase name="consensus_isolated_stopped_capture_guards" classname="consensus_isolated_stopped_capture_guards" time="0.00396775" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery_tooling"/>
+		</properties>
+		<system-out>{"cases":25,"databaseAccessed":false,"envRead":false,"format":"nano-isolated-stopped-capture-self-test-v1","newSignaturesCreated":0,"passed":true,"runtimeStarted":false}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_duty_projection_availability" classname="consensus_capella_duty_projection_availability" time="5.90383" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_duty_availability"/>
+		</properties>
+		<system-out>{"callbackAndResourceErrorsVisible":true,"elapsedMs":44,"maxRssKiB":16164,"networkQualified":false,"optionalLocalSyncDeferred":true,"productionQualified":false,"proposalAttestationContextsRemainReady":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-local-sync-postready63","strictSyncBoundaryStillRejects":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+{"callbackResourceErrorsRemainVisible":true,"checkpointAndJournalUnchanged":true,"elapsedMs":112,"localKeyPendingRegistration":true,"maxRssKiB":21408,"networkQualified":false,"networkStarted":false,"productionQualified":false,"proposalAttestationAssignmentsRemainAvailable":true,"providerCalls":0,"realCoreAndLoopHealthy":true,"result":"PASS","runtimeStarted":false,"scenario":"capella-real-reactor-local-sync-postready63","syncCurrentDeferredBeforeProvider":true,"syncMembersDeferred":true,"syntheticFixture":true,"syntheticFixtureSignaturesCreated":0}
+{"clockMonotoneUnchangedAfterInitialTick":true,"coldDecodedCacheUsageDirectlyObs...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_fresh_lifecycle_canonical_stream" classname="consensus_fresh_lifecycle_canonical_stream" time="30.6269" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_lifecycle"/>
+		</properties>
+		<system-out>{"canonicalExecutionIndexChecks":0,"event":"begin","fixtureBlsSignatures":0,"lastSyntheticSlot":0,"phase":"private-index-seal-and-mutation-refusals","phaseElapsedMs":0,"productionQualified":false,"scenario":"fresh-stream-phase-diagnostic","sourceArchiveReads":0,"successfulStreamVisits":0,"wholeDriverElapsedMs":0,"wholeDriverPeakRssKiB":11120}
+{"expectedRefusals":4,"fileContentChangedByMutation":false,"passed":true,"positiveIndexVerification":2,"productionQualified":false,"scenario":"fresh-stream-private-index-seal","wholeSignedReplayNeeded":false}
+{"canonicalExecutionIndexChecks":0,"event":"end","fixtureBlsSignatures":0,"lastSyntheticSlot":0,"phase":"private-index-seal-and-mutation-refusals","phaseElapsedMs":0,"productionQualified":false,"scenario":"fresh-stream-phase-diagnostic","sourceArchiveReads":0,"successfulStreamVisits":0,"wholeDriverElapsedMs":1,"wholeDriverPeakRssKiB":14252}
+{"canonicalExecutionIndexChecks":0,"event":"begin","fixtureBlsSignatures":0,"lastSyntheticSlot":0,"phase":"pinned-corpus-input-...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_canonical_deposit_context" classname="consensus_canonical_deposit_context" time="0.562866" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_deposits"/>
+		</properties>
+		<system-out>{"contextsCreated":10,"databaseFenceFilesClosed":70,"databaseFenceFilesOpened":70,"explicitContextCloseCalls":20,"groups":[{"case":"nonzero-contract-history-and-prefixes","deposits":32,"executionHeaders":96,"fullConsensusAdmission":false,"fullProofsCompared":142},{"case":"old-votes-and-ssz-operations","exactOperationBytes":120280,"hotRecords":8,"legacyFormatReuseRefused":true,"oldTuples":89,"periodVotesCompared":9},{"case":"siblings-count-root-cursor-refusals","foreignCursorRefused":true,"sameCountRootSlotSibling":true,"sameCountSlotDifferentRootSibling":true},{"case":"holes-order-and-declared-capacity","implicitExpansion":false},{"case":"legacy-corruption-code-and-proof-refusals","oldV1BytesPreserved":true,"proofsConsumed":32,"publicUnitValidators":2,"unreachableScratchBlobsMayRemain":true},{"case":"typed-cancellation-and-idempotent-retry","scratchOrphansCounted":true,"sourceHistoryUnchanged":true},{"case":"bounded-pins-concurrent-leases-and-close","concurrentReaders":8,"immutableLeaseSurvivesClose":true,"in...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_cold_deposit_replay" classname="consensus_capella_cold_deposit_replay" time="8.19108" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_deposits"/>
+		</properties>
+		<system-out>{"actualFinalizedEpochFromProducer":10,"actualPrunes":9,"cachedColdCursorWriterRefused":true,"canonicalExecutionChecks":97,"coldBlobBytes":41919,"coldBlobRecords":479,"coldCachedBytes":85,"coldCachedRecords":1,"coldTupleBytes":243550,"coldTuples":97,"executionBlockHash":"0xa455a264ee98b67c90dc2718d02d7d558af3f7a17764f2a88fe55e0224e62a89","executionStateRoot":"0x2ac73471d402d44acf5821613c528d0a971df37b2a2740107b0448d791e406c3","finalWarmAnchorSlot":80,"fixtureBlsSignatures":972,"headRoot":"0x720bfce96300fb33b4fba729304d3e07580ac02a13737d8201bcbe4af82315e9","historicalForkChoiceVerified":false,"inlineDepositAncestorPeak":0,"largestDepositHistoryCount":16,"legacyColdHistoryWriterRefused":true,"legacyFragmentsStaged":0,"liveRecordPeak":33,"liveSszPeakBytes":686517,"liveSszPlusNextReservePeakBytes":4861032,"networkFinalityQualified":false,"oldFullProofsCompared":16,"oldSelectedSlot":63,"passed":true,"productionQualified":false,"publicRegistrySize":64,"scenario":"capella-cold-deposit-signed-replay","signedDescendan...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="chain" classname="chain" time="0.12113" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>185 chain checks passed
+</system-out>
+	</testcase>
+	<testcase name="rpc" classname="rpc" time="1.08246" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_evm"/>
+		</properties>
+		<system-out>{"callCheckpoints":407,"depth":2,"estimateCheckpoints":1596,"fork":"Paris","scenario":"deep-estimate-probe-count"}
+{"callCheckpoints":407,"depth":2,"estimateCheckpoints":1596,"fork":"Paris","gasQuote":"0x19ff43","minimumVerified":"0x19f2ae","scenario":"deep-estimate-checkpoints"}
+{"callCheckpoints":415,"depth":4,"estimateCheckpoints":1609,"fork":"Paris","scenario":"deep-estimate-probe-count"}
+{"callCheckpoints":415,"depth":4,"estimateCheckpoints":1609,"fork":"Paris","gasQuote":"0x1aea53","minimumVerified":"0x1ad959","scenario":"deep-estimate-checkpoints"}
+{"callCheckpoints":431,"depth":8,"estimateCheckpoints":1643,"fork":"Paris","scenario":"deep-estimate-probe-count"}
+{"callCheckpoints":431,"depth":8,"estimateCheckpoints":1643,"fork":"Paris","gasQuote":"0x1cd96f","minimumVerified":"0x1cbd11","scenario":"deep-estimate-checkpoints"}
+{"callCheckpoints":407,"depth":2,"estimateCheckpoints":1596,"fork":"Shanghai","scenario":"deep-estimate-probe-count"}
+{"callCheckpoints":407,"depth":2,"estimateCheckpoints":1596,"fo...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="rpc_simulation_context" classname="rpc_simulation_context" time="0.0413717" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_rpc_simulation_context"/>
+		</properties>
+		<system-out>{"caseRecords":[{"fork":"Paris","method":"eth_call","params":[{"chainId":"0x539","from":"0x00000000000000000000000000000000000000a1","gas":"0x186a0","to":"0x00000000000000000000000000000000000000a2","value":"0x5"},"latest"],"response":{"id":17,"jsonrpc":"2.0","result":"0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000de0b6b3a763fffb0000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000f"}},{"fork":"Paris","method":"eth_estimateGas","params":[{"chainId":"0x539","from":"0x00000000000000000000000000000000000000a1","gas":"0x186a0","to":"0x00000000000000000000000000000000000000a7","value":"0x5"},"latest"],"response":{"id":17,"jsonrpc":"2.0","result":"0xa87d"}},{"fork":"Paris","method":"eth_call","params":[{"chainId":"0x539","from":"0x00000000000000000000000000000000000000a1","gas":"0xa87d","to":"0x00000000000000000...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="rpc_state_block_id" classname="rpc_state_block_id" time="0.0720202" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_rpc_state_block_id"/>
+		</properties>
+		<system-out>{"checks":255,"expectedRefusals":14,"passed":true,"scenario":"state-readers-canonical-selectors-paris-shanghai"}
+{"checks":377,"expectedRefusals":126,"passed":true,"scenario":"state-readers-selector-error-precedence"}
+{"checks":674,"expectedRefusals":150,"passed":true,"scenario":"state-readers-detached-capture-and-real-reorg"}
+{"checks":750,"expectedRefusals":170,"passed":true,"scenario":"state-readers-real-retention-and-reopen"}
+{"checks":805,"expectedRefusals":179,"passed":true,"scenario":"state-readers-http-object-selectors-and-batch"}
+{"checks":805,"consensusModified":false,"expectedRefusals":179,"externalNetwork":false,"groups":5,"methods":4,"passed":true,"scenario":"state-readers-summary","selectedGroup":"all"}
+</system-out>
+	</testcase>
+	<testcase name="rpc_get_proof" classname="rpc_get_proof" time="15.052" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_rpc_state_proof"/>
+		</properties>
+		<system-out>{"checks":148,"expectedRefusals":6,"passed":true,"scenario":"get-proof-native-mpt-shapes-and-canonical-rlp"}
+{"address":"0x10661c82569f75921d13ee5fc55c7a5870ed4242","expectedPresent":true,"expectedValues":["0x1","0x2","0x0","0x1","0x1"],"keys":["0x0","0x1","0x2","0x0","0x0000000000000000000000000000000000000000000000000000000000000000"],"response":{"accountProof":["0xf87180808080808080808080a0838d599aabf314c3ec26bf28c04ca4d77b828a31123fd00c14968d3c1ba2f7b2a0b6123dfafd88ca72b43bb107c6d691e820177142c7aa6642b352bfe9524d641980a02fc751cbe0668a1b00c8060320fd1a69931006be8336401f442a9db5b9d8e44f808080","0xf869a037f351342502e7b3200a6bc3d8f8ae6d0bd6f2209618bfccab63ecf014d8516cb846f8440101a041d5fe9f5915af65d9f3d9981ce2229311329a177963f6fe7d448b100cb085cea0c1d5b4ce3e2a6227293fccce2904121c8647bbe16c1216340b851bf12d12560e"],"address":"0x10661c82569f75921d13ee5fc55c7a5870ed4242","balance":"0x1","codeHash":"0xc1d5b4ce3e2a6227293fccce2904121c8647bbe16c1216340b851bf12d12560e","nonce":"0x1","storageHash":"0x41d5fe9f5915af65d9f3...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="rpc_state_read_cost" classname="rpc_state_read_cost" time="0.845071" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_rpc_state_proof"/>
+		</properties>
+		<system-out>{"accounts":128,"actualPeakRssKiB":59228,"beaconReadyCases":true,"checks":47,"expectedRefusals":23,"externalNetwork":false,"fullBeaconAbaQualified":false,"groups":1,"headerSelectionCases":true,"maximumRssKiB":131072,"maximumTestBlsSignatures":32,"newTestOnlyBlsSignatures":12,"passed":true,"privateInputsRead":false,"runtimeDutiesAuthorized":false,"scenario":"state-read-cost-summary","slotsPerAccount":16}
+</system-out>
+	</testcase>
+	<testcase name="rpc_queue_expiry" classname="rpc_queue_expiry" time="0.930606" status="run">
+		<properties/>
+		<system-out>{"drained":1,"lateWork":0,"replies":1,"scenario":"delayed-event-loop"}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":54.277667,"lateMutationSkipped":true,"notifications":false,"runningWorkCompleted":true,"transport":"http","wallet":false}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.337334,"lateMutationSkipped":true,"notifications":false,"runningWorkCompleted":true,"transport":"http","wallet":true}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.180084,"lateMutationSkipped":true,"notifications":true,"runningWorkCompleted":true,"transport":"http","wallet":false}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.268459,"lateMutationSkipped":true,"notifications":true,"runningWorkCompleted":true,"transport":"http","wallet":true}
+{"capacityRecovered":true,"capacityRetainedUntilDrain":true,"concurrentWorkers":2,"expiryMs":50.8...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="ethereum_consensus_bls_verify" classname="ethereum_consensus_bls_verify" time="0.032671" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"activeInConsensus":false,"aggregateVerification":false,"invalid":19,"mutationsRejected":100,"officialCases":29,"scenario":"ethereum-consensus-bls-verify","valid":10}
+</system-out>
+	</testcase>
+	<testcase name="ethereum_consensus_bls_fast_aggregate" classname="ethereum_consensus_bls_fast_aggregate" time="0.0199223" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"activeInConsensus":false,"invalid":9,"mutationsRejected":33,"officialCases":12,"possessionEstablished":false,"scenario":"consensus-bls-fast-aggregate","valid":3}
+</system-out>
+	</testcase>
+	<testcase name="consensus_registry_cancellation" classname="consensus_registry_cancellation" time="0.0476963" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_ethereum"/>
+		</properties>
+		<system-out>{"cases":28,"consensusCampaignExecuted":false,"groups":["registry-inspection-before-late-invalid-row","registry-staging-activation-and-cancellation","voluntary-exit-stages-and-versioned-dispatch","proposer-slashing-progress-and-late-rollback","registry-attester-slashing-progress-and-late-rollback","committee-attester-overloads-and-index-loop","delayed-penalty-read-loops","slashing-epoch-staging-and-final-swap"],"newNetworkIdentities":false,"persistent":false,"productionQualified":false,"scenario":"consensus-cooperative-registry-cancellation","syntheticRegistryEntries":8192}
+</system-out>
+	</testcase>
+	<testcase name="storage_execution_checkpoint" classname="storage_execution_checkpoint" time="0.201499" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_storage_local"/>
+		</properties>
+		<system-out>{"archiveAtomicRecovery":true,"archiveSurvivesReorg":true,"bellatrixReactor":false,"concurrentCAS":true,"rejections":14,"scenario":"atomic-execution-checkpoint","shanghai":false,"shorterReorg":true,"sigkillReopens":4,"unchangedHeadCheckpoint":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_payload_paired_state" classname="consensus_capella_payload_paired_state" time="0.0163636" status="run">
+		<properties/>
+		<system-out>{"cancellations":3,"firstCapella":false,"historicalSummariesPreserved":true,"networkActivated":false,"rejected":7,"scenario":"capella-payload-paired-state","withdrawals":4}
+{"cancellations":3,"firstCapella":true,"historicalSummariesPreserved":true,"networkActivated":false,"rejected":8,"scenario":"capella-payload-paired-state","withdrawals":4}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_signed_transition" classname="consensus_capella_signed_transition" time="4.99362" status="run">
+		<properties/>
+		<system-out>{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":0,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":false,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":false,"rejected":20,"scenario":"capella-signed-transition","signedArchives":9,"signedSlashings":1,"signedVotes":6,"skippedForkSlots":0,"snapshotReopened":true,"storeBlocks":9,"storeSigkillReopens":2,"storeVotes":6,"voteReorgs":2,"wireMessages":0,"withdrawals":1}
+{"assembledBodies":9,"beaconReadChecks":0,"blocks":9,"cancellations":18,"contexts":9,"deferredVotes":0,"durableReactor":true,"finalityScenario":false,"finalizedEpoch":1,"includedAttestations":0,"localAttestations":0,"localBlsChangeSelection":false,"localProposals":8,"localRandao":8,"migrated":true,"networkActivated":false,"participationPercent":100,"queuedBlsChangeSelection":fals...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_clock_diagnostics" classname="consensus_capella_clock_diagnostics" time="0.103461" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"checkpointUnchanged":true,"failClosedPreserved":true,"networkTransport":false,"scenario":"capella-clock-diagnostics","scenarios":4}
+{"directTransitionOracle":true,"networkTransport":false,"runtimeJumpRefusalPreserved":true,"scenario":"capella-startup-catchup","scenarios":9,"witnessedDurablePrefixes":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_local_monotonic_time" classname="consensus_local_monotonic_time" time="0.00146017" status="run">
+		<properties>
+			<property name="cmake_labels" value="clock;consensus"/>
+		</properties>
+		<system-out>bounded wall adjustments, latched faults, overflow and800 concurrent observations passed
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_published_signed_inventory" classname="consensus_capella_published_signed_inventory" time="1.74775" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_runtime"/>
+		</properties>
+		<system-out>{"checkpointUnchanged":true,"commitmentCancellationQualified":true,"privateExceptionRedacted":true,"publicationCancellationQualified":true,"scenario":"beacon-read-phase-diagnostics"}
+{"archiveReadCompleted":true,"cancelledWriterUnpublished":true,"oldPublicationPreserved":true,"publicationReadCompleted":true,"retainedBlockExportCompleted":true,"scenario":"beacon-read-during-held-admission"}
+{"admissionWhileExporterPaused":true,"admissionWhileReaderPaused":true,"headAdvanced":true,"oldPublicationPreserved":true,"retainedExportCoherentDuringCommit":true,"scenario":"beacon-read-concurrent-admission"}
+{"cancellationPreserved":true,"completedWhileWriterHeld":true,"rootBudgetPreserved":true,"sameDurableRootsAndToken":true,"scenario":"published-signed-inventory-during-held-admission","signedVotes":1,"slashings":0,"wanQualified":false}
+{"cancellationPreserved":true,"completedWhileWriterHeld":true,"rootBudgetPreserved":true,"sameDurableRootsAndToken":true,"scenario":"published-signed-inventory-during-held-admission","s...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_publication_cancel_boundary" classname="consensus_capella_publication_cancel_boundary" time="4.22936" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_recovery"/>
+		</properties>
+		<system-out>{"networkQualified":false,"noCancellationCallbackAfterWitnessWrite":true,"scenario":"capella-publication-cancel-boundary"}
+{"executionTip":true,"externalMutationsRejectedAndClosed":3,"networkQualified":false,"primaryCheckpoint":true,"scenario":"capella-cold-duplicate-storage-guards","witnessCheckpoint":true}
+{"allPublishedRecordsCold":true,"graphCapacityClosed":false,"idempotentMigration":true,"lateSnapshotReadRejected":true,"migrationAtomic":true,"networkQualified":false,"primaryAndWitnessRestarts":true,"productionQualified":false,"runtimeConfigBootQualified":false,"scenario":"capella-cold-reactor-integration","signerCommitmentUnchanged":true,"stickyColdFormat":true,"validChildDurablyAdmitted":true,"witnessPreviousPrimaryRecovered":true}
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_sync_adverse" classname="consensus_capella_sync_adverse" time="1.55962" status="run">
+		<properties>
+			<property name="cmake_labels" value="qualification_consensus_sync_adverse"/>
+		</properties>
+		<system-out>{"canonicalSnapshotAndWitnessEqual":true,"duplicateCheckpointStable":true,"finalizedAdvanceQualified":false,"finalizedCheckpointUnchanged":true,"networkTransport":false,"newTestOnlySignaturesCreated":8,"orphanRejectedBeforeParent":true,"privateInputsRead":false,"productionQualified":false,"receiptReservationsRetired":true,"rejectedPairUnchanged":true,"result":"PASS","runtimeDutiesAuthorized":false,"scenario":"capella-sync-orphan-retry","signedArchiveAndExecutionEqual":true,"workerCallbacks":5,"workerQuanta":6,"workersJoined":true}
+{"actualDeferredBeforeReopen":true,"canonicalSnapshotAndWitnessEqual":true,"deferredPairUnchanged":true,"duplicateCheckpointStable":true,"finalizedAdvanceQualified":false,"finalizedCheckpointUnchanged":true,"freshOwnerWitnessReactor":true,"honestResubmission":true,"lostCommitAckRetried":true,"networkTransport":false,"newRelayKnowledge":true,"newTestOnlySignaturesCreated":8,"oldSessionOutcomeUnknown":true,"privateInputsRead":false,"productionQualified":false,"realExports":3,"realRela...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="consensus_capella_bounded_canonical_audit" classname="consensus_capella_bounded_canonical_audit" time="28.6331" status="run">
+		<properties>
+			<property name="cmake_labels" value="audit;capella;consensus;recovery"/>
+		</properties>
+		<system-out>Capella audit private scratch retained: /tmp/nano-canonical-stream-Viji5e/audit-scratch/legacy-index-guard/nano-capella-canonical-audit-nxDpzB
+{"auditBlsSignaturesCreated":0,"databaseFullNineAndShaUnchanged":true,"databaseMemoryPolicy":{"durabilityChanged":false,"maximumWriteBuffers":2,"sharedBlockCacheBytes":0,"sharedMemtableBytes":16777216,"totalProcessRssBound":false,"writeBufferBytes":4194304},"fixtureBlsSignatures":1611,"groups":[{"audit":{"allHistoricalStatesMaterialized":false,"archiveBytes":238400,"blocksIncludingTrustedAnchor":161,"canonicalHistoryVerified":true,"checkpointDigest":"0x6f00cd1ac3f35391793cc93947de74ecf60983065b84127b7a2381bdbf65cd0c","checkpointSequence":338,"externalFinalizedAncestorVerified":true,"finalized":{"epoch":"0x12","root":"0xd188c99774f71f2e6710ee6e1b531619720038b805ebb2568c5cec19a043e77d"},"firstExecutionBlock":"0x1","head":"0x6550aec04ec15afd5dcdca470d098dd4f5b55c2a19c71b6a0df9bdc9189234b4","historicalForkChoiceVerified":false,"historicalStandaloneVotesReplayed":false,"las...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

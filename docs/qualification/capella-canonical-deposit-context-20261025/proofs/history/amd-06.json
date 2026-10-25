@@ -1,0 +1,301 @@
+{
+  "format": "nano-root-current-cmake-core-build-v1",
+  "passed": false,
+  "firstFailure": {
+    "type": "ValueError",
+    "reason": "actual Docker phase exit zero: daily-tests",
+    "phase": "daily-tests"
+  },
+  "secondaryFailures": [],
+  "sourceCandidate": "03542c1776cf45ec7ef59f64203495f20dbcb45a",
+  "architecture": "x86_64",
+  "phases": [
+    {
+      "phase": "build",
+      "exitCode": 0,
+      "elapsedMs": 231361
+    },
+    {
+      "phase": "header-closure",
+      "exitCode": 0,
+      "elapsedMs": 27548
+    },
+    {
+      "phase": "selection",
+      "exitCode": 0,
+      "elapsedMs": 469
+    },
+    {
+      "phase": "daily-tests",
+      "exitCode": 8,
+      "elapsedMs": 334561
+    }
+  ],
+  "actualLastDockerExitCode": 8,
+  "elapsedMs": 614325,
+  "heldInputs": 1867,
+  "heldInputsClosed": 1867,
+  "operatorFdLimitRestored": true,
+  "image": "sha256:fd9b0bb98a63963dba141a820ab7a49c08e23afcfb7b5ea9ea939987d75d6f14",
+  "imageBuilds": 0,
+  "gitArchivePayloadsByteExact": true,
+  "generatedDependencyPins": [
+    {
+      "path": "/home/ubuntu/nano-cold-deposit-full-amd-root-20261025-01/outputs/compile_commands.json",
+      "bytes": 246715,
+      "sha256": "26b61bd16704fe580e55717c0064b2e7be674bfccd477b4068cb4b246bf340d9"
+    },
+    {
+      "path": "/home/ubuntu/nano-cold-deposit-full-amd-root-20261025-01/outputs/lib/libmcl.a",
+      "bytes": 830682,
+      "sha256": "f5be373399ca12a4e98e7b8d8a07280def307418c2eb0a3b454769cafbdf42b7"
+    },
+    {
+      "path": "/home/ubuntu/nano-cold-deposit-full-amd-root-20261025-01/outputs/third_party/ckzg/include/nano_kzg_setup.hpp",
+      "bytes": 1997497,
+      "sha256": "d2329c1fd5c8eeb44a6c90175c23cdc6de8740dbb21515ea8bdb6e11967ac7be"
+    },
+    {
+      "path": "/home/ubuntu/nano-cold-deposit-full-amd-root-20261025-01/outputs/third_party/ckzg/libnano_blst.a",
+      "bytes": 313998,
+      "sha256": "d49255c72f14c75bf92d665978f5e43c709499604fe3a7aab49c59397a9f9c83"
+    },
+    {
+      "path": "/home/ubuntu/nano-cold-deposit-full-amd-root-20261025-01/outputs/third_party/ckzg/libnano_ckzg.a",
+      "bytes": 54340,
+      "sha256": "f816e478d405c4d0534ef231d205975fc9eacacbb0e5dc360d7d6de62d0e4cd5"
+    },
+    {
+      "path": "/home/ubuntu/nano-cold-deposit-full-amd-root-20261025-01/outputs/third_party/secp256k1/lib/libsecp256k1.a",
+      "bytes": 1310950,
+      "sha256": "ea23660ba94127725ba64f9d311757d23811e926d6f9924dacb4ec32a08bb6c6"
+    }
+  ],
+  "archiveProof": {
+    "members": 145,
+    "allCurrentObjectsBuiltFreshThisInvocation": false,
+    "allCoreObjectsBuiltForCurrentSources": true,
+    "resumedCurrentSourceObjects": 145,
+    "resumedFromCandidate": "1bc88aab3e8757ea2306c70cf93ec1fa9ea0560a",
+    "historicalCoreObjectPayloadsRetained": 0,
+    "currentHeaderDependencyClosure": true,
+    "sourceCandidate": "03542c1776cf45ec7ef59f64203495f20dbcb45a"
+  },
+  "retainedCurrentCoreBeforeBuild": {
+    "path": "/home/ubuntu/nano-cold-deposit-full-amd-root-20261025-01/outputs/libnano_core.a",
+    "bytes": 42048780,
+    "sha256": "e2c7a1c0789c5427da1e81a65ed53304af81c84a76574699837f4c8f9070fae2"
+  },
+  "archiveIntakeAddedSources": [
+    "tests/support/capella_canonical_stream.ipp"
+  ],
+  "fixtureHeaderCorrectionOnly": true,
+  "affectedExistingCallersRebuilt": 0,
+  "normalizedDependencyLookup": true,
+  "rawIndependentDependencyListsMustMatch": true,
+  "coreRecompiledThisInvocation": false,
+  "callerCompilationResumedThisInvocation": true,
+  "currentHeaderClosure": true,
+  "ctestResult": null,
+  "executables": [
+    {
+      "name": "nano-capella-sync-adverse-tests",
+      "bytes": 6494392,
+      "sha256": "24d845958da518297b0cd97f5b0e0e6a794fe3a0a896f6629b57a7116415b9f2",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-rpc-state-block-id-tests",
+      "bytes": 11296616,
+      "sha256": "b4929ef0c7bca57b8495f4531c4e9f8275143c5f2c2d0fd680acaa465f8f2865",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-rpc-get-proof-tests",
+      "bytes": 12243712,
+      "sha256": "be444f565d614034650d2eef4b8ccf6eb8da658ba83357fb8765c342f6419b78",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-rpc-state-read-cost-tests",
+      "bytes": 7885704,
+      "sha256": "a3d5bcbe2f4edd15453fab6361bfaf1152b47c7ced52290e26f16dd870a403e5",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-rpc-tests",
+      "bytes": 8406920,
+      "sha256": "5cba0dca02c769da26d742f9d742a7ed13e8f37f8e14af93b7fe4a15c91f385d",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-rpc-simulation-context-tests",
+      "bytes": 7757360,
+      "sha256": "4aef2155869c9e60020309bec90ac4898b62368b01f40fd9428e403fbeac6f31",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-duty-availability-tests",
+      "bytes": 6333944,
+      "sha256": "e53f8df2fba84975168d58f3f38cc4c35577b2bee374ad09fb2288f67b2e77be",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano",
+      "bytes": 14228720,
+      "sha256": "1cf78bff5f2dc00ec94801263bb998f64bea7cd2a1e1a6c4afe7f86c7ad5303c",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-tests",
+      "bytes": 7968144,
+      "sha256": "43d975e70a6bf48ffba11a753847816ffeee966affa1e90e7bbb82b565ede7a0",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-chain-tests",
+      "bytes": 7782680,
+      "sha256": "27256169a73ee14a1f06e1ac9e191da1c53a174c82602b6e4cf03cef5cf170c5",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-rpc-queue-tests",
+      "bytes": 11349032,
+      "sha256": "066d1a1fa84561e9cacdf91d521979f90ec4c1084bc8b06d201632cc037ddfaa",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-consensus-bls-tests",
+      "bytes": 529440,
+      "sha256": "521efbd884e971c8debcfcd70ee619855d116f573523f9bb52ec69680d664474",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-consensus-bls-aggregate-tests",
+      "bytes": 551496,
+      "sha256": "ac95f144700646ab6371b0fd26a16c87ec581b746bd42759c849bc8b7f6a2fd5",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-execution-checkpoint-tests",
+      "bytes": 3924048,
+      "sha256": "2e189d5afa33ad57dacb4ef2e02f3edd35b837ddb95af40ed259f6e490f1f66d",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-execution-tests",
+      "bytes": 3508040,
+      "sha256": "9f75f4efddd3723b9729fa163c65bef983af400b335c72af92f479853026bc38",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-transition-tests",
+      "bytes": 19706296,
+      "sha256": "196d3b4b7e6bfdcfba4f6cd3af98c5b1a141d2af3b53b1f1a63ceb18429b3ef3",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-local-monotonic-time-tests",
+      "bytes": 39936,
+      "sha256": "4cb284f227031a245cbd64a69e3db94a838198495ff73b7f41d605647dc61865",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-slashing-fixture",
+      "bytes": 7027328,
+      "sha256": "0acb4e4d1ca799ff578e2b2f871bea7808fb92941a996c7ca1acb59bcd792187",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-slashing-audit",
+      "bytes": 6088744,
+      "sha256": "88faf088d67ac1cbc8fd91246ceb42250c9e184ad40b3d340d6b51e251441c39",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-deposit-audit",
+      "bytes": 6968416,
+      "sha256": "bb5afc267f818ba83105b644b260c4eec560c9eca299f51d44bf03d30633cb3a",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-paused-capture",
+      "bytes": 6108536,
+      "sha256": "0686013424a5d35fa621251d3028b45dc68ee808b9a949d7300c3a5612eb66bf",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-isolated-bootstrap-audit",
+      "bytes": 2557640,
+      "sha256": "5f77993e04a2c2234ce834cbf6e365d0515999f315a5caec3ed0db3d5d9f4280",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-isolated-stopped-capture",
+      "bytes": 6258184,
+      "sha256": "8bb67017d6ed992763873bce51653868e194e5de67454fc69d75a91c3bb703cd",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-consensus-cancellation-tests",
+      "bytes": 611568,
+      "sha256": "16e067fe1c9239168b675a4006cfa242b444aa0e374c1445a74518869ae81c34",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-bounded-audit-tests",
+      "bytes": 6225480,
+      "sha256": "844ed0e24a388702ae9adb56ef5b8b5e42a47a6e9c6c905d21f7366ae5dfa6ec",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-canonical-stream-tests",
+      "bytes": 5683824,
+      "sha256": "daf8002d7a98ff9ac0faf324864dd1ce4fcd1808fae57fef63919187c52eaf28",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-canonical-deposit-context-tests",
+      "bytes": 5590896,
+      "sha256": "b76a1fd2e26a19bf5c46a6d24e65b8c46caebe9eb78cc5a4faee69043705d458",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-cold-deposit-replay-tests",
+      "bytes": 5523464,
+      "sha256": "458944867865e5721164a141a0f2b001ef446424f5f80783996e04a1c4557c0d",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-deposit-history-tests",
+      "bytes": 5042104,
+      "sha256": "8ff184a6e49e80c2df9d78f6aef14d0e12d0e7e7e4ccc9804bcf38640dee7b29",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-storage-maintenance",
+      "bytes": 6065864,
+      "sha256": "de4cf52d07f3358474e46a13179cb48980e66b6c89206da457ec3b41aec1c121",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-bootstrap-archive-maintenance",
+      "bytes": 6210536,
+      "sha256": "f6bf0d2824045aff6d9fcdc85aceab1ffe14daa14e17b9f366f3f39f976e6dd4",
+      "elfMachine": 62
+    },
+    {
+      "name": "nano-capella-duty-readiness",
+      "bytes": 6320320,
+      "sha256": "b78afe74f053e1e13a62c3df3c670175e10a8c95619696a9ddec23497b4a9880",
+      "elfMachine": 62
+    }
+  ],
+  "dailyCiPostExportControlsExecuted": false,
+  "gitHubCiQualified": false,
+  "reproducibleBitwiseRebuildClaimed": false,
+  "networkBinaryRebuilt": false,
+  "networkCampaignStarted": false,
+  "realFundsUsed": false,
+  "productionQualified": false
+}

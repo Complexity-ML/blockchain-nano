@@ -1,5 +1,17 @@
 # Base–Nanobees : options de relation avec l’actif natif
 
+**Mise à jour du 25 octobre 2026 :** la représentation convertible **1 Nanobees
+sur Base pour 1 NANO natif**, couverte par une réserve verrouillée, est retenue
+comme orientation de travail à la suite de la demande utilisateur de choisir
+le modèle le plus clair. Voir la [spécification de relation entre actifs](NANOBEES-BASE-ASSET.md).
+Le 1:1 concerne les jetons entiers ; le ratio atomique tient compte des décimales.
+Implémentation, financement de la réserve et termes de vente restent ouverts.
+Aucune vente, utilisation de fonds réels ou activation de route n'est autorisée.
+
+Le brouillon initial non adopté est conservé ci-dessous pour tracer les options
+et exigences qui ont conduit à ce choix.
+
+
 **Brouillon technique, aucune adoption.** L’utilisateur n’a pas encore arrêté la relation économique. Une représentation Base convertible d’un même actif est l’hypothèse conseillée à examiner, pas un choix validé. Offre, ratio, noms/symbole, allocations et inflation ne sont pas fixés ; aucun 1:1 n’est configuré dans le dépôt. Aucun contrat, test, fonds, vente ou déploiement n’est ajouté par cette fiche. C8 reste prioritaire.
 
 ## Trois options réellement différentes

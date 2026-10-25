@@ -1,0 +1,424 @@
+import shutil,xml.etree.ElementTree as ET
+import pathlib,os,json,hashlib,stat,subprocess,tarfile,time,re,shlex,sys,resource
+D=pathlib.Path(sys.argv[1]).resolve();cfg=json.loads((D/'dispatch-public.json').read_text());R=pathlib.Path(cfg['repository']);REV=cfg['sourceCandidate'];BASE=cfg['base'];DOCKER=cfg['docker'];IMAGE=cfg['image'];NAME=cfg['containerName'];LABEL=cfg['label'];start=time.monotonic();held=[];closed=0;first=None;secondary=[];docker_exit=None;archive_proof=None;test_rows=[];source_limits=resource.getrlimit(resource.RLIMIT_NOFILE);raised=False;git_inputs_exact=False;empty_git_inputs=0
+
+CORE_SOURCE='src/consensus_deposit_history.cpp'
+LEGACY_SOURCE='tests/test_deposit_history.cpp'
+LEGACY_TARGET='nano-deposit-history-tests'
+PLANNED_SOURCES={CORE_SOURCE,LEGACY_SOURCE}
+legacy_junit=None;legacy_runtime=None;legacy_log=None;daily_log=None;transient_closed=0;planned_rebuild_verified=False;legacy_build_reused=False;remaining_build_reused=False
+
+def need(v,m):
+ if not v:raise ValueError(m)
+def run(a,timeout=30,**kw):return subprocess.run(a,check=True,capture_output=True,timeout=timeout,**kw)
+def git(*a):return run(['git',*a],cwd=R).stdout.decode().strip()
+def nine(s):return[str(getattr(s,k))for k in['st_dev','st_ino','st_mode','st_uid','st_gid','st_nlink','st_size','st_mtime_ns','st_ctime_ns']]
+def hashfd(fd,size):
+ h=hashlib.sha256();at=0
+ while at<size:
+  b=os.pread(fd,min(1048576,size-at),at);need(b,'short held read');h.update(b);at+=len(b)
+ need(not os.pread(fd,1,at),'input grew');return h.hexdigest()
+def pin(path,expected=None,expectedFullNine=None):
+ path=pathlib.Path(path).resolve(strict=True);fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+ try:
+  a=os.fstat(fd);need(stat.S_ISREG(a.st_mode)and a.st_nlink==1 and 0<=a.st_size<=134217728 and(a.st_size>0 or expected is not None),'bounded regular source/provider');m=nine(a);need(expectedFullNine is None or m==expectedFullNine,'NEW input stable metadata matches first admission');sha=hashfd(fd,a.st_size);need(nine(os.fstat(fd))==m==nine(path.lstat()),'source first FD/path fence')
+  if expected:need(a.st_size==expected['bytes']and sha==expected['sha256'],'exact source/provider pin: '+path.name)
+  held.append((path,fd,m,sha));return {'path':str(path),'bytes':a.st_size,'sha256':sha}
+ except BaseException:os.close(fd);raise
+
+def held_bytes(path):
+ path=pathlib.Path(path);matches=[r for r in held if r[0]==path]
+ need(bool(matches),'read only a prospectively held file')
+ p,fd,m,h=matches[-1];data=os.pread(fd,int(m[6]),0)
+ need(len(data)==int(m[6])and hashlib.sha256(data).hexdigest()==h and nine(os.fstat(fd))==m==nine(p.lstat()),'held content and full9 unchanged')
+ return data
+
+def read_previous_archive(path,expected):
+ global transient_closed
+ need(path==path.resolve(strict=True),'previous Core archive canonical spelling')
+ fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+ try:
+  before=os.fstat(fd);m=nine(before)
+  need(stat.S_ISREG(before.st_mode)and before.st_nlink==1 and 0<before.st_size<=134217728 and before.st_size==expected['bytes'],'bounded previous archive before rewrite')
+  data=os.pread(fd,before.st_size,0)
+  need(len(data)==before.st_size and not os.pread(fd,1,before.st_size)and hashlib.sha256(data).hexdigest()==expected['sha256']and nine(os.fstat(fd))==m==nine(path.lstat()),'previous archive external bytes/full9')
+  return data,{'path':str(path),**expected,'previousFullNine':m,'role':'planned rewrite, not retained input'}
+ finally:os.close(fd);transient_closed+=1
+
+def elf(path):
+ data=held_bytes(path);need(len(data)>=20 and data[:6]==b'\x7fELF\x02\x01','ELF64 little-endian executable')
+ machine=int.from_bytes(data[18:20],'little');need(machine==cfg['elfMachine'],'actual ELF architecture')
+ return machine
+
+def link_uses_core(path,target):
+ argv=shlex.split(held_bytes(path).decode())
+ need(argv and argv.count('-o')==1 and argv.index('-o')+1<len(argv),'one explicit CMake linker output')
+ output=argv[argv.index('-o')+1];guest=output if output.startswith('/')else '/out/'+output
+ need(os.path.normpath(guest)=='/out/'+target,'link command belongs to its exact target')
+ need(not any(a.startswith('@')or a in ['-lnano_core','-l:libnano_core.a']for a in argv),'no opaque response file or alternate Core library spelling')
+ refs=[a for a in argv if 'libnano_core.a'in a]
+ need(len(refs)<=1 and all(a in ['libnano_core.a','/out/libnano_core.a']for a in refs),'Core classification uses an explicit canonical archive argument')
+ return bool(refs),argv
+
+def settle_known_new_files(files,pins,base=None,authority="git"):
+ # Prospective admission of known NEW Git payloads or terminal CMake outputs.
+ # Generated inputs have their own declared authority; no retained input is refreshed.
+ base=source if base is None else base
+ previous=None;stable=0;first_stable=None;deadline=time.monotonic()+10
+ while time.monotonic()<deadline:
+  snapshot=[]
+  for p in files:
+   need(time.monotonic()<deadline,'NEW Git intake deadline before file');expected=pins[str(p.relative_to(base))];fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+   try:
+    a=os.fstat(fd);need(stat.S_ISREG(a.st_mode)and a.st_nlink==1 and a.st_size==expected['bytes'],'known NEW Git fixture type/size');h=hashfd(fd,a.st_size);need(h==expected['sha256'],'known NEW Git payload exact');snapshot.append((str(p.relative_to(base)),nine(a),nine(os.fstat(fd)),nine(p.lstat())))
+   finally:os.close(fd)
+   need(time.monotonic()<deadline,'NEW Git intake deadline after file')
+  need(time.monotonic()<deadline,'NEW Git intake deadline after scan')
+  internal=all(a==b==c for _,a,b,c in snapshot)
+  signature=[(n,a)for n,a,_,_ in snapshot]
+  if internal and signature==previous:stable+=1
+  elif internal:stable=1;first_stable=time.monotonic()
+  else:stable=0;first_stable=None
+  previous=signature if internal else None
+  if stable>=3 and time.monotonic()-first_stable>=2:
+   need(time.monotonic()<deadline,'NEW Git intake deadline at admission');return {'report':{'stableSamples':stable,'stableSpanMs':round((time.monotonic()-first_stable)*1000),'files':len(files),'payloadsBoundToGit':authority=='git','inputAuthority':authority,'retainedAuthoritiesRefreshed':False},'materials':dict(signature)}
+  remaining=deadline-time.monotonic();need(remaining>0,'NEW Git intake deadline before wait');time.sleep(min(1,remaining))
+ raise ValueError('NEW exact-Git input metadata did not settle before first admission')
+
+def dependency_host(item,prefix,base):
+ normalized=os.path.normpath(item);need(normalized.startswith(prefix+'/'),'normalized dependency stays inside its mounted authority: '+item)
+ host=(base/item.removeprefix(prefix+'/')).resolve(strict=True);need(host.is_relative_to(base.resolve(strict=True)),'dependency path stays inside held mounted root: '+item)
+ return str(host)
+
+def archive_members(b):
+ need(b[:8]==b'!<arch>\n','GNU archive');at=8;names={};long=b''
+ while at<len(b):
+  h=b[at:at+60];need(len(h)==60 and h[58:]==b'`\n','archive header');size=int(h[48:58]);name=h[:16].decode().strip();at+=60;data=b[at:at+size];need(len(data)==size,'archive body');at+=size+(size%2)
+  if name=='//':long=data;continue
+  if name in['/','/SYM64/']:continue
+  if name.startswith('/'):
+   need(name[1:].isdigit(),'archive long name');pos=int(name[1:]);end=long.find(b'/\n',pos);need(end>=pos,'archive long-name terminator');name=long[pos:end].decode()
+  else:name=name.removesuffix('/')
+  need(re.fullmatch('[A-Za-z0-9_.-]+[.]o',name)and name not in names,'unique plain archive object name');names[name]=data
+ need(at==len(b),'archive exact length');return names
+
+def admit_terminal_outputs(paths,base,producer_phase):
+ # Only NEW/mutable outputs after this invocation's known successful producer.
+ # Retained authority never enters this path and never receives replacement pins.
+ need(phase_rows and phase_rows[-1]['phase']==producer_phase and phase_rows[-1]['exitCode']==0,'known terminal output producer before first admission')
+ paths=sorted(set(paths));held_paths={p for p,fd,m,h in held};need(not(set(paths)&held_paths),'NEW output admission cannot refresh a held input')
+ need(all(p.is_relative_to(base)and p==p.resolve(strict=True)for p in paths),'NEW output path is canonical inside its producer namespace before reading')
+ expected={}
+ for p in paths:
+  fd=os.open(p,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+  try:
+   before=os.fstat(fd);m=nine(before);need(stat.S_ISREG(before.st_mode)and before.st_nlink==1 and 0<before.st_size<=134217728,'bounded regular known NEW output before expected hash')
+   digest=hashfd(fd,before.st_size);need(nine(os.fstat(fd))==m==nine(p.lstat())and p==p.resolve(strict=True),'known NEW output unchanged during prospective hash')
+   expected[str(p.relative_to(base))]={'bytes':before.st_size,'sha256':digest}
+  finally:os.close(fd)
+ stable=settle_known_new_files(paths,expected,base,'known-terminal-current-cmake-output')
+ rows=[pin(p,expected[str(p.relative_to(base))],stable['materials'][str(p.relative_to(base))])for p in paths]
+ (D/(producer_phase+'-new-output-admission.json')).write_text(json.dumps({'producerPhase':producer_phase,'sourceCandidate':REV,'stability':stable['report'],'retainedAuthoritiesRefreshed':False,'files':rows},indent=2)+'\n')
+ return rows
+
+def retain_daily_last_test(out,label,producer_phase,previous_material):
+ need(phase_rows and phase_rows[-1]['phase']==producer_phase and phase_rows[-1]['exitCode']in[0,8],'known terminal CTest producer before log retention')
+ path=out/'Testing/Temporary/LastTest.log';need(path==path.resolve(strict=True),'terminal CTest log path has no symlink aliases');fd=os.open(path,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK)
+ try:
+  before=os.fstat(fd);m=nine(before);need(stat.S_ISREG(before.st_mode)and before.st_nlink==1 and 0<before.st_size<=64*1024*1024 and m!=previous_material,'bounded newly produced CTest log')
+  pieces=[];at=0
+  while at<before.st_size:
+   piece=os.pread(fd,min(1048576,before.st_size-at),at);need(piece,'short CTest log');pieces.append(piece);at+=len(piece)
+  need(not os.pread(fd,1,at)and nine(os.fstat(fd))==m==nine(path.lstat())and path==path.resolve(strict=True),'terminal CTest log read complete, canonical and unchanged');payload=b''.join(pieces)
+ finally:os.close(fd)
+ destination=D/(label+'-LastTest.full.log')
+ with open(destination,'xb')as target:target.write(payload);target.flush();os.fsync(target.fileno())
+ expected={'bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest()};stable=settle_known_new_files([destination],{destination.name:expected},D,'known-terminal-log-copy')
+ identity=pin(destination,expected,stable['materials'][destination.name])
+ (D/(label+'-log-retention.json')).write_text(json.dumps({'producerPhase':producer_phase,'producerExitCode':phase_rows[-1]['exitCode'],'fullUntruncatedLog':identity,'sourceLogFullNineAtRead':m,'laterCTestMayOverwriteOriginalLog':True},indent=2)+'\n')
+ return identity
+
+def junit_audit(registry,xml):
+ verifier=(source/'scripts/ci/verify-results.sh').read_text().split("<<'PY'\n",1)[1].rsplit('\nPY',1)[0]
+ result=run([sys.executable,'-B','-',str(registry),str(xml)],input=verifier.encode(),timeout=30)
+ value=json.loads(result.stdout);need(value['complete']and not value['failed']and value['skipped']==0,'exact complete CTest JUnit result')
+ return value
+try:
+ need(bool(cfg.get('resume')),'explicit terminal Full07 reference required')
+ need(type(cfg.get('elfMachine'))is int and cfg['elfMachine']=={'aarch64':183,'x86_64':62}.get(cfg['architecture']),'explicit ELF machine matches the selected architecture before any build or admission')
+ need(isinstance(cfg['resume'].get('completedLegacyBuild'),dict),'explicit terminal Full08 completed legacy build required; no recompile fallback')
+ need(isinstance(cfg['resume'].get('completedRemainingBuild'),dict),'explicit terminal Full09 completed remaining build required; no build or legacy replay fallback')
+ need(cfg['expectedCoreUnits']==145 and len(cfg['targets'])==len(set(cfg['targets']))==32 and LEGACY_TARGET in cfg['targets'],'exact 145 Core and 32 caller targets')
+ pin(pathlib.Path(__file__),cfg['controllerSourcePin']);pin(D/'dispatch-public.json')
+ need(git('rev-parse','HEAD')==BASE and not git('status','--porcelain'),'repository main clean at base')
+ bundle=pin(D/'candidate.bundle',cfg['bundle']);run(['git','bundle','verify',bundle['path']],cwd=R);run(['git','fetch','--no-tags',bundle['path'],cfg['bundleRef']],cwd=R);need(git('rev-parse','FETCH_HEAD')==REV,'candidate received through Git')
+ source=D/'source';source.mkdir(mode=0o700);arc=D/'source.tar';run(['git','archive','--format=tar','--output',str(arc),REV,*cfg['archiveRoots']],cwd=R)
+ arc_bytes=arc.read_bytes();arc_pin={'bytes':len(arc_bytes),'sha256':hashlib.sha256(arc_bytes).hexdigest()};arc_stability=settle_known_new_files([arc],{arc.name:arc_pin},D);pin(arc,arc_pin,arc_stability['materials'][arc.name]);git_pins={}
+ with tarfile.open(arc)as t:
+  members=t.getmembers();need(len(members)<3500 and sum(r.size for r in members)<67108864,'bounded public source archive');seen=set()
+  for r in members:
+   p=pathlib.PurePosixPath(r.name);need(not p.is_absolute()and '..'not in p.parts and(r.isfile()or r.isdir())and r.name not in seen,'unique regular public source archive');seen.add(r.name)
+   if r.isfile():
+    with t.extractfile(r)as f:b=f.read()
+    need(len(b)==r.size,'complete exact Git member');expected={'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()};declared=cfg['sourcePins'].get(r.name)
+    if declared:need(expected==declared,'changed source pin matches Git member: '+r.name)
+    git_pins[r.name]=expected
+  need(len(git_pins)==cfg['archivedSourceFiles']and sum(r['bytes']for r in git_pins.values())==cfg['archivedBytes'],'exact Git file and byte counts');need(set(cfg['sourcePins']).issubset(git_pins),'all changed Source pins present in Git archive')
+  t.extractall(source,members=members,filter='data')
+ if cfg.get('resume'):
+  producer=pathlib.Path(cfg['resume']['directory']);pin(producer/'result-public.json',cfg['resume']['reportPin'])
+  old=json.loads(held_bytes(producer/'result-public.json'));need(old['sourceCandidate']==cfg['resume']['sourceCandidate']and not old['passed']and old['firstFailure']['phase']=='legacy-history'and not old['secondaryFailures']and old['heldInputs']==old['heldInputsClosed']and old['gitArchivePayloadsByteExact'],'terminal Full07 legacy failure with exact closed input fences')
+  need(old['image']==IMAGE and old['architecture']==cfg['architecture'],'producer image and architecture match')
+  need(old['currentHeaderClosure']and old['archiveProof']['members']==145 and old['archiveProof']['allCoreObjectsBuiltForCurrentSources']and old['ctestResult']['complete']and not old['ctestResult']['failed']and old['ctestResult']['skipped']==0,'previous daily tests passed with current145 closure; whole result remains FAILED')
+  pin(producer/'current-header-closure.json',cfg['resume']['currentHeaderClosurePin'])
+  old_closure=json.loads(held_bytes(producer/'current-header-closure.json'))
+  need(old_closure['passed']and old_closure['sourceCandidate']==old['sourceCandidate']and len(old_closure['units'])==177,'exact pinned previous object closure')
+  prior_units={(r['target'],r['source']):r for r in old_closure['units']};need(len(prior_units)==177,'unique previous Core/caller units')
+  for previous in old['generatedDependencyPins']:
+   payload=pathlib.Path(previous['path']).read_bytes();need(len(payload)==previous['bytes']and hashlib.sha256(payload).hexdigest()==previous['sha256'],'producer generated configuration/dependency bytes unchanged')
+  changed=set(git('diff','--name-only',cfg['resume']['sourceCandidate'],REV).splitlines());need(changed==set(cfg['resume']['changedSources'])==PLANNED_SOURCES,'only one reviewed Core CPP and one legacy test CPP changed; headers and CMake identical')
+  pin(producer/'dispatch-public.json',cfg['resume']['dispatchPin'])
+  previous_cfg=json.loads(held_bytes(producer/'dispatch-public.json'));added=set(cfg['resume']['addedArchiveSources']);need(not added and set(cfg['archiveRoots'])==set(previous_cfg['archiveRoots']),'same complete Full07 source archive roots')
+  need(all(not (producer/'source'/p).exists() for p in added),'added source was actually absent from producer intake')
+  completed_ref=cfg['resume']['completedLegacyBuild'];completed_dir=pathlib.Path(completed_ref['directory'])
+  pin(completed_dir/'result-public.json',completed_ref['reportPin']);pin(completed_dir/'dispatch-public.json',completed_ref['dispatchPin']);pin(completed_dir/'legacy-build-new-output-admission.json',completed_ref['admissionPin'])
+  completed=json.loads(held_bytes(completed_dir/'result-public.json'));completed_cfg=json.loads(held_bytes(completed_dir/'dispatch-public.json'));completed_admission=json.loads(held_bytes(completed_dir/'legacy-build-new-output-admission.json'))
+  need(completed['sourceCandidate']==REV and completed['architecture']==cfg['architecture']and completed['image']==IMAGE and completed['passed']is False and completed['firstFailure']=={'type':'KeyError','reason':"'elfMachine'",'phase':'legacy-build'},'only the exact terminal Full08 missing-machine failure may be continued')
+  need(completed['secondaryFailures']==[]and completed['heldInputs']==completed['heldInputsClosed']==1837 and completed['plannedPreviousInputsTransientFdsClosed']==3 and completed['gitArchivePayloadsByteExact']and completed['archiveProof']is None and completed['legacyFirstResult']is None and completed['ctestResult']is None,'Full08 exact closed fences and no legacy/daily test adoption')
+  need(len(completed['phases'])==1 and completed['phases'][0]['phase']=='legacy-build'and completed['phases'][0]['exitCode']==0 and completed['actualLastDockerExitCode']==0,'exactly one already completed successful legacy build')
+  need(completed_cfg['controllerSourcePin']=={'sha256':'5c8e31546b81026ae87c26081855ed45dbd241afefd2ac507680a1a75d493edd','bytes':38700}and 'elfMachine'not in completed_cfg,'the exact prior V8 wrapper lacked its required machine field')
+  need(completed_cfg['sourceCandidate']==REV and completed_cfg['architecture']==cfg['architecture']and completed_cfg['image']==IMAGE and completed_cfg['targets']==cfg['targets']and completed_cfg['sourcePins']==cfg['sourcePins']and completed_cfg['archiveRoots']==cfg['archiveRoots'],'completed build used the same exact candidate, image, targets and source pins')
+  need(all(completed_cfg['resume'][k]==cfg['resume'][k]for k in ['directory','reportPin','dispatchPin','currentHeaderClosurePin','faultLibraryPin','coreArchivePin','outputDirectory','changedSources','addedArchiveSources']),'Full08 was joined to the same original Full07 authorities and output tree')
+  need(completed_admission['sourceCandidate']==REV and completed_admission['producerPhase']=='legacy-build'and completed_admission['retainedAuthoritiesRefreshed']is False and completed_admission['stability']['stableSamples']>=3 and completed_admission['stability']['stableSpanMs']>=2000 and completed_admission['stability']['files']==6,'externally pinned six-file successful-producer admission')
+  completed_files={pathlib.Path(r['path']):{'bytes':r['bytes'],'sha256':r['sha256']}for r in completed_admission['files']}
+  need(len(completed_admission['files'])==len(completed_files)==6,'exactly six unique inherited output commitments')
+  unchanged_times=0
+  for relative,expected in git_pins.items():
+   previous=(completed_dir if relative in changed else producer)/'source'/relative;payload=previous.read_bytes();need(len(payload)==expected['bytes']and hashlib.sha256(payload).hexdigest()==expected['sha256'],'retained object source/header exactly matches new Git bytes')
+   target=source/relative;st=previous.stat();os.utime(target,ns=(st.st_atime_ns,st.st_mtime_ns));unchanged_times+=1
+  (D/'prospective-new-input-times.json').write_text(json.dumps({'files':unchanged_times,'changedCppTimesFromCompletedFull08':sorted(changed),'otherTimesFromFull07':True,'reason':'byte-identical new Git inputs retain the applicable terminal producer mtimes before first admission, avoiding a second compilation of the two corrected units','retainedAuthoritiesRefreshed':False})+'\n')
+ files=sorted(p for p in source.rglob('*')if p.is_file());need(len(files)==cfg['archivedSourceFiles'],'declared source count');wanted=len(files)+512;need(wanted<=4096 and (source_limits[1]==resource.RLIM_INFINITY or wanted<=source_limits[1]),'bounded operator-only FD budget')
+ if wanted>source_limits[0]:resource.setrlimit(resource.RLIMIT_NOFILE,(wanted,source_limits[1]));raised=True
+ stable_inputs=settle_known_new_files(files,git_pins);admission=stable_inputs['report']
+ for p in files:
+  rel=str(p.relative_to(source));pin(p,git_pins[rel],stable_inputs['materials'][rel])
+ git_inputs_exact=True;empty_git_inputs=sum(r['bytes']==0 for r in git_pins.values())
+ out=pathlib.Path(cfg['resume']['outputDirectory'])if cfg.get('resume')else D/'outputs'
+ if not cfg.get('resume'):out.mkdir(mode=0o700)
+ need(shutil.disk_usage(D).free>=2*1024**3,'two GiB of existing build-disk headroom required')
+ mounts=['--mount','type=bind,src='+str(source)+',dst=/work,readonly','--mount','type=bind,src='+str(out)+',dst=/out']
+ phase_rows=[];owned_containers=[];active_phase=None;dependency_artifacts=[];generated_inputs=[]
+ def docker_phase(name,command,timeout):
+  global active_phase,docker_exit
+  active_phase=name;container=NAME+'-'+name;cidfile=D/(name+'.cid')
+  need(not run(DOCKER+['ps','-a','--filter','name=^/'+container+'$','--format','{{.ID}}']).stdout.strip(),'fresh owned phase container absent')
+  owned_containers.append((container,cidfile))
+  argv=DOCKER+['run','--rm','--pull=never','--init','--cidfile',str(cidfile),'--name',container,'--label','nano.qualification='+LABEL,'--network','none','--read-only','--user',cfg['user'],'--cap-drop','ALL','--security-opt','no-new-privileges','--memory','3g','--cpus','2','--pids-limit','256','--tmpfs','/tmp:rw,nosuid,nodev,exec,size=512m,mode=1777',*mounts,'--workdir','/out','--entrypoint',command[0],IMAGE,*command[1:]]
+  (D/(name+'-argv.json')).write_text(json.dumps(argv,indent=2)+'\n')
+  notify={'phase':name,'event':'begin','container':container};print(json.dumps(notify),flush=True)
+  began=time.monotonic()
+  with open(D/(name+'.stdout.log'),'xb')as stdout,open(D/(name+'.stderr.log'),'xb')as stderr:
+   actual=subprocess.run(argv,stdout=stdout,stderr=stderr,timeout=timeout)
+  docker_exit=actual.returncode;phase_rows.append({'phase':name,'exitCode':actual.returncode,'elapsedMs':round((time.monotonic()-began)*1000)})
+  print(json.dumps(phase_rows[-1]),flush=True);need(actual.returncode==0,'actual Docker phase exit zero: '+name)
+ cmake=['/usr/bin/cmake','-S','/work','-B','/out','-DCMAKE_BUILD_TYPE=Release','-DCMAKE_CXX_COMPILER=/usr/bin/clang++','-DCMAKE_C_COMPILER=/usr/bin/clang','-DCMAKE_CXX_COMPILER_LAUNCHER=','-DCMAKE_C_COMPILER_LAUNCHER=','-DCMAKE_EXPORT_COMPILE_COMMANDS=ON','-DCMAKE_SUPPRESS_REGENERATION=ON','-DMCL_PORTABLE=ON']
+ if not cfg.get('resume'):
+  docker_phase('configure',cmake,180)
+  need(not list(out.rglob('libnano_core.a')),'no preexisting Core archive')
+  docker_phase('dependencies',['/usr/bin/cmake','--build','/out','--parallel','1','--target','nano_blst','nano_ckzg','secp256k1','mcl_st'],600)
+ else:
+  need(any(r['phase']=='core-build'and r['exitCode']==0 for r in old['phases'])or(old.get('currentHeaderClosure')and old.get('archiveProof',{}).get('members')==cfg['expectedCoreUnits']and old['archiveProof'].get('allCoreObjectsBuiltForCurrentSources')),'terminal producer completed the exact-current Core or authenticated it with the full current header closure')
+  need(list(out.rglob('libnano_core.a'))==[out/'libnano_core.a'],'one completed current Core archive')
+  need(cfg['resume']['coreArchivePin']=={k:old['retainedCurrentCoreBeforeBuild'][k]for k in ['bytes','sha256']},'previous Core archive matches retained external producer commitment')
+  retained_core_pin={'path':str(out/'libnano_core.a'),**cfg['resume']['coreArchivePin'],'role':'historical Full07 commitment only; current Full08 archive is separately admitted','oldArchiveReopened':False}
+ # Prospective admission of generated configuration and dependency inputs after
+ # their producer is terminal, before any current Core object is built.
+ generated=sorted(p for p in out.rglob('*')if p.is_file()and p!=out/'libnano_core.a' and(p.suffix in{'.h','.hpp','.inc','.a'}or p.name=='compile_commands.json'))
+ need(generated and (out/'compile_commands.json')in generated,'generated compile commands and headers required')
+ if cfg.get('resume'):
+  inherited={pathlib.Path(r['path']):{'bytes':r['bytes'],'sha256':r['sha256']}for r in old['generatedDependencyPins']}
+  need(set(generated)==set(inherited),'generated dependency namespace exactly inherited')
+  expected={str(p.relative_to(out)):inherited[p]for p in generated}
+ else:expected={str(p.relative_to(out)):{'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()}for p in generated}
+ stability=settle_known_new_files(generated,expected,out,'retained-terminal-cmake-producer'if cfg.get('resume')else'cmake-generated-from-pinned-source')
+ for p in generated:
+  rec=pin(p,expected[str(p.relative_to(out))],stability['materials'][str(p.relative_to(out))]);generated_inputs.append(rec)
+  if p.suffix=='.a':dependency_artifacts.append(rec)
+ (D/'generated-inputs-before-core.json').write_text(json.dumps({'sourceCandidate':REV,'producerPhases':phase_rows,'stability':stability['report'],'files':generated_inputs},indent=2)+'\n')
+ entries=json.loads((out/'compile_commands.json').read_text());required_targets=set(cfg['targets'])|{'nano_core'}
+ inherited_paths={out/'libnano_core.a',out/LEGACY_TARGET}
+ for entry in entries:
+  if entry['file']not in {'/work/'+CORE_SOURCE,'/work/'+LEGACY_SOURCE}:continue
+  args=entry.get('arguments')or shlex.split(entry['command']);need('-o'in args,'planned unit has its exact configured object path');obj=args[args.index('-o')+1]
+  expected_target='nano_core'if entry['file']=='/work/'+CORE_SOURCE else LEGACY_TARGET
+  need('CMakeFiles/'+expected_target+'.dir/'in obj,'completed mutable unit belongs to its expected target')
+  host=out/obj.removeprefix('/out/');inherited_paths.update([host,pathlib.Path(str(host)+'.d')])
+ need(len(inherited_paths)==6 and set(completed_files)==inherited_paths and all(p.is_relative_to(out)and p==p.resolve(strict=True)for p in inherited_paths),'six completed outputs exactly match two configured objects, two dependency lists, Core archive and legacy ELF')
+ inherited_pins=[pin(p,completed_files[p])for p in sorted(inherited_paths)]
+ (D/'inherited-legacy-build-output-admission.json').write_text(json.dumps({'sourceCandidate':REV,'completedProducerDirectory':str(completed_dir),'producerExitCode':0,'originalFull08EnvelopeRemainsFailed':True,'retainedAuthoritiesRefreshed':False,'inputAuthority':'externally pinned terminal Full08 bytes, not a new output producer or learned hash','historicalFullNineContinuityClaimed':False,'prospectiveFdPathFencesHeld':True,'files':inherited_pins},indent=2)+'\n')
+ selected=[];core_entries=[];rebuild_objects=[];planned=[];old_program_material={}
+ for entry in entries:
+  args=entry.get('arguments')or shlex.split(entry['command']);need('-o'in args,'CMake compile command object output')
+  obj=args[args.index('-o')+1];target=next((x for x in required_targets if 'CMakeFiles/'+x+'.dir/'in obj),None)
+  if target is None or not entry['file'].endswith(('.cpp','.cc')):continue
+  relative=entry['file'].removeprefix('/work/');host=out/obj.removeprefix('/out/');dep=pathlib.Path(str(host)+'.d')
+  need(host.is_file()and dep.is_file(),'every previous Full07 object/dependency list present')
+  prior=prior_units.get((target,entry['file']));need(prior is not None,'unit belongs to exact previous closure')
+  mutable=(target=='nano_core'and relative==CORE_SOURCE)or(target==LEGACY_TARGET and relative==LEGACY_SOURCE)
+  if mutable:
+   payload=held_bytes(host);need(host in completed_files and dep in completed_files,'corrected object and dependency list held from Full08 external commitment')
+  else:
+   pin(host,prior['object']);pin(dep);payload=held_bytes(host)
+  prior_dependencies=shlex.split(dep.read_text().replace(chr(92)+chr(10),' ').split(':',1)[1])
+  input_dependencies={os.path.normpath(v).removeprefix('/work/')for v in prior_dependencies if v.startswith('/work/')}
+  need(not(input_dependencies&changed)or(mutable and input_dependencies&changed=={relative}),'only planned two units depend on changed CPPs')
+  for dependency in prior_dependencies:
+   if dependency.startswith('/out/'):need(dependency_host(dependency,'/out',out)in {r['path']for r in old['generatedDependencyPins']},'retained object used known generated dependencies')
+  row={'target':target,'source':entry['file'],'object':obj,'arguments':args,'directory':entry['directory']};selected.append(row)
+  if target=='nano_core':
+   core_entries.append(row)
+  if mutable:
+   need((source/relative).stat().st_mtime_ns<=host.stat().st_mtime_ns,'inherited exact CPP does not request recompilation of its completed Full08 object')
+   planned.append(row);rebuild_objects.append({'source':entry['file'],'target':target,'object':str(host),'inheritedFromCompletedFull08':True})
+ need(len(selected)==177 and len(core_entries)==145 and {(r['target'],r['source'])for r in planned}=={('nano_core','/work/'+CORE_SOURCE),(LEGACY_TARGET,'/work/'+LEGACY_SOURCE)},'one mutable Core and one legacy TU; 175 retained units')
+ need({r['target']for r in selected}==required_targets,'all 32 callers and Core have compile commands')
+ (D/'current-compile-commands-before-core.json').write_text(json.dumps(selected,indent=2)+'\n')
+ (D/'retained-current-core-before-build.json').write_text(json.dumps({'sourceCandidate':REV,'previousSourceCandidate':old['sourceCandidate'],'historicalFull07ArchiveCommitment':retained_core_pin,'currentFull08Archive':completed_files[out/'libnano_core.a'],'previousMembers':145,'retainedUnchangedCoreObjects':144,'correctedCoreSource':CORE_SOURCE,'oldArchiveReopened':False,'newCoreCompilationRequested':False},indent=2)+'\n')
+ fault=list(out.glob('libnano-test-sync-fault.*'));need(len(fault)==1 and fault[0].is_file(),'unique retained fault library')
+ fault_pin=pin(fault[0],cfg['resume']['faultLibraryPin'])
+
+ legacy_program=out/LEGACY_TARGET
+ core=out/'libnano_core.a';current_members=archive_members(held_bytes(core))
+ need(len(current_members)==145,'new complete Core archive has145 members')
+ for row in core_entries:
+  object_path=out/row['object'].removeprefix('/out/')
+  need(current_members.get(pathlib.Path(row['source']).name+'.o')==held_bytes(object_path),'all145 members equal144 held current objects plus one new object')
+ del current_members
+ elf(legacy_program)
+ planned_rebuild_verified=True;legacy_build_reused=True
+ (D/'completed-legacy-build-reuse.json').write_text(json.dumps({'sourceCandidate':REV,'completedProducerDirectory':str(completed_dir),'coreUnitsRecompiledThisInvocation':0,'legacyUnitsRecompiledThisInvocation':0,'correctedCoreUnitsInheritedFromFull08':1,'correctedLegacyUnitsInheritedFromFull08':1,'unchangedCoreUnitsInheritedFromFull07':144,'completeArchiveMembers':145,'oldArchiveAuthorityRefreshed':False,'currentArchiveHeldAcrossLaterBuild':True,'originalFull08EnvelopeRemainsFailed':True},indent=2)+'\n')
+
+ remaining_ref=cfg['resume']['completedRemainingBuild'];remaining_dir=pathlib.Path(remaining_ref['directory'])
+ pin(remaining_dir/'result-public.json',remaining_ref['reportPin']);pin(remaining_dir/'dispatch-public.json',remaining_ref['dispatchPin']);pin(remaining_dir/'remaining-build-publication.json',remaining_ref['postKnownOutputPin'])
+ remaining=json.loads(held_bytes(remaining_dir/'result-public.json'));remaining_cfg=json.loads(held_bytes(remaining_dir/'dispatch-public.json'));remaining_publication=json.loads(held_bytes(remaining_dir/'remaining-build-publication.json'))
+ need(remaining['sourceCandidate']==REV and remaining['architecture']==cfg['architecture']and remaining['image']==IMAGE and remaining['passed']is False and remaining['firstFailure']=={'type':'ValueError','reason':'remaining caller actually relinked: nano-local-monotonic-time-tests','phase':'build'},'only the exact terminal Full09 standalone-role failure may be continued')
+ need(remaining['secondaryFailures']==[]and remaining['heldInputs']==remaining['heldInputsClosed']==1841 and remaining['gitArchivePayloadsByteExact']and remaining['legacyBuildInheritedFromTerminalFull08']is True and remaining['archiveProof']is None and remaining['ctestResult']is None,'Full09 strict closed fences with no daily qualification')
+ need([(r['phase'],r['exitCode'])for r in remaining['phases']]==[('legacy-first-selection',0),('legacy-first',0),('build',0)]and remaining['actualLastDockerExitCode']==0,'only completed legacy-first and remaining build phases are inherited')
+ need(remaining_cfg['controllerSourcePin']=={'sha256':'2a5658c258c7c2904899d41c93f2478010f60344b290014de9e62aa449f51ca0','bytes':43426}and remaining_cfg['elfMachine']==cfg['elfMachine'],'the exact prior continuation and explicit architecture binding')
+ need(all(remaining_cfg[k]==cfg[k]for k in ['sourceCandidate','architecture','image','targets','sourcePins','archiveRoots','ctestPattern','ctestExpectedCount']),'same exact candidate, build image, callers, sources and daily selection as Full09')
+ need(all(remaining_cfg['resume'][k]==cfg['resume'][k]for k in ['directory','reportPin','dispatchPin','currentHeaderClosurePin','faultLibraryPin','coreArchivePin','outputDirectory','changedSources','addedArchiveSources','completedLegacyBuild']),'Full09 joined the same Full07 and completed Full08 authorities')
+ legacy_junit=remaining['legacyFirstResult'];legacy_runtime=remaining['legacyFirstRuntime'];legacy_log=remaining['legacyFirstFullLog']
+ need(legacy_junit['complete']and not legacy_junit['failed']and legacy_junit['skipped']==0,'externally pinned completed legacy-first JUnit with zero skips')
+ legacy_path=pathlib.Path(legacy_log['path']);need(legacy_path==remaining_dir/(remaining_cfg['label']+'-legacy-first-LastTest.full.log')and legacy_path==legacy_path.resolve(strict=True),'legacy full log belongs to the exact completed Full09 output namespace')
+ pin(legacy_path,legacy_log)
+ records=[]
+ for line in held_bytes(legacy_path).decode().splitlines():
+  try:value=json.loads(line)
+  except ValueError:continue
+  if isinstance(value,dict)and value.get('scenario')=='execution-deposit-history':records.append(value)
+ need(len(records)==1 and records[0]==legacy_runtime and legacy_runtime.get('scenario')=='execution-deposit-history'and legacy_runtime.get('prefixCheckpointBoundaries')==[3,35,34,35]and legacy_runtime.get('prefixDutyCancellations')==107,'completed Full09 legacy log exactly matches its typed 107-cancellation result')
+ (D/'inherited-legacy-first-result.json').write_text(json.dumps({'inheritedFromCompletedFull09':True,'completedProducerDirectory':str(remaining_dir),'originalFull09EnvelopeRemainsFailed':True,'junit':legacy_junit,'runtime':legacy_runtime,'fullLog':legacy_log,'provisionalUntilGlobalDependencyAndFdFences':True},indent=2)+'\n')
+
+ need(remaining_publication['format']=='nano-root-completed-cmake-remaining-build-v1'and remaining_publication['sourceCandidate']==REV and remaining_publication['architecture']==cfg['architecture']and remaining_publication['image']==IMAGE and remaining_publication['reportPin']==remaining_ref['reportPin']and remaining_publication['dispatchPin']==remaining_ref['dispatchPin']and remaining_publication['buildExitCode']==0,'external post-producer output commitments joined to exact Full09 report and dispatch')
+ pin(remaining_dir/'build.stdout.log',remaining_publication['buildStdoutPin']);link_lines=[]
+ for line in held_bytes(remaining_dir/'build.stdout.log').decode().splitlines():
+  try:link_lines.append(shlex.split(line))
+  except ValueError:continue
+ rows=remaining_publication['artifacts'];by_target={r['target']:r for r in rows};expected_other=set(cfg['targets'])-{LEGACY_TARGET}
+ need(len(rows)==len(by_target)==31 and set(by_target)==expected_other,'exactly 31 unique nonlegacy executable roles')
+ old_programs={r['name']:{'bytes':r['bytes'],'sha256':r['sha256']}for r in old['executables']};need(len(old_programs)==32 and set(old_programs)==set(cfg['targets']),'complete exact Full07 executable authority for standalone callers')
+ core_linked=[];standalone=[];role_rows=[]
+ for target in cfg['targets']:
+  if target==LEGACY_TARGET:continue
+  row=by_target[target];program=out/target;link_path=out/'CMakeFiles'/(target+'.dir')/'link.txt'
+  need(row['executable']['path']==str(program)and row['linkCommand']['path']==str(link_path)and program==program.resolve(strict=True)and link_path==link_path.resolve(strict=True),'exact canonical known CMake producer executable and link paths')
+  pin(link_path,row['linkCommand']);uses_core,link_argv=link_uses_core(link_path,target);observed=link_argv in link_lines
+  need(type(row['linksCore'])is bool and row['linksCore']==uses_core and type(row['linkArgvObservedInCompletedBuild'])is bool and row['linkArgvObservedInCompletedBuild']==observed,'independently parsed Core role and actual completed linker command agree with Root commitments')
+  if uses_core:
+   need(observed,'Core-dependent output has its exact linker command in the completed successful build stdout');expected={'bytes':row['executable']['bytes'],'sha256':row['executable']['sha256']};core_linked.append(target)
+  else:
+   need(not observed and {k:row['executable'][k]for k in ['bytes','sha256']}==old_programs[target],'standalone output keeps its exact Full07 bytes without an invented new linker command');expected=old_programs[target];standalone.append(target)
+  pin(program,expected);role_rows.append({'target':target,'linksCore':uses_core,'linkArgvObservedInCompletedBuild':observed,'expectedArtifactAuthority':'Root post-Full09 successful producer commitment'if uses_core else'existing Full07 executable commitment'})
+ need(len(core_linked)==30 and len(standalone)==1,'exact 30 Core-dependent callers and one standalone target')
+ remaining_build_reused=True
+ (D/'inherited-remaining-build-roles.json').write_text(json.dumps({'sourceCandidate':REV,'completedProducerDirectory':str(remaining_dir),'originalFull09EnvelopeRemainsFailed':True,'newCompilationsRequested':0,'newRelinksRequested':0,'coreDependentOutputsFromFull09':core_linked,'standaloneOutputsFromFull07':standalone,'historicalFullNineContinuityClaimed':False,'retainedAuthoritiesRefreshed':False,'roles':role_rows},indent=2)+'\n')
+ # Probe the actual configured flags independently against the compiler's .d.
+ closure_directory=out/('closure-'+LABEL);closure_directory.mkdir(mode=0o700);probe_script='set -eu\n';probes=[]
+ for i,row in enumerate(selected):
+  args=row['arguments'];clean=[];j=0
+  while j<len(args):
+   if args[j]in['-o','-MT','-MF','-MQ']:j+=2;continue
+   if args[j]in['-c','-MD','-MMD','-MP']:j+=1;continue
+   clean.append(args[j]);j+=1
+  guest='/out/'+closure_directory.name+'/'+str(i)+'.M';obj=row['object'];probes.append((row,closure_directory/(str(i)+'.M'),out/(obj.removeprefix('/out/')+'.d')))
+  command=clean+['-M','-MT',obj,'-MF',guest]
+  probe_script+='cd '+shlex.quote(row['directory'])+'\n'+shlex.join(command)+'\n'
+ docker_phase('header-closure',['/bin/sh','-ec',probe_script],600)
+ closure=[]
+ def dependencies(p):return shlex.split((held_bytes(p).decode()if str(p)in held_paths else p.read_text()).replace(chr(92)+chr(10),' ').split(':',1)[1])
+ held_paths={str(p)for p,fd,m,h in held}
+ for row,probe,actual in probes:
+  a=dependencies(probe);b=dependencies(actual);need(a==b,'independent M equals actual compiler dependencies: '+row['source'])
+  for item in b:
+   if item.startswith('/work/'):need(dependency_host(item,'/work',source)in held_paths,'Git dependency held before build: '+item)
+   elif item.startswith('/out/'):need(dependency_host(item,'/out',out)in held_paths,'generated header held before Core build: '+item)
+   else:need(item.startswith(('/usr/','/lib/')),'dependency belongs to immutable image or held inputs')
+  obj=out/row['object'].removeprefix('/out/');need(obj.is_file(),'actual current compiled object exists');payload=held_bytes(obj)
+  closure.append({'target':row['target'],'source':row['source'],'dependencies':len(b),'object':{'bytes':len(payload),'sha256':hashlib.sha256(payload).hexdigest()},'configuredOptimization':[x for x in row['arguments']if re.fullmatch('-O[0-3sgz]',x)]})
+ new=archive_members(held_bytes(out/'libnano_core.a'));need(len(new)==cfg['expectedCoreUnits'],'new full Core archive exact count')
+ for row in core_entries:
+  name=pathlib.Path(row['source']).name+'.o';obj=out/row['object'].removeprefix('/out/');need(name in new and new[name]==held_bytes(obj),'each Core member is its held current object')
+ archive_proof={'members':len(new),'allCurrentObjectsBuiltFreshThisInvocation':False,'allCoreObjectsBuiltForCurrentSources':True,'resumedCurrentSourceObjects':145,'newCoreObjectsBuilt':0,'resumedFromCandidate':REV,'unchangedCoreObjectsInheritedFromFull07':144,'correctedCoreObjectsInheritedFromFull08':1,'historicalCoreObjectPayloadsRetained':0,'currentHeaderDependencyClosure':True,'sourceCandidate':REV}
+ (D/'current-header-closure.json').write_text(json.dumps({'passed':True,'sourceCandidate':REV,'archive':archive_proof,'units':closure,'immutableImage':IMAGE,'independentProbeMatchesCompiler':True},indent=2)+'\n')
+ fault=list(out.glob('libnano-test-sync-fault.*'));need(len(fault)==1 and fault[0].is_file(),'unique built fault-injection library')
+ need(held_bytes(fault[0])is not None,'retained fault library still held');executables=[]
+ for target in cfg['targets']:
+  p=out/target;need(p.is_file(),'built target executable exists: '+target);known=[rec for rec in held if rec[0]==p.resolve(strict=True)];need(bool(known),'executable held from known NEW producer');identity={'bytes':int(known[-1][2][6]),'sha256':known[-1][3]};executables.append({'name':target,'bytes':identity['bytes'],'sha256':identity['sha256'],'elfMachine':elf(p)})
+ (D/'executables-before-tests.json').write_text(json.dumps(executables,indent=2)+'\n')
+ # Real configured registry, exact reviewed names/labels/commands and no skips.
+ selection=shlex.join(['/usr/bin/ctest','--test-dir','/out','-R',cfg['ctestPattern'],'--show-only=json-v1'])+' > /out/'+LABEL+'-selection.json\n'+shlex.join(['/usr/bin/cmake','-DREGISTRY=/out/'+LABEL+'-selection.json','-P','/work/scripts/ci/check-core.cmake'])
+ docker_phase('selection',['/bin/sh','-ec',selection],60)
+ registry=json.loads((out/(LABEL+'-selection.json')).read_text());need(len(registry['tests'])==cfg['ctestExpectedCount'],'actual configured CTest selection count')
+ last_test=out/'Testing/Temporary/LastTest.log';previous_daily_log=nine(last_test.lstat())if last_test.exists()else None;daily_failure=None
+ try:docker_phase('daily-tests',['/usr/bin/ctest','--test-dir','/out','-R',cfg['ctestPattern'],'--output-on-failure','--no-tests=error','--parallel','1','--output-junit','/out/'+LABEL+'-core.xml'],1800)
+ except BaseException as error:daily_failure=error
+ try:
+  if phase_rows and phase_rows[-1]['phase']=='daily-tests'and phase_rows[-1]['exitCode']in[0,8]:daily_log=retain_daily_last_test(out,LABEL+'-daily','daily-tests',previous_daily_log)
+ except BaseException as error:
+  if daily_failure is None:raise
+  secondary.append({'phase':'retain-daily-full-log','reason':str(error)})
+ if daily_failure is not None:raise daily_failure
+ # Execute the repository's exact JUnit verifier on the host's Python runtime;
+ # the build image deliberately has no Python dependency.
+ junit=junit_audit(out/(LABEL+'-selection.json'),out/(LABEL+'-core.xml'))
+ (D/'ctest-result-audit.json').write_text(json.dumps(junit,indent=2)+'\n')
+ docker_phase('cli-help',['/out/nano','--help'],30)
+ need('audit-capella <genesis.json> <existing-database-directory> <audit-request.json>'in(D/'cli-help.stdout.log').read_text(),'built current CLI includes preserved audit command')
+ need(fault[0].stat().st_size==fault_pin['bytes']and hashlib.sha256(fault[0].read_bytes()).hexdigest()==fault_pin['sha256'],'fault library byte exact across real CTest')
+ for row in executables:
+  b=(out/row['name']).read_bytes();need(len(b)==row['bytes']and hashlib.sha256(b).hexdigest()==row['sha256'],'tested executable bytes unchanged')
+except BaseException as e:first={'type':type(e).__name__,'reason':str(e)[:1000],'phase':locals().get('active_phase')}
+finally:
+ for container,cidfile in locals().get('owned_containers',[]):
+  try:
+   if not cidfile.exists():
+    discovered=run(DOCKER+['ps','-a','--no-trunc','--filter','name=^/'+container+'$','--format','{{.ID}}']).stdout.decode().strip()
+    if not discovered:continue
+    cid=discovered
+   else:cid=cidfile.read_text().strip();need(re.fullmatch('[0-9a-f]{64}',cid),'exact owned phase CID')
+   if run(DOCKER+['ps','-a','--filter','id='+cid,'--format','{{.ID}}']).stdout.strip():
+    info=json.loads(run(DOCKER+['inspect',cid,'--format','{{json .}}']).stdout);need(info['Id']==cid and info['Name']=='/'+container and info['Image']==IMAGE and info['Config']['Labels'].get('nano.qualification')==LABEL,'owned phase cleanup identity');run(DOCKER+['rm','-f',cid]);secondary.append({'phase':'cleanup','reason':'late owned phase cleanup required','container':container})
+  except BaseException as e:secondary.append({'phase':'cleanup','reason':str(e)})
+ for p,fd,m,h in held:
+  observed_fd=None;observed_path=None;observed_sha=None
+  try:
+   observed_fd=nine(os.fstat(fd));observed_path=nine(p.lstat());observed_sha=hashfd(fd,int(m[6]));need(observed_fd==m==observed_path and observed_sha==h,'final held source/generated dependency FD/path/hash fence')
+  except BaseException as e:secondary.append({'phase':'fence','reason':str(e),'path':str(p),'expectedFullNine':m,'observedFdFullNine':observed_fd,'observedPathFullNine':observed_path,'expectedSha256':h,'observedFdSha256':observed_sha})
+ for _,fd,_,_ in held:
+  try:os.close(fd);closed+=1
+  except BaseException as e:secondary.append({'phase':'close','reason':str(e)})
+ if raised:
+  try:resource.setrlimit(resource.RLIMIT_NOFILE,source_limits)
+  except BaseException as e:secondary.append({'phase':'restore-operator-fd-limit','reason':str(e)})
+report={'format':'nano-root-current-cmake-core-build-v1','passed':first is None and not secondary,'firstFailure':first,'secondaryFailures':secondary,'sourceCandidate':REV,'architecture':cfg['architecture'],'phases':locals().get('phase_rows',[]),'actualLastDockerExitCode':docker_exit,'elapsedMs':round((time.monotonic()-start)*1000),'heldInputs':len(held),'heldInputsClosed':closed,'operatorFdLimitRestored':not raised or resource.getrlimit(resource.RLIMIT_NOFILE)==source_limits,'image':IMAGE,'imageBuilds':0,'gitArchivePayloadsByteExact':git_inputs_exact,'generatedDependencyPins':locals().get('generated_inputs',[]),'archiveProof':archive_proof,'retainedCurrentCoreBeforeBuild':locals().get('retained_core_pin'),'archiveIntakeAddedSources':sorted(locals().get('added',[])),'fixtureHeaderCorrectionOnly':False,'plannedProductionCppCorrectionOnly':True,'plannedChangedSources':sorted(PLANNED_SOURCES),'legacyBuildInheritedFromTerminalFull08':legacy_build_reused,'inheritedLegacyBuildSourceCandidate':REV if legacy_build_reused else None,'originalFull08EnvelopeRemainsFailed':True,'remainingBuildInheritedFromTerminalFull09':remaining_build_reused,'legacyFirstInheritedFromTerminalFull09':remaining_build_reused,'originalFull09EnvelopeRemainsFailed':True,'legacyFirstResult':legacy_junit,'legacyFirstRuntime':legacy_runtime,'legacyFirstFullLog':legacy_log,'dailyFullLog':daily_log,'plannedPreviousInputsTransientFdsClosed':transient_closed,'affectedExistingCallersRebuilt':0,'normalizedDependencyLookup':True,'rawIndependentDependencyListsMustMatch':True,'coreRecompiledThisInvocation':False,'confirmedCoreUnitsRebuilt':0,'retainedCurrentCoreUnits':145 if legacy_build_reused else None,'confirmedLegacyUnitsRebuilt':0,'callerCompilationResumedThisInvocation':False,'callerRelinkingRequested':False,'currentHeaderClosure':archive_proof is not None,'ctestResult':locals().get('junit'),'executables':locals().get('executables',[]),'dailyCiPostExportControlsExecuted':False,'gitHubCiQualified':False,'reproducibleBitwiseRebuildClaimed':False,'networkBinaryRebuilt':False,'networkCampaignStarted':False,'realFundsUsed':False,'productionQualified':False}
+(D/'result-public.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:report[k]for k in['passed','firstFailure','sourceCandidate','architecture','elapsedMs','heldInputs','heldInputsClosed','archiveProof','ctestResult']}),flush=True);raise SystemExit(0 if report['passed']else 1)
