@@ -1,5 +1,6 @@
 #pragma once
 #include "nano/consensus_capella_reactor.hpp"
+#include "nano/consensus_canonical_deposit_context.hpp"
 namespace nano {
 struct Genesis;
 Json audit_capella_database(const Genesis&,const std::filesystem::path&,const Json& request);
@@ -13,6 +14,7 @@ struct CapellaCanonicalAuditReplayWindow {
  // Absolute NEW index under an existing canonical owner0700 directory, outside
  // the audited DB. Retained on success/refusal; caller owns its disposition.
  std::filesystem::path new_private_index;
+ std::optional<CanonicalDepositContextLimits> deposit_context_limits{};
 };
 // Offline, read-only canonical block/state/index replay from an externally
 // authenticated anchor. Does not reconstruct historical off-chain votes or

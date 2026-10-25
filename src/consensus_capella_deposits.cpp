@@ -1,4 +1,5 @@
 #include "nano/consensus_capella_deposits.hpp"
+#include "nano/consensus_canonical_deposit_context.hpp"
 namespace nano {
 namespace {
 uint64_t number(std::span<const uint8_t> b,size_t at,size_t width=8){if(at>b.size()||width>b.size()-at)throw std::invalid_argument("deposit SSZ bounds");uint64_t n=0;for(size_t i=0;i<width;++i)n|=uint64_t(b[at+i])<<(8*i);return n;}
@@ -6,10 +7,36 @@ Bytes vote_for(const CapellaForkBlock& b){
  if(!b.deposit_history)throw std::invalid_argument("missing native deposit history");
  const auto& history=*b.deposit_history;const auto root=history.root();Bytes vote(root.begin(),root.end());for(unsigned i=0;i<8;++i)vote.push_back(uint8_t(history.count()>>(8*i)));const auto hash=b.execution_block.header.hash();if(hash!=history.execution_hash())throw std::invalid_argument("native deposit anchor mismatch");vote.insert(vote.end(),hash.begin(),hash.end());return vote;
 }
+// The local cursor must bind the actual retained anchor, its authenticated
+// deposit history and the original network identity. A secondary disk index is
+// only a locator inside the cursor's committed prefix.
+const CapellaDepositAncestry& cold_ancestry(const CapellaForkStore& store,const std::function<void()>& check){
+ const auto& binding=store.deposit_ancestry;
+ if(!binding||!binding->context||!binding->cursor||!store.deposit_ancestors.empty()||binding->anchor_root!=store.timed.view.anchor)
+  throw std::invalid_argument("invalid ephemeral deposit ancestry");
+ const auto anchor=store.blocks.at(binding->anchor_root).lease(check);
+ if(!anchor->deposit_history||consensus_beacon_header_root(anchor->header)!=binding->anchor_root)throw std::invalid_argument("missing or misbound cold anchor deposit history");
+ binding->context->validate_cursor(binding->cursor,anchor->header,anchor->execution_block.header,check);
+ const auto row=binding->context->at(binding->cursor,check);
+ if(row.count!=anchor->deposit_history->count()||row.root!=anchor->deposit_history->root()||anchor->deposit_history->execution_hash()!=anchor->execution_block.header.hash())throw std::invalid_argument("cold deposit anchor commitment differs");
+ const auto original=binding->context->at(binding->context->anchor_cursor(check),check);
+ if(consensus_beacon_header_root(original.beacon)!=capella_network_anchor(store))throw std::invalid_argument("cold deposit context lost network anchor");
+ return *binding;
+}
+Bytes vote_for(const CapellaDepositAncestor& old){
+ Bytes out(old.root.begin(),old.root.end());for(unsigned n=0;n<8;++n)out.push_back(uint8_t(old.count>>(8*n)));
+ const auto hash=old.execution.hash();out.insert(out.end(),hash.begin(),hash.end());return out;
+}
 std::optional<ExecutionDepositHistory> find(const CapellaForkStore& store,ConsensusRoot id,std::span<const uint8_t> vote,const std::function<void()>& check){
  if(vote.size()!=72)return std::nullopt;
  for(size_t seen=0;seen<store.blocks.size();++seen){if(check)check();const auto b_pin=store.blocks.at(id).lease(check);const auto& b=*b_pin;const auto candidate=vote_for(b);if(std::equal(vote.begin(),vote.end(),candidate.begin()))return *b.deposit_history;if(id==store.timed.view.anchor){
    if(!b.deposit_history)throw std::invalid_argument("missing pruned deposit history");
+   if(store.deposit_ancestry){
+    const auto& binding=cold_ancestry(store,check);ConsensusRoot root{};std::copy_n(vote.begin(),32,root.begin());
+    const auto old=binding.context->find_before(binding.cursor,Bytes(vote.begin()+40,vote.end()),number(vote,32),root,check);
+    if(!old)return std::nullopt;
+    return b.deposit_history->authenticated_prefix(old->count,old->execution.hash(),old->root,check);
+   }
    for(const auto& ancestor:store.deposit_ancestors){if(check)check();const auto hash=ancestor.execution.hash();if(std::equal(vote.begin(),vote.begin()+32,ancestor.root.begin())&&number(vote,32)==ancestor.count&&std::equal(vote.begin()+40,vote.end(),hash.begin()))return b.deposit_history->authenticated_prefix(ancestor.count,hash,ancestor.root,check);}
    return std::nullopt;
   }id=b.header.parent_root;}
@@ -20,6 +47,7 @@ Bytes capella_native_deposit_vote(const CapellaForkStore& store,const ConsensusR
  if(!rules.native_deposit_votes||!rules.transition.consensus.state.eth1_votes_limit)throw std::invalid_argument("native deposit voting disabled");
  const auto period=rules.transition.consensus.state.eth1_votes_limit,start=slot-slot%period;auto id=parent;
  for(size_t seen=0;seen<store.blocks.size();++seen){if(check)check();const auto b_pin=store.blocks.at(id).lease(check);const auto& b=*b_pin;if(b.header.slot<start)return vote_for(b);if(id==store.timed.view.anchor){
+   if(store.deposit_ancestry){const auto& binding=cold_ancestry(store,check);return vote_for(binding.context->last_before(binding.cursor,start,check));}
    if(store.deposit_ancestors.empty())return vote_for(b);
    for(size_t i=0;i<store.deposit_ancestors.size();++i){if(check)check();const auto& old=store.deposit_ancestors[i];if(old.beacon.slot<start||i+1==store.deposit_ancestors.size()){Bytes out(old.root.begin(),old.root.end());for(unsigned n=0;n<8;++n)out.push_back(uint8_t(old.count>>(8*n)));const auto hash=old.execution.hash();out.insert(out.end(),hash.begin(),hash.end());return out;}}
   }id=b.header.parent_root;}
@@ -47,11 +75,13 @@ Bytes capella_native_deposit_operations(const CapellaForkStore& store,const Cons
 
 namespace nano {
 std::vector<CapellaDepositAncestor> capella_deposit_ancestors_before(const CapellaForkStore& store,const ConsensusRoot& anchor,const std::function<void()>& check){
+ if(store.deposit_ancestry)throw std::invalid_argument("cold ancestry cannot be materialized through the legacy vector helper");
  std::vector<CapellaDepositAncestor> result;auto id=anchor;
  for(size_t seen=0;id!=store.timed.view.anchor;++seen){if(check)check();if(seen>=store.blocks.size())throw std::invalid_argument("cyclic deposit pin ancestry");id=store.blocks.at(id).header().parent_root;const auto b_pin=store.blocks.at(id).lease(check);const auto& b=*b_pin;if(!b.deposit_history||b.deposit_history->execution_hash()!=b.execution_block.header.hash())throw std::invalid_argument("missing deposit pin source");result.push_back({b.header,b.execution_block.header,b.deposit_history->count(),b.deposit_history->root()});}
  result.insert(result.end(),store.deposit_ancestors.begin(),store.deposit_ancestors.end());return result;
 }
 void validate_capella_deposit_ancestors(const CapellaForkStore& store,const std::function<void()>& check){
+ if(store.deposit_ancestry){(void)cold_ancestry(store,check);return;}
  if(store.deposit_ancestors.empty())return;
  const auto anchor_pin=store.blocks.at(store.timed.view.anchor).lease(check);const auto& anchor=*anchor_pin;if(!anchor.deposit_history||!store.network_anchor)throw std::invalid_argument("unbound deposit pins");auto beacon=anchor.header;auto execution=anchor.execution_block.header;
  for(const auto& old:store.deposit_ancestors){if(check)check();if(old.beacon.slot>=beacon.slot||consensus_beacon_header_root(old.beacon)!=beacon.parent_root||old.execution.number+1!=execution.number||old.execution.hash()!=execution.parent_hash)throw std::invalid_argument("deposit pin ancestry mismatch");(void)anchor.deposit_history->authenticated_prefix(old.count,old.execution.hash(),old.root,check);beacon=old.beacon;execution=old.execution;}

@@ -6,7 +6,7 @@ import {join,resolve,dirname} from 'node:path';
 import {execFile,execFileSync} from 'node:child_process';
 import {promisify} from 'node:util';
 const exec=promisify(execFile),repo=process.cwd(),gate=join(repo,'scripts/ci/check-core.cmake');
-const expected=['core','chain','rpc_queue_expiry','rpc_simulation_context','rpc','rpc_state_block_id','rpc_get_proof','rpc_state_read_cost','ethereum_consensus_bls_verify','ethereum_consensus_bls_fast_aggregate','storage_execution_checkpoint','consensus_capella_payload_paired_state','consensus_capella_signed_transition','consensus_capella_clock_diagnostics','consensus_capella_published_signed_inventory','consensus_capella_publication_cancel_boundary','consensus_local_monotonic_time','consensus_capella_duty_projection_availability','consensus_isolated_stopped_capture_guards','consensus_capella_sync_adverse','consensus_registry_cancellation','consensus_capella_bounded_canonical_audit','consensus_fresh_lifecycle_canonical_stream'];
+const expected=['core','chain','rpc_queue_expiry','rpc_simulation_context','rpc','rpc_state_block_id','rpc_get_proof','rpc_state_read_cost','ethereum_consensus_bls_verify','ethereum_consensus_bls_fast_aggregate','storage_execution_checkpoint','consensus_capella_payload_paired_state','consensus_capella_signed_transition','consensus_capella_clock_diagnostics','consensus_capella_published_signed_inventory','consensus_capella_publication_cancel_boundary','consensus_local_monotonic_time','consensus_capella_duty_projection_availability','consensus_isolated_stopped_capture_guards','consensus_capella_sync_adverse','consensus_registry_cancellation','consensus_capella_bounded_canonical_audit','consensus_fresh_lifecycle_canonical_stream','consensus_canonical_deposit_context','consensus_capella_cold_deposit_replay'];
 const stateRegistrations={
  rpc_state_block_id:{program:'nano-rpc-state-block-id-tests',argument:'--state-readers-self-test',label:'qualification_rpc_state_block_id'},
  rpc_get_proof:{program:'nano-rpc-get-proof-tests',argument:'--get-proof-self-test',label:'qualification_rpc_state_proof'},
@@ -15,7 +15,9 @@ const stateRegistrations={
 const replayRegistrations={
  consensus_registry_cancellation:{program:'nano-consensus-cancellation-tests',timeout:60,labels:['qualification_consensus_ethereum']},
  consensus_capella_bounded_canonical_audit:{program:'nano-capella-bounded-audit-tests',timeout:600,labels:['consensus','capella','audit','recovery']},
- consensus_fresh_lifecycle_canonical_stream:{program:'nano-capella-canonical-stream-tests',timeout:300,labels:['qualification_consensus_lifecycle']}
+ consensus_fresh_lifecycle_canonical_stream:{program:'nano-capella-canonical-stream-tests',timeout:300,labels:['qualification_consensus_lifecycle']},
+ consensus_canonical_deposit_context:{program:'nano-canonical-deposit-context-tests',timeout:300,labels:['qualification_consensus_deposits']},
+ consensus_capella_cold_deposit_replay:{program:'nano-capella-cold-deposit-replay-tests',timeout:300,labels:['qualification_consensus_deposits']}
 };
 async function fixture(fn){
  const dir=await mkdtemp(join(tmpdir(),'nano-core-selection-'));
@@ -37,7 +39,7 @@ async function fixture(fn){
   await fn({dir,registry,check});
  }finally{await rm(dir,{recursive:true,force:true});}
 }
-test('exact twenty-three daily registrations validate without claiming full C++ qualification',async()=>fixture(async({registry,check})=>assert.match((await check(registry())).stdout,/Verified 23 daily core/)));
+test('exact twenty-five daily registrations validate without claiming full C++ qualification',async()=>fixture(async({registry,check})=>assert.match((await check(registry())).stdout,/Verified 25 daily core/)));
 test('missing, duplicated and foreign registrations cannot pass daily core gate',async()=>fixture(async({registry,check})=>{
  for(const change of [x=>x.tests.pop(),x=>x.tests[3].name=x.tests[2].name,x=>x.tests[3].name='foreign']){const r=registry();change(r);await assert.rejects(check(r),/count differs|names differ/);}
 }));
@@ -85,7 +87,7 @@ test('legacy RPC registration keeps its real program, no selector, fixture cwd a
  }
  const r=registry();r.tests=r.tests.filter(x=>x.name!=='rpc');await assert.rejects(check(r),/count differs/);
 }));
-test('all three replay/cancellation registrations require their own no-argument driver, exact budget and labels',async()=>fixture(async({registry,check})=>{
+test('all five replay/cancellation registrations require their own no-argument driver, exact budget and labels',async()=>fixture(async({registry,check})=>{
  for(const [name,registration]of Object.entries(replayRegistrations)){
   const changes=[
    x=>x.command[0]='/usr/bin/true',
@@ -107,7 +109,7 @@ test('all three replay/cancellation registrations require their own no-argument 
 }));
 test('bounded canonical audit labels are an exact set and the old deposit-auditor selector cannot stand in for the thin stream driver',async()=>fixture(async({registry,check})=>{
  const reordered=registry();reordered.tests.find(x=>x.name==='consensus_capella_bounded_canonical_audit').properties[1].value.reverse();
- assert.match((await check(reordered)).stdout,/Verified 23 daily core/);
+ assert.match((await check(reordered)).stdout,/Verified 25 daily core/);
  for(const labels of [['consensus','capella','audit','audit'],['consensus','capella','audit','other'],['consensus','capella','audit',3],['audit;capella','','consensus','recovery'],['audit','capella','consensus','recovery;']]){
   const r=registry();r.tests.find(x=>x.name==='consensus_capella_bounded_canonical_audit').properties[1].value=labels;
   await assert.rejects(check(r),/Canonical replay/);
@@ -116,7 +118,7 @@ test('bounded canonical audit labels are an exact set and the old deposit-audito
  stream.command.push('--fresh-stream-self-test');
  await assert.rejects(check(oldSelector),/Canonical replay\/cancellation command/);
 }));
-test('real daily shell builds and hashes every added driver and selects all twenty-three reviewed names',async()=>{
+test('real daily shell builds and hashes every added driver and selects all twenty-five reviewed names',async()=>{
  const source=await readFile(join(repo,'scripts/ci/core.sh'),'utf8'),lines=source.split('\n');
  const build=lines.filter(line=>line.startsWith('cmake --build ')&&line.includes(' --target '));assert.equal(build.length,1);
  const targets=build[0].split(' --target ')[1].split(' 2>&1')[0].split(/\s+/);
@@ -127,7 +129,7 @@ test('real daily shell builds and hashes every added driver and selects all twen
  }
  const patterns=lines.filter(line=>line.startsWith("pattern='"));assert.equal(patterns.length,1);
  const selection=patterns[0].slice("pattern='^(".length,-")$'".length).split('|');
- assert.deepEqual(selection,expected);assert.equal(new Set(selection).size,23);
+ assert.deepEqual(selection,expected);assert.equal(new Set(selection).size,25);
 });
 
 // Exercise the real shell's result gate with injected build/CTest adapters.
@@ -170,7 +172,7 @@ test('daily shell refuses a green CTest exit with a skipped or incomplete JUnit 
   assert.equal(failure.code,1,diagnostic);
   assert.equal(await capture('fixture-ctest-executed'),'ctest executed\n',diagnostic);
   assert.equal(await capture('ci-reports/core.xml'),xml,diagnostic);
-  assert.match(await capture('ci-reports/selection-audit.log'),/Verified 23 daily core/,diagnostic);
+  assert.match(await capture('ci-reports/selection-audit.log'),/Verified 25 daily core/,diagnostic);
   assert(String(failure.stderr).split('\n').includes(scenario.reason),diagnostic);
  }
 }));

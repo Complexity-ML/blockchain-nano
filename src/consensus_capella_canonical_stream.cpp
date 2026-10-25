@@ -8,6 +8,37 @@ ConsensusBeaconHeader header(const CheckpointArchiveEntry& e,const ConsensusRoot
  ConsensusBeaconHeader h{e.slot,little(e.payload,108),root(e.payload,116),root(e.payload,148),capella_beacon_body_root(std::span<const uint8_t>(e.payload).subspan(184),t.consensus.body,t.consensus.state.sync_committee_size,t.execution,t.withdrawals.maximum_per_payload,t.maximum_bls_changes,t.consensus.maximum_block_bytes,check)};
  require(consensus_beacon_header_root(h)==id,"stream archive signed header root differs");return h;
 }
+CapellaDepositAncestor deposit_tuple(const CapellaForkBlock& block){
+ require(bool(block.deposit_history),"stream admitted deposit history unavailable");
+ require(block.deposit_history->execution_hash()==block.execution_block.header.hash(),"stream deposit execution binding differs");
+ return {block.header,block.execution_block.header,block.deposit_history->count(),block.deposit_history->root()};
+}
+CanonicalDepositContextLimits deposit_policy(const CanonicalStreamLimits& bound){
+ if(bound.deposit_context_limits)return *bound.deposit_context_limits;
+ // These are operator scratch budgets, not validator/protocol limits. 8192
+ // covers one encoded header/ancestry row including its <=64 skip references.
+ constexpr size_t row_bytes=8192,node_bytes=256,database_minimum=1024*1024;
+ require(bound.maximum_total_blocks<UINT64_MAX,"stream deposit tuple count overflow");
+ const auto tuples=bound.maximum_total_blocks+1;
+ require(tuples<=UINT64_MAX/row_bytes,"stream deposit tuple byte budget overflow");
+ const auto cache=std::max(node_bytes,bound.maximum_live_state_bytes/bound.maximum_live_blocks);
+ const auto records=std::max(size_t(1),cache/node_bytes);
+ const auto buffer=std::max(database_minimum,cache);
+ require(buffer<=SIZE_MAX/2,"stream deposit database policy overflow");
+ return {tuples,tuples*row_bytes,row_bytes,bound.maximum_total_archive_bytes,
+  bound.maximum_total_archive_bytes,records,cache,{buffer,2,2*buffer,0}};
+}
+Json deposit_usage(const std::shared_ptr<CanonicalDepositContext>& context,const CanonicalDepositContextLimits& limits,const std::filesystem::path& path){
+ const auto u=context->usage();
+ return {{"scratchDirectory",path.string()},{"automaticDeletion",false},{"replayScratchOnly",true},
+  {"tuples",u.tuples},{"tupleBytes",u.tuple_bytes},{"blobRecords",u.blob_records},{"blobBytes",u.blob_bytes},
+  {"cachedBlobRecords",u.cached_blob_records},{"cachedBlobBytes",u.cached_blob_bytes},{"pinnedBlobRecords",u.pinned_blob_records},
+  {"maximumTuples",limits.maximum_tuples},{"maximumTupleBytes",limits.maximum_tuple_bytes},{"maximumTupleRecordBytes",limits.maximum_tuple_record_bytes},
+  {"maximumBlobRecords",limits.maximum_blob_records},{"maximumBlobBytes",limits.maximum_blob_bytes},
+  {"maximumCachedBlobRecords",limits.maximum_cached_blob_records},{"maximumCachedBlobBytes",limits.maximum_cached_blob_bytes},
+  {"databaseMemory",{{"writeBufferBytes",limits.database_memory.write_buffer_bytes},{"maximumWriteBuffers",limits.database_memory.maximum_write_buffers},{"sharedMemtableBytes",limits.database_memory.shared_memtable_bytes},{"sharedBlockCacheBytes",limits.database_memory.shared_block_cache_bytes}}},
+  {"physicalDiskOrProcessRssBoundClaimed",false},{"persistedNodePruningQualified",false}};
+}
 size_t live_bytes(const CapellaForkStore& s,size_t maximum,const std::function<void()>& check,CanonicalStreamResult& result){
  result.peak_deposit_ancestor_records=std::max(result.peak_deposit_ancestor_records,s.deposit_ancestors.size());
  size_t total=0;for(const auto& [_,entry]:s.blocks){
@@ -66,15 +97,31 @@ CanonicalStreamResult stream_capella_canonical_history(const CapellaForkStore& t
   replay=std::move(next);++result.prunes;
  };
  {const auto first=replay.blocks.at(anchor).lease(check);source.verify_execution(*first,check);visit({nullptr,*first,{},anchor,0},check);}measure();
+ std::shared_ptr<CanonicalDepositContext> deposits;CanonicalDepositContextLimits deposit_limits{};std::filesystem::path deposit_directory;
+ if(!rules.deposit_contract_code_hash.empty()){
+  deposit_limits=deposit_policy(bound);deposit_directory=std::filesystem::path(index_path.string()+".deposits");
+  auto history=[&]{
+   const auto first=replay.blocks.at(anchor).lease(check);const auto tuple=deposit_tuple(*first);
+   const auto profile=capella_fork_profile(rules).dump();
+   deposits=CanonicalDepositContext::create(deposit_directory,tuple,sha256(Bytes(profile.begin(),profile.end())),deposit_limits,check);
+   return first->deposit_history->with_cold_storage(deposits,check);
+  }(); // Release the old lease before writable(), avoiding a third anchor copy.
+  replay.blocks.at(anchor).writable(check).deposit_history=std::make_shared<const ExecutionDepositHistory>(std::move(history));
+  replay.deposit_ancestry=CapellaDepositAncestry{deposits,deposits->anchor_cursor(check),anchor};
+  validate_capella_deposit_ancestors(replay,check);
+ }
  for(uint64_t ordinal=0;ordinal<index.count();++ordinal){
   check();prune();const auto n=measure();require(replay.blocks.size()+1<bound.maximum_live_blocks&&t.maximum_state_bytes<=bound.maximum_live_state_bytes-n,"stream finalized window unavailable before next state");result.peak_live_state_ssz_plus_next_reserve_bytes=std::max(result.peak_live_state_ssz_plus_next_reserve_bytes,n+t.maximum_state_bytes);
   const auto row=index.read(index.count()-ordinal-1,check);const auto id=root(row,0);const auto e=source.archive(id,t.consensus.maximum_block_bytes,check);require(e&&e->payload.size()>=404&&e->payload.size()<=t.consensus.maximum_block_bytes&&record(id,*e)==row,"stream archive changed since ancestry indexing");const auto h=header(*e,id,rules,t.consensus.maximum_block_bytes,check);require(replay.blocks.contains(h.parent_root),"stream replay parent unavailable");
   require(h.slot<=(UINT64_MAX-replay.timed.clock.genesis_time_ms)/rules.slot_duration_ms,"stream replay clock overflow");replay=prepare_capella_resumed_store_tick(replay,replay.timed.clock.genesis_time_ms+h.slot*rules.slot_duration_ms,rules,snapshot.replay_slots,snapshot.sync_trials,check);
   auto next=prepare_capella_resumed_fork_block(replay,e->payload,rules,snapshot.replay_slots,snapshot.sync_trials,check);require(next&&next->blocks.contains(id)&&next->blocks.size()==replay.blocks.size()+1,"stream canonical signed transition rejected");
-  {const auto parent=replay.blocks.at(h.parent_root).lease(check),post=next->blocks.at(id).lease(check);require(post->header==h,"stream admitted signed header differs");source.verify_execution(*post,check);visit({parent.get(),*post,e->payload,id,ordinal+1},check);}
+  {const auto parent=replay.blocks.at(h.parent_root).lease(check),post=next->blocks.at(id).lease(check);require(post->header==h,"stream admitted signed header differs");source.verify_execution(*post,check);
+   if(deposits){require(post->deposit_history&&post->deposit_history->cold_storage()==deposits,"stream new history lost its cold context");(void)deposits->append_admitted(deposit_tuple(*post),check);}
+   visit({parent.get(),*post,e->payload,id,ordinal+1},check);}
   replay=std::move(*next);++result.verified_signed_blocks;measure();
  }
  index.verify(check);require(replay.blocks.contains(head),"stream stopped head unavailable");result.head=replay.blocks.at(head).lease(check);require(result.head->header==boundary.stopped_head,"stream stopped head differs from authenticated replay");result.replay_anchor=replay.timed.view.anchor;result.replay_anchor_slot=replay.blocks.at(result.replay_anchor).header().slot;
+ if(deposits)result.deposit_context=deposit_usage(deposits,deposit_limits,deposit_directory);
  result.required_finalized_ancestor_verified=true;check();return result;
 }
 }

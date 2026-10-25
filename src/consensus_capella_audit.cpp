@@ -59,7 +59,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
   if(retained!=saved.state->blocks.end()){const auto retained_pin=retained->second.lease(guard);require(retained_pin->state==record.state&&retained_pin->execution_state.root()==record.execution_state.root(),"retained checkpoint state differs from replay");}
   require(blocks<std::numeric_limits<size_t>::max(),"block counter overflow");++blocks;guard();
  };
- const CanonicalStreamLimits bound{window.maximum_live_blocks,window.maximum_live_state_bytes,uint64_t(maximum_blocks),uint64_t(maximum_archive_bytes),index_bytes};
+ const CanonicalStreamLimits bound{window.maximum_live_blocks,window.maximum_live_state_bytes,uint64_t(maximum_blocks),uint64_t(maximum_archive_bytes),index_bytes,window.deposit_context_limits};
  const CanonicalStreamBoundary boundary{target.header,saved.state->timed.view.finalized,required_finalized.value_or(saved.state->timed.view.finalized)};
  const CanonicalStreamSource source{
   [&](const ConsensusRoot& id,size_t maximum,const std::function<void()>& guard){guard();auto entry=disk.checkpoint_archive(Bytes(id.begin(),id.end()),std::min(maximum,limits.envelope_bytes));guard();return entry;},verify_disk};
@@ -75,7 +75,7 @@ Json audit_capella_canonical_history(ChainStore& disk,const Int& chain,const Byt
   {"trustedAnchor",hex(Bytes(anchor.begin(),anchor.end()))},{"firstExecutionBlock",quantity(first_execution_number)},
   {"lastExecutionBlock",quantity(target.execution_block.header.number)},{"blocksIncludingTrustedAnchor",blocks},{"transactions",transactions},
   {"prunedExecutionStatesReplayed",pruned_states},{"allHistoricalStatesMaterialized",pruned_states==0},{"archiveBytes",replay.archive_bytes},{"head",hex(Bytes(head.begin(),head.end()))},{"checkpointSequence",expected.sequence},{"checkpointDigest",hex(expected.digest)},
-  {"replayWindow",{{"maximumLiveBlocks",window.maximum_live_blocks},{"maximumLiveStateBytes",window.maximum_live_state_bytes},{"peakLiveBlocks",replay.peak_live_blocks},{"peakLiveStateSszBytes",replay.peak_live_state_ssz_bytes},{"peakLiveStateSszPlusNextReserveBytes",replay.peak_live_state_ssz_plus_next_reserve_bytes},{"prunes",replay.prunes},{"indexBytes",replay.index_bytes},{"maximumIndexBytes",index_bytes},{"privateIndexFile",window.new_private_index.string()},{"privateIndexAutomaticDeletion",false},{"privateIndexOwnershipForDeletionVerified",false},{"verifiedSignedBlocks",replay.verified_signed_blocks},{"finalReplayAnchorRoot",hex(Bytes(replay.replay_anchor.begin(),replay.replay_anchor.end()))},{"finalReplayAnchorSlot",replay.replay_anchor_slot},{"peakDepositAncestorRecords",replay.peak_deposit_ancestor_records},{"largestDepositHistoryCount",replay.largest_deposit_history_count},{"processRssQualified",false},{"auxiliaryDepositMemoryBounded",false}}}};
+  {"replayWindow",{{"maximumLiveBlocks",window.maximum_live_blocks},{"maximumLiveStateBytes",window.maximum_live_state_bytes},{"peakLiveBlocks",replay.peak_live_blocks},{"peakLiveStateSszBytes",replay.peak_live_state_ssz_bytes},{"peakLiveStateSszPlusNextReserveBytes",replay.peak_live_state_ssz_plus_next_reserve_bytes},{"prunes",replay.prunes},{"indexBytes",replay.index_bytes},{"maximumIndexBytes",index_bytes},{"privateIndexFile",window.new_private_index.string()},{"privateIndexAutomaticDeletion",false},{"privateIndexOwnershipForDeletionVerified",false},{"verifiedSignedBlocks",replay.verified_signed_blocks},{"finalReplayAnchorRoot",hex(Bytes(replay.replay_anchor.begin(),replay.replay_anchor.end()))},{"finalReplayAnchorSlot",replay.replay_anchor_slot},{"peakDepositAncestorRecords",replay.peak_deposit_ancestor_records},{"largestDepositHistoryCount",replay.largest_deposit_history_count},{"processRssQualified",false},{"auxiliaryDepositMemoryBounded",false},{"replayDepositContext",replay.deposit_context}}}};
  check();return result;
 }
 // Exact historical database-entry symbol; no alternate unlimited replay path.
@@ -109,8 +109,14 @@ Json audit_capella_database(const Genesis& genesis,const std::filesystem::path& 
  check();ChainStore store(path,ChainStore::OpenMode::ReadOnly);store.bind_chain(genesis.chain_id,genesis.block.header.hash(),"beacon");check();
  const auto maximum_blocks=number(request.at("maximumBlocks")),maximum_archive_bytes=number(request.at("maximumArchiveBytes"));
  if(request.contains("replayWindow")){
-  const auto& w=request.at("replayWindow");require(w.is_object()&&w.size()==3&&w.contains("maximumLiveBlocks")&&w.contains("maximumLiveStateBytes")&&w.contains("newPrivateIndex"),"invalid replayWindow fields");
-  const CapellaCanonicalAuditReplayWindow window{number(w.at("maximumLiveBlocks")),number(w.at("maximumLiveStateBytes")),w.at("newPrivateIndex").get<std::string>()};
+  const auto& w=request.at("replayWindow");require(w.is_object()&&w.size()==3+size_t(w.contains("depositContextLimits"))&&w.contains("maximumLiveBlocks")&&w.contains("maximumLiveStateBytes")&&w.contains("newPrivateIndex"),"invalid replayWindow fields");
+  CapellaCanonicalAuditReplayWindow window{number(w.at("maximumLiveBlocks")),number(w.at("maximumLiveStateBytes")),w.at("newPrivateIndex").get<std::string>()};
+  if(w.contains("depositContextLimits")){
+   const auto& d=w.at("depositContextLimits");require(d.is_object()&&d.size()==8,"invalid depositContextLimits fields");
+   const auto& m=d.at("databaseMemory");require(m.is_object()&&m.size()==4,"invalid deposit database memory fields");
+   const auto buffers=number(m.at("maximumWriteBuffers"));require(buffers<=UINT32_MAX,"deposit write-buffer count overflow");
+   window.deposit_context_limits=CanonicalDepositContextLimits{number(d.at("maximumTuples")),number(d.at("maximumTupleBytes")),number(d.at("maximumTupleRecordBytes")),number(d.at("maximumBlobRecords")),number(d.at("maximumBlobBytes")),number(d.at("maximumCachedBlobRecords")),number(d.at("maximumCachedBlobBytes")),{number(m.at("writeBufferBytes")),uint32_t(buffers),number(m.at("sharedMemtableBytes")),number(m.at("sharedBlockCacheBytes"))}};
+  }
   return audit_capella_canonical_history(store,genesis.chain_id,genesis.block.header.hash(),rules,limits,initial,expected,maximum_blocks,maximum_archive_bytes,window,check,required_finalized);
  }
  return audit_capella_canonical_history(store,genesis.chain_id,genesis.block.header.hash(),rules,limits,initial,expected,maximum_blocks,maximum_archive_bytes,check,required_finalized);

@@ -31,6 +31,15 @@ public:
  const std::optional<CapellaColdReference>& cold_reference()const{return cold_;}
 };
 struct CapellaDepositAncestor {ConsensusBeaconHeader beacon;Header execution;uint64_t count;ConsensusRoot root;};
+// Ephemeral audit-only ancestry. The opaque cursor is bound to this context's
+// admitted canonical chain; it is never accepted from gossip or a legacy snapshot.
+class CanonicalDepositContext;
+class CanonicalDepositCursor;
+struct CapellaDepositAncestry {
+ std::shared_ptr<CanonicalDepositContext> context;
+ std::shared_ptr<const CanonicalDepositCursor> cursor;
+ ConsensusRoot anchor_root{};
+};
 struct CapellaForkStore {
  Phase0ForkTimedView timed;
  // Original trusted anchor; storage pruning must not change network identity.
@@ -42,6 +51,9 @@ struct CapellaForkStore {
  std::map<ConsensusRoot,CapellaForkRecord> blocks;
  std::map<ConsensusRoot,bool> timely;
  std::map<ConsensusRoot,ConsensusCheckpoint> unrealized_justifications;
+ // Present only during a private canonical audit. Legacy inline ancestors and
+ // this cursor cannot coexist; persistence must use an explicit future format.
+ std::optional<CapellaDepositAncestry> deposit_ancestry;
 };
 enum class CapellaProposerBoostProfile { Release160Beta0, ShufflingDependent };
 struct CapellaForkBlockRules {

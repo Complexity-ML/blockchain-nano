@@ -24,7 +24,7 @@ Json profile(const CapellaForkBlockRules& r){
 }
 Json slot_snapshot(const CapellaSlotState& s){return Json::array({hex(s.ssz),s.last_processed_epoch?Json(num(*s.last_processed_epoch)):Json(nullptr)});}
 CapellaSlotState slot_restore(const Json& j,size_t budget){require(j.is_array()&&j.size()==2&&j[0].is_string());const auto& hexstate=j[0].get_ref<const std::string&>();require(hexstate.starts_with("0x")&&hexstate.size()%2==0&&(hexstate.size()-2)/2<=budget);CapellaSlotState s{unhex(hexstate),std::nullopt};if(!j[1].is_null())s.last_processed_epoch=number(j[1]);return s;}
-Json execution(const CapellaForkBlock& b,const std::function<void()>& cancel,bool matched_accounts=false){Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());auto out=Json::array({b.execution_block.to_json(true),matched_accounts?Json(nullptr):b.execution_state.to_json(),receipts});if(b.deposit_history)out.push_back(b.deposit_history->snapshot(cancel));return out;}
+Json execution(const CapellaForkBlock& b,const std::function<void()>& cancel,bool matched_accounts=false){if(b.deposit_history&&b.deposit_history->uses_cold_storage())throw std::invalid_argument("cold deposit history cannot use a legacy store snapshot");Json receipts=Json::array();for(const auto& receipt:b.receipts)receipts.push_back(receipt.to_json());auto out=Json::array({b.execution_block.to_json(true),matched_accounts?Json(nullptr):b.execution_state.to_json(),receipts});if(b.deposit_history)out.push_back(b.deposit_history->snapshot(cancel));return out;}
 ConsensusSlashingState registry(const CapellaForkStore& s,const CapellaForkBlockRules& r,const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel){
  const auto b_pin=s.blocks.at(s.timed.view.justified.root).lease(cancel);const auto& b=*b_pin;
  if(s.timed.view.justified.root==s.timed.view.anchor&&s.timed.view.justified.epoch==b.header.slot/r.transition.consensus.epoch.ffg.slots_per_epoch)return capella_fork_block_context(b.state,b.header,epoch_rules(r),r.transition.consensus.state,cancel).registry;
@@ -39,6 +39,7 @@ struct ReusedColdMetadata {ConsensusBeaconHeader header;Header execution;Phase0F
 std::string capella_store_snapshot_reference_memo_impl(const CapellaForkStore& s,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void()>& cancel,CapellaStoreSnapshotCache* cache,
  const std::function<void(const CapellaColdReference&,std::string_view)>* stage,CapellaReferenceSnapshotCache* memo){
+ if(s.deposit_ancestry)throw std::invalid_argument("ephemeral audit deposit context cannot use a legacy snapshot");
  require(!stage||(!cache&&bool(*stage)));require(!memo||stage);
  const auto& v=s.timed.view;const auto& c=s.timed.clock;const auto slots=r.transition.consensus.epoch.ffg.slots_per_epoch;
  require(slots&&r.slot_duration_ms&&r.attestation_due_ms<=r.slot_duration_ms&&c.time_ms>=c.genesis_time_ms&&
@@ -166,6 +167,7 @@ std::string capella_store_snapshot_impl(const CapellaForkStore& s,const CapellaF
 std::string capella_store_reference_snapshot_cached(const CapellaForkStore& s,const CapellaForkBlockRules& r,
  const CapellaStoreSnapshotLimits& l,const std::function<void(const CapellaColdReference&,std::string_view)>& stage,
  CapellaReferenceSnapshotCache& memo,const std::function<void()>& check){
+ if(s.deposit_ancestry)throw std::invalid_argument("ephemeral audit deposit context cannot use a legacy snapshot");
  if(check)check();auto candidate=memo;
  auto result=capella_store_snapshot_reference_memo_impl(s,r,l,check,nullptr,&stage,&candidate);
  memo=std::move(candidate);return result;
