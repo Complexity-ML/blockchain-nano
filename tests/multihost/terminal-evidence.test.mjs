@@ -4,7 +4,9 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
+import {createHash} from 'node:crypto';
 import {createTerminalEvidenceSequence} from './terminal-evidence.mjs';
+import {dockerRuntimeInspectTemplate} from './docker-runtime-restart-guard.mjs';
 const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
 const source=await readFile(new URL('./run.mjs',import.meta.url),'utf8');
 const names=['mac-native','mac-docker','vps-docker'];
@@ -32,6 +34,7 @@ function terminalFixture(options={}){
  const need=(ok,message)=>{if(!ok)throw Error(message);};
  async function save(path,value){
   const leaf=path.split('/').at(-1);events.push('save:'+leaf);if(options.publicationFailure===leaf)throw options.publicationError;
+  if(leaf==='campaign-closeout-started.json')assert.equal(value.specSha256,specSha,'Closeout handoff binds the actual synthetic spec bytes');
   assert.equal(writes.has(path),false,'Terminal outputs are exclusive');writes.set(path,structuredClone(value));
   const pin={sha256:'d'.repeat(64),bytes:1};newFiles.set(path,pin);observed.set(path,structuredClone(pin));return Buffer.from('synthetic only');
  }
@@ -46,14 +49,16 @@ function terminalFixture(options={}){
    if(options.outputMutation)observed.get('/synthetic/output/old.json').material[8]='201';
    return options.runningContainer===name?name:'';
   }
-  if(args[0]==='inspect')return JSON.stringify({Name:'/'+args[1],Image:options.wrongCleanupImage?'foreign-image':'image-'+(remote?'vps-docker':'mac-docker'),Config:{Labels:{'nano.fresh.campaign':uuid}},State:{Running:true}});
+  if(args[0]==='inspect'){assert.equal(args.length,4);assert.deepEqual(args.slice(2),['--format',dockerRuntimeInspectTemplate],'Same exact bounded projection as the actual runner');return JSON.stringify({Name:'/'+args[1],Image:options.wrongCleanupImage?'foreign-image':'image-'+(remote?'vps-docker':'mac-docker'),Config:{Labels:{'nano.fresh.campaign':uuid}},State:{Running:true}});}
   if(args[0]==='stop'){events.push('container-stop:'+args.at(-1));return '';}
   if(args[0]==='ps'){events.push('absence:'+(remote?'vps':'mac'));return options.activeAtEnd?'still-running':'';}
   throw Error('Unexpected synthetic Docker adapter request');
  }
+ const fixtureSpec={lifecycle:{deadlines:{maximumRunMs:10000}},partitionRotation:options.partitionRequested??false,backupRestore:options.backupRequested??false,overlayManifest:{sha256:'e'.repeat(64)}};
+ const specSha=createHash('sha256').update(Buffer.from(JSON.stringify(fixtureSpec))).digest('hex');
  const deps={
   createTerminalEvidenceSequence,failure:error,bodyFailureRecordError:options.bodyFailureRecordError,
-  spec:{lifecycle:{deadlines:{maximumRunMs:10000}},partitionRotation:options.partitionRequested??false,backupRestore:options.backupRequested??false,overlayManifest:{sha256:'e'.repeat(64)}},
+  spec:fixtureSpec,specSha,dockerRuntimeInspectTemplate,
   campaignBudget,campaignCommands,campaignCloseoutStartedAt:null,campaignStartedAt:0,campaignCloseoutReserve:1000,performance:{now:()=>clock},
   nativeLoader:options.c8?{}:null,macOwnerRecovery:options.c8?{passed:true}:null,ownerRecoveryRecords:new Map(options.c8?names.slice(0,2).map(name=>[name,{}]):[]),
   ownerRecoverySourceFences:options.c8?names.slice(0,2).map(name=>({name,verifySource:async()=>{events.push('owner-source:'+name);if(options.ownerSourceFailure===name)throw options.ownerSourceError;}})):[],
