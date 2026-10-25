@@ -22,8 +22,12 @@ ni qualification du dispatcher par Mac n'est revendiqué.
 
 Le job dédié `vps-duty-worker` prépare le vrai UID/GID1000 avec `setpriv` dans
 le conteneur Ubuntu24 épinglé, sous Node25.9.0, et impose le mode obligatoire.
-Son exécution GitHub demeure ouverte ; le succès Docker Node18 ne qualifie pas
-cette lane ni la CI complète. Le blocage historique de facturation est conservé.
+Le run40146021439 sur `a80f2617` a été refusé avant toute étape : worker,
+operations et changes n'ont pas démarré ; core/network sont skipped. GitHub
+indique un paiement récent échoué ou un plafond à augmenter, sans distinguer
+les deux. Zéro test CI exécuté, aucune relance ni facturation modifiée.
+[Reçu terminal](qualification/vps-duty-floor-portable-20261025/retained-public/github-a80f2617-terminal.json).
+Le succès Docker Node18 ne qualifie donc ni la lane GitHub ni la CI complète.
 [Reçus, commande ciblée et portée](qualification/vps-duty-floor-portable-20261025/README.md).
 
 Les notes chronologiques ci-dessous restent conservées dans leur portée initiale.
