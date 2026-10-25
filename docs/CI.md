@@ -1,37 +1,32 @@
 # CI et limites de qualification
 
-## VPS duty worker : portabilité des tests et lane dédiée
+## VPS duty worker : qualification ciblée du 25 octobre
 
-`vps-duty-floor.test.mjs` conserve six groupes exécutables dans le contexte
-ordinaire ; son septième groupe exerce le dispatcher Python entier et exige
-réellement Linux, UID1000 et EUID1000. Ailleurs (dont Mac UID501 ou runner
-UID1001), seul ce groupe est marqué **SKIP avec motif visible**. Ce skip ne
-qualifie pas le dispatcher et n'efface pas ses preuves Linux antérieures.
-Les racines temporaires synthétiques sont résolues avant toute création/pin,
-pour que les alias usuels de répertoire temporaire ne violent pas le vrai
-lecteur à chemins canoniques. Aucune garde du worker de production n'est changée.
+La candidate `e4589f7f9b328f09d3a98b6a496d3b398235d5be` conserve six groupes
+ordinaires ; seul le septième exige Linux avec UID1000 et EUID1000 réels.
+Ailleurs, ce groupe porte un skip visible. Le mode
+`NANO_REQUIRE_VPS_DUTY_WORKER_TEST=1` refuse un contexte incorrect avant tests.
+Les gardes du worker de production restent inchangées.
 
-Le job `vps-duty-worker` réutilise le conteneur Ubuntu24 épinglé et Node25.9.0
-déjà employés par le workflow, avec Python3 et util-linux. `setpriv` fait tourner
-le vrai Node/Python en UID/GID1000 sans modifier `geteuid` ni les données du dépôt.
-`NANO_REQUIRE_VPS_DUTY_WORKER_TEST=1` transforme un contexte absent/incorrect en
-échec avant tests, jamais en skip. Les sept groupes doivent y passer réellement.
-Le script operations et ses globs restent inchangés ; le job dédié archive ses
-versions, révision et logs, y compris en cas d'échec. Aucun build d'image Nano,
-Docker imbriqué, clé, capsule ou accès VPS ne fait partie de ces tests.
+Dans Docker Linux, Node18.19.1/Python3.12.3 en UID1000 ont exécuté les **sept
+groupes : 7 PASS, 0 FAIL, 0 SKIP**, exit Docker0 et 87/87 descripteurs fermés.
+Le premier contrôleur VPS avait refusé une mauvaise base déclarée avant Docker ;
+cet échec reste conservé. Aucun nœud Nano n'a démarré pendant ces contrôles.
 
-Commande ciblée dans un contexte Linux UID1000 préparé :
+Sur Mac UID501, le mode obligatoire a bien refusé l'exécution (exit1, groupe de
+processus absent). La suite ordinaire reste **PARTIAL_UNEXPLAINED** : 5 PASS,
+1 timeout Python à 5000ms et 1 SKIP. Une reprise ciblée a produit 1 PASS TAP mais
+son post-validateur a échoué sur un comptage inadapté au filtrage de Node25 ; une
+troisième tentative ciblée a de nouveau expiré. Aucun run Mac entièrement vert
+ni qualification du dispatcher par Mac n'est revendiqué.
 
-```sh
-NANO_REQUIRE_VPS_DUTY_WORKER_TEST=1 node --test tests/multihost/vps-duty-floor.test.mjs
-```
+Le job dédié `vps-duty-worker` prépare le vrai UID/GID1000 avec `setpriv` dans
+le conteneur Ubuntu24 épinglé, sous Node25.9.0, et impose le mode obligatoire.
+Son exécution GitHub demeure ouverte ; le succès Docker Node18 ne qualifie pas
+cette lane ni la CI complète. Le blocage historique de facturation est conservé.
+[Reçus, commande ciblée et portée](qualification/vps-duty-floor-portable-20261025/README.md).
 
-Cette modification est à qualifier par Root : six exécutions + un skip visible
-hors contexte, refus explicite du mode obligatoire hors contexte, et sept vrais
-succès en Linux UID1000. Une exécution CI GitHub reste requise et peut rester
-bloquée par la facturation ; aucun succès de cette nouvelle lane n'est présumé.
-Le routeur actuel considère une modification de workflow comme pertinente pour
-Core et Network : cette politique n'est pas affaiblie par la nouvelle lane.
+Les notes chronologiques ci-dessous restent conservées dans leur portée initiale.
 
 CI du lot d’outillage livré8e053d99 : run38313225000 terminé avant toute étape ; operations/changes refusés, core/network skipped. Les annotations indiquent un paiement récent échoué ou une limite de dépenses, sans préciser lequel. Zéro test CI exécuté, aucun réglage de facturation modifié. [Reçu terminal actuel](qualification/isolated-recovery-tooling-ci-20261012/ci-8e053d99-terminal.json). Sources livrées sur main et récupérées sur VPS ; reprise des duties, finalité commune et toutes les exigences restantes restent ouvertes.
 

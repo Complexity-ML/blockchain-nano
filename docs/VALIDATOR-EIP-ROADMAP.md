@@ -9322,3 +9322,13 @@ Le rejeu Anvil des **mêmes transactions signées** reste **FAILED** : deux raci
 Aucune promotion d’EIP, conformité générale EVM/RPC, reprise de consensus ou qualification de production n’en découle. Les historiques d’échec sont conservés ; bridge/finalité source, réserve, allocations, ratio de conversion et termes Doppler restent ouverts, sans adoption implicite de 1:1 ni fonds réels.
 
 Tous les critères normatifs antérieurs restent ouverts selon leur périmètre, dont le cycle complet de consensus, CI/reproductibilité et la revue de sécurité indépendante non réalisée. Objectif actif, production non qualifiée.
+
+
+<!-- nano-inventory-storage-reference-and-worker-portability-20261025 -->
+## 25 octobre 2026 — divergence de référence localisée, sélection VPS corrigée
+
+Le [diagnostic de stockage](qualification/inventory-v2-storage-diagnostic-20261025/README.md) reproduit le seul préfixe de trois transactions concerné, lit14comptes/40slots et vérifie indépendamment les preuves Anvil. Les racines canoniques reconstruites concordent avec Nano. Pour les deux endpoints, ajouter une seule feuille zéro au slot8 reproduit exactement les engagements Anvil1.5.1 ; leurs preuves authentifient cette feuille. Ce résultat explique l'écart de référence observé sans modifier le cœur ni effacer le rejeu initial FAILED ; les62transactions suivantes et l'ancienne différence de324gas restent non qualifiées par ce diagnostic. Aucune conformité EVM/RPC générale ou promotion d'EIP n'est déduite.
+
+Le [correctif de sélection du worker VPS](qualification/vps-duty-floor-portable-20261025/README.md) passe7/7groupes sous Docker Linux, UID/EUID1000 réels,87FD fermés, sorties0. Seul le groupe exigeant ce contexte devient un skip visible ailleurs ; le mode obligatoire refuse un mauvais contexte. Sur Mac, le refus UID501 est vérifié mais la suite reste PARTIAL_UNEXPLAINED, avec timeouts Python et erreur de post-validation conservés. La lane GitHub dédiée sous Node25 et la CI complète restent ouvertes ; le succès Docker Node18 ne les remplace pas.
+
+Les quatre documents normatifs et toutes preuves/échecs antérieurs sont conservés. Aucun runtime de consensus ni nouveau domaine signé n'a été lancé ;04resteFAILED. Cycle validateur complet, budgets futurs/reprise, autres écarts consensus/WAN, exploitation/CI/reproductibilité et revue indépendante non réalisée restent ouverts selon leur périmètre, comme Base–Nano/USDC/Doppler/T0 et les termes économiques (aucun1:1 adopté). Aucun fonds réel, vente, déploiement public, flood, machine ou dépense. Objectif actif, production non qualifiée.
