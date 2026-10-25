@@ -1,0 +1,310 @@
+TAP version 13
+# Subtest: candidate is accepted only after the actual common checkpoint was traversed; older canonical candidates also work
+ok 1 - candidate is accepted only after the actual common checkpoint was traversed; older canonical candidates also work
+  ---
+  duration_ms: 12.162581
+  ...
+# Subtest: same tip needs no block fetch; an extension joins the cursor without refetching old history
+ok 2 - same tip needs no block fetch; an extension joins the cursor without refetching old history
+  ---
+  duration_ms: 4.643341
+  ...
+# Subtest: rolling authenticated checkpoint refresh spans more than2048slots without larger windows and joins all refresh branches
+ok 3 - rolling authenticated checkpoint refresh spans more than2048slots without larger windows and joins all refresh branches
+  ---
+  duration_ms: 296.002145
+  ...
+# Subtest: false common root, conflicting checkpoint or non-descendant finalized extension refuse without cache replacement
+ok 4 - false common root, conflicting checkpoint or non-descendant finalized extension refuse without cache replacement
+  ---
+  duration_ms: 3.09584
+  ...
+# Subtest: parent loops, self parent, equal/reversed slots and unauthenticated projections cannot produce a candidate
+ok 5 - parent loops, self parent, equal/reversed slots and unauthenticated projections cannot produce a candidate
+  ---
+  duration_ms: 3.41931
+  ...
+# Subtest: declared history byte and slot capacities fail distinctly from a searched deadline with no event
+ok 6 - declared history byte and slot capacities fail distinctly from a searched deadline with no event
+  ---
+  duration_ms: 2.654805
+  ...
+# Subtest: absolute phase deadline refuses late header block callback result and sleep; Promise predicates never pass
+ok 7 - absolute phase deadline refuses late header block callback result and sleep; Promise predicates never pass
+  ---
+  duration_ms: 3.696443
+  ...
+# Subtest: owner selection resolves all sixteen at one sealed state and chooses an actual finalized proposer independently of first key
+ok 8 - owner selection resolves all sixteen at one sealed state and chooses an actual finalized proposer independently of first key
+  ---
+  duration_ms: 4.54131
+  ...
+# Subtest: strict future duty floor is max stopped head and authenticated journal slot, never the signing root
+ok 9 - strict future duty floor is max stopped head and authenticated journal slot, never the signing root
+  ---
+  duration_ms: 20.15081
+  ...
+# Subtest: caller integration persists the exact decision before returning to STOP and shares one selection deadline
+ok 10 - caller integration persists the exact decision before returning to STOP and shares one selection deadline
+  ---
+  duration_ms: 10.125795
+  ...
+# Subtest: actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+ok 11 - actual lifecycle driver generation20261025 gates legacy and C8 authorizations and explicit closeout reserve before absent seed/output/network
+  ---
+  duration_ms: 25468.919407
+  ...
+# Subtest: new output admission: actual save rejects transient ctime sample before stable first admission
+ok 12 - new output admission: actual save rejects transient ctime sample before stable first admission
+  ---
+  duration_ms: 13.510764
+  ...
+# Subtest: new output admission: three strict samples span two seconds and ctime change resets the run
+ok 13 - new output admission: three strict samples span two seconds and ctime change resets the run
+  ---
+  duration_ms: 14.422941
+  ...
+# Subtest: new output admission: every known-byte and creation-identity mismatch refuses without retry
+ok 14 - new output admission: every known-byte and creation-identity mismatch refuses without retry
+  ---
+  duration_ms: 18.94332
+  ...
+# Subtest: new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+ok 15 - new output admission: retained inputs or outputs cannot be refreshed even during prospective sampling
+  ---
+  duration_ms: 14.238961
+  ...
+# Subtest: new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+ok 16 - new output admission: ongoing ctime churn is bounded and unrelated read errors retain their identity
+  ---
+  duration_ms: 5.443089
+  ...
+# Subtest: legacy and explicit V2 windows are distinct exact schemas
+ok 17 - legacy and explicit V2 windows are distinct exact schemas
+  ---
+  duration_ms: 10.750803
+  ...
+# Subtest: actual sequential stages charge ten F plus four P, and both Mac recoveries separately
+ok 18 - actual sequential stages charge ten F plus four P, and both Mac recoveries separately
+  ---
+  duration_ms: 5.131347
+  ...
+# Subtest: global reserve, real remaining work, ancestry and archival horizon cannot fund each other
+ok 19 - global reserve, real remaining work, ancestry and archival horizon cannot fund each other
+  ---
+  duration_ms: 6.958964
+  ...
+# Subtest: actual proposal wrapper clamps once to work end and rejects late, stale, reselected or beyond-horizon answers
+ok 20 - actual proposal wrapper clamps once to work end and rejects late, stale, reselected or beyond-horizon answers
+  ---
+  duration_ms: 2.453392
+  ...
+# Subtest: real pre-export caller refuses insufficient V2 recipe before exporter or seed path can run
+ok 21 - real pre-export caller refuses insufficient V2 recipe before exporter or seed path can run
+  ---
+  duration_ms: 6.878602
+  ...
+# Subtest: all real proposal call sites select P while finality, operations and withdrawals retain F
+ok 22 - all real proposal call sites select P while finality, operations and withdrawals retain F
+  ---
+  duration_ms: 1.561815
+  ...
+# Subtest: runtime and every specific private transfer authority fail closed before adapters
+ok 23 - runtime and every specific private transfer authority fail closed before adapters
+  ---
+  duration_ms: 10.441212
+  ...
+# Subtest: plan hash comes from owned known bytes and retains independent artifact pins
+ok 24 - plan hash comes from owned known bytes and retains independent artifact pins
+  ---
+  duration_ms: 3.267697
+  ...
+# Subtest: PREPARED is not acceptance; accepted projection cannot leak a session or fake finality
+ok 25 - PREPARED is not acceptance; accepted projection cannot leak a session or fake finality
+  ---
+  duration_ms: 2.385483
+  ...
+# Subtest: operation commitment encodes actual public SSZ fields without private action export
+ok 26 - operation commitment encodes actual public SSZ fields without private action export
+  ---
+  duration_ms: 3.760176
+  ...
+# Subtest: opaque known-file admission refuses post-admission mutation and physical aliases
+ok 27 - opaque known-file admission refuses post-admission mutation and physical aliases
+  ---
+  duration_ms: 2051.868455
+  ...
+# Subtest: whole-owner copy plan refuses unsafe namespace, owner and zero inventory authority
+ok 28 - whole-owner copy plan refuses unsafe namespace, owner and zero inventory authority
+  ---
+  duration_ms: 1.038691
+  ...
+# Subtest: only terminal C++ replay closes accounting; 3 captures never mean 3 full audits
+ok 29 - only terminal C++ replay closes accounting; 3 captures never mean 3 full audits
+  ---
+  duration_ms: 5.871815
+  ...
+# Subtest: stopped capture receipt retains real owner-local storage and only public commitments
+ok 30 - stopped capture receipt retains real owner-local storage and only public commitments
+  ---
+  duration_ms: 3.71027
+  ...
+# Subtest: stopped capture receipt refuses missing authority, bad bindings and non-exact counters or flags
+ok 31 - stopped capture receipt refuses missing authority, bad bindings and non-exact counters or flags
+  ---
+  duration_ms: 6.581817
+  ...
+# Subtest: stopped capture receipt requires all three distinct owners and rejects public extra fields
+ok 32 - stopped capture receipt requires all three distinct owners and rejects public extra fields
+  ---
+  duration_ms: 2.08105
+  ...
+# Subtest: stopped capture receipt is awaited and remains published when lifecycle closing fails
+ok 33 - stopped capture receipt is awaited and remains published when lifecycle closing fails
+  ---
+  duration_ms: 2.476713
+  ...
+# Subtest: stopped capture receipt publication refusal prevents closing and missing capture prevents publication
+ok 34 - stopped capture receipt publication refusal prevents closing and missing capture prevents publication
+  ---
+  duration_ms: 2.299454
+  ...
+# Subtest: each actual stopped capture commitment is awaited before return or a failed next stage
+ok 35 - each actual stopped capture commitment is awaited before return or a failed next stage
+  ---
+  duration_ms: 2.963987
+  ...
+# Subtest: retained stopped owner survives stage failure and all three captures publish before failed closing
+ok 36 - retained stopped owner survives stage failure and all three captures publish before failed closing
+  ---
+  duration_ms: 2.772597
+  ...
+# Subtest: resuming invalidates the old stop before a new writer and cannot publish an incomplete terminal set
+ok 37 - resuming invalidates the old stop before a new writer and cannot publish an incomplete terminal set
+  ---
+  duration_ms: 1.5933
+  ...
+# Subtest: retained stopped receipt refuses changed roots, duplicate or unhealthy owner authority
+ok 38 - retained stopped receipt refuses changed roots, duplicate or unhealthy owner authority
+  ---
+  duration_ms: 1.28001
+  ...
+# Subtest: whole-owner generated Perl copies complete namespaced roots and refuses copy mutation
+ok 39 - whole-owner generated Perl copies complete namespaced roots and refuses copy mutation
+  ---
+  duration_ms: 2829.976372
+  ...
+# Subtest: whole-owner statx keeps exact FD/path nine fields, one ns and closed ABI refusals
+ok 40 - whole-owner statx keeps exact FD/path nine fields, one ns and closed ABI refusals
+  ---
+  duration_ms: 76.77411
+  ...
+# Subtest: profile rules determine the real325epoch lower bound and finite total budget
+ok 41 - profile rules determine the real325epoch lower bound and finite total budget
+  ---
+  duration_ms: 14.2359
+  ...
+# Subtest: synthetic action authority and two distinct roles are explicit
+ok 42 - synthetic action authority and two distinct roles are explicit
+  ---
+  duration_ms: 2.661958
+  ...
+# Subtest: pending identity joins publicKey ownership rather than index/null/keyEnv arithmetic
+ok 43 - pending identity joins publicKey ownership rather than index/null/keyEnv arithmetic
+  ---
+  duration_ms: 2.593512
+  ...
+# Subtest: observations do not coerce null and exit preparation enforces actual tenure
+ok 44 - observations do not coerce null and exit preparation enforces actual tenure
+  ---
+  duration_ms: 2.622489
+  ...
+# Subtest: withdrawal accounting uses exact selected debit and total withdrawal-step credit
+ok 45 - withdrawal accounting uses exact selected debit and total withdrawal-step credit
+  ---
+  duration_ms: 2.71498
+  ...
+# Subtest: phase guards reject premature actions, repeated jobs and incomplete second restart
+ok 46 - phase guards reject premature actions, repeated jobs and incomplete second restart
+  ---
+  duration_ms: 7.279307
+  ...
+# Subtest: single-validator adapter binds immutable state, exact decimal fields and lifecycle status
+ok 47 - single-validator adapter binds immutable state, exact decimal fields and lifecycle status
+  ---
+  duration_ms: 3.214173
+  ...
+# Subtest: only the freshly exported pending deposit and funded sender can be submitted
+ok 48 - only the freshly exported pending deposit and funded sender can be submitted
+  ---
+  duration_ms: 2.78105
+  ...
+# Subtest: exporter address boundary accepts casing of the same twenty bytes without changing the export
+ok 49 - exporter address boundary accepts casing of the same twenty bytes without changing the export
+  ---
+  duration_ms: 7.618318
+  ...
+# Subtest: exporter address boundary refuses malformed values and different address bytes on either side
+ok 50 - exporter address boundary refuses malformed values and different address bytes on either side
+  ---
+  duration_ms: 18.625451
+  ...
+# Subtest: owner relocation remaps peer, core witness and all16 journal pairs without changing consensus or floors
+ok 51 - owner relocation remaps peer, core witness and all16 journal pairs without changing consensus or floors
+  ---
+  duration_ms: 9.188484
+  ...
+# Subtest: relocation refuses aliases, overlapping roots, changed domain/owner or an incomplete original journal mapping
+ok 52 - relocation refuses aliases, overlapping roots, changed domain/owner or an incomplete original journal mapping
+  ---
+  duration_ms: 6.704723
+  ...
+# Subtest: capture comparison preserves complete semantic commitments while physical copies have different inventories and config paths
+ok 53 - capture comparison preserves complete semantic commitments while physical copies have different inventories and config paths
+  ---
+  duration_ms: 7.100504
+  ...
+# Subtest: capture comparison refuses changed tokens, archives, signing history, owner and incomplete or writable role claims
+ok 54 - capture comparison refuses changed tokens, archives, signing history, owner and incomplete or writable role claims
+  ---
+  duration_ms: 24.173998
+  ...
+# Subtest: coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff
+ok 55 - coordinator restores Native then DockerMac and binds each new proposal to the same duty beyond its cutoff
+  ---
+  duration_ms: 2.515584
+  ...
+# Subtest: coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails
+ok 56 - coordinator refuses before later effects when a copy, finality, postcutoff proposal or required capability fails
+  ---
+  duration_ms: 5.689149
+  ...
+# Subtest: additional Mac recovery budget includes two restores and six full finality phases without changing existing audits
+ok 57 - additional Mac recovery budget includes two restores and six full finality phases without changing existing audits
+  ---
+  duration_ms: 0.696068
+  ...
+# Subtest: actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid
+not ok 58 - actual Mac post-recovery proposal adapter refuses exact or late phase completion even while the global budget remains valid
+  ---
+  duration_ms: 19.130956
+  location: 'file:///case/tests/multihost/owner-recovery.test.mjs:106:1'
+  failureType: 'testCodeFailure'
+  error: 'lifecycleProposalMs is not defined'
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    eval (eval at <anonymous> (file:///case/tests/multihost/owner-recovery.test.mjs:114:17), <anonymous>:4:22)
+    TestContext.<anonymous> (file:///case/tests/multihost/owner-recovery.test.mjs:115:44)
+    async Test.run (node:internal/test_runner/test:632:9)
+    async Test.processPendingSubtests (node:internal/test_runner/test:374:7)
+  ...
+1..58
+# tests 58
+# suites 0
+# pass 57
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 32612.223778

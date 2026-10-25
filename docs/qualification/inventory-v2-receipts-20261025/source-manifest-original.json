@@ -1,0 +1,63 @@
+{
+  "format": "nano-inventory-v2-receipt-coverage-source-v1",
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "repositoryBaseReportedByRoot": "cab8498f",
+  "cppTestshimParent": {
+    "repositoryPath": "tests/inventory_v2_execution_runner.cpp",
+    "sha256": "10997f1ad206ba8644b21643bef9ac34a16b4a8cf4c5bdcac6c1b97fdc06ba40",
+    "bytes": 11627,
+    "delta": "six added lines only: one comment and five receipt observations"
+  },
+  "coreSourceBaseReportedByRoot": "d23409b3",
+  "retainedCoreArchiveReportedByRoot": {
+    "sha256": "a1475733637348e9a22e72d6f8be3d61ebeafb39443cb168110ca353781ae2e6",
+    "bytes": 41077050
+  },
+  "engineCoreHeadersChanged": false,
+  "authorExecutedProgramsOrTests": false,
+  "authorModifiedRepository": false,
+  "sourcePeer": {
+    "reviewer": "source_merge",
+    "scope": "source receipt ABI/math, exact65 raw/result bindings, owned protocol/EOF/FD closure",
+    "driverSha256": "956f94400e42b58b4f49e1e5d6bf3c2ef341041e3ad4babcc9ea69130025e007",
+    "executionQualified": false
+  },
+  "plannedQualification": {
+    "nativeSignedTransactionsReplayed": 65,
+    "jsonlRequests": 132,
+    "solidityCompilation": false,
+    "scenario24Rerun": false,
+    "gethRerun": false,
+    "minedOrConsensusEvidence": false,
+    "rootActualTerminalRequired": true
+  },
+  "payloadFiles": 4,
+  "payloadBytes": 40764,
+  "files": [
+    {
+      "path": "source/tests/inventory_v2_execution_runner.cpp",
+      "repositoryTarget": "tests/inventory_v2_execution_runner.cpp",
+      "bytes": 12018,
+      "sha256": "10b01e8ed036906379b98a30631d6da9f2347bf83a57197cb0d0065650a6a0f9"
+    },
+    {
+      "path": "receipt-coverage.mjs",
+      "repositoryTarget": "tests/hardhat/inventory-v2/native/receipt-coverage.mjs",
+      "bytes": 21287,
+      "sha256": "956f94400e42b58b4f49e1e5d6bf3c2ef341041e3ad4babcc9ea69130025e007"
+    },
+    {
+      "path": "README.md",
+      "repositoryTarget": "tests/hardhat/inventory-v2/native/README.receipt-coverage.source.md",
+      "bytes": 6330,
+      "sha256": "de67768cd45bec0d1f154235f634b48965c80de2d0e95aaeeae4a2018a4bd959"
+    },
+    {
+      "path": "cpp-receipt-observability.patch",
+      "repositoryTarget": null,
+      "role": "review-only alternative to copying the full C++ file; do not apply both",
+      "bytes": 1129,
+      "sha256": "c03a682db0cf649546923ee03092e4276cd0e39c37f440fe42da0e8c824935c7"
+    }
+  ]
+}

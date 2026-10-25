@@ -1,0 +1,51 @@
+{
+  "format": "nano-inventory-v2-receipt-empty-logs-source-v1",
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "parentDriverSha256": "956f94400e42b58b4f49e1e5d6bf3c2ef341041e3ad4babcc9ea69130025e007",
+  "parentSourceManifestSha256": "0e5b7b7c8b11af914584dc722533f3bb59013194db8266e03b8cfa2f3e9e0a08",
+  "delta": "require own Geth receipt.logs; map explicit null to [] only in receiptFromReference",
+  "nativeLogArrayContractChanged": false,
+  "cppTestshimChanged": false,
+  "retainedCppTestshimSha256": "10b01e8ed036906379b98a30631d6da9f2347bf83a57197cb0d0065650a6a0f9",
+  "engineCoreHelpersOrRawTransactionsChanged": false,
+  "authorExecutedProgramsOrTests": false,
+  "authorModifiedRepository": false,
+  "historicalRefusalReportedByRoot": {
+    "actualDockerExitCode": 1,
+    "transactions": 0,
+    "requests": 0,
+    "driverFDsOpenedAndClosed": 7,
+    "rootFDsOpenedAndClosed": 28,
+    "childStarted": false,
+    "status": "RETAINED_FAILURE"
+  },
+  "parentGethStep01ObservationReportedByRoot": {
+    "sha256": "3a4e465ef61746c961e1644dfa41a949cc956943074cb500cf099d1918724892",
+    "bytes": 2063,
+    "logs": null,
+    "receiptAndAggregateBloomZero": true
+  },
+  "payloadFiles": 3,
+  "payloadBytes": 24112,
+  "files": [
+    {
+      "path": "receipt-coverage.mjs",
+      "repositoryTarget": "tests/hardhat/inventory-v2/native/receipt-coverage.mjs",
+      "sha256": "90a7f14d30c06e2e1a340aa64eff006a8b9f5ca6713097b243d7f9fe3035a9d7",
+      "bytes": 21382
+    },
+    {
+      "path": "README.md",
+      "repositoryTarget": "tests/hardhat/inventory-v2/native/README.receipt-empty-logs.source.md",
+      "sha256": "8f22468f55b44544fb4921be4833909854a9bb592d8f1c5ccd783ea765c4fbf8",
+      "bytes": 2029
+    },
+    {
+      "path": "reference-empty-logs.patch",
+      "repositoryTarget": null,
+      "role": "review-only alternative to the full driver; do not apply both",
+      "sha256": "803388fbcf3e5251b8c1c59d412222016c88b37a120eda04940a6714d0c967c9",
+      "bytes": 701
+    }
+  ]
+}
