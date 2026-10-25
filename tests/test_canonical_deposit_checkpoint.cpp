@@ -18,31 +18,36 @@ CanonicalDepositContextLimits limits(){return {128,4*1024*1024,8192,8192,4*1024*
 template<class Call>void refuses(Call call,const char* message){d::rejects(std::move(call),message);}
 
 struct Primary {
- struct Shared {std::shared_ptr<ChainStore> db;Bytes genesis;bool closed=false;size_t fetches=0,lookups=0;};
+ struct Shared {std::shared_ptr<ChainStore> db;Bytes genesis;size_t fetches=0,lookups=0;};
  std::shared_ptr<Shared> shared;
  std::unique_ptr<CapellaCheckpointProvider> provider;
- Primary(const f::fs::path& path,const Bytes& genesis,ChainStore::OpenMode mode):shared(std::make_shared<Shared>()){
+ Primary(const f::fs::path& path,const Bytes& genesis,ChainStore::OpenMode mode,const Bytes& profile,const ConsensusRoot& network):shared(std::make_shared<Shared>()){
   shared->db=std::make_shared<ChainStore>(path,mode);shared->genesis=genesis;
   if(mode==ChainStore::OpenMode::ReadWrite)shared->db->bind_chain(1337,genesis,"beacon");
   else shared->db->require_existing_chain_binding(1337,genesis,"beacon");
   provider=std::make_unique<CapellaCheckpointProvider>([s=shared](const Bytes& key,size_t bound){
-   f::check(!s->closed&&bool(s->db),"primary provider open");++s->fetches;return s->db->checkpoint_blob(1337,s->genesis,key,bound);
-  });
- }
- Context::Fetch fetch()const{return provider->reader();}
- Context::FetchLocator lookup(const Bytes& profile,const ConsensusRoot& network)const{
-  return [s=shared,profile,network](CanonicalDepositLookup kind,const Bytes& key)->std::optional<CanonicalDepositLocator>{
-   f::check(!s->closed&&bool(s->db),"locator provider open");++s->lookups;
+   ++s->fetches;f::check(bool(s->db),"primary provider backing alive");return s->db->checkpoint_blob(1337,s->genesis,key,bound);
+  },[s=shared,profile,network](CanonicalDepositLookup kind,const Bytes& key)->std::optional<CanonicalDepositLocator>{
+   ++s->lookups;f::check(bool(s->db),"locator provider backing alive");
    const CheckpointDepositLocatorKey lookup{profile,raw(network),key,kind==CanonicalDepositLookup::ExecutionHash};
    const auto value=s->db->checkpoint_deposit_locator(1337,s->genesis,lookup);
    if(!value)return {};return Context::decode_locator(*value);
-  };
+  });
  }
+ Context::Fetch fetch()const{return provider->reader();}
+ Context::FetchLocator lookup()const{return provider->locator_reader();}
  ForkCheckpointRecord checkpoint(const ForkCheckpointToken& token)const{
   const auto record=shared->db->fork_checkpoint(1337,shared->genesis,batch_budget,token);
   f::check(record&&record->token==token,"independently retained checkpoint token");return *record;
  }
- void close(){if(provider)provider->close();shared->closed=true;shared->db.reset();}
+ void assert_paired_close(const Bytes& digest,const Bytes& locator_key){
+  const auto read=fetch();const auto locate=lookup();const auto fetches=shared->fetches,lookups=shared->lookups;
+  provider->close();f::check(bool(shared->db),"paired gate closes before the primary backing database is released");
+  refuses([&]{read(digest,256);},"saved CAS reader refuses after paired provider close");
+  refuses([&]{locate(CanonicalDepositLookup::BeaconRoot,locator_key);},"saved locator reader refuses after same paired provider close");
+  f::check(shared->fetches==fetches&&shared->lookups==lookups,"neither backing callback reached after common gate close, with database still alive");
+ }
+ void close(){if(provider)provider->close();shared->db.reset();}
  ~Primary(){close();}
 };
 
@@ -80,7 +85,7 @@ struct Owners {
  std::vector<std::shared_ptr<Context>> contexts;
  std::vector<std::shared_ptr<Primary>> primary;
  std::shared_ptr<Context> own(std::shared_ptr<Context> context){contexts.push_back(context);return context;}
- std::shared_ptr<Primary> open(const f::fs::path& path,const Bytes& genesis,ChainStore::OpenMode mode){auto p=std::make_shared<Primary>(path,genesis,mode);primary.push_back(p);return p;}
+ std::shared_ptr<Primary> open(const f::fs::path& path,const Bytes& genesis,ChainStore::OpenMode mode,const Bytes& profile,const ConsensusRoot& network){auto p=std::make_shared<Primary>(path,genesis,mode,profile,network);primary.push_back(p);return p;}
  void close_contexts(){std::exception_ptr first;for(const auto& c:contexts)try{c->close();}catch(...){if(!first)first=std::current_exception();}if(first)std::rethrow_exception(first);}
  void close(){std::exception_ptr first;try{close_contexts();}catch(...){first=std::current_exception();}for(const auto& p:primary)try{p->close();}catch(...){if(!first)first=std::current_exception();}if(first)std::rethrow_exception(first);}
  ~Owners(){try{close();}catch(...){}}
@@ -90,11 +95,11 @@ ForkCheckpointToken commit(Primary& primary,const std::optional<ForkCheckpointTo
  return primary.shared->db->commit_fork_checkpoint_with_deposit_blobs(1337,primary.shared->genesis,previous,snapshot,bytes,pending.blobs(),max_blobs,pending.records(),max_locators);
 }
 std::string manifest(const std::shared_ptr<Context>& context,const Json& history){return Json{{"format","public-deposit-checkpoint-component-v1"},{"context",context->checkpoint_descriptor(f::checkpoint)},{"history",history}}.dump();}
-std::shared_ptr<Context> restore_context(Owners& owners,const Json& descriptor,const Bytes& profile,const ConsensusRoot& network,const std::shared_ptr<Primary>& p){return owners.own(Context::from_checkpoint(descriptor,profile,network,limits(),p->fetch(),p->lookup(profile,network),{},{},f::checkpoint));}
+std::shared_ptr<Context> restore_context(Owners& owners,const Json& descriptor,const Bytes& profile,const ConsensusRoot& network,const std::shared_ptr<Primary>& p){return owners.own(Context::from_checkpoint(descriptor,profile,network,limits(),p->fetch(),p->lookup(),{},{},f::checkpoint));}
 ExecutionDepositHistory restore_history(const Json& reference,size_t i,const d::Fixture& fixture,const std::shared_ptr<Context>& context,const std::function<void()>& check=f::checkpoint,const DepositCheckpointTreeBudget& budget=tree_budget){return ExecutionDepositHistory::from_checkpoint_reference(reference,fixture.blocks.at(i).header,fixture.states.at(i),fixture.blocks.at(i).header.hash(),fixture.code_hash,d::nonzero_deposits,context,budget,check);}
 
 void budget_and_locator_codec(const f::fs::path& path,const d::Fixture& fixture){
- f::test_stage="typed-primary-batch-and-legacy-budget";Owners owners;auto p=owners.open(path,fixture.blocks[0].header.hash(),ChainStore::OpenMode::ReadWrite);
+ f::test_stage="typed-primary-batch-and-legacy-budget";Owners owners;auto p=owners.open(path,fixture.blocks[0].header.hash(),ChainStore::OpenMode::ReadWrite,Bytes(32,0x45),fixture.ids[0]);
  const auto legacy=p->shared->db->commit_fork_checkpoint(1337,p->shared->genesis,{},"{}",2);const auto before=p->checkpoint(legacy).snapshot;
  bool bounded=false;try{p->shared->db->commit_fork_checkpoint_with_deposit_blobs(1337,p->shared->genesis,legacy,"{}",2,{},0,{},0);}catch(const std::length_error&){bounded=true;}
  f::check(bounded&&p->checkpoint(legacy).snapshot==before,"empty typed delta still bounds complete batch, without token mutation");
@@ -141,11 +146,11 @@ struct Published {
  f::fs::path path;Bytes genesis,profile;ConsensusRoot network;ForkCheckpointToken token;std::string snapshot;Json descriptor,history,history10;
 };
 Published stage_commit_history(const f::fs::path& path,const d::Fixture& fixture){
- f::test_stage="staged-history-primary-atomic-publication";Owners owners;const auto genesis=fixture.blocks[0].header.hash();const Bytes profile(32,0x46);const auto network=fixture.ids[0];auto p=owners.open(path,genesis,ChainStore::OpenMode::ReadWrite);
- auto initial=std::make_shared<Pending>(profile,network);auto c0=owners.own(Context::create_staged(tuple(fixture,0),profile,limits(),initial->fetch(p->fetch()),initial->lookup(p->lookup(profile,network)),initial->stage(),initial->stage_locator(),f::checkpoint));
+ f::test_stage="staged-history-primary-atomic-publication";Owners owners;const auto genesis=fixture.blocks[0].header.hash();const Bytes profile(32,0x46);const auto network=fixture.ids[0];auto p=owners.open(path,genesis,ChainStore::OpenMode::ReadWrite,profile,network);
+ auto initial=std::make_shared<Pending>(profile,network);auto c0=owners.own(Context::create_staged(tuple(fixture,0),profile,limits(),initial->fetch(p->fetch()),initial->lookup(p->lookup()),initial->stage(),initial->stage_locator(),f::checkpoint));
  const auto h0=fixture.histories[0].checkpoint_reference(c0,tree_budget,f::checkpoint);const auto s0=manifest(c0,h0);const auto token0=commit(*p,{},s0,*initial);
  auto published=restore_context(owners,Json::parse(s0).at("context"),profile,network,p);const auto descriptor0=published->checkpoint_descriptor(f::checkpoint);
- auto pending=std::make_shared<Pending>(profile,network);auto candidate=owners.own(published->fork_staged(pending->fetch(p->fetch()),pending->lookup(p->lookup(profile,network)),pending->stage(),pending->stage_locator(),f::checkpoint));
+ auto pending=std::make_shared<Pending>(profile,network);auto candidate=owners.own(published->fork_staged(pending->fetch(p->fetch()),pending->lookup(p->lookup()),pending->stage(),pending->stage_locator(),f::checkpoint));
  auto current=restore_history(h0,0,fixture,candidate);
  Json history10;
  for(size_t i=1;i<=d::execution_blocks;++i){f::test_slot=i;current=current.append_verified_execution(fixture.blocks[i].header,fixture.states[i],fixture.receipts[i],fixture.code_hash,1,f::checkpoint);candidate->append_admitted(tuple(fixture,i),f::checkpoint);if(i==10)history10=current.checkpoint_reference(candidate,tree_budget,f::checkpoint);}
@@ -165,7 +170,7 @@ Published stage_commit_history(const f::fs::path& path,const d::Fixture& fixture
 }
 
 void restart_closure_and_refusals(const Published& publication,const d::Fixture& fixture){
- f::test_stage="durable-restart-deep-closure-and-domain-refusals";const auto before=d::inventory(publication.path);Owners owners;auto p=owners.open(publication.path,publication.genesis,ChainStore::OpenMode::ReadOnly);f::check(p->checkpoint(publication.token).snapshot==publication.snapshot,"restart authenticates independently retained token");
+ f::test_stage="durable-restart-deep-closure-and-domain-refusals";const auto before=d::inventory(publication.path);Owners owners;auto p=owners.open(publication.path,publication.genesis,ChainStore::OpenMode::ReadOnly,publication.profile,publication.network);f::check(p->checkpoint(publication.token).snapshot==publication.snapshot,"restart authenticates independently retained token");
  auto context=restore_context(owners,publication.descriptor,publication.profile,publication.network,p);auto history=restore_history(publication.history,96,fixture,context);
  f::check(history.snapshot(f::checkpoint)==fixture.histories.back().snapshot(f::checkpoint),"durable history exact old-v1 export and root equal memory oracle");
  for(uint64_t i=0;i<32;++i)d::same_proof(history.proof(i,f::checkpoint),fixture.histories.back().proof(i,f::checkpoint));
@@ -174,19 +179,19 @@ void restart_closure_and_refusals(const Published& publication,const d::Fixture&
  size_t tuple_refs=0;context->visit_checkpoint_closure([&](const CanonicalDepositBlobRef&){++tuple_refs;},f::checkpoint);std::vector<CanonicalDepositBlobRef> nodes;history.authenticate_checkpoint_closure(tree_budget,[&](const auto& ref){nodes.push_back(ref);},f::checkpoint);f::check(tuple_refs>=97&&!nodes.empty(),"complete tuple and history closures really traversed");
  auto deep=std::find_if(nodes.begin(),nodes.end(),[](const auto& ref){return ref.bytes==194;});f::check(deep!=nodes.end()&&hex(raw(deep->digest))!=publication.history[5][0].get<std::string>(),"deep leaf distinct from known descriptor root");const auto missing=raw(deep->digest);const auto source=p->fetch();
  auto bad_fetch=[&](bool corrupt){return Context::Fetch([=](const Bytes& key,size_t maximum)->std::optional<std::string>{auto value=source(key,maximum);if(key==missing){if(!corrupt)return {};f::check(bool(value),"existing deep corruption premise");(*value)[value->size()-1]^=1;}return value;});};
- for(bool corrupt:{false,true}){auto changed=owners.own(Context::from_checkpoint(publication.descriptor,publication.profile,publication.network,limits(),bad_fetch(corrupt),p->lookup(publication.profile,publication.network),{},{},f::checkpoint));refuses([&]{restore_history(publication.history,96,fixture,changed);},"full restore refuses missing/corrupt deep leaf, not merely descriptor root");}
- auto wrong_profile=publication.profile;wrong_profile[0]^=1;refuses([&]{Context::from_checkpoint(publication.descriptor,wrong_profile,publication.network,limits(),p->fetch(),p->lookup(publication.profile,publication.network),{},{},f::checkpoint);},"wrong externally supplied profile refused");
+ for(bool corrupt:{false,true}){auto changed=owners.own(Context::from_checkpoint(publication.descriptor,publication.profile,publication.network,limits(),bad_fetch(corrupt),p->lookup(),{},{},f::checkpoint));refuses([&]{restore_history(publication.history,96,fixture,changed);},"full restore refuses missing/corrupt deep leaf, not merely descriptor root");}
+ auto wrong_profile=publication.profile;wrong_profile[0]^=1;refuses([&]{Context::from_checkpoint(publication.descriptor,wrong_profile,publication.network,limits(),p->fetch(),p->lookup(),{},{},f::checkpoint);},"wrong externally supplied profile refused");
  auto wrong_network=publication.network;wrong_network[0]^=1;refuses([&]{restore_context(owners,publication.descriptor,publication.profile,wrong_network,p);},"wrong external network root refused");
- const auto durable_lookup=p->lookup(publication.profile,publication.network);const auto key17=fixture.blocks[17].header.hash();
+ const auto durable_lookup=p->lookup();const auto key17=fixture.blocks[17].header.hash();
  for(bool corrupt:{false,true}){const auto lookup=[durable_lookup,key17,corrupt](CanonicalDepositLookup kind,const Bytes& key)->std::optional<CanonicalDepositLocator>{auto found=durable_lookup(kind,key);if(kind==CanonicalDepositLookup::ExecutionHash&&key==key17){if(!corrupt)return {};f::check(bool(found),"existing locator corruption premise");found->digest[0]^=1;}return found;};refuses([&]{Context::from_checkpoint(publication.descriptor,publication.profile,publication.network,limits(),p->fetch(),lookup,{},{},f::checkpoint);},"missing/corrupt durable lookup cannot authenticate a canonical row");}
- auto short_limits=limits();short_limits.maximum_tuples=96;refuses([&]{Context::from_checkpoint(publication.descriptor,publication.profile,publication.network,short_limits,p->fetch(),p->lookup(publication.profile,publication.network),{},{},f::checkpoint);},"external context quota is not learned from descriptor");
+ auto short_limits=limits();short_limits.maximum_tuples=96;refuses([&]{Context::from_checkpoint(publication.descriptor,publication.profile,publication.network,short_limits,p->fetch(),p->lookup(),{},{},f::checkpoint);},"external context quota is not learned from descriptor");
  for(size_t field:{size_t(1),size_t(3),size_t(4)}){auto changed=publication.history;auto value=changed[field].get<std::string>();value.back()=value.back()=='0'?'1':'0';changed[field]=value;refuses([&]{restore_history(changed,96,fixture,context);},"history execution/mixed/tree-root mutation refused");}
  auto wrong_count=publication.history;wrong_count[2]="0x21";refuses([&]{restore_history(wrong_count,96,fixture,context);},"history count beyond external deposit cap refused");
  refuses([&]{restore_history(fixture.histories.back().snapshot(f::checkpoint),96,fixture,context);},"old-v1 history is not autodetected as explicit-v2 reference");
  const auto sibling=*fixture.same_root_sibling;refuses([&]{ExecutionDepositHistory::from_checkpoint_reference(publication.history10,sibling.execution_block.header,sibling.execution_state,sibling.execution_block.header.hash(),fixture.code_hash,32,context,tree_budget,f::checkpoint);},"same count/root sibling cannot replace external execution binding");
  size_t checks=0;bool expired=false;try{restore_history(publication.history,96,fixture,context,[&]{if(++checks==5)throw ExpiredCapellaDuty("checkpoint component cancelled");});}catch(const ExpiredCapellaDuty& error){expired=std::string(error.what())=="checkpoint component cancelled";}
  f::check(expired&&checks==5&&p->checkpoint(publication.token).snapshot==publication.snapshot,"typed cancellation preserves original primary commitment");
- auto held=context->lease_node_blob(*deep,f::checkpoint);const auto held_value=*held;p->close();refuses([&]{context->lease_node_blob(*deep,f::checkpoint);},"closed durable provider refuses even cached node read");f::check(*held==held_value,"immutable byte lease survives provider close");owners.close();f::check(d::inventory(publication.path)==before,"read-only restart/refusal/close paths leave physical primary unchanged");
+ auto held=context->lease_node_blob(*deep,f::checkpoint);const auto held_value=*held;p->assert_paired_close(raw(deep->digest),raw(fixture.ids.back()));p->close();refuses([&]{context->lease_node_blob(*deep,f::checkpoint);},"closed durable provider refuses even cached node read");f::check(*held==held_value,"immutable byte lease survives provider close");owners.close();f::check(d::inventory(publication.path)==before,"read-only restart/refusal/close paths leave physical primary unchanged");
 }
 
 // Imported/genesis storage can contain an opaque branch hash. Matching its
@@ -213,7 +218,7 @@ void dense_prefix_reference(Owners& owners,const std::shared_ptr<Context>& sourc
  const auto view=[&](const char* signature){State isolated=state;ExecutionContext execution;execution.revision=EvmRevision::Paris;execution.address=ethereum_deposit_contract;execution.code=state.get(ethereum_deposit_contract).code;execution.data=keccak(Bytes(signature,signature+std::char_traits<char>::length(signature)));execution.data.resize(4);execution.is_static=true;execution.number=header.number;execution.timestamp=header.timestamp;execution.checkpoint=f::checkpoint;const auto result=EVM(isolated).execute(execution);f::check(result.success,"opaque imported branch contract view succeeds");return result.return_data;};
  Bytes count_view(96);count_view[31]=32;count_view[63]=8;count_view[64]=2;
  f::check(view("get_deposit_root()")==raw(mixed)&&view("get_deposit_count()")==count_view&&keccak(state.get(ethereum_deposit_contract).code)==fixture.code_hash&&header.state_root==state.root(),"sparse imported tree has coherent real contract views, code, header and state root");
- const auto underlying=pending->fetch(primary->fetch());const auto lookup=pending->lookup(primary->lookup(pending->profile,pending->network));
+ const auto underlying=pending->fetch(primary->fetch());const auto lookup=pending->lookup(primary->lookup());
  const auto fetch=[forged=std::move(forged),underlying](const Bytes& key,size_t maximum)->std::optional<std::string>{const auto at=forged.find(key);if(at==forged.end())return underlying(key,maximum);f::check(at->second.size()<=maximum,"sparse fixture CAS bound");return at->second;};
  auto context=owners.own(source->fork_staged(fetch,lookup,{},{},f::checkpoint));
  const auto encoded=Json::array({"nano-execution-deposit-history-v2",hex(header.hash()),"0x2",hex(raw(mixed)),hex(raw(tree)),Json::array({hex(raw(reference.digest)),quantity(Int(std::to_string(reference.bytes)))})});
@@ -222,9 +227,9 @@ void dense_prefix_reference(Owners& owners,const std::shared_ptr<Context>& sourc
 }
 
 void tree_budget_and_cancel(const f::fs::path& cancelled_path,const Published& publication,const d::Fixture& fixture){
- f::test_stage="full-tree-budget-independent-of-deduplicated-emissions";Owners owners;const auto before=d::inventory(publication.path);auto primary=owners.open(publication.path,publication.genesis,ChainStore::OpenMode::ReadOnly);
- const Bytes profile(32,0x47);auto overlay=std::make_shared<Pending>(profile,publication.network);
- auto context=owners.own(Context::create_staged(tuple(fixture,0),profile,limits(),overlay->fetch(primary->fetch()),overlay->lookup(primary->lookup(profile,publication.network)),overlay->stage(),overlay->stage_locator(),f::checkpoint));
+ f::test_stage="full-tree-budget-independent-of-deduplicated-emissions";Owners owners;const auto before=d::inventory(publication.path);const Bytes profile(32,0x47);auto primary=owners.open(publication.path,publication.genesis,ChainStore::OpenMode::ReadOnly,profile,publication.network);
+ auto overlay=std::make_shared<Pending>(profile,publication.network);
+ auto context=owners.own(Context::create_staged(tuple(fixture,0),profile,limits(),overlay->fetch(primary->fetch()),overlay->lookup(primary->lookup()),overlay->stage(),overlay->stage_locator(),f::checkpoint));
  const auto reference=fixture.histories.back().checkpoint_reference(context,tree_budget,f::checkpoint);
  f::check(reference==publication.history&&context->usage().blob_records==0&&context->usage().blob_bytes==0,"prepopulated primary CAS reuses the complete real tree with zero new blob emissions");
  const auto root_bytes=u64(quantity(reference[5][1]));f::check(root_bytes>0,"nonempty externally pinned tree root");
@@ -239,9 +244,9 @@ void tree_budget_and_cancel(const f::fs::path& cancelled_path,const Published& p
  dense_prefix_reference(owners,context,overlay,primary,fixture);
  // A failed candidate is discarded in full. It never becomes a readonly
  // published context merely because some node CAS writes already succeeded.
- f::test_stage="typed-cancel-after-real-private-staging";auto empty=owners.open(cancelled_path,publication.genesis,ChainStore::OpenMode::ReadWrite);auto pending=std::make_shared<Pending>(publication.profile,publication.network);std::shared_ptr<Context> cancelled;
+ f::test_stage="typed-cancel-after-real-private-staging";auto empty=owners.open(cancelled_path,publication.genesis,ChainStore::OpenMode::ReadWrite,publication.profile,publication.network);auto pending=std::make_shared<Pending>(publication.profile,publication.network);std::shared_ptr<Context> cancelled;
  const auto check=[&]{f::checkpoint();if(cancelled&&cancelled->usage().blob_records>=2)throw ExpiredCapellaDuty("cancel after two private node emissions");};
- cancelled=owners.own(Context::create_staged(tuple(fixture,0),publication.profile,limits(),pending->fetch(empty->fetch()),pending->lookup(empty->lookup(publication.profile,publication.network)),pending->stage(),pending->stage_locator(),check));
+ cancelled=owners.own(Context::create_staged(tuple(fixture,0),publication.profile,limits(),pending->fetch(empty->fetch()),pending->lookup(empty->lookup()),pending->stage(),pending->stage_locator(),check));
  const auto original=fixture.histories.back().snapshot(f::checkpoint);bool typed=false;
  try{fixture.histories.back().checkpoint_reference(cancelled,tree_budget,check);}catch(const ExpiredCapellaDuty& error){typed=std::string(error.what())=="cancel after two private node emissions";}
  f::check(typed&&cancelled->usage().blob_records>=2&&pending->writes>=2&&!empty->shared->db->fork_checkpoint(1337,publication.genesis,batch_budget)&&fixture.histories.back().snapshot(f::checkpoint)==original,"typed cancellation after real stage writes leaves primary and memory input unpublished/unchanged");
@@ -250,23 +255,23 @@ void tree_budget_and_cancel(const f::fs::path& cancelled_path,const Published& p
 }
 
 void store_v4_roundtrip(const f::fs::path& path){
- f::test_stage="real-valid-anchor-store-v4-codec";auto fixture=f::fixture();const auto root=fixture.initial.timed.view.anchor;const auto anchor=fixture.initial.blocks.at(root).lease(f::checkpoint);const auto legacy=capella_store_snapshot(fixture.initial,fixture.rules,fixture.limits,f::checkpoint);const auto profile_text=Json::parse(legacy).at("profile").dump();const auto profile=sha(profile_text);const auto genesis=fixture.genesis.block.header.hash();Owners owners;auto p=owners.open(path,genesis,ChainStore::OpenMode::ReadWrite);auto pending=std::make_shared<Pending>(profile,root);
+ f::test_stage="real-valid-anchor-store-v4-codec";auto fixture=f::fixture();const auto root=fixture.initial.timed.view.anchor;const auto anchor=fixture.initial.blocks.at(root).lease(f::checkpoint);const auto legacy=capella_store_snapshot(fixture.initial,fixture.rules,fixture.limits,f::checkpoint);const auto profile_text=Json::parse(legacy).at("profile").dump();const auto profile=sha(profile_text);const auto genesis=fixture.genesis.block.header.hash();Owners owners;auto p=owners.open(path,genesis,ChainStore::OpenMode::ReadWrite,profile,root);auto pending=std::make_shared<Pending>(profile,root);
  f::check(fixture.rules.native_deposit_votes&&fixture.rules.deposit_contract_code_hash.size()==32&&bool(anchor->deposit_history),"real signed anchor supports native-deposit Store v4 profile");
  const CapellaDepositAncestor tuple0{anchor->header,anchor->execution_block.header,anchor->deposit_history->count(),anchor->deposit_history->root()};
  const auto bind_store=[&](const std::shared_ptr<Context>& context){auto store=fixture.initial;store.blocks.at(root).writable(f::checkpoint).deposit_history=std::make_shared<const ExecutionDepositHistory>(anchor->deposit_history->with_cold_storage(context,f::checkpoint));store.deposit_ancestry=CapellaDepositAncestry{context,context->anchor_cursor(f::checkpoint),root};return store;};
  // Abort after a genuine block Stage callback. The candidate and all pending
  // material are discarded; a later successful attempt gets new owners.
- auto failed_pending=std::make_shared<Pending>(profile,root);auto failed_context=owners.own(Context::create_staged(tuple0,profile,limits(),failed_pending->fetch(p->fetch()),failed_pending->lookup(p->lookup(profile,root)),failed_pending->stage(),failed_pending->stage_locator(),f::checkpoint));
+ auto failed_pending=std::make_shared<Pending>(profile,root);auto failed_context=owners.own(Context::create_staged(tuple0,profile,limits(),failed_pending->fetch(p->fetch()),failed_pending->lookup(p->lookup()),failed_pending->stage(),failed_pending->stage_locator(),f::checkpoint));
  const auto failed_store=bind_store(failed_context);size_t failed_stages=0;bool late=false;
  try{capella_store_deposit_reference_snapshot(failed_store,fixture.rules,fixture.limits,failed_context,tree_budget,[&](const CapellaColdReference& ref,std::string_view bytes){failed_pending->stage()(ref.digest,std::string(bytes));++failed_stages;throw ExpiredCapellaDuty("stop after consensus block stage");},f::checkpoint);}catch(const ExpiredCapellaDuty& error){late=std::string(error.what())=="stop after consensus block stage";}
  f::check(late&&failed_stages==1&&!p->shared->db->fork_checkpoint(1337,genesis,batch_budget),"late writer cancellation leaves real staged block private and no primary checkpoint");for(const auto& [key,_]:failed_pending->cas)f::check(!p->shared->db->checkpoint_blob(1337,genesis,key,batch_budget),"failed v4 writer publishes no partial CAS");failed_context->close();failed_pending->clear();
  auto scratch=owners.own(Context::create(path.parent_path()/"unpublished-audit-scratch",tuple0,profile,limits(),f::checkpoint));const auto scratch_store=bind_store(scratch);size_t scratch_stages=0;refuses([&]{capella_store_deposit_reference_snapshot(scratch_store,fixture.rules,fixture.limits,scratch,tree_budget,[&](const CapellaColdReference&,std::string_view){++scratch_stages;},f::checkpoint);},"scratch audit context is not a durable checkpoint descriptor");f::check(scratch_stages==0,"scratch context refuses before external block staging");scratch->close();
- auto context=owners.own(Context::create_staged(tuple0,profile,limits(),pending->fetch(p->fetch()),pending->lookup(p->lookup(profile,root)),pending->stage(),pending->stage_locator(),f::checkpoint));
+ auto context=owners.own(Context::create_staged(tuple0,profile,limits(),pending->fetch(p->fetch()),pending->lookup(p->lookup()),pending->stage(),pending->stage_locator(),f::checkpoint));
  auto stage=[&](const CapellaColdReference& ref,std::string_view bytes){f::check(sha(bytes)==ref.digest&&bytes.size()==ref.bytes,"staged real consensus row commitment");pending->stage()(ref.digest,std::string(bytes));};
  auto store=bind_store(context);
  const auto encoded=capella_store_deposit_reference_snapshot(store,fixture.rules,fixture.limits,context,tree_budget,stage,f::checkpoint);const auto document=Json::parse(encoded);f::check(document.at("format")=="nano-capella-reference-store-v2"&&document.at("snapshot").at("format")=="nano-capella-store-v4"&&document.at("snapshot").size()==15,"explicit real Store v4, not legacy auto-detection");
- f::check(!p->shared->db->fork_checkpoint(1337,genesis,batch_budget),"writer only stages before primary publication");const auto token=commit(*p,{},encoded,*pending);owners.close();const auto before=d::inventory(path);auto ro=owners.open(path,genesis,ChainStore::OpenMode::ReadOnly);f::check(ro->checkpoint(token).snapshot==encoded,"published Store manifest externally authenticated");
- auto restore=[&](const std::string& bytes,const Bytes& digest){return capella_store_from_deposit_reference_snapshot(bytes,digest,fixture.rules,fixture.limits,1,fixture.limits.envelope_bytes,limits(),tree_budget,ro->fetch(),ro->lookup(profile,root),f::checkpoint);};
+ f::check(!p->shared->db->fork_checkpoint(1337,genesis,batch_budget),"writer only stages before primary publication");const auto token=commit(*p,{},encoded,*pending);owners.close();const auto before=d::inventory(path);auto ro=owners.open(path,genesis,ChainStore::OpenMode::ReadOnly,profile,root);f::check(ro->checkpoint(token).snapshot==encoded,"published Store manifest externally authenticated");
+ auto restore=[&](const std::string& bytes,const Bytes& digest){return capella_store_from_deposit_reference_snapshot(bytes,digest,fixture.rules,fixture.limits,1,fixture.limits.envelope_bytes,limits(),tree_budget,ro->fetch(),ro->lookup(),f::checkpoint);};
  auto restored=restore(encoded,sha(encoded));f::check(restored.deposit_ancestry&&restored.blocks.at(root).lease(f::checkpoint)->state.ssz==anchor->state.ssz&&restored.blocks.at(root).lease(f::checkpoint)->execution_state.root()==anchor->execution_state.root(),"real Store SSZ and execution survive v4 restart");owners.own(restored.deposit_ancestry->context);
  size_t references=0;authenticate_capella_deposit_checkpoint_closure(restored,tree_budget,[&](const CanonicalDepositBlobRef&){++references;},f::checkpoint);f::check(references>0,"Store closure authenticates canonical tuple bindings");
  auto bad_digest=sha(encoded);bad_digest[0]^=1;const auto fetches=ro->shared->fetches;refuses([&]{restore(encoded,bad_digest);},"external manifest digest refused before provider");f::check(ro->shared->fetches==fetches,"wrong digest performs no fetch");

@@ -747,6 +747,34 @@ bool CanonicalDepositContext::shares_blob_storage(const CanonicalDepositContext&
  require(!state_->closed.load() && !target.state_->closed.load(), "deposit context closed");
  return !state_->writable;
 }
+std::pair<std::shared_ptr<CanonicalDepositContext>,CanonicalDepositContext::Cursor>
+CanonicalDepositContext::clone_preflight_primary(Fetch fetch,FetchLocator lookup,
+ const Cursor& source_tip,const Checkpoint& check) const {
+ CanonicalDepositContextState::Operation operation(*state_,check);
+ state_->check_metadata(check);
+ require(state_->provider_owner && !state_->writable && bool(fetch) && bool(lookup) &&
+   bool(source_tip) && source_tip->owner_.lock().get()==state_.get() &&
+   state_->tuples && source_tip->ordinal_==state_->tuples-1 &&
+   source_tip->digest_==state_->tip_digest,
+   "deposit publication requires certified readonly tip");
+ auto next=std::make_shared<CanonicalDepositContextState>();
+ // Intentionally do NOT share the source provider, cache, stage callbacks or
+ // overlay. Construction of State gives this generation a fresh empty cache.
+ next->provider_owner=std::make_shared<DepositProviderOwner>();
+ next->fetch=std::move(fetch);next->fetch_locator=std::move(lookup);
+ next->profile=state_->profile;next->limits=state_->limits;
+ next->network_root=state_->network_root;
+ next->anchor_digest=state_->anchor_digest;next->tip_digest=state_->tip_digest;
+ next->anchor_bytes=state_->anchor_bytes;next->tip_bytes=state_->tip_bytes;
+ next->tuples=state_->tuples;next->tuple_bytes=state_->tuple_bytes;
+ next->blob_records=state_->blob_records;next->blob_bytes=state_->blob_bytes;
+ next->metadata=state_->metadata;
+ state_->fence(check);
+ auto context=std::shared_ptr<CanonicalDepositContext>(new CanonicalDepositContext(next));
+ auto cursor=context->make_cursor(next->tuples-1,next->tip_digest);
+ state_->fence(check);
+ return {std::move(context),std::move(cursor)};
+}
 CanonicalDepositContextLimits CanonicalDepositContext::limits() const {
  ensure_open({});return state_->limits;
 }

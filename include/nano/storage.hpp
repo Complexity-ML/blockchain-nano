@@ -6,6 +6,7 @@
 #include <functional>
 namespace rocksdb { class DB; class WriteBatch; }
 namespace nano {
+namespace deposit_publication_detail { class PreparedDepositPublication; }
 struct ForkCheckpointToken {uint64_t sequence;Bytes digest;bool operator==(const ForkCheckpointToken&)const=default;};
 struct ExecutionStateRetentionAnchor {Int number;Bytes hash;};
 struct ExecutionStatePruningInfo {Int before;ExecutionStateRetentionAnchor anchor;};
@@ -138,6 +139,15 @@ public:
   const std::vector<CheckpointBlob>& blobs,size_t maximum_records,
   const std::vector<CheckpointDepositLocatorRecord>& locators,size_t maximum_locators,
   const std::vector<CheckpointArchiveEntry>& archive={},
+  const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
+ // Internal sealed publication. The factory has authenticated the complete
+ // durable envelope; this handle is one-shot and bound to this living store.
+ // A failed attempt remains dormant. Success arms only that primary view;
+ // existing APIs and normal untrusted recovery keep their full validation.
+ ForkCheckpointToken commit_prepared_deposit_checkpoint(
+  deposit_publication_detail::PreparedDepositPublication&,
+  const Int& common_height,const Bytes& common_hash,
+  const std::vector<ExecutionCheckpointBlock>& suffix,size_t maximum_blocks,
   const std::optional<ExecutionStateRetentionAnchor>& retention=std::nullopt);
  // Missing historical state is intentional only below this durable boundary.
  std::optional<ExecutionStatePruningInfo> state_pruning() const;

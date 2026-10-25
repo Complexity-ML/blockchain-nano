@@ -4,9 +4,11 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <utility>
 
 namespace nano {
 struct CanonicalDepositContextState;
+namespace deposit_publication_detail { class DepositPublicationFactory; }
 
 // A cursor is created only by its live context. Its ordinal is a locator, not
 // ancestry authority; context identity and the committed row digest are checked.
@@ -66,6 +68,7 @@ struct CanonicalDepositContextUsage {
 // a DB; primary atomic publication, witnesses, backups and GC remain the caller's
 // responsibility. Logical values/cache budgets do not bound physical SST/WAL/RSS.
 class CanonicalDepositContext {
+ friend class deposit_publication_detail::DepositPublicationFactory;
  std::shared_ptr<CanonicalDepositContextState> state_;
  explicit CanonicalDepositContext(std::shared_ptr<CanonicalDepositContextState>);
  std::shared_ptr<const CanonicalDepositCursor> make_cursor(uint64_t,const ConsensusRoot&)const;
@@ -148,5 +151,11 @@ public:
  // Serializes with in-flight operations. Existing immutable byte leases survive;
  // every later operation, including a cache hit, fails closed.
  void close();
+private:
+ // Only the fixed full-durable preflight factory may transplant certified
+ // readonly metadata to a dormant PRIMARY reader. No decoding or fetch occurs;
+ // normal public restore/fork APIs still authenticate their complete inputs.
+ std::pair<std::shared_ptr<CanonicalDepositContext>,Cursor> clone_preflight_primary(
+  Fetch,FetchLocator,const Cursor& source_tip,const std::function<void()>&)const;
 };
 }

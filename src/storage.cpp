@@ -1,6 +1,8 @@
 #include "nano/storage.hpp"
 #include "nano/storage_memory_policy.hpp"
 #include "checkpoint_blob_bounded_read.hpp"
+#include "consensus_capella_deposit_publication.hpp"
+#include <type_traits>
 #include "nano/block_auth.hpp"
 #include "nano/finality.hpp"
 #include <rocksdb/db.h>
@@ -703,7 +705,7 @@ ForkCheckpointToken ChainStore::commit_fork_checkpoint_parts(const Int& chain_id
  std::lock_guard lock(mutex_);if(get("execution-checkpoint/v1"))throw std::invalid_argument("coupled checkpoint requires execution binding");const auto previous=fork_checkpoint_impl(chain_id,genesis_hash,maximum_bytes);
  if(bool(previous)!=bool(expected)||(previous&&previous->token!=*expected))throw std::invalid_argument("stale fork checkpoint writer");
  if(previous&&previous->token.sequence==UINT64_MAX)throw std::overflow_error("fork checkpoint sequence exhausted");
- const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
+ ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
  const Json encoded{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(token.digest)}};
  rocksdb::WriteBatch batch;
  append_checkpoint_blobs(batch,blobs,maximum_records,maximum_bytes);
@@ -811,7 +813,7 @@ ForkCheckpointToken ChainStore::commit_execution_checkpoint_with_deposit_blobs(c
   }
   if(deleted){batch.Put("meta/schema","nano/2-state-pruned");batch.Put("execution-state-pruning/v1",Json{{"before",quantity(before)},{"anchorNumber",quantity(retention->number)},{"anchorHash",hex(retention->hash)}}.dump());bounded();}
  }
- const ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
+ ForkCheckpointToken token{previous?previous->token.sequence+1:1,digest};
  batch.Put("meta/tip",height_key(parent.number));batch.Put("meta/difficulty",total.get_str());batch.Put("meta/count",count.get_str());
  batch.Put("fork-checkpoint/v1/payload",rocksdb::Slice(snapshot.data(),snapshot.size()));batch.Put("fork-checkpoint/v1/token",Json{{"sequence",quantity(Int(std::to_string(token.sequence)))},{"digest",hex(digest)}}.dump());
  batch.Put("execution-checkpoint/v1",Json{{"digest",hex(digest)},{"tip",hex(parent.hash())}}.dump());bounded();
@@ -935,5 +937,52 @@ std::optional<std::string> ChainStore::checkpoint_deposit_locator(const Int& cha
  if(found.IsNotFound())return std::nullopt;require_ok(found);
  if(value.size()!=40)throw std::runtime_error("corrupt checkpoint deposit locator length");
  return std::string(value.data(),value.size());
+}
+}
+
+namespace nano {
+ForkCheckpointToken ChainStore::commit_prepared_deposit_checkpoint(
+ deposit_publication_detail::PreparedDepositPublication& prepared,
+ const Int& common_height,const Bytes& common_hash,
+ const std::vector<ExecutionCheckpointBlock>& suffix,size_t maximum_blocks,
+ const std::optional<ExecutionStateRetentionAnchor>& retention){
+ static_assert(std::is_nothrow_move_constructible_v<ForkCheckpointToken>);
+ // Consume before any fallible validation or I/O: a rejected/uncertain attempt
+ // must not be replayed with the same publication capability.
+ prepared.consume_for_commit(*this);
+ const auto& certified=prepared.certified_execution_header();
+ const auto& verified=prepared.verified_store();
+ const auto& anchor=verified.blocks.at(verified.timed.view.anchor).execution_header();
+ const auto existing_pruning=state_pruning();
+ if(existing_pruning&&(existing_pruning->anchor.number>anchor.number||
+    (existing_pruning->anchor.number==anchor.number&&existing_pruning->anchor.hash!=anchor.hash())))
+  throw std::invalid_argument("prepared deposit anchor precedes existing state pruning");
+ // A valid head does not permit deleting state needed by the certified Store's
+ // retained anchor. Such a commit could otherwise become unreopenable.
+ if(retention&&(retention->number>anchor.number||
+    (retention->number==anchor.number&&retention->hash!=anchor.hash())))
+  throw std::invalid_argument("prepared deposit retention exceeds certified anchor");
+ if(suffix.empty()){
+  if(common_height!=certified.number||common_hash!=certified.hash())
+   throw std::invalid_argument("prepared deposit execution head mismatch");
+ }else{
+  const auto& last=suffix.back().block.header;
+  if(last.number!=certified.number||last.hash()!=certified.hash())
+   throw std::invalid_argument("prepared deposit execution suffix mismatch");
+ }
+ // Token/tip/genesis/common-ancestor/receipt/state/retention guards remain in
+ // the real primary batch below. The sealed manifest and delta cannot change.
+ // Its token is precomputed by the same private factory from those exact bytes
+ // and expected sequence; no fallible post-write comparison is introduced.
+ auto committed=commit_execution_checkpoint_with_deposit_blobs(
+  prepared.chain_id(),prepared.genesis_hash(),prepared.expected_previous_token(),
+  prepared.expected_primary_tip(),common_height,common_hash,suffix,prepared.manifest(),
+  prepared.maximum_bytes(),maximum_blocks,prepared.blobs(),prepared.maximum_blobs(),
+  prepared.locators(),prepared.maximum_locators(),prepared.archives(),retention);
+ // Returning the existing token above uses its noexcept move (no const local
+ // NRVO dependency). Publication gets a separately preallocated return token.
+ (void)committed;
+ prepared.arm_after_commit();
+ return prepared.take_return_token();
 }
 }

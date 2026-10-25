@@ -7,6 +7,7 @@
 #include "nano/consensus_message_ssz.hpp"
 #include "consensus_checkpoint_json.hpp"
 #include "consensus_capella_checkpoint_fragments.hpp"
+#include "consensus_capella_deposit_publication.hpp"
 namespace nano {
 namespace {
 void archive_require(bool value){if(!value)throw std::invalid_argument("Invalid Capella durable archive");}
@@ -124,8 +125,9 @@ Bytes canonical_proposer_slashing_wire(SignedConsensusBeaconHeader first,SignedC
  if(std::lexicographical_compare(wire.begin()+208,wire.end(),wire.begin(),wire.begin()+208))std::rotate(wire.begin(),wire.begin()+208,wire.end());
  return wire;
 }
-std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVotes& votes,const CapellaSignedVotes& slashings,const CapellaPendingBlsChanges& changes,const CapellaPendingExits& exits,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,CapellaStoreSnapshotCache* cache=nullptr,const std::function<void(const CapellaColdReference&,std::string_view)>* stage=nullptr,CapellaReferenceSnapshotCache* reference_cache=nullptr,const CapellaPendingProposerSlashings& proposers={}){
- const auto encoded=stage?(reference_cache?capella_store_reference_snapshot_cached(store,rules,limits,*stage,*reference_cache,check):capella_store_reference_snapshot(store,rules,limits,*stage,check)):capella_store_snapshot(store,rules,limits,check,cache);if(votes.empty()&&slashings.empty()&&changes.empty()&&exits.empty()&&proposers.empty())return encoded;
+std::string durable_snapshot(const CapellaForkStore& store,const CapellaSignedVotes& votes,const CapellaSignedVotes& slashings,const CapellaPendingBlsChanges& changes,const CapellaPendingExits& exits,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,CapellaStoreSnapshotCache* cache=nullptr,const std::function<void(const CapellaColdReference&,std::string_view)>* stage=nullptr,CapellaReferenceSnapshotCache* reference_cache=nullptr,const CapellaPendingProposerSlashings& proposers={},const std::shared_ptr<CanonicalDepositContext>& deposit_context={},const DepositCheckpointTreeBudget& tree_budget={}){
+ if(deposit_context)archive_require(stage&&!cache&&!reference_cache);
+ const auto encoded=deposit_context?capella_store_deposit_reference_snapshot(store,rules,limits,deposit_context,tree_budget,*stage,check):stage?(reference_cache?capella_store_reference_snapshot_cached(store,rules,limits,*stage,*reference_cache,check):capella_store_reference_snapshot(store,rules,limits,*stage,check)):capella_store_snapshot(store,rules,limits,check,cache);if(votes.empty()&&slashings.empty()&&changes.empty()&&exits.empty()&&proposers.empty())return encoded;
  if(votes.size()>limits.messages)throw std::length_error("Capella signed vote capacity");Json list=Json::array();size_t total=0;
  for(const auto& [id,wire]:votes){if(check)check();if(wire.size()>limits.envelope_bytes/2-total)throw std::length_error("Capella signed vote bytes");total+=wire.size();list.push_back(Json::array({hex(id),hex(wire)}));}
  Json document{{"format","nano-capella-durable-v1"},{"signedVotes",std::move(list)}};
@@ -162,14 +164,30 @@ std::optional<CapellaColdCheckpointOptions> cold_options(std::string_view encode
  return CapellaColdCheckpointOptions{size_t(count),size_t(bytes)};
 }
 std::string cold_envelope(std::string_view payload,CapellaColdCheckpointOptions options){return Json{{"format","nano-capella-cold-checkpoint-v1"},{"cache",Json::array({quantity(Int(std::to_string(options.cache_records))),quantity(Int(std::to_string(options.cache_bytes)))})},{"checkpoint",Json::parse(payload)}}.dump();}
-std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPendingBlsChanges,CapellaPendingExits,CapellaPendingProposerSlashings> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={},std::optional<CapellaColdCheckpointOptions> cold=std::nullopt,const CapellaForkStore* source=nullptr,CapellaReferenceSnapshotCache* memo=nullptr){
+// Explicit local publication preflight policy, never inferred from disk.
+struct DepositCheckpointReadContext {
+ size_t cache_records,cache_bytes;
+ CanonicalDepositContextLimits context_limits;
+ DepositCheckpointTreeBudget tree_budget;
+ CanonicalDepositContext::FetchLocator lookup;
+};
+std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPendingBlsChanges,CapellaPendingExits,CapellaPendingProposerSlashings> restore_durable(std::string_view encoded,const Bytes& digest,const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check,const std::function<std::optional<std::string>(const Bytes&,size_t)>& fetch={},std::optional<CapellaColdCheckpointOptions> cold=std::nullopt,const CapellaForkStore* source=nullptr,CapellaReferenceSnapshotCache* memo=nullptr,const DepositCheckpointReadContext* deposit=nullptr){
  if(check)check();archive_require(encoded.size()<=limits.envelope_bytes&&digest.size()==32&&sha256(Bytes(encoded.begin(),encoded.end()))==digest);
  const auto document=Json::parse(encoded);
+ if(deposit){
+  archive_require(!cold&&!source&&!memo&&bool(fetch)&&bool(deposit->lookup)&&deposit->cache_records&&deposit->cache_records<=limits.blocks&&deposit->cache_bytes&&deposit->cache_bytes<=limits.envelope_bytes);
+  const auto format=document.value("format",std::string());
+  const bool wrapped=format=="nano-capella-durable-v1"||format=="nano-capella-durable-v2"||format=="nano-capella-durable-v3"||format=="nano-capella-durable-v4"||format=="nano-capella-durable-v5";
+  const auto& inner=wrapped?document.at("store"):document;
+  archive_require(inner.is_object()&&inner.value("format",std::string())=="nano-capella-reference-store-v2");
+ }
  if(const auto options=cold_options(encoded,limits)){
   archive_require(!cold&&bool(fetch));const auto inner=document.at("checkpoint").dump();
   return restore_durable(inner,sha256(Bytes(inner.begin(),inner.end())),rules,limits,check,fetch,options,source,memo);
  }
  auto restore_store=[&](std::string_view bytes,const Bytes& committed){
+  if(deposit)return capella_store_from_deposit_reference_snapshot(bytes,committed,rules,limits,
+   deposit->cache_records,deposit->cache_bytes,deposit->context_limits,deposit->tree_budget,fetch,deposit->lookup,check);
   if(cold&&memo){
    // An empty source certifies via the full decoder; only subsequent identical
    // records can reuse that certificate, with fresh provider digest checks.
@@ -242,7 +260,8 @@ std::tuple<CapellaForkStore,CapellaSignedVotes,CapellaSignedVotes,CapellaPending
   }
  }
  const std::function<void(const CapellaColdReference&,std::string_view)> no_hot=[](const auto&,auto){throw std::logic_error("Unexpected restored hot row");};
- archive_require(durable_snapshot(store,votes,proofs,changes,exits,rules,limits,check,nullptr,cold?&no_hot:nullptr,cold?memo:nullptr,proposers)==encoded);return {std::move(store),std::move(votes),std::move(proofs),std::move(changes),std::move(exits),std::move(proposers)};
+ archive_require(durable_snapshot(store,votes,proofs,changes,exits,rules,limits,check,nullptr,(cold||deposit)?&no_hot:nullptr,cold?memo:nullptr,proposers,
+  deposit?store.deposit_ancestry->context:std::shared_ptr<CanonicalDepositContext>{},deposit?deposit->tree_budget:DepositCheckpointTreeBudget{})==encoded);return {std::move(store),std::move(votes),std::move(proofs),std::move(changes),std::move(exits),std::move(proposers)};
 }
 
 Json recovery_token_json(const std::optional<ForkCheckpointToken>& token){return token?Json{{"sequence",quantity(Int(std::to_string(token->sequence)))},{"digest",hex(token->digest)}}:Json(nullptr);}
@@ -1227,5 +1246,38 @@ AuthenticatedCheckpointBlobClosure authenticate_capella_checkpoint_blob_closure(
   {"retainedBlocks",store.blocks.size()},
   {"pending",{{"attestations",votes.size()},{"attesterSlashings",slashings.size()},{"blsChanges",changes.size()},{"exits",exits.size()},{"proposerSlashings",proposers.size()}}}};
  if(check)check();closure.head_context_=std::move(context);return closure;
+}
+}
+
+namespace nano::deposit_publication_detail {
+// Fixed internal verifier for publication certificates. The real durable
+// decoder above validates every pending operation and exact outer re-encoding;
+// no caller-supplied verification callback or unrelated store slice is accepted.
+CapellaForkStore verify_deposit_durable_checkpoint(std::string_view encoded,const Bytes& digest,
+ const CapellaForkBlockRules& rules,const CapellaStoreSnapshotLimits& limits,
+ size_t cache_records,size_t cache_bytes,const CanonicalDepositContextLimits& context_limits,
+ const DepositCheckpointTreeBudget& tree_budget,CanonicalDepositContext::Fetch fetch,
+ CanonicalDepositContext::FetchLocator lookup,const std::function<void()>& check){
+ const DepositCheckpointReadContext policy{cache_records,cache_bytes,context_limits,tree_budget,std::move(lookup)};
+ auto restored=restore_durable(encoded,digest,rules,limits,check,fetch,std::nullopt,nullptr,nullptr,&policy);
+ return std::move(std::get<0>(restored));
+}
+}
+
+namespace nano::deposit_publication_detail {
+void verify_deposit_publication_archives(const std::vector<CheckpointArchiveEntry>& archive,
+ const CapellaForkStore& store,const CapellaForkBlockRules& rules,
+ const CapellaStoreSnapshotLimits& limits,const std::function<void()>& check){
+ archive_require(archive.size()<=limits.blocks);size_t total=0;std::set<Bytes> seen;
+ for(const auto& entry:archive){
+  if(check)check();
+  archive_require(entry.root.size()==32&&!entry.payload.empty()&&
+   entry.payload.size()<=limits.envelope_bytes-total&&seen.insert(entry.root).second);
+  total+=entry.payload.size();
+  const auto id=archive_array<32>(entry.root,0);
+  verify_archived_block(id,entry.payload,store,rules,check);
+  archive_require(store.blocks.at(id).header().slot==entry.slot);
+ }
+ if(check)check();
 }
 }

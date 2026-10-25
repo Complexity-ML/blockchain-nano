@@ -1,5 +1,6 @@
 #pragma once
 #include "nano/consensus_capella_store_snapshot.hpp"
+#include "nano/consensus_canonical_deposit_context.hpp"
 #include <mutex>
 namespace nano {
 // LOCAL only: references must come from an externally authenticated checkpoint,
@@ -7,17 +8,24 @@ namespace nano {
 // Lifetime gate for LOCAL checkpoint fetches. Close before destroying backing
 // storage. Existing decoded leases remain valid; later fetches fail closed.
 // Fetch callbacks must not re-enter this provider or call close().
+// A nested operation on another provider refuses rather than waiting when its
+// gate is busy; this prevents cross-thread, cross-provider lock cycles.
 class CapellaCheckpointProvider {
  struct Shared;
  std::shared_ptr<Shared> shared_;
 public:
  using Fetch=std::function<std::optional<std::string>(const Bytes&,size_t)>;
  explicit CapellaCheckpointProvider(Fetch);
+ CapellaCheckpointProvider(Fetch,CanonicalDepositContext::FetchLocator);
  CapellaCheckpointProvider(const CapellaCheckpointProvider&)=delete;
  CapellaCheckpointProvider& operator=(const CapellaCheckpointProvider&)=delete;
  ~CapellaCheckpointProvider();
  Fetch reader()const;
- // Wait for an in-flight fetch, then release the backing closure exactly once.
+ // Only the paired constructor has this capability. Both readers share the
+ // same close/reentry gate; a locator is still only an authenticated hint.
+ CanonicalDepositContext::FetchLocator locator_reader()const;
+ // Wait for either in-flight operation, then retire both backing closures
+ // outside the mutex. Concurrent close callers join the same retirement.
  void close();
 };
 struct CapellaColdRecord {CapellaColdReference reference;CapellaForkBlock block;Phase0ForkNode node;};
