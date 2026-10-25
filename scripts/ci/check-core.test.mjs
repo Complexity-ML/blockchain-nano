@@ -6,7 +6,7 @@ import {join,resolve,dirname} from 'node:path';
 import {execFile,execFileSync} from 'node:child_process';
 import {promisify} from 'node:util';
 const exec=promisify(execFile),repo=process.cwd(),gate=join(repo,'scripts/ci/check-core.cmake');
-const expected=['core','chain','rpc_queue_expiry','rpc_simulation_context','rpc','rpc_state_block_id','rpc_get_proof','rpc_state_read_cost','ethereum_consensus_bls_verify','ethereum_consensus_bls_fast_aggregate','storage_execution_checkpoint','consensus_capella_payload_paired_state','consensus_capella_signed_transition','consensus_capella_clock_diagnostics','consensus_capella_published_signed_inventory','consensus_capella_publication_cancel_boundary','consensus_local_monotonic_time','consensus_capella_duty_projection_availability','consensus_isolated_stopped_capture_guards','consensus_capella_sync_adverse','consensus_registry_cancellation','consensus_capella_bounded_canonical_audit','consensus_fresh_lifecycle_canonical_stream','consensus_canonical_deposit_context','consensus_capella_cold_deposit_replay'];
+const expected=['core','chain','rpc_queue_expiry','rpc_simulation_context','rpc','rpc_state_block_id','rpc_get_proof','rpc_state_read_cost','ethereum_consensus_bls_verify','ethereum_consensus_bls_fast_aggregate','storage_execution_checkpoint','consensus_capella_payload_paired_state','consensus_capella_signed_transition','consensus_capella_clock_diagnostics','consensus_capella_published_signed_inventory','consensus_capella_publication_cancel_boundary','consensus_local_monotonic_time','consensus_capella_duty_projection_availability','consensus_isolated_stopped_capture_guards','consensus_capella_sync_adverse','consensus_registry_cancellation','consensus_capella_bounded_canonical_audit','consensus_fresh_lifecycle_canonical_stream','consensus_canonical_deposit_context','consensus_capella_cold_deposit_replay','storage_checkpoint_blob_application_copy_bound'];
 const stateRegistrations={
  rpc_state_block_id:{program:'nano-rpc-state-block-id-tests',argument:'--state-readers-self-test',label:'qualification_rpc_state_block_id'},
  rpc_get_proof:{program:'nano-rpc-get-proof-tests',argument:'--get-proof-self-test',label:'qualification_rpc_state_proof'},
@@ -17,7 +17,8 @@ const replayRegistrations={
  consensus_capella_bounded_canonical_audit:{program:'nano-capella-bounded-audit-tests',timeout:600,labels:['consensus','capella','audit','recovery']},
  consensus_fresh_lifecycle_canonical_stream:{program:'nano-capella-canonical-stream-tests',timeout:300,labels:['qualification_consensus_lifecycle']},
  consensus_canonical_deposit_context:{program:'nano-canonical-deposit-context-tests',timeout:300,labels:['qualification_consensus_deposits']},
- consensus_capella_cold_deposit_replay:{program:'nano-capella-cold-deposit-replay-tests',timeout:300,labels:['qualification_consensus_deposits']}
+ consensus_capella_cold_deposit_replay:{program:'nano-capella-cold-deposit-replay-tests',timeout:300,labels:['qualification_consensus_deposits']},
+ storage_checkpoint_blob_application_copy_bound:{program:'nano-checkpoint-blob-bounded-read-tests',timeout:60,labels:['qualification_storage_checkpoint']}
 };
 async function fixture(fn){
  const dir=await mkdtemp(join(tmpdir(),'nano-core-selection-'));
@@ -39,7 +40,7 @@ async function fixture(fn){
   await fn({dir,registry,check});
  }finally{await rm(dir,{recursive:true,force:true});}
 }
-test('exact twenty-five daily registrations validate without claiming full C++ qualification',async()=>fixture(async({registry,check})=>assert.match((await check(registry())).stdout,/Verified 25 daily core/)));
+test('exact twenty-six daily registrations validate without claiming full C++ qualification',async()=>fixture(async({registry,check})=>assert.match((await check(registry())).stdout,/Verified 26 daily core/)));
 test('missing, duplicated and foreign registrations cannot pass daily core gate',async()=>fixture(async({registry,check})=>{
  for(const change of [x=>x.tests.pop(),x=>x.tests[3].name=x.tests[2].name,x=>x.tests[3].name='foreign']){const r=registry();change(r);await assert.rejects(check(r),/count differs|names differ/);}
 }));
@@ -129,7 +130,7 @@ test('real daily shell builds and hashes every added driver and selects all twen
  }
  const patterns=lines.filter(line=>line.startsWith("pattern='"));assert.equal(patterns.length,1);
  const selection=patterns[0].slice("pattern='^(".length,-")$'".length).split('|');
- assert.deepEqual(selection,expected);assert.equal(new Set(selection).size,25);
+ assert.deepEqual(selection,expected);assert.equal(new Set(selection).size,26);
 });
 
 // Exercise the real shell's result gate with injected build/CTest adapters.
@@ -172,7 +173,7 @@ test('daily shell refuses a green CTest exit with a skipped or incomplete JUnit 
   assert.equal(failure.code,1,diagnostic);
   assert.equal(await capture('fixture-ctest-executed'),'ctest executed\n',diagnostic);
   assert.equal(await capture('ci-reports/core.xml'),xml,diagnostic);
-  assert.match(await capture('ci-reports/selection-audit.log'),/Verified 25 daily core/,diagnostic);
+  assert.match(await capture('ci-reports/selection-audit.log'),/Verified 26 daily core/,diagnostic);
   assert(String(failure.stderr).split('\n').includes(scenario.reason),diagnostic);
  }
 }));

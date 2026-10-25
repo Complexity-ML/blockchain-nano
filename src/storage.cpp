@@ -1,5 +1,6 @@
 #include "nano/storage.hpp"
 #include "nano/storage_memory_policy.hpp"
+#include "checkpoint_blob_bounded_read.hpp"
 #include "nano/block_auth.hpp"
 #include "nano/finality.hpp"
 #include <rocksdb/db.h>
@@ -852,8 +853,16 @@ std::optional<std::string> ChainStore::checkpoint_blob(const Int& chain_id,const
  if(digest.size()!=32||!maximum_bytes)throw std::invalid_argument("checkpoint blob read bounds");
  std::lock_guard lock(mutex_);const auto identity=read("meta/identity");
  if(genesis_hash.size()!=32||!identity||identity->at("chainId")!=quantity(chain_id)||identity->at("genesisHash")!=hex(genesis_hash))throw std::invalid_argument("checkpoint blob chain binding mismatch");
- auto payload=get("checkpoint-blob/v1/"+hex(digest));if(!payload)return std::nullopt;
- if(payload->empty()||payload->size()>maximum_bytes||sha256(Bytes(payload->begin(),payload->end()))!=digest)throw std::runtime_error("corrupt or oversized checkpoint blob");
- return payload;
+ // Do not use the unbounded string-returning get() here. RocksDB may still
+ // allocate internally to produce a PinnableSlice; that is not bounded by this
+ // API. Refuse size before our hash Bytes and returned std::string are created.
+ rocksdb::PinnableSlice payload;
+ const auto found=db_->Get(rocksdb::ReadOptions{},db_->DefaultColumnFamily(),
+                          "checkpoint-blob/v1/"+hex(digest),&payload);
+ if(found.IsNotFound())return std::nullopt;require_ok(found);
+ return storage_detail::validated_checkpoint_blob_copy(
+  std::string_view(payload.data(),payload.size()),digest,maximum_bytes,
+  [](std::string_view value){return sha256(Bytes(value.begin(),value.end()));},
+  [](std::string_view value){return std::string(value);});
 }
 }
