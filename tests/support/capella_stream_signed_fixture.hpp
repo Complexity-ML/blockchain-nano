@@ -27,6 +27,10 @@
 #include <memory>
 #include <set>
 #include <sys/resource.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <cerrno>
+#include <utility>
 #include <unistd.h>
 namespace nano::test::canonical_stream_fixture {
 using namespace nano;namespace fs=std::filesystem;
@@ -48,7 +52,25 @@ void checkpoint(){check(std::chrono::steady_clock::now()-started<std::chrono::se
  check(u.ru_maxrss<=131072,"canonical-stream fixture RSS bound");
 #endif
 }
-std::string read(const fs::path& path){std::ifstream in(path,std::ios::binary);check(bool(in),"public fixture read");std::string s((std::istreambuf_iterator<char>(in)),{});check(s.size()<=32*1024*1024,"public fixture input bound");return s;}
+std::string read(const fs::path& path){
+ struct File {int value;~File(){if(value>=0)::close(value);}};
+ check(fs::canonical(path)==path,"public fixture canonical path");
+ File file{::open(path.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC)};check(file.value>=0,"public fixture read");
+ struct stat before{},after{},linked{};
+ auto same=[](const struct stat& a,const struct stat& b){
+#ifdef __APPLE__
+  const auto am=a.st_mtimespec,bm=b.st_mtimespec,ac=a.st_ctimespec,bc=b.st_ctimespec;
+#else
+  const auto am=a.st_mtim,bm=b.st_mtim,ac=a.st_ctim,bc=b.st_ctim;
+#endif
+  return a.st_dev==b.st_dev&&a.st_ino==b.st_ino&&a.st_mode==b.st_mode&&a.st_nlink==b.st_nlink&&a.st_uid==b.st_uid&&a.st_gid==b.st_gid&&a.st_size==b.st_size&&am.tv_sec==bm.tv_sec&&am.tv_nsec==bm.tv_nsec&&ac.tv_sec==bc.tv_sec&&ac.tv_nsec==bc.tv_nsec;
+ };
+ check(::fstat(file.value,&before)==0&&S_ISREG(before.st_mode)&&before.st_nlink==1&&before.st_size>=0&&uint64_t(before.st_size)<=32*1024*1024,"public fixture input bound/type");
+ std::string out;out.reserve(size_t(before.st_size));std::array<char,65536> buffer{};
+ for(;;){checkpoint();const auto n=::read(file.value,buffer.data(),buffer.size());if(n<0&&errno==EINTR)continue;check(n>=0,"public fixture read failure");if(!n)break;check(size_t(n)<=size_t(before.st_size)-out.size(),"public fixture grew");out.append(buffer.data(),size_t(n));}
+ check(out.size()==size_t(before.st_size)&&::fstat(file.value,&after)==0&&::lstat(path.c_str(),&linked)==0&&same(before,after)&&same(after,linked),"public fixture FD/path changed");
+ const auto descriptor=std::exchange(file.value,-1);check(::close(descriptor)==0,"public fixture close");return out;
+}
 Bytes bytes_of(const std::string& s){return {s.begin(),s.end()};}
 struct Temp{fs::path path;Temp(){auto pattern=(fs::temp_directory_path()/"nano-canonical-stream-XXXXXX").string();check(::mkdtemp(pattern.data()),"owned temporary fixture");path=fs::canonical(pattern);}~Temp(){std::error_code e;fs::remove_all(path,e);}};
 struct Fixture{Genesis genesis;CapellaForkBlockRules rules;CapellaStoreSnapshotLimits limits;CapellaSlotState pre;CapellaForkStore initial;Bytes wire;};
@@ -121,7 +143,7 @@ struct LongFixture {
    size_t live=0;for(const auto& [_,b]:store.blocks)live+=b.lease(checkpoint)->state.ssz.size();check(store.blocks.size()<256&&live+t.maximum_state_bytes<=f.limits.total_state_bytes,"generator refuses unfinalized full window");peak_generator_records=std::max(peak_generator_records,store.blocks.size());peak_generator_state_bytes=std::max(peak_generator_state_bytes,live);
    Bytes wire;ConsensusRoot id{};uint64_t slot=0;
    {
-    const auto parent=store.blocks.at(tip).lease(checkpoint);slot=parent->header.slot+1;auto advanced=prepare_capella_slots(parent->state,epochs,l,slot,f.limits.replay_slots,f.limits.sync_trials,checkpoint);auto proposer=prepare_capella_proposer_identity(parent->state,parent->header,slot,epochs,l,t.consensus.attestation.duties,f.limits.replay_slots,f.limits.sync_trials,checkpoint);check(bool(proposer),"real streaming proposer");TestKey key(proposer->index);check(key.public_key==proposer->public_key,"streaming key matches authenticated proposer");ConsensusRoot epoch{};for(size_t j=0;j<8;++j)epoch[j]=uint8_t((slot/slots)>>(8*j));const auto reveal=key.sign(consensus_signing_root(epoch,consensus_domain({2,0,0,0},proposer->fork_version,proposer->genesis_root)));
+    const auto parent=store.blocks.at(tip).lease(checkpoint);slot=parent->header.slot+1;test_slot=slot;auto advanced=prepare_capella_slots(parent->state,epochs,l,slot,f.limits.replay_slots,f.limits.sync_trials,checkpoint);auto proposer=prepare_capella_proposer_identity(parent->state,parent->header,slot,epochs,l,t.consensus.attestation.duties,f.limits.replay_slots,f.limits.sync_trials,checkpoint);check(bool(proposer),"real streaming proposer");TestKey key(proposer->index);check(key.public_key==proposer->public_key,"streaming key matches authenticated proposer");ConsensusRoot epoch{};for(size_t j=0;j<8;++j)epoch[j]=uint8_t((slot/slots)>>(8*j));const auto reveal=key.sign(consensus_signing_root(epoch,consensus_domain({2,0,0,0},proposer->fork_version,proposer->genesis_root)));
     const auto hist=176+64*l.slots_per_historical_root,randao=hist+96;Block execution;execution.header.parent_hash=parent->execution_block.header.hash();execution.header.number=parent->execution_block.header.number+1;execution.header.timestamp=parent->execution_block.header.timestamp+Int(std::to_string(t.seconds_per_slot));execution.header.gas_limit=parent->execution_block.header.gas_limit;execution.header.coinbase=parent->execution_block.header.coinbase;execution.header.base_fee=next_base_fee(parent->execution_block.header);execution.header.difficulty=0;const auto mix=test_root(advanced.ssz,randao+32*((slot/slots)%l.epochs_per_historical_vector));execution.header.mix_hash=Bytes(mix.begin(),mix.end());
     const auto state_root=capella_beacon_state_root(advanced.ssz,l,t.execution,t.maximum_state_bytes,checkpoint);const auto withdrawals=expected_capella_withdrawals(read_capella_withdrawal_state(advanced.ssz,state_root,l,t.execution,t.maximum_state_bytes,slots,checkpoint),t.withdrawals,checkpoint);execution.withdrawals=Json::array();for(const auto& w:withdrawals)execution.withdrawals.push_back(w.to_json());auto history=[&](const Int& h){return capella_execution_history(store,tip,h,checkpoint);};auto state=parent->execution_state;ExecutionEngine(t.chain_id,history,EvmRevision::Shanghai,t.replay_policy,ConsensusInputPolicy::EthereumValidated).execute_block(state,execution,false);
     auto body=test_body(advanced,t,reveal,test_payload(execution));if(f.rules.native_deposit_votes){const auto vote=capella_native_deposit_vote(store,tip,slot,f.rules,checkpoint);check(vote.size()==72,"native streaming fixture vote");std::copy(vote.begin(),vote.end(),body.begin()+96);check(capella_native_deposit_operations(store,tip,advanced.ssz,vote,f.rules,checkpoint).empty(),"empty native fixture produces no invented deposits");}if(!pending.empty()){const size_t sync=(l.sync_committee_size+7)/8+96,fixed=228+sync;auto payload=encode_capella_execution_payload(test_payload(execution),t.execution,t.withdrawals.maximum_per_payload,t.consensus.maximum_block_bytes);Bytes list(4*pending.size());for(size_t j=0;j<pending.size();++j){test_put(list,j*4,list.size(),4);list.insert(list.end(),pending[j].begin(),pending[j].end());}body.resize(fixed);for(size_t at:{size_t(212),size_t(216),220+sync})test_put(body,at,fixed+list.size(),4);test_put(body,224+sync,fixed+list.size()+payload.size(),4);body.insert(body.end(),list.begin(),list.end());body.insert(body.end(),payload.begin(),payload.end());}
