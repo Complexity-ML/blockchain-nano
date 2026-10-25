@@ -85,6 +85,12 @@ class Runner {
         out["senderBalanceBefore"]=quantity(balance_before);out["senderBalanceAfter"]=quantity(static_cast<const State&>(state_).get(senders_[i]).balance);
         out["stateRootBefore"]=hex(root_before);out["executionStateRoot"]=hex(state_.root());out["executionStep"]=quantity(Int(std::to_string(step_)));
         out["contractAddress"]=receipt.contract_address?Json(*receipt.contract_address):Json(nullptr);out["logs"]=logs_json(receipt.logs);
+        // Receipt commitments for this one-transaction synthetic context only.
+        out["receiptType"]=quantity(Int(receipt.type));
+        out["cumulativeGasUsed"]=quantity(receipt.cumulative_gas_used);
+        out["logsBloom"]=hex(nano::logs_bloom(receipt.logs));
+        out["encodedReceipt"]=hex(receipt.encode());
+        out["singletonReceiptsRoot"]=hex(receipts_root({receipt}));
         // receipt.block_hash is derived from our synthetic Header; NEVER expose
         // it or Receipt::to_json as a mined/consensus commitment.
         return out;
