@@ -1,13 +1,15 @@
 #pragma once
 #include "capella_canonical_stream.hpp"
-#include "capella_stream_signed_fixture.hpp"
-// Only --fresh-stream-self-test invokes this new synthetic fixture. Including
-// these definitions never starts a generator, signs, opens a DB or runs a test.
+#include "capella_stream_public_corpus.hpp"
+#include "capella_stream_public_corpus_pins.hpp"
+// The default runner loads the pinned public corpus and fully replays it.
+// Explicit --generate-fixtures retains the historical combined benchmark.
+// Inclusion alone never generates, signs, opens a DB or runs a test.
 namespace nano::test::lifecycle {
-inline int fresh_stream_self_test(){
+inline int fresh_stream_self_test(bool generate_fixtures=false){
  namespace f=nano::test::canonical_stream_fixture;
  const char* phase="initialization";auto phase_started=f::started;Json phase_timings=Json::object();
- uint64_t visits=0,execution_checks=0,archive_reads=0,refusals=0,groups=0;
+ uint64_t visits=0,execution_checks=0,archive_reads=0,refusals=0,groups=0,corpus_input_refusals=0;
  auto phase_row=[&](const char* event){const auto now=std::chrono::steady_clock::now();return Json{{"scenario","fresh-stream-phase-diagnostic"},{"event",event},{"phase",phase},{"phaseElapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(now-phase_started).count()},{"wholeDriverElapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(now-f::started).count()},{"lastSyntheticSlot",f::test_slot},{"sourceArchiveReads",archive_reads},{"canonicalExecutionIndexChecks",execution_checks},{"successfulStreamVisits",visits},{"fixtureBlsSignatures",f::test_signatures},{"wholeDriverPeakRssKiB",f::public_peak_rss_kib()},{"productionQualified",false}};};
  auto begin_phase=[&](const char* name){phase=name;phase_started=std::chrono::steady_clock::now();f::test_stage=name;f::test_slot=0;std::cout<<phase_row("begin").dump()<<std::endl;};
  auto end_phase=[&]{auto row=phase_row("end");phase_timings[phase]=row.at("phaseElapsedMs");std::cout<<row.dump()<<std::endl;};
@@ -21,16 +23,44 @@ inline int fresh_stream_self_test(){
    const auto empty_path=temporary.path/"empty.index";canonical_stream_detail::Index empty(empty_path,112);empty.seal();empty.verify(f::checkpoint);const auto empty_time=std::filesystem::last_write_time(empty_path);std::filesystem::last_write_time(empty_path,empty_time+std::chrono::seconds(1));refusal([&]{empty.verify(f::checkpoint);},"stream sealed index material changed");
    std::cout<<Json{{"scenario","fresh-stream-private-index-seal"},{"passed",true},{"positiveIndexVerification",2},{"expectedRefusals",4},{"fileContentChangedByMutation",false},{"wholeSignedReplayNeeded",false},{"productionQualified",false}}.dump()<<'\n';++groups;
   }
-  end_phase();begin_phase("fixture-generation-1026");f::LongFixture complete(1026);end_phase();const auto& config=complete.f;f::check(config.rules.native_deposit_votes,"native deposit validation must remain enabled in real fixture");const auto live=std::min(size_t(128)*1024*1024,config.limits.total_state_bytes);
+  end_phase();
+  if(!generate_fixtures){
+   begin_phase("pinned-corpus-input-refusals");
+   auto reject_input=[&](f::PublicCorpusPin pin,f::PublicCorpusMode mode){bool refused=false;try{auto ignored=f::load_public_corpus(pin,mode);(void)ignored;}catch(const std::runtime_error&){refused=true;}f::check(refused,"pinned public corpus input must refuse");++corpus_input_refusals;};
+   auto bad_hash=f::complete_public_corpus_pin();bad_hash.sha256[0]=bad_hash.sha256[0]=='0'?'1':'0';reject_input(bad_hash,f::PublicCorpusMode::Complete);
+   auto bad_size=f::complete_public_corpus_pin();++bad_size.bytes;reject_input(bad_size,f::PublicCorpusMode::Complete);
+   reject_input(f::complete_public_corpus_pin(),f::PublicCorpusMode::Stalled);
+   auto missing=f::complete_public_corpus_pin();missing.manifest=temporary.path/"missing"/"manifest.json";reject_input(missing,f::PublicCorpusMode::Complete);
+   {
+    namespace d=f::public_corpus_detail;
+    const auto original=f::complete_public_corpus_pin();
+    auto manifest=d::parse_canonical(d::read_pinned(original.manifest,original.sha256,original.bytes,f::public_corpus_manifest_maximum));
+    const auto& original_body=manifest.at("body");
+    auto body=d::parse_canonical(d::read_pinned(original.manifest.parent_path()/"corpus.json",original_body.at("sha256").get<std::string>(),original_body.at("bytes").get<size_t>(),f::public_corpus_body_maximum));
+    body["sibling"]["root"]=body.at("binding").at("anchorRoot");
+    const auto body_bytes=d::bytes_of_json(body);
+    manifest["body"]["sha256"]=d::digest(body_bytes);manifest["body"]["bytes"]=uint64_t(body_bytes.size());
+    const auto manifest_bytes=d::bytes_of_json(manifest);const auto root=temporary.path/"repinned-sibling-anchor";
+    (void)d::create_directory(root);d::File directory(::open(root.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));f::check(directory.value>=0,"owned regression corpus directory");
+    d::write_new(root,directory.value,"corpus.json",body_bytes);d::write_new(root,directory.value,"manifest.json",manifest_bytes);directory.close();
+    const auto signatures_before=f::test_signatures;bool refused=false;
+    try{auto ignored=f::load_public_corpus({root/"manifest.json",d::digest(manifest_bytes),manifest_bytes.size()},f::PublicCorpusMode::Complete);(void)ignored;}
+    catch(const std::runtime_error& e){refused=std::string(e.what())=="public corpus distinct same-slot sibling";}
+    f::check(refused&&f::test_signatures==signatures_before,"repinned sibling anchor must refuse before bootstrap or existing-record admission");++corpus_input_refusals;
+   }
+   end_phase();std::cout<<Json{{"scenario","pinned-corpus-input-refusals"},{"passed",true},{"expectedRefusals",corpus_input_refusals},{"productionQualified",false}}.dump()<<'\n';
+  }
+  begin_phase(generate_fixtures?"fixture-generation-1026":"fixture-load-pinned-1026");
+  auto complete=generate_fixtures?f::from_generated(f::LongFixture(1026)):f::load_public_corpus(f::complete_public_corpus_pin(),f::PublicCorpusMode::Complete);end_phase();const auto& config=complete.f;f::check(config.rules.native_deposit_votes,"native deposit validation must remain enabled in real fixture");const auto live=std::min(size_t(128)*1024*1024,config.limits.total_state_bytes);
   CanonicalStreamLimits limits{256,live,1026,16*1024*1024,1026*112};
   CanonicalStreamBoundary boundary{complete.head,complete.finalized,complete.finalized};
-  auto source=[&](const f::LongFixture& fixture,int fault=0){return CanonicalStreamSource{
+  auto source=[&](const auto& fixture,int fault=0){return CanonicalStreamSource{
    [&,fault](const ConsensusRoot& id,size_t maximum,const std::function<void()>& check)->std::optional<CheckpointArchiveEntry>{check();++archive_reads;const auto found=fixture.archives.find(id);if(found==fixture.archives.end())return std::nullopt;f::test_slot=found->second.slot;if(fault==2&&id==consensus_beacon_header_root(fixture.head))return std::nullopt;auto e=found->second;if(fault==3&&id==consensus_beacon_header_root(fixture.head)){f::check(bool(fixture.wrong_branch),"genuine valid wrong-branch fixture required");e=*fixture.wrong_branch;}f::check(e.payload.size()<=maximum,"fixture archive callback respects bound");if(fault==1&&e.slot==2)e.payload[4]^=1;return e;},
    [&](const CapellaForkBlock& record,const std::function<void()>& check){check();++execution_checks;const auto id=consensus_beacon_header_root(record.header);const auto found=fixture.execution.find(id);f::check(found!=fixture.execution.end()&&found->second.first.to_json(true)==record.execution_block.to_json(true)&&found->second.second==record.execution_state.root()&&record.receipts.size()==record.execution_block.transactions.size(),"real fixture canonical execution index/state differs");}};};
   CanonicalStreamVisitor visitor=[&](const CanonicalStreamVisit& item,const std::function<void()>& check){check();f::check(item.ordinal==visits++&&item.root==consensus_beacon_header_root(item.block.header),"actual stream visitor order/root");if(item.parent)f::check(item.block.header.parent_root==consensus_beacon_header_root(item.parent->header)&&!item.signed_wire.empty(),"actual stream parent/wire");else f::check(item.ordinal==0&&item.signed_wire.empty(),"only anchor may omit wire");};
   begin_phase("core-stream-replay-1026");const auto outcome=stream_capella_canonical_history(config.initial,config.rules,config.limits,limits,boundary,source(complete),temporary.path/"complete.index",visitor,f::checkpoint);end_phase();
   f::check(outcome.verified_signed_blocks==1026&&visits==1027&&outcome.prunes>0&&outcome.peak_live_blocks<=256&&outcome.peak_live_state_ssz_plus_next_reserve_bytes<=live&&outcome.required_finalized_ancestor_verified&&!outcome.historical_fork_choice_verified&&outcome.head->header==complete.head,"1026 real signed transitions require bounded genuine pruning");
-  std::cout<<Json{{"scenario","fresh-stream-real-signed-1026"},{"passed",true},{"signedBlocks",outcome.verified_signed_blocks},{"liveRecordPeak",outcome.peak_live_blocks},{"liveStateSszPeakBytes",outcome.peak_live_state_ssz_bytes},{"liveStateSszPlusNextReservePeakBytes",outcome.peak_live_state_ssz_plus_next_reserve_bytes},{"stateReservationIsProcessRss",false},{"prunes",outcome.prunes},{"actualFinalizedEpoch",complete.finalized.epoch},{"generatorPeakRecords",complete.peak_generator_records},{"generatorPrunes",complete.generator_prunes},{"historicalForkChoiceVerified",false},{"productionQualified",false}}.dump()<<'\n';++groups;
+  const auto observed_head_root=consensus_beacon_header_root(outcome.head->header);std::cout<<Json{{"scenario","fresh-stream-real-signed-1026"},{"passed",true},{"signedBlocks",outcome.verified_signed_blocks},{"headRoot",hex(Bytes(observed_head_root.begin(),observed_head_root.end()))},{"executionBlockHash",hex(outcome.head->execution_block.header.hash())},{"executionStateRoot",hex(outcome.head->execution_state.root())},{"peakDepositAncestorRecords",outcome.peak_deposit_ancestor_records},{"largestDepositHistoryCount",outcome.largest_deposit_history_count},{"liveRecordPeak",outcome.peak_live_blocks},{"liveStateSszPeakBytes",outcome.peak_live_state_ssz_bytes},{"liveStateSszPlusNextReservePeakBytes",outcome.peak_live_state_ssz_plus_next_reserve_bytes},{"stateReservationIsProcessRss",false},{"prunes",outcome.prunes},{"actualFinalizedEpoch",complete.finalized.epoch},{"fixtureGenerationProvenance",{{"peakRecords",complete.peak_generator_records},{"prunes",complete.generator_prunes},{"rerunInThisInvocation",generate_fixtures}}},{"historicalForkChoiceVerified",false},{"productionQualified",false}}.dump()<<'\n';++groups;
   // Each first-pass refusal uses the same immutable genuine source, and each
   // fresh private index is distinct. Bad signature reaches real BLS admission.
   auto reject=[&](const char* leaf,int fault,const char* reason){begin_phase(leaf);bool refused=false;try{auto ignored=stream_capella_canonical_history(config.initial,config.rules,config.limits,limits,boundary,source(complete,fault),temporary.path/leaf,[](const auto&,const auto&){},f::checkpoint);(void)ignored;}catch(const std::runtime_error& e){refused=std::string(e.what())==reason;}f::check(refused,"specific corrupt archive refusal required");++refusals;end_phase();};
@@ -40,10 +70,10 @@ inline int fresh_stream_self_test(){
   // 255 genuine signed blocks + anchor, no attestations, no fabricated FFG.
   // Authority selects a128-live-record window: it must refuse, not retain the
   // whole unfinalized source or promote a supplied checkpoint into replay FFG.
-  begin_phase("fixture-generation-stalled-255");f::LongFixture stalled(255,false);end_phase();auto stalled_limits=limits;stalled_limits.maximum_live_blocks=128;stalled_limits.maximum_total_blocks=255;stalled_limits.maximum_private_index_bytes=255*112;const auto anchor=stalled.f.initial.timed.view.finalized;
+  begin_phase(generate_fixtures?"fixture-generation-stalled-255":"fixture-load-pinned-stalled-255");auto stalled=generate_fixtures?f::from_generated(f::LongFixture(255,false)):f::load_public_corpus(f::stalled_public_corpus_pin(),f::PublicCorpusMode::Stalled);end_phase();auto stalled_limits=limits;stalled_limits.maximum_live_blocks=128;stalled_limits.maximum_total_blocks=255;stalled_limits.maximum_private_index_bytes=255*112;const auto anchor=stalled.f.initial.timed.view.finalized;
   begin_phase("core-stream-stalled-window-refusal");bool window=false;try{auto ignored=stream_capella_canonical_history(stalled.f.initial,stalled.f.rules,stalled.f.limits,stalled_limits,{stalled.head,anchor,anchor},source(stalled),temporary.path/"stalled.index",[](const auto&,const auto&){},f::checkpoint);(void)ignored;}catch(const std::runtime_error& e){window=std::string(e.what())=="stream finalized window unavailable before next state";}f::check(window,"unfinalized history must refuse before window growth");++refusals;end_phase();
   std::cout<<Json{{"scenario","fresh-stream-stalled-finality-bounded-refusal"},{"passed",true},{"sourceSignedBlocks",255},{"selectedLiveWindow",128},{"expectedRefusals",1},{"fabricatedFinality",false},{"productionQualified",false}}.dump()<<'\n';++groups;
-  f::check(groups==4&&refusals==9,"all fresh streaming groups and refusals observed");std::cout<<Json{{"scenario","fresh-stream-summary"},{"passed",true},{"groups",groups},{"expectedRefusals",refusals},{"signedBlocksInSuccessfulStream",1026},{"testFixtureBlsSignatures",f::test_signatures},{"sourceArchiveReads",archive_reads},{"canonicalExecutionIndexChecks",execution_checks},{"phaseDurationsMs",phase_timings},{"phaseDiagnosticsOnly",true},{"newDatabasesOpened",0},{"runtimeStarted",false},{"projectSourceOrProfileChanged",false},{"productionQualified",false}}.dump()<<'\n';return 0;
+  f::check(groups==4&&refusals==9&&corpus_input_refusals==(generate_fixtures?0:5),"all fresh streaming groups and refusals observed");std::cout<<Json{{"scenario","fresh-stream-summary"},{"passed",true},{"groups",groups},{"expectedRefusals",refusals},{"signedBlocksInSuccessfulStream",1026},{"testFixtureBlsSignatures",f::test_signatures},{"sourceArchiveReads",archive_reads},{"canonicalExecutionIndexChecks",execution_checks},{"phaseDurationsMs",phase_timings},{"phaseDiagnosticsEmitted",true},{"inputMode",generate_fixtures?"generated-invocation":"pinned-public-corpus"},{"additionalCorpusInputRefusals",corpus_input_refusals},{"fixtureGenerationRerunInThisInvocation",generate_fixtures},{"newDatabasesOpened",0},{"runtimeStarted",false},{"projectSourceOrProfileChanged",false},{"productionQualified",false}}.dump()<<'\n';return 0;
  }catch(const std::exception& error){std::cerr<<Json{{"scenario","fresh-stream-self-test-refused"},{"passed",false},{"publicFixtureReason",error.what()},{"elapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-f::started).count()},{"wholeDriverPeakRssKiB",f::public_peak_rss_kib()},{"testStage",f::test_stage},{"testSlot",f::test_slot},{"currentPhase",phase},{"currentPhaseElapsedMs",std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-phase_started).count()},{"completedPhaseDurationsMs",phase_timings},{"sourceArchiveReads",archive_reads},{"canonicalExecutionIndexChecks",execution_checks},{"successfulStreamVisits",visits},{"fixedPublicFixtureOnly",true},{"productionQualified",false}}.dump()<<'\n';return 1;}
  catch(...){std::cerr<<"{\"scenario\":\"fresh-stream-self-test-refused\",\"passed\":false,\"detailsExported\":false}\n";return 1;}
 }

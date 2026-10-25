@@ -125,6 +125,11 @@ add_executable(nano-capella-canonical-stream-tests tests/test_capella_canonical_
 target_link_libraries(nano-capella-canonical-stream-tests PRIVATE nano_core)
 target_include_directories(nano-capella-canonical-stream-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
 target_compile_definitions(nano-capella-canonical-stream-tests PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
+# Explicit data-fixture producer; ordinary CTest never regenerates the corpus.
+add_executable(nano-capella-canonical-corpus EXCLUDE_FROM_ALL tests/export_capella_stream_corpus.cpp)
+target_link_libraries(nano-capella-canonical-corpus PRIVATE nano_core)
+target_include_directories(nano-capella-canonical-corpus PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ckzg/blst/bindings")
+target_compile_definitions(nano-capella-canonical-corpus PRIVATE NANO_TEST_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}")
 # Keep the original Release optimization for the long signed-stream fixture.
 add_test(NAME consensus_fresh_lifecycle_canonical_stream COMMAND nano-capella-canonical-stream-tests)
 set_tests_properties(consensus_fresh_lifecycle_canonical_stream PROPERTIES TIMEOUT 300 LABELS qualification_consensus_lifecycle)
