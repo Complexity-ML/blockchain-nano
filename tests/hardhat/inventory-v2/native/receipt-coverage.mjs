@@ -69,7 +69,8 @@ function bloomFromLogs(rows,ethers){
  return '0x'+out.toString('hex');
 }
 function receiptFromReference(receipt,ethers){
- const rows=logs(receipt.logs),status=uint(receipt.status),cumulative=uint(receipt.cumulativeGasUsed);
+ need(Object.hasOwn(receipt,'logs'),'reference receipt must own logs');
+ const rows=logs(receipt.logs===null?[]:receipt.logs),status=uint(receipt.status),cumulative=uint(receipt.cumulativeGasUsed);
  need(status===0n||status===1n,'binary reference status');const bloom=bloomFromLogs(rows,ethers);
  need(hex(receipt.logsBloom,256)&&receipt.logsBloom.toLowerCase()===bloom,'reference log-derived bloom');
  const integer=n=>n===0n?'0x':ethers.toBeHex(n);
